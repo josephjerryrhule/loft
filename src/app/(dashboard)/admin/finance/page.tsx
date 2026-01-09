@@ -1,70 +1,58 @@
-import { prisma } from "@/lib/prisma";
+"use client";
+
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AdminCommissionActions, AdminPayoutActions } from "@/components/admin/AdminFinanceActions";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { Loader2 } from "lucide-react";
+import { getFinanceData } from "@/app/actions/admin";
 
-async function getFinanceStats() {
-    // Total commissions paid
-    const paidCommissions = await prisma.commission.aggregate({
-        _sum: { amount: true },
-        where: { status: "PAID" }
-    });
+export default function AdminFinancePage() {
+  const [stats, setStats] = useState<any>(null);
+  const [payoutRequests, setPayoutRequests] = useState<any[]>([]);
+  const [recentCommissions, setRecentCommissions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [payoutPage, setPayoutPage] = useState(1);
+  const [payoutItemsPerPage, setPayoutItemsPerPage] = useState(12);
+  const [commissionPage, setCommissionPage] = useState(1);
+  const [commissionItemsPerPage, setCommissionItemsPerPage] = useState(12);
 
-    // Pending commissions
-    const pendingCommissions = await prisma.commission.aggregate({
-        _sum: { amount: true },
-        where: { status: "PENDING" }
-    });
+  useEffect(() => {
+    loadFinanceData();
+  }, []);
 
-    // Approved (ready to pay)
-    const approvedCommissions = await prisma.commission.aggregate({
-        _sum: { amount: true },
-        where: { status: "APPROVED" }
-    });
+  const loadFinanceData = async () => {
+    try {
+      setLoading(true);
+      const data = await getFinanceData();
+      setStats(data.stats);
+      setPayoutRequests(data.payoutRequests);
+      setRecentCommissions(data.recentCommissions);
+    } catch (error) {
+      console.error("Failed to load finance data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    // Total revenue from orders
-    const orderRevenue = await prisma.order.aggregate({
-        _sum: { totalAmount: true },
-        where: { paymentStatus: "COMPLETED" as any }
-    });
+  const payoutTotalPages = Math.ceil(payoutRequests.length / payoutItemsPerPage);
+  const payoutStartIndex = (payoutPage - 1) * payoutItemsPerPage;
+  const paginatedPayouts = payoutRequests.slice(payoutStartIndex, payoutStartIndex + payoutItemsPerPage);
 
-    // Total revenue from subscriptions
-    const subscriptions = await prisma.subscription.findMany({
-        include: { plan: true }
-    });
-    const subscriptionRevenue = subscriptions.reduce((sum: number, sub: any) => sum + Number(sub.plan.price), 0);
+  const commissionTotalPages = Math.ceil(recentCommissions.length / commissionItemsPerPage);
+  const commissionStartIndex = (commissionPage - 1) * commissionItemsPerPage;
+  const paginatedCommissions = recentCommissions.slice(commissionStartIndex, commissionStartIndex + commissionItemsPerPage);
 
-    const totalRevenue = (orderRevenue._sum.totalAmount?.toNumber() || 0) + subscriptionRevenue;
-
-    // Active subscriptions count
-    const activeSubscriptions = await prisma.subscription.count({
-        where: { status: "ACTIVE" }
-    });
-
-    return {
-        paidCommissions: paidCommissions._sum.amount?.toNumber() || 0,
-        pendingCommissions: pendingCommissions._sum.amount?.toNumber() || 0,
-        approvedCommissions: approvedCommissions._sum.amount?.toNumber() || 0,
-        totalRevenue,
-        activeSubscriptions
-    };
-}
-
-export default async function AdminFinancePage() {
-  const stats = await getFinanceStats();
-  
-  const payoutRequests = await prisma.payoutRequest.findMany({
-      include: { user: true },
-      orderBy: { requestedAt: 'desc' }
-  });
-
-  const recentCommissions = await prisma.commission.findMany({
-      include: { user: true },
-      orderBy: { createdAt: 'desc' },
-      take: 20
-  });
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -137,14 +125,14 @@ export default async function AdminFinancePage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {payoutRequests.length === 0 && (
+              {paginatedPayouts.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     No pending payout requests.
                   </TableCell>
                 </TableRow>
               )}
-              {payoutRequests.map((req: any) => (
+              {paginatedPayouts.map((req: any) => (
                 <TableRow key={req.id}>
                   <TableCell className="font-medium">{req.user.email}</TableCell>
                   <TableCell>
@@ -164,6 +152,19 @@ export default async function AdminFinancePage() {
               ))}
             </TableBody>
           </Table>
+          <div className="mt-4">
+            <TablePagination
+              currentPage={payoutPage}
+              totalPages={payoutTotalPages}
+              itemsPerPage={payoutItemsPerPage}
+              totalItems={payoutRequests.length}
+              onPageChange={setPayoutPage}
+              onItemsPerPageChange={(value) => {
+                setPayoutItemsPerPage(value);
+                setPayoutPage(1);
+              }}
+            />
+          </div>
         </CardContent>
       </Card>
 
@@ -186,14 +187,14 @@ export default async function AdminFinancePage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {recentCommissions.length === 0 && (
+              {paginatedCommissions.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     No commissions yet.
                   </TableCell>
                 </TableRow>
               )}
-              {recentCommissions.map((comm: any) => (
+              {paginatedCommissions.map((comm: any) => (
                 <TableRow key={comm.id}>
                   <TableCell className="font-medium">{comm.user?.email || "Unknown"}</TableCell>
                   <TableCell>
@@ -217,6 +218,19 @@ export default async function AdminFinancePage() {
               ))}
             </TableBody>
           </Table>
+          <div className="mt-4">
+            <TablePagination
+              currentPage={commissionPage}
+              totalPages={commissionTotalPages}
+              itemsPerPage={commissionItemsPerPage}
+              totalItems={recentCommissions.length}
+              onPageChange={setCommissionPage}
+              onItemsPerPageChange={(value) => {
+                setCommissionItemsPerPage(value);
+                setCommissionPage(1);
+              }}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -1,42 +1,53 @@
-import { prisma } from "@/lib/prisma";
+"use client";
+
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createFlipbook } from "@/app/actions/flipbooks";
-import { auth } from "@/auth";
+import { createFlipbook, getAllFlipbooks } from "@/app/actions/flipbooks";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { FileUpload } from "@/components/ui/file-upload";
 import { FlipbookActions } from "@/components/flipbook/FlipbookActions";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { Loader2 } from "lucide-react";
+import { useSession } from "next-auth/react";
 
-interface AdminFlipbooksPageProps {
-  searchParams: Promise<{
-    category?: string;
-  }>;
-}
+export default function AdminFlipbooksPage() {
+  const { data: session } = useSession();
+  const [flipbooks, setFlipbooks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(12);
 
-export default async function AdminFlipbooksPage(props: AdminFlipbooksPageProps) {
-  const session = await auth();
-  const searchParams = await props.searchParams;
-  const categoryFilter = searchParams?.category;
+  useEffect(() => {
+    loadFlipbooks();
+  }, []);
 
-  const where: any = {};
-  if (categoryFilter) {
-      where.category = categoryFilter;
+  const loadFlipbooks = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllFlipbooks();
+      setFlipbooks(data);
+    } catch (error) {
+      console.error("Failed to load flipbooks:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const totalPages = Math.ceil(flipbooks.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedFlipbooks = flipbooks.slice(startIndex, startIndex + itemsPerPage);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
-
-  const flipbooks = await prisma.flipbook.findMany({
-      where,
-      include: { createdBy: true },
-      orderBy: { createdAt: "desc" }
-  });
-
-  // Get distinct categories for filter
-  const categories = await prisma.flipbook.findMany({
-      select: { category: true },
-      distinct: ['category']
-  }).then(cat => cat.map(c => c.category).filter(Boolean));
 
   return (
     <div className="space-y-6">
@@ -51,7 +62,7 @@ export default async function AdminFlipbooksPage(props: AdminFlipbooksPageProps)
               <DialogTitle>Create New Flipbook</DialogTitle>
             </DialogHeader>
             <form action={createFlipbook} className="space-y-4">
-               <input type="hidden" name="createdById" value={session?.user?.id} />
+               <input type="hidden" name="createdById" value={session?.user?.id || ""} />
                <div>
                   <Label>Title</Label>
                   <Input name="title" placeholder="E.g. Monthly Gazette" required />
@@ -91,7 +102,7 @@ export default async function AdminFlipbooksPage(props: AdminFlipbooksPageProps)
       
       {/* Filters could go here */}
 
-      <div className="border rounded-md">
+      <div className="border rounded-md bg-white dark:bg-slate-900">
         <Table>
           <TableHeader>
             <TableRow>
@@ -104,14 +115,14 @@ export default async function AdminFlipbooksPage(props: AdminFlipbooksPageProps)
             </TableRow>
           </TableHeader>
           <TableBody>
-            {flipbooks.length === 0 && (
+            {paginatedFlipbooks.length === 0 && (
                 <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                         No flipbooks found.
                     </TableCell>
                 </TableRow>
             )}
-            {flipbooks.map((book) => (
+            {paginatedFlipbooks.map((book) => (
               <TableRow key={book.id}>
                 <TableCell className="font-medium">{book.title}</TableCell>
                 <TableCell>
@@ -133,6 +144,18 @@ export default async function AdminFlipbooksPage(props: AdminFlipbooksPageProps)
           </TableBody>
         </Table>
       </div>
+
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        itemsPerPage={itemsPerPage}
+        totalItems={flipbooks.length}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={(value) => {
+          setItemsPerPage(value);
+          setCurrentPage(1);
+        }}
+      />
     </div>
   );
 }

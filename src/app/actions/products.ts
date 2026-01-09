@@ -114,3 +114,15 @@ export async function deleteProduct(id: string) {
     }
 }
 
+export async function getAllProducts() {
+    try {
+        const products = await prisma.product.findMany({
+            orderBy: { createdAt: "desc" }
+        });
+        return products;
+    } catch (error) {
+        console.error("Failed to get all products:", error);
+        throw error;
+    }
+}
+

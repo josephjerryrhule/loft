@@ -95,3 +95,16 @@ export async function deleteFlipbook(flipbookId: string) {
         return { error: "Failed to delete flipbook" };
     }
 }
+
+export async function getAllFlipbooks() {
+    try {
+        const flipbooks = await prisma.flipbook.findMany({
+            include: { createdBy: true },
+            orderBy: { createdAt: "desc" }
+        });
+        return flipbooks;
+    } catch (error) {
+        console.error("Failed to get all flipbooks:", error);
+        throw error;
+    }
+}

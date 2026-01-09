@@ -1,17 +1,52 @@
-import { prisma } from "@/lib/prisma";
+"use client";
+
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createProduct } from "@/app/actions/products";
+import { createProduct, getAllProducts } from "@/app/actions/products";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/ui/file-upload";
 import { ProductActions } from "@/components/product/ProductActions";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { Loader2 } from "lucide-react";
 
-export default async function AdminProductsPage() {
-  const products = await prisma.product.findMany({});
+export default function AdminProductsPage() {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(12);
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllProducts();
+      setProducts(data);
+    } catch (error) {
+      console.error("Failed to load products:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const totalPages = Math.ceil(products.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedProducts = products.slice(startIndex, startIndex + itemsPerPage);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -71,7 +106,7 @@ export default async function AdminProductsPage() {
         </Dialog>
       </div>
 
-      <div className="border rounded-md">
+      <div className="border rounded-md bg-white dark:bg-slate-900">
         <Table>
           <TableHeader>
             <TableRow>
@@ -84,14 +119,14 @@ export default async function AdminProductsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-             {products.length === 0 && (
+             {paginatedProducts.length === 0 && (
                 <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                         No products available.
                     </TableCell>
                 </TableRow>
             )}
-            {products.map((p) => (
+            {paginatedProducts.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.title}</TableCell>
                 <TableCell>{p.productType}</TableCell>
@@ -106,6 +141,18 @@ export default async function AdminProductsPage() {
           </TableBody>
         </Table>
       </div>
+
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        itemsPerPage={itemsPerPage}
+        totalItems={products.length}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={(value) => {
+          setItemsPerPage(value);
+          setCurrentPage(1);
+        }}
+      />
     </div>
   );
 }
