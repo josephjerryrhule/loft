@@ -158,7 +158,7 @@ export async function getRecentManagerActivities() {
             action: "Customer Signup",
             description: `${customer.firstName || ""} ${customer.lastName || ""} joined via referral`,
             timestamp: customer.createdAt,
-            status: "completed"
+            status: "COMPLETED"
         });
     });
 
@@ -174,7 +174,7 @@ export async function getRecentManagerActivities() {
             action,
             description: `Earned GHS ${Number(comm.amount).toFixed(2)}`,
             timestamp: comm.createdAt,
-            status: comm.status === "PAID" ? "completed" : "pending"
+            status: comm.status
         });
     });
 
@@ -192,7 +192,7 @@ export async function getRecentManagerActivities() {
             action,
             description: `${memberName} earned GHS ${Number(comm.amount).toFixed(2)}`,
             timestamp: comm.createdAt,
-            status: comm.status === "PAID" ? "completed" : "pending"
+            status: comm.status
         });
     });
 

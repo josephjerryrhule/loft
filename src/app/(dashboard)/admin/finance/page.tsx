@@ -158,7 +158,7 @@ export default async function AdminFinancePage() {
                   </TableCell>
                   <TableCell>{new Date(req.requestedAt).toLocaleDateString()}</TableCell>
                   <TableCell>
-                    <AdminPayoutActions id={req.id} status={req.status} />
+                    <AdminPayoutActions payout={req} />
                   </TableCell>
                 </TableRow>
               ))}

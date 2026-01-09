@@ -49,7 +49,14 @@ export function ActivityTable({ activities }: ActivityTableProps) {
                 </TableCell>
                 <TableCell>
                   {activity.status && (
-                    <Badge variant={activity.status === "completed" ? "default" : "secondary"}>
+                    <Badge 
+                      variant={
+                        activity.status === "COMPLETED" || activity.status === "PAID" || activity.status === "ACTIVE" ? "default" : 
+                        activity.status === "APPROVED" ? "secondary" : 
+                        activity.status === "PENDING" ? "outline" : 
+                        "secondary"
+                      }
+                    >
                       {activity.status}
                     </Badge>
                   )}

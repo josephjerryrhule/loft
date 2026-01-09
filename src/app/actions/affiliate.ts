@@ -58,20 +58,107 @@ export async function getRecentAffiliateActivities() {
     const session = await auth();
     if (!session?.user?.id) return [];
 
+    const userId = session.user.id;
+    const activities: any[] = [];
+
+    // Get recent commissions earned
+    const commissions = await prisma.commission.findMany({
+        where: { userId: userId },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+        include: {
+            user: {
+                select: { firstName: true, lastName: true }
+            }
+        }
+    });
+
+    commissions.forEach((comm: any) => {
+        let description = "";
+        if (comm.sourceType === "SUBSCRIPTION") {
+            description = `Earned GHS ${Number(comm.amount).toFixed(2)} from subscription commission`;
+        } else if (comm.sourceType === "ORDER") {
+            description = `Earned GHS ${Number(comm.amount).toFixed(2)} from product order commission`;
+        } else if (comm.sourceType === "SIGNUP") {
+            description = `Earned GHS ${Number(comm.amount).toFixed(2)} signup bonus`;
+        } else {
+            description = `Earned GHS ${Number(comm.amount).toFixed(2)} commission`;
+        }
+
+        activities.push({
+            id: `comm-${comm.id}`,
+            action: "Commission Earned",
+            description: description,
+            timestamp: comm.createdAt,
+            status: comm.status
+        });
+    });
+
     // Get customers referred by this affiliate
     const referredCustomers = await prisma.user.findMany({
-        where: { referredById: session.user.id },
+        where: { referredById: userId, role: "CUSTOMER" },
         select: { id: true, firstName: true, lastName: true, createdAt: true },
         orderBy: { createdAt: "desc" },
         take: 5
     });
 
-    return referredCustomers.map((customer: any) => ({
-        id: customer.id,
-        actionType: "REFERRAL",
-        description: `New customer referral: ${customer.firstName} ${customer.lastName}`,
-        createdAt: customer.createdAt,
-    }));
+    referredCustomers.forEach((customer: any) => {
+        activities.push({
+            id: `ref-${customer.id}`,
+            action: "New Referral",
+            description: `${customer.firstName || ""} ${customer.lastName || ""} signed up using your link`,
+            timestamp: customer.createdAt,
+            status: "COMPLETED"
+        });
+    });
+
+    // Get subscriptions from referred customers
+    const referredCustomerIds = referredCustomers.map(c => c.id);
+    const subscriptions = await prisma.subscription.findMany({
+        where: { customerId: { in: referredCustomerIds } },
+        include: {
+            customer: { select: { firstName: true, lastName: true } },
+            plan: { select: { name: true, price: true } }
+        },
+        orderBy: { createdAt: "desc" },
+        take: 5
+    });
+
+    subscriptions.forEach((sub: any) => {
+        activities.push({
+            id: `sub-${sub.id}`,
+            action: "Customer Subscription",
+            description: `${sub.customer.firstName || ""} ${sub.customer.lastName || ""} subscribed to ${sub.plan.name} (GHS ${Number(sub.plan.price).toFixed(2)})`,
+            timestamp: sub.createdAt,
+            status: sub.status
+        });
+    });
+
+    // Get orders from referred customers
+    const orders = await prisma.order.findMany({
+        where: { referredById: userId },
+        include: {
+            customer: { select: { firstName: true, lastName: true } },
+            product: { select: { title: true } }
+        },
+        orderBy: { createdAt: "desc" },
+        take: 5
+    });
+
+    orders.forEach((order: any) => {
+        activities.push({
+            id: `order-${order.id}`,
+            action: "Customer Purchase",
+            description: `${order.customer.firstName || ""} ${order.customer.lastName || ""} purchased ${order.product.title} (GHS ${Number(order.totalAmount).toFixed(2)})`,
+            timestamp: order.createdAt,
+            status: order.status
+        });
+    });
+
+    // Sort all activities by timestamp (newest first) and take top 15
+    return activities
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, 15);
 }
 
 export async function getAffiliateMonthlyEarningsData() {
