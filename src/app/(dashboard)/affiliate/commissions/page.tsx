@@ -1,4 +1,5 @@
 import { getAffiliateStats, getAffiliateCommissions } from "@/app/actions/affiliate";
+import { getMinimumPayoutAmount } from "@/app/actions/settings";
 import { RequestPayoutDialog } from "@/components/dashboard/RequestPayoutDialog";
 import {
   Table,
@@ -13,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 export default async function AffiliateCommissionsPage() {
     const stats = await getAffiliateStats();
     const commissions = await getAffiliateCommissions();
+    const minimumPayoutAmount = await getMinimumPayoutAmount();
 
     if (!stats) return <div>Loading...</div>;
 
@@ -23,7 +25,10 @@ export default async function AffiliateCommissionsPage() {
                     <h1 className="text-3xl font-bold tracking-tight">My Earnings</h1>
                     <p className="text-muted-foreground">Track your commissions and request payouts.</p>
                 </div>
-                <RequestPayoutDialog availableBalance={stats.pendingBalance} />
+                <RequestPayoutDialog 
+                  availableBalance={stats.approvedBalance} 
+                  minimumPayoutAmount={minimumPayoutAmount}
+                />
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
@@ -32,9 +37,14 @@ export default async function AffiliateCommissionsPage() {
                     <div className="text-2xl font-bold mt-2">GHS {stats.totalEarnings.toFixed(2)}</div>
                  </div>
                  <div className="border rounded-md p-4 bg-card text-green-600">
-                    <h3 className="text-sm font-medium text-muted-foreground">Available for Payout</h3>
+                    <h3 className="text-sm font-medium text-muted-foreground">Approved Balance</h3>
+                    <div className="text-2xl font-bold mt-2">GHS {stats.approvedBalance.toFixed(2)}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Ready for payout</p>
+                 </div>
+                 <div className="border rounded-md p-4 bg-card text-amber-600">
+                    <h3 className="text-sm font-medium text-muted-foreground">Pending Balance</h3>
                     <div className="text-2xl font-bold mt-2">GHS {stats.pendingBalance.toFixed(2)}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Pending & Approved</p>
+                    <p className="text-xs text-muted-foreground mt-1">Awaiting approval</p>
                  </div>
                  <div className="border rounded-md p-4 bg-card">
                     <h3 className="text-sm font-medium text-muted-foreground">This Month</h3>

@@ -37,9 +37,15 @@ export async function getManagerStats() {
     _sum: { amount: true },
   });
 
-  // Available for payout = PENDING or APPROVED (not yet paid out)
-  const pendingPayout = await prisma.commission.aggregate({
-    where: { userId: userId, status: { in: ["PENDING", "APPROVED"] } },
+  // Approved balance = APPROVED only (ready for payout)
+  const approvedBalance = await prisma.commission.aggregate({
+    where: { userId: userId, status: "APPROVED" },
+    _sum: { amount: true },
+  });
+  
+  // Pending balance = PENDING only (awaiting admin approval)
+  const pendingBalance = await prisma.commission.aggregate({
+    where: { userId: userId, status: "PENDING" },
     _sum: { amount: true },
   });
 
@@ -65,7 +71,8 @@ export async function getManagerStats() {
     teamCount,
     customersCount,
     totalEarnings: Number(totalEarnings._sum.amount) || 0,
-    pendingPayout: Number(pendingPayout._sum.amount) || 0,
+    approvedBalance: Number(approvedBalance._sum.amount) || 0,
+    pendingBalance: Number(pendingBalance._sum.amount) || 0,
     monthEarnings: Number(monthEarnings._sum.amount) || 0,
     teamEarnings: Number(teamEarnings._sum.amount) || 0,
   };

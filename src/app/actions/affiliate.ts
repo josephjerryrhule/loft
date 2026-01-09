@@ -21,14 +21,14 @@ export async function getAffiliateStats() {
     _sum: { amount: true },
   });
 
-  // Pending balance = PENDING only
+  // Pending balance = PENDING only (awaiting admin approval)
   const pendingBalance = await prisma.commission.aggregate({
     where: { userId: userId, status: "PENDING" },
     _sum: { amount: true },
   });
 
-  // Withdrawable balance = APPROVED (not yet paid out)
-  const withdrawableBalance = await prisma.commission.aggregate({
+  // Approved balance = APPROVED (ready for payout, approved by admin)
+  const approvedBalance = await prisma.commission.aggregate({
     where: { userId: userId, status: "APPROVED" },
     _sum: { amount: true },
   });
@@ -49,7 +49,7 @@ export async function getAffiliateStats() {
     referralsCount,
     totalEarnings: Number(totalEarnings._sum.amount) || 0,
     pendingBalance: Number(pendingBalance._sum.amount) || 0,
-    withdrawableBalance: Number(withdrawableBalance._sum.amount) || 0,
+    approvedBalance: Number(approvedBalance._sum.amount) || 0,
     monthEarnings: Number(monthEarnings._sum.amount) || 0,
   };
 }

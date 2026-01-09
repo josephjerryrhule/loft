@@ -1,5 +1,6 @@
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { getAffiliateStats, getRecentAffiliateActivities, getAffiliateMonthlyEarningsData } from "@/app/actions/affiliate";
+import { getMinimumPayoutAmount } from "@/app/actions/settings";
 import { EarningsChart } from "@/components/dashboard/EarningsChart";
 import { ActivityTable } from "@/components/dashboard/ActivityTable";
 import { CopyInviteLinkButton } from "@/components/affiliate/CopyInviteLinkButton";
@@ -17,6 +18,7 @@ export default async function AffiliateDashboardPage() {
   const stats = await getAffiliateStats();
   const activities = await getRecentAffiliateActivities();
   const chartData = await getAffiliateMonthlyEarningsData();
+  const minimumPayoutAmount = await getMinimumPayoutAmount();
 
   if (!stats) return <div>Loading...</div>;
 
@@ -63,13 +65,16 @@ export default async function AffiliateDashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Withdrawable Balance</CardTitle>
+            <CardTitle className="text-sm font-medium">Approved Balance</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">GHS {stats.withdrawableBalance.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-green-600">GHS {stats.approvedBalance.toFixed(2)}</div>
              <p className="text-xs text-muted-foreground">Ready for payout</p>
              <div className="mt-2">
-                <RequestPayoutDialog availableBalance={stats.withdrawableBalance} />
+                <RequestPayoutDialog 
+                  availableBalance={stats.approvedBalance} 
+                  minimumPayoutAmount={minimumPayoutAmount}
+                />
              </div>
           </CardContent>
         </Card>

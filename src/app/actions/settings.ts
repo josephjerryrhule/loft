@@ -22,6 +22,20 @@ export async function getSystemSettings() {
     }
 }
 
+export async function getMinimumPayoutAmount(): Promise<number> {
+    try {
+        const setting = await prisma.systemSettings.findUnique({
+            where: { key: "minimumPayoutAmount" }
+        });
+        if (setting) {
+            return Number(JSON.parse(setting.value));
+        }
+    } catch (e) {
+        console.error("Failed to fetch minimum payout amount:", e);
+    }
+    return 50; // Default minimum
+}
+
 export async function updateSystemSettings(formData: FormData) {
     try {
         const data: Record<string, any> = {};

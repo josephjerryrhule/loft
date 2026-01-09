@@ -121,7 +121,7 @@ export function SystemSettingsForm({ settings }: SystemSettingsFormProps) {
                     <Card>
                         <CardHeader>
                             <CardTitle>Commission Structure</CardTitle>
-                            <CardDescription>Configure global commission rates.</CardDescription>
+                            <CardDescription>Configure global commission rates and payout settings.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
@@ -149,6 +149,19 @@ export function SystemSettingsForm({ settings }: SystemSettingsFormProps) {
                                     />
                                     <p className="text-[0.8rem] text-muted-foreground">Fixed amount earned per subscription.</p>
                                 </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="minimumPayoutAmount">Minimum Payout Amount (GHS)</Label>
+                                <Input 
+                                    type="number" 
+                                    id="minimumPayoutAmount" 
+                                    name="minimumPayoutAmount" 
+                                    defaultValue={settings.minimumPayoutAmount || "50"} 
+                                    placeholder="50" 
+                                    min="0"
+                                    step="0.01"
+                                />
+                                <p className="text-[0.8rem] text-muted-foreground">Minimum approved balance required before affiliates and managers can request payouts.</p>
                             </div>
                         </CardContent>
                     </Card>

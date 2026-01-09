@@ -21,11 +21,14 @@ import { Textarea } from "@/components/ui/textarea";
 
 interface RequestPayoutDialogProps {
     availableBalance: number;
+    minimumPayoutAmount?: number;
 }
 
-export function RequestPayoutDialog({ availableBalance }: RequestPayoutDialogProps) {
+export function RequestPayoutDialog({ availableBalance, minimumPayoutAmount = 50 }: RequestPayoutDialogProps) {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    const canRequestPayout = availableBalance > 0 && availableBalance >= minimumPayoutAmount;
 
     const handleSubmit = async (formData: FormData) => {
         setLoading(true);
@@ -55,13 +58,20 @@ export function RequestPayoutDialog({ availableBalance }: RequestPayoutDialogPro
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button disabled={availableBalance <= 0}>Request Payout</Button>
+                <Button disabled={!canRequestPayout}>
+                    Request Payout
+                </Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Request Payout</DialogTitle>
                     <DialogDescription>
                         Available Balance: GHS {availableBalance.toFixed(2)}
+                        {availableBalance < minimumPayoutAmount && (
+                            <span className="block text-red-500 mt-1">
+                                Minimum payout amount: GHS {minimumPayoutAmount.toFixed(2)}
+                            </span>
+                        )}
                     </DialogDescription>
                 </DialogHeader>
                 <form action={handleSubmit} className="space-y-4">

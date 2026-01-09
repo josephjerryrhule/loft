@@ -1,12 +1,15 @@
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { getManagerStats, getRecentManagerActivities, getMonthlyEarningsData } from "@/app/actions/manager";
+import { getMinimumPayoutAmount } from "@/app/actions/settings";
 import { EarningsChart } from "@/components/dashboard/EarningsChart";
 import { ActivityTable } from "@/components/dashboard/ActivityTable";
+import { RequestPayoutDialog } from "@/components/dashboard/RequestPayoutDialog";
 
 export default async function ManagerDashboardPage() {
   const stats = await getManagerStats();
   const activities = await getRecentManagerActivities();
   const chartData = await getMonthlyEarningsData();
+  const minimumPayoutAmount = await getMinimumPayoutAmount();
 
   if (!stats) return <div>Loading...</div>;
 
@@ -45,11 +48,26 @@ export default async function ManagerDashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Available Balance</CardTitle>
+            <CardTitle className="text-sm font-medium">Approved Balance</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">GHS {stats.pendingPayout.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-green-600">GHS {stats.approvedBalance.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">Ready for payout</p>
+            <div className="mt-2">
+              <RequestPayoutDialog 
+                availableBalance={stats.approvedBalance} 
+                minimumPayoutAmount={minimumPayoutAmount}
+              />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Balance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600">GHS {stats.pendingBalance.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">Awaiting approval</p>
           </CardContent>
         </Card>
       </div>
