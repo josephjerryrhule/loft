@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, Eye } from "lucide-react";
+import { Pencil, Trash2, Eye } from "lucide-react";
 import { useState } from "react";
 import { EditProductDialog } from "./EditProductDialog";
 import { ProductViewer } from "./ProductViewer";
@@ -34,7 +34,7 @@ export function ProductActions({ product }: ProductActionsProps) {
             await deleteProduct(product.id);
             toast.success("Product deleted successfully");
             setDeleteOpen(false);
-        } catch (error) {
+        } catch {
             toast.error("Failed to delete product");
         } finally {
             setIsDeleting(false);
@@ -44,13 +44,13 @@ export function ProductActions({ product }: ProductActionsProps) {
     return (
         <>
             <div className="flex items-center gap-2 justify-end">
-                <Button variant="ghost" size="icon" onClick={() => setViewOpen(true)} title="View Details">
+                <Button variant="ghost" size="sm" onClick={() => setViewOpen(true)} title="View Details">
                     <Eye className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => setEditOpen(true)} title="Edit Product">
-                    <Edit className="h-4 w-4" />
+                <Button variant="ghost" size="sm" onClick={() => setEditOpen(true)} title="Edit Product">
+                    <Pencil className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setDeleteOpen(true)} title="Delete Product">
+                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteOpen(true)} title="Delete Product">
                     <Trash2 className="h-4 w-4" />
                 </Button>
             </div>

@@ -13,6 +13,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Pencil, Loader2 } from "lucide-react";
 import { updatePlan } from "@/app/actions/plans";
 import { toast } from "sonner";
@@ -33,6 +40,7 @@ interface EditPlanDialogProps {
 export function EditPlanDialog({ plan }: EditPlanDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState(plan.isActive ? "active" : "inactive");
   const router = useRouter();
 
   async function handleSubmit(formData: FormData) {
@@ -118,6 +126,23 @@ export function EditPlanDialog({ plan }: EditPlanDialogProps) {
               defaultValue={plan.features || ""}
               placeholder="Unlimited flipbooks&#10;Priority support&#10;Early access" 
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="isActive">Status</Label>
+            <Select 
+              name="isActive" 
+              value={status} 
+              onValueChange={setStatus}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+            <input type="hidden" name="isActive" value={status === "active" ? "true" : "false"} />
           </div>
           <div className="flex gap-2">
             <Button 
