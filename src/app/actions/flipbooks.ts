@@ -143,11 +143,29 @@ export async function getCustomerFlipbooks() {
             orderBy: { createdAt: "desc" }
         });
 
-        // Flatten progress (take first item from array)
-        const flipbooksWithProgress = flipbooks.map(fb => ({
-            ...fb,
-            progress: fb.progress[0] || null
-        }));
+        // Flatten progress (take first item from array) and serialize to plain objects
+        const flipbooksWithProgress = flipbooks.map(fb => {
+            const progress = fb.progress[0] || null;
+            return {
+                id: fb.id,
+                title: fb.title,
+                description: fb.description,
+                coverImageUrl: fb.coverImageUrl,
+                pdfUrl: fb.pdfUrl,
+                totalPages: fb.totalPages,
+                category: fb.category,
+                isPublished: fb.isPublished,
+                isFree: fb.isFree,
+                createdAt: fb.createdAt.toISOString(),
+                updatedAt: fb.updatedAt.toISOString(),
+                progress: progress ? {
+                    id: progress.id,
+                    lastPageRead: progress.lastPageRead,
+                    completed: progress.completed,
+                    lastAccessedAt: progress.lastAccessedAt.toISOString()
+                } : null
+            };
+        });
 
         return {
             flipbooks: flipbooksWithProgress,
