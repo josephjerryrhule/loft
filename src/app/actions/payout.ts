@@ -48,14 +48,30 @@ export async function requestPayout(amount: number, method: any) {
     }
 
     try {
-        await prisma.payoutRequest.create({
-            data: {
-                userId: userId,
-                amount,
-                paymentMethod: JSON.stringify(method),
-                status: "PENDING",
-                requestedAt: new Date()
-            }
+        await prisma.$transaction(async (tx) => {
+            // Create payout request
+            await tx.payoutRequest.create({
+                data: {
+                    userId: userId,
+                    amount,
+                    paymentMethod: JSON.stringify(method),
+                    status: "PENDING",
+                    requestedAt: new Date()
+                }
+            });
+
+            // Log activity for the user who requested the payout
+            await tx.activityLog.create({
+                data: {
+                    userId: userId,
+                    actionType: "PAYOUT_REQUESTED",
+                    actionDetails: JSON.stringify({
+                        amount: amount,
+                        paymentMethod: method.type,
+                        approvedBalance: balance
+                    })
+                }
+            });
         });
 
         // Revalidate based on role
