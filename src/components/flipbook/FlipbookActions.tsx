@@ -5,8 +5,8 @@ import { Edit, Trash2, Eye } from "lucide-react";
 import { useState } from "react";
 import { EditFlipbookDialog } from "./EditFlipbookDialog";
 import { deleteFlipbook } from "@/app/actions/flipbooks";
-import { FlipbookViewer } from "./FlipbookViewer";
 import { toast } from "sonner";
+import dynamic from "next/dynamic";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +17,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+const FlipbookViewer = dynamic(
+  () => import("./FlipbookViewer").then((mod) => mod.FlipbookViewer),
+  { ssr: false }
+);
 
 interface FlipbookActionsProps {
     flipbook: any;
