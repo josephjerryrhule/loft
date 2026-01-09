@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { requestPayout } from "@/app/actions/manager";
+import { requestPayout } from "@/app/actions/payout";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";

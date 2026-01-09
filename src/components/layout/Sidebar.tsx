@@ -49,7 +49,6 @@ function getLinks(userRole?: string) {
 
   const affiliateLinks = [
      { href: "/affiliate", label: "Dashboard", icon: LayoutDashboard },
-     { href: "/affiliate/links", label: "Invite Links", icon: UserPlus },
      { href: "/affiliate/commissions", label: "My Earnings", icon: CreditCard },
   ];
 

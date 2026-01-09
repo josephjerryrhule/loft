@@ -3,6 +3,7 @@ import { getAffiliateStats, getRecentAffiliateActivities, getAffiliateMonthlyEar
 import { EarningsChart } from "@/components/dashboard/EarningsChart";
 import { ActivityTable } from "@/components/dashboard/ActivityTable";
 import { CopyInviteLinkButton } from "@/components/affiliate/CopyInviteLinkButton";
+import { RequestPayoutDialog } from "@/components/dashboard/RequestPayoutDialog";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -23,7 +24,12 @@ export default async function AffiliateDashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight">Affiliate Dashboard</h1>
-          {user?.inviteCode && <CopyInviteLinkButton inviteCode={user.inviteCode} />}
+          {user?.inviteCode && (
+            <CopyInviteLinkButton 
+              text={`${typeof window !== 'undefined' ? window.location.origin : ''}/join/customer/${user.inviteCode}`} 
+              label="Copy Invite link" 
+            />
+          )}
       </div>
       
       {/* KPI Cards */}
@@ -57,11 +63,23 @@ export default async function AffiliateDashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Withdrawable Balance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">GHS {stats.withdrawableBalance.toFixed(2)}</div>
+             <p className="text-xs text-muted-foreground">Ready for payout</p>
+             <div className="mt-2">
+                <RequestPayoutDialog availableBalance={stats.withdrawableBalance} />
+             </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending Balance</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">GHS {stats.pendingBalance.toFixed(2)}</div>
-             <p className="text-xs text-muted-foreground">Minimum payout: GHS 50</p>
+            <div className="text-2xl font-bold text-amber-600">GHS {stats.pendingBalance.toFixed(2)}</div>
+             <p className="text-xs text-muted-foreground">Awaiting approval</p>
           </CardContent>
         </Card>
       </div>

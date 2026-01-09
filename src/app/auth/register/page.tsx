@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { registerUser } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import Link from "next/link";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { Role } from "@/lib/types";
+import { Suspense } from "react";
 
 const registerSchema = z.object({
   firstName: z.string().min(2, "First name is too short"),
@@ -27,8 +28,12 @@ const registerSchema = z.object({
   referralCode: z.string().optional(),
 });
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const ref = searchParams.get("ref") || "";
+  const roleFromQuery = searchParams.get("role") as Role || Role.CUSTOMER;
+
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -37,9 +42,9 @@ export default function RegisterPage() {
       email: "",
       password: "",
       phone: "",
-      role: Role.CUSTOMER,
-      managerCode: "",
-      referralCode: "",
+      role: roleFromQuery,
+      managerCode: roleFromQuery === Role.AFFILIATE ? ref : "",
+      referralCode: roleFromQuery === Role.CUSTOMER ? ref : "",
     },
   });
 
@@ -51,7 +56,6 @@ export default function RegisterPage() {
       toast.error(result.error);
     } else {
       toast.success("Registration successful! Please login.");
-      // Redirect handled by server action or here
       router.push("/auth/login");
     }
   }
@@ -93,7 +97,18 @@ export default function RegisterPage() {
               <FormField control={form.control} name="phone" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Phone Number (Optional)</FormLabel>
-                  <FormControl><Input placeholder="+1234567890" {...field} /></FormControl>
+                  <FormControl>
+                    <PhoneInput
+                      placeholder="Enter phone number"
+                      defaultCountry="GH"
+                      value={field.value}
+                      onChange={field.onChange}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      numberInputProps={{
+                          className: "border-0 bg-transparent focus:ring-0 outline-none w-full ml-2"
+                      }}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
@@ -106,31 +121,38 @@ export default function RegisterPage() {
                 </FormItem>
               )} />
 
-              <FormField control={form.control} name="role" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>I am a...</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value={Role.CUSTOMER}>Customer</SelectItem>
-                      <SelectItem value={Role.AFFILIATE}>Affiliate</SelectItem>
-                      <SelectItem value={Role.MANAGER}>Manager</SelectItem>
-                      {/* Admin registration usually hidden or seeded */}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )} />
+              {!ref && (
+                <FormField control={form.control} name="role" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>I am a...</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value={Role.CUSTOMER}>Customer</SelectItem>
+                        <SelectItem value={Role.AFFILIATE}>Affiliate</SelectItem>
+                        <SelectItem value={Role.MANAGER}>Manager</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              )}
 
               {selectedRole === Role.AFFILIATE && (
                 <FormField control={form.control} name="managerCode" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Manager Invite Code</FormLabel>
-                    <FormControl><Input placeholder="Enter code" {...field} /></FormControl>
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter code" 
+                        {...field} 
+                        disabled={!!ref && roleFromQuery === Role.AFFILIATE} 
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -139,8 +161,14 @@ export default function RegisterPage() {
               {selectedRole === Role.CUSTOMER && (
                 <FormField control={form.control} name="referralCode" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Referral Code (Optional)</FormLabel>
-                    <FormControl><Input placeholder="Enter code" {...field} /></FormControl>
+                    <FormLabel>Referral Code {ref ? "" : "(Optional)"}</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter code" 
+                        {...field} 
+                        disabled={!!ref && roleFromQuery === Role.CUSTOMER}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -156,4 +184,12 @@ export default function RegisterPage() {
       </Card>
     </div>
   );
+}
+
+export default function RegisterPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <RegisterForm />
+        </Suspense>
+    );
 }

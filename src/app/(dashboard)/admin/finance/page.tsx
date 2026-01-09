@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { AdminCommissionActions, AdminPayoutActions } from "@/components/admin/AdminFinanceActions";
 
 async function getFinanceStats() {
     // Total commissions paid
@@ -26,7 +27,7 @@ async function getFinanceStats() {
     // Total revenue from orders
     const orderRevenue = await prisma.order.aggregate({
         _sum: { totalAmount: true },
-        where: { paymentStatus: "COMPLETED" }
+        where: { paymentStatus: "COMPLETED" as any }
     });
 
     // Total revenue from subscriptions
@@ -143,7 +144,7 @@ export default async function AdminFinancePage() {
                   </TableCell>
                 </TableRow>
               )}
-              {payoutRequests.map((req) => (
+              {payoutRequests.map((req: any) => (
                 <TableRow key={req.id}>
                   <TableCell className="font-medium">{req.user.email}</TableCell>
                   <TableCell>
@@ -157,7 +158,7 @@ export default async function AdminFinancePage() {
                   </TableCell>
                   <TableCell>{new Date(req.requestedAt).toLocaleDateString()}</TableCell>
                   <TableCell>
-                    <Button size="sm" variant="outline">View</Button>
+                    <AdminPayoutActions id={req.id} status={req.status} />
                   </TableCell>
                 </TableRow>
               ))}
@@ -181,12 +182,13 @@ export default async function AdminFinancePage() {
                 <TableHead>Amount</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Date</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {recentCommissions.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     No commissions yet.
                   </TableCell>
                 </TableRow>
@@ -208,6 +210,9 @@ export default async function AdminFinancePage() {
                     </Badge>
                   </TableCell>
                   <TableCell>{new Date(comm.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <AdminCommissionActions id={comm.id} status={comm.status} />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

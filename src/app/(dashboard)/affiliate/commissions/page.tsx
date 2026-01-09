@@ -1,4 +1,4 @@
-import { getManagerStats, getManagerCommissions } from "@/app/actions/manager";
+import { getAffiliateStats, getAffiliateCommissions } from "@/app/actions/affiliate";
 import { RequestPayoutDialog } from "@/components/dashboard/RequestPayoutDialog";
 import {
   Table,
@@ -10,33 +10,39 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
-export default async function ManagerCommissionsPage() {
-    const stats = await getManagerStats();
-    const commissions = await getManagerCommissions();
+export default async function AffiliateCommissionsPage() {
+    const stats = await getAffiliateStats();
+    const commissions = await getAffiliateCommissions();
+
+    if (!stats) return <div>Loading...</div>;
 
     return (
         <div className="space-y-6">
              <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Commissions & Payouts</h1>
-                    <p className="text-muted-foreground">Track earnings and manage payouts.</p>
+                    <h1 className="text-3xl font-bold tracking-tight">My Earnings</h1>
+                    <p className="text-muted-foreground">Track your commissions and request payouts.</p>
                 </div>
-                {stats && <RequestPayoutDialog availableBalance={stats.pendingPayout} />}
+                <RequestPayoutDialog availableBalance={stats.pendingBalance} />
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
-                 <div className="border rounded-md p-4">
+                 <div className="border rounded-md p-4 bg-card">
                     <h3 className="text-sm font-medium text-muted-foreground">Total Earnings</h3>
-                    <div className="text-2xl font-bold mt-2">GHS {stats?.totalEarnings.toFixed(2)}</div>
+                    <div className="text-2xl font-bold mt-2">GHS {stats.totalEarnings.toFixed(2)}</div>
                  </div>
-                 <div className="border rounded-md p-4">
+                 <div className="border rounded-md p-4 bg-card text-green-600">
                     <h3 className="text-sm font-medium text-muted-foreground">Available for Payout</h3>
-                    <div className="text-2xl font-bold mt-2 text-green-600">GHS {stats?.pendingPayout.toFixed(2)}</div>
+                    <div className="text-2xl font-bold mt-2">GHS {stats.pendingBalance.toFixed(2)}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Pending & Approved</p>
                  </div>
-                 {/* Can add pending (unapproved) commissions here if we distinguish */}
+                 <div className="border rounded-md p-4 bg-card">
+                    <h3 className="text-sm font-medium text-muted-foreground">This Month</h3>
+                    <div className="text-2xl font-bold mt-2">GHS {stats.monthEarnings.toFixed(2)}</div>
+                 </div>
             </div>
 
-             <div className="rounded-md border">
+             <div className="rounded-md border bg-card">
                  <Table>
                     <TableHeader>
                         <TableRow>
@@ -58,7 +64,7 @@ export default async function ManagerCommissionsPage() {
                                 <TableRow key={comm.id}>
                                      <TableCell>{new Date(comm.createdAt).toLocaleDateString()}</TableCell>
                                      <TableCell className="capitalize">{comm.sourceType.toLowerCase()}</TableCell>
-                                     <TableCell>GHS {comm.amount}</TableCell>
+                                     <TableCell>GHS {comm.amount.toFixed(2)}</TableCell>
                                      <TableCell>
                                         <Badge variant={
                                             comm.status === 'PAID' ? 'default' : 

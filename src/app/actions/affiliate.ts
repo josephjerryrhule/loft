@@ -21,9 +21,15 @@ export async function getAffiliateStats() {
     _sum: { amount: true },
   });
 
-  // Pending balance = PENDING or APPROVED (not yet paid out)
+  // Pending balance = PENDING only
   const pendingBalance = await prisma.commission.aggregate({
-    where: { userId: userId, status: { in: ["PENDING", "APPROVED"] } },
+    where: { userId: userId, status: "PENDING" },
+    _sum: { amount: true },
+  });
+
+  // Withdrawable balance = APPROVED (not yet paid out)
+  const withdrawableBalance = await prisma.commission.aggregate({
+    where: { userId: userId, status: "APPROVED" },
     _sum: { amount: true },
   });
 
@@ -43,6 +49,7 @@ export async function getAffiliateStats() {
     referralsCount,
     totalEarnings: Number(totalEarnings._sum.amount) || 0,
     pendingBalance: Number(pendingBalance._sum.amount) || 0,
+    withdrawableBalance: Number(withdrawableBalance._sum.amount) || 0,
     monthEarnings: Number(monthEarnings._sum.amount) || 0,
   };
 }
@@ -59,76 +66,87 @@ export async function getRecentAffiliateActivities() {
         take: 5
     });
 
-    // Get recent commissions earned
-    const recentCommissions = await prisma.commission.findMany({
-        where: { userId: session.user.id },
-        orderBy: { createdAt: "desc" },
-        take: 5
-    });
-
-    // Build activity list
-    const activities: { id: string; action: string; description: string; timestamp: Date; status: string }[] = [];
-
-    // Add customer signups
-    referredCustomers.forEach((customer: { id: string; firstName: string | null; lastName: string | null; createdAt: Date }) => {
-        activities.push({
-            id: `signup-${customer.id}`,
-            action: "Customer Signup",
-            description: `${customer.firstName || ""} ${customer.lastName || ""} joined via your link`,
-            timestamp: customer.createdAt,
-            status: "completed"
-        });
-    });
-
-    // Add commissions
-    recentCommissions.forEach((comm: { id: string; sourceType: string; amount: any; createdAt: Date; status: string }) => {
-        let action = "Commission";
-        if (comm.sourceType === "SIGNUP") action = "Signup Bonus";
-        else if (comm.sourceType === "PRODUCT") action = "Sale Commission";
-        else if (comm.sourceType === "SUBSCRIPTION") action = "Subscription Commission";
-        
-        activities.push({
-            id: `comm-${comm.id}`,
-            action,
-            description: `Earned GHS ${Number(comm.amount).toFixed(2)}`,
-            timestamp: comm.createdAt,
-            status: comm.status === "PAID" ? "completed" : "pending"
-        });
-    });
-
-    // Sort by timestamp and return top 10
-    return activities
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-        .slice(0, 10);
+    return referredCustomers.map((customer: any) => ({
+        id: customer.id,
+        actionType: "REFERRAL",
+        description: `New customer referral: ${customer.firstName} ${customer.lastName}`,
+        createdAt: customer.createdAt,
+    }));
 }
 
 export async function getAffiliateMonthlyEarningsData() {
     const session = await auth();
     if (!session?.user?.id) return [];
 
-    const months = [];
-    const now = new Date();
-    
-    for (let i = 5; i >= 0; i--) {
-        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const endDate = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
-        
-        const earnings = await prisma.commission.aggregate({
-            where: {
-                userId: session.user.id,
-                createdAt: {
-                    gte: date,
-                    lte: endDate
-                }
-            },
-            _sum: { amount: true }
-        });
+    const userId = session.user.id;
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setDate(1);
+    sixMonthsAgo.setHours(0, 0, 0, 0);
 
-        months.push({
-            month: date.toLocaleString('default', { month: 'short' }),
-            earnings: Number(earnings._sum.amount) || 0
-        });
+    const commissions = await prisma.commission.findMany({
+        where: {
+            userId: userId,
+            createdAt: { gte: sixMonthsAgo }
+        },
+        orderBy: { createdAt: "asc" }
+    });
+
+    const monthlyData: { [key: string]: number } = {};
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    // Initialize last 6 months
+    for (let i = 0; i < 6; i++) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        const monthLabel = months[d.getMonth()];
+        monthlyData[monthLabel] = 0;
     }
 
-    return months;
+    commissions.forEach((comm: any) => {
+        const date = new Date(comm.createdAt);
+        const monthLabel = months[date.getMonth()];
+        if (monthlyData[monthLabel] !== undefined) {
+            monthlyData[monthLabel] += Number(comm.amount);
+        }
+    });
+
+    return Object.entries(monthlyData)
+        .map(([month, earnings]) => ({ month, earnings: Number(earnings.toFixed(2)) }))
+        .reverse();
+}
+
+export async function getAffiliateCommissions() {
+    const session = await auth();
+    if (!session?.user?.id) return [];
+
+    const commissions = await prisma.commission.findMany({
+        where: { userId: session.user.id },
+        orderBy: { createdAt: "desc" }
+    });
+
+    return commissions.map((comm: any) => ({
+        ...comm,
+        amount: Number(comm.amount)
+    }));
+}
+
+export async function getAffiliateLinks() {
+    const session = await auth();
+    if (!session?.user?.id) return null;
+
+    const user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { inviteCode: true }
+    });
+
+    if (!user?.inviteCode) return null;
+
+    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+
+    return {
+        referralCode: user.inviteCode,
+        customerLink: `${baseUrl}/join/customer/${user.inviteCode}`,
+        affiliateLink: `${baseUrl}/join/affiliate/${user.inviteCode}`
+    };
 }

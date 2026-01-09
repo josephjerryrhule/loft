@@ -5,19 +5,22 @@ import { Link2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface CopyInviteLinkButtonProps {
-  inviteCode: string;
+  text: string;
+  label?: string;
 }
 
-export function CopyInviteLinkButton({ inviteCode }: CopyInviteLinkButtonProps) {
+export function CopyInviteLinkButton({ text, label = "Copy Link" }: CopyInviteLinkButtonProps) {
   const handleCopy = () => {
-    const link = `${window.location.origin}/signup?ref=${inviteCode}`;
-    navigator.clipboard.writeText(link);
-    toast.success("Invite link copied to clipboard!");
+    const finalText = text.startsWith("/") 
+      ? `${window.location.origin}${text}` 
+      : text;
+    navigator.clipboard.writeText(finalText);
+    toast.success("Copied to clipboard!");
   };
 
   return (
     <Button onClick={handleCopy}>
-      <Link2 className="mr-2 h-4 w-4" /> Copy Invite Link
+      <Link2 className="mr-2 h-4 w-4" /> {label}
     </Button>
   );
 }

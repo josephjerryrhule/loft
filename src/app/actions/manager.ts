@@ -102,38 +102,6 @@ export async function getManagerCommissions() {
     });
 }
 
-export async function requestPayout(amount: number, method: any) {
-    const session = await auth();
-    if (!session?.user?.id) return { error: "Unauthorized" };
-
-    // Validate balance
-    const approvedBalance = await prisma.commission.aggregate({
-        where: { userId: session.user.id, status: "APPROVED" },
-        _sum: { amount: true }
-    });
-    
-    if ((approvedBalance._sum.amount || 0) < amount) {
-        return { error: "Insufficient approved balance" };
-    }
-
-    try {
-        await prisma.payoutRequest.create({
-            data: {
-                userId: session.user.id,
-                amount,
-                paymentMethod: JSON.stringify(method),
-                status: "PENDING",
-                requestedAt: new Date()
-            }
-        });
-        revalidatePath("/manager/commissions");
-        return { success: true };
-    } catch(e) {
-        console.error("Payout request failed:", e);
-        return { error: "Failed to request payout" };
-    }
-}
-
 export async function getRecentManagerActivities() {
     const session = await auth();
     if (!session?.user?.id) return [];
