@@ -1,5 +1,6 @@
 "use server";
 
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -12,25 +13,27 @@ const flipbookSchema = z.object({
   coverImageUrl: z.string().optional(),
   category: z.string().optional(),
   isFree: z.boolean().optional(),
-  createdById: z.string(),
 });
 
 export async function createFlipbook(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
   const title = formData.get("title") as string;
   const description = formData.get("description") as string;
   const pdfUrl = formData.get("pdfUrl") as string;
   const coverImageUrl = formData.get("coverImageUrl") as string;
-  const createdById = formData.get("createdById") as string;
   const category = formData.get("category") as string;
   const isFree = formData.get("isFree") === "on";
 
   try {
-    const validatedData = flipbookSchema.parse({ title, description, pdfUrl, coverImageUrl, createdById, category, isFree });
+    const validatedData = flipbookSchema.parse({ title, description, pdfUrl, coverImageUrl, category, isFree });
 
     await prisma.flipbook.create({
       data: {
-        ...validatedData,
-        isPublished: true,
+        ...validatedData,        createdById: session.user.id,        isPublished: true,
         isFree: validatedData.isFree || false,
       },
     });

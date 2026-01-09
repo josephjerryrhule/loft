@@ -12,10 +12,8 @@ import { FileUpload } from "@/components/ui/file-upload";
 import { FlipbookActions } from "@/components/flipbook/FlipbookActions";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { Loader2 } from "lucide-react";
-import { useSession } from "next-auth/react";
 
 export default function AdminFlipbooksPage() {
-  const { data: session } = useSession();
   const [flipbooks, setFlipbooks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -62,7 +60,6 @@ export default function AdminFlipbooksPage() {
               <DialogTitle>Create New Flipbook</DialogTitle>
             </DialogHeader>
             <form action={createFlipbook} className="space-y-4">
-               <input type="hidden" name="createdById" value={session?.user?.id || ""} />
                <div>
                   <Label>Title</Label>
                   <Input name="title" placeholder="E.g. Monthly Gazette" required />
