@@ -130,7 +130,6 @@ export function EditPlanDialog({ plan }: EditPlanDialogProps) {
           <div className="space-y-2">
             <Label htmlFor="isActive">Status</Label>
             <Select 
-              name="isActive" 
               value={status} 
               onValueChange={setStatus}
             >
