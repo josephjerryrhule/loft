@@ -1,12 +1,8 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
-import { Role, UserStatus } from "@/lib/types"; // using local types if available, or just strings if schema uses strings
-import { revalidatePath } from "next/cache";
+// ... existing code ...
 
-// Using Schema strings for now since local Enums might not match perfectly if not carefully synced
-// but let's try to use the types we defined
-// actually the schema uses String for enums now, so we can just use strings or the constants
+import { auth } from "@/auth"; // Need to import auth
 
 export async function updateUser(userId: string, data: {
     firstName: string;
@@ -16,6 +12,7 @@ export async function updateUser(userId: string, data: {
     role: string;
     status: string;
 }) {
+    // ... existing implementation ...
     try {
         await prisma.user.update({
             where: { id: userId },
@@ -24,8 +21,8 @@ export async function updateUser(userId: string, data: {
                 lastName: data.lastName,
                 email: data.email,
                 phoneNumber: data.phoneNumber,
-                role: data.role, // Prisma expects string
-                status: data.status, // Prisma expects string
+                role: data.role, 
+                status: data.status, 
             }
         });
         revalidatePath("/admin/users");
@@ -37,6 +34,7 @@ export async function updateUser(userId: string, data: {
 }
 
 export async function deleteUser(userId: string) {
+    // ... existing implementation ...
     try {
         await prisma.user.delete({
             where: { id: userId }
@@ -49,3 +47,31 @@ export async function deleteUser(userId: string) {
         return { error: "Failed to delete user. They may have related records (orders, logs) that prevent deletion." };
     }
 }
+
+export async function updateProfile(formData: FormData) {
+    const session = await auth();
+    if (!session?.user?.id) {
+        return { error: "Unauthorized" };
+    }
+    
+    const firstName = formData.get("firstName") as string;
+    const lastName = formData.get("lastName") as string;
+    const phoneNumber = formData.get("phoneNumber") as string;
+    
+    try {
+        await prisma.user.update({
+            where: { id: session.user.id },
+            data: {
+                firstName,
+                lastName,
+                phoneNumber
+            }
+        });
+        revalidatePath("/settings");
+        return { success: true };
+    } catch (error) {
+        console.log("Error updating profile:", error);
+        return { error: "Failed to update profile" };
+    }
+}
+

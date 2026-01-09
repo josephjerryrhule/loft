@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/ui/file-upload";
+import { ProductActions } from "@/components/product/ProductActions";
 
 export default async function AdminProductsPage() {
   const products = await prisma.product.findMany({});
@@ -17,6 +18,7 @@ export default async function AdminProductsPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Products</h1>
         <Dialog>
+          {/* ... existing code ... */}
           <DialogTrigger asChild>
             <Button>+ Add Product</Button>
           </DialogTrigger>
@@ -78,12 +80,13 @@ export default async function AdminProductsPage() {
               <TableHead>Price</TableHead>
               <TableHead>Commission</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
              {products.length === 0 && (
                 <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                         No products available.
                     </TableCell>
                 </TableRow>
@@ -95,6 +98,9 @@ export default async function AdminProductsPage() {
                 <TableCell>GHS {p.price.toString()}</TableCell>
                 <TableCell>GHS {p.affiliateCommissionAmount.toString()}</TableCell>
                 <TableCell>{p.isActive ? "Active" : "Archived"}</TableCell>
+                <TableCell className="text-right">
+                    <ProductActions product={p} />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
