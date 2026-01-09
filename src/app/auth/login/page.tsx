@@ -5,11 +5,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardContent, CardTitle, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 
 const loginSchema = z.object({
@@ -19,6 +21,7 @@ const loginSchema = z.object({
 
 export default function LoginPage() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -28,18 +31,23 @@ export default function LoginPage() {
   });
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
-    const result = await signIn("credentials", {
-      email: values.email,
-      password: values.password,
-      redirect: false,
-    });
+    setIsLoading(true);
+    try {
+      const result = await signIn("credentials", {
+        email: values.email,
+        password: values.password,
+        redirect: false,
+      });
 
-    if (result?.error) {
-      toast.error("Invalid email or password");
-    } else {
-      toast.success("Logged in successfully");
-      router.push("/");
-      router.refresh();
+      if (result?.error) {
+        toast.error("Invalid email or password");
+      } else {
+        toast.success("Logged in successfully");
+        router.push("/");
+        router.refresh();
+      }
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -78,7 +86,10 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">Sign In</Button>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isLoading ? "Signing in..." : "Sign In"}
+              </Button>
             </form>
           </Form>
         </CardContent>

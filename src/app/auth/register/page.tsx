@@ -11,11 +11,12 @@ import { Card, CardHeader, CardContent, CardTitle, CardFooter } from "@/componen
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { Role } from "@/lib/types";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 
 const registerSchema = z.object({
   firstName: z.string().min(2, "First name is too short"),
@@ -33,6 +34,7 @@ function RegisterForm() {
   const searchParams = useSearchParams();
   const ref = searchParams.get("ref") || "";
   const roleFromQuery = searchParams.get("role") as Role || Role.CUSTOMER;
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
@@ -51,12 +53,17 @@ function RegisterForm() {
   const selectedRole = form.watch("role");
 
   async function onSubmit(values: z.infer<typeof registerSchema>) {
-    const result = await registerUser(values);
-    if (result && result.error) {
-      toast.error(result.error);
-    } else {
-      toast.success("Registration successful! Please login.");
-      router.push("/auth/login");
+    setIsLoading(true);
+    try {
+      const result = await registerUser(values);
+      if (result && result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Registration successful! Please login.");
+        router.push("/auth/login");
+      }
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -174,7 +181,10 @@ function RegisterForm() {
                 )} />
               )}
 
-              <Button type="submit" className="w-full">Sign Up</Button>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isLoading ? "Creating account..." : "Sign Up"}
+              </Button>
             </form>
           </Form>
         </CardContent>
