@@ -1,0 +1,223 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Models
+
+model User {
+  id              String     @id @default(uuid())
+  email           String     @unique
+  passwordHash    String     @map("password_hash")
+  role            String     // Enum: ADMIN, MANAGER, AFFILIATE, CUSTOMER
+  firstName       String?    @map("first_name")
+  lastName        String?    @map("last_name")
+  phoneNumber     String?    @map("phone_number")
+  profilePictureUrl String?  @map("profile_picture_url")
+  
+  managerId       String?    @map("manager_id")
+  manager         User?      @relation("ManagerAffiliates", fields: [managerId], references: [id])
+  affiliates      User[]     @relation("ManagerAffiliates")
+
+  inviteCode      String?    @unique @map("invite_code")
+  
+  referredById    String?    @map("referred_by_id")
+  referredBy      User?      @relation("Referrals", fields: [referredById], references: [id])
+  referrals       User[]     @relation("Referrals")
+
+  status          String     @default("ACTIVE") // Enum: ACTIVE, SUSPENDED, PENDING
+  
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  invitationsSent Invitation[] @relation("Inviter")
+  subscriptions   Subscription[]
+  createdFlipbooks Flipbook[]
+  flipbookProgress FlipbookProgress[]
+  orders          Order[] @relation("CustomerOrders")
+  referredOrders  Order[] @relation("AffiliateReferredOrders")
+  commissions     Commission[]
+  payoutRequests  PayoutRequest[]
+  activityLogs    ActivityLog[]
+
+  @@map("users")
+}
+
+model Invitation {
+  id           String     @id @default(uuid())
+  inviterId    String     @map("inviter_id")
+  inviter      User       @relation("Inviter", fields: [inviterId], references: [id])
+  inviteeEmail String     @map("invitee_email")
+  inviteType   String     @map("invite_type") // Enum: AFFILIATE, CUSTOMER
+  token        String     @unique
+  expiresAt    DateTime   @map("expires_at")
+  usedAt       DateTime?  @map("used_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  @@map("invitations")
+}
+
+model Subscription {
+  id          String             @id @default(uuid())
+  customerId  String             @map("customer_id")
+  customer    User               @relation(fields: [customerId], references: [id])
+  planId      String             @map("plan_id")
+  plan        SubscriptionPlan   @relation(fields: [planId], references: [id])
+  status      String             // Enum: ACTIVE, EXPIRED, CANCELLED
+  startDate   DateTime           @map("start_date")
+  endDate     DateTime           @map("end_date")
+  autoRenew   Boolean            @default(false) @map("auto_renew")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+
+  @@map("subscriptions")
+}
+
+model SubscriptionPlan {
+  id           String   @id @default(uuid())
+  name         String
+  description  String?
+  price        Decimal
+  durationDays Int      @map("duration_days")
+  features     String?  @map("features") // JSON string
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  subscriptions Subscription[]
+
+  @@map("subscription_plans")
+}
+
+model Flipbook {
+  id            String   @id @default(uuid())
+  title         String
+  description   String?
+  coverImageUrl String?  @map("cover_image_url")
+  pdfUrl        String?  @map("pdf_url")
+  totalPages    Int?     @map("total_pages")
+  category      String?    
+  isPublished   Boolean  @default(false) @map("is_published")
+  createdById   String   @map("created_by")
+  createdBy     User     @relation(fields: [createdById], references: [id])
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  progress      FlipbookProgress[]
+
+  @@map("flipbooks")
+}
+
+model FlipbookProgress {
+  id             String   @id @default(uuid())
+  customerId     String   @map("customer_id")
+  customer       User     @relation(fields: [customerId], references: [id])
+  flipbookId     String   @map("flipbook_id")
+  flipbook       Flipbook @relation(fields: [flipbookId], references: [id])
+  lastPageRead   Int      @map("last_page_read")
+  completed      Boolean  @default(false)
+  lastAccessedAt DateTime @default(now()) @map("last_accessed_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@map("flipbook_progress")
+}
+
+model Product {
+  id                  String      @id @default(uuid())
+  title               String
+  description         String?
+  productType         String      @map("product_type") // Enum: DIGITAL, PHYSICAL
+  price               Decimal
+  featuredImageUrl    String?     @map("featured_image_url")
+  affiliateCommissionAmount Decimal @map("affiliate_commission_amount")
+  isActive            Boolean     @default(true) @map("is_active")
+  stockQuantity       Int?        @map("stock_quantity")
+  digitalFileUrl      String?     @map("digital_file_url")
+  requiresCustomization Boolean   @default(false) @map("requires_customization")
+  customizationFields String?     @map("customization_fields") // JSON string
+  createdAt           DateTime    @default(now()) @map("created_at")
+  updatedAt           DateTime    @updatedAt @map("updated_at")
+
+  orders              Order[]
+
+  @@map("products")
+}
+
+model Order {
+  id               String      @id @default(uuid())
+  orderNumber      String      @unique @map("order_number")
+  customerId       String      @map("customer_id")
+  customer         User        @relation("CustomerOrders", fields: [customerId], references: [id])
+  productId        String      @map("product_id")
+  product          Product     @relation(fields: [productId], references: [id])
+  quantity         Int
+  unitPrice        Decimal     @map("unit_price")
+  totalAmount      Decimal     @map("total_amount")
+  customizationData String?    @map("customization_data") // JSON string
+  status           String      @default("PENDING") // Enum: PENDING, PROCESSING, COMPLETED, CANCELLED
+  paymentStatus    String      @default("PENDING") @map("payment_status") // Enum
+  paymentReference String?     @map("payment_reference")
+  referredById     String?     @map("referred_by_id")
+  referredBy       User?       @relation("AffiliateReferredOrders", fields: [referredById], references: [id])
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+
+  @@map("orders")
+}
+
+model Commission {
+  id          String             @id @default(uuid())
+  userId      String             @map("user_id")
+  user        User               @relation(fields: [userId], references: [id])
+  sourceType  String             @map("source_type") // Enum
+  sourceId    String             @map("source_id") // ID of Order, Subscription, or User
+  amount      Decimal
+  status      String             @default("PENDING") // Enum
+  createdAt   DateTime           @default(now()) @map("created_at")
+  paidAt      DateTime?          @map("paid_at")
+
+  @@map("commissions")
+}
+
+model PayoutRequest {
+  id            String       @id @default(uuid())
+  userId        String       @map("user_id")
+  user          User         @relation(fields: [userId], references: [id])
+  amount        Decimal
+  status        String       @default("PENDING") // Enum
+  requestedAt   DateTime     @default(now()) @map("requested_at")
+  processedAt   DateTime?    @map("processed_at")
+  adminNotes    String?      @map("admin_notes")
+  paymentMethod String?      @map("payment_method") // JSON string
+  
+  @@map("payout_requests")
+}
+
+model SystemSettings {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String   @map("value") // JSON string
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}
+
+model ActivityLog {
+  id            String     @id @default(uuid())
+  userId        String?    @map("user_id")
+  user          User?      @relation(fields: [userId], references: [id])
+  actionType    String     @map("action_type") // Enum
+  actionDetails String?    @map("action_details") // JSON string
+  ipAddress     String?    @map("ip_address")
+  createdAt     DateTime   @default(now()) @map("created_at")
+
+  @@map("activity_logs")
+}

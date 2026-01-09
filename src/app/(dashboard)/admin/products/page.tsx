@@ -1,0 +1,105 @@
+import { prisma } from "@/lib/prisma";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { createProduct } from "@/app/actions/products";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FileUpload } from "@/components/ui/file-upload";
+
+export default async function AdminProductsPage() {
+  const products = await prisma.product.findMany({});
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Products</h1>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button>+ Add Product</Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Add New Product</DialogTitle>
+            </DialogHeader>
+            <form action={createProduct} className="space-y-4">
+               <div>
+                  <Label>Title</Label>
+                  <Input name="title" placeholder="My Product" required />
+               </div>
+                <div>
+                  <Label>Description</Label>
+                  <Textarea name="description" placeholder="Product details..." />
+               </div>
+               <div className="grid grid-cols-2 gap-4">
+                   <div>
+                        <Label>Price (GHS)</Label>
+                        <Input name="price" type="number" step="0.01" placeholder="100.00" required />
+                   </div>
+                   <div>
+                        <Label>Commission (GHS)</Label>
+                        <Input name="affiliateCommission" type="number" step="0.01" placeholder="10.00" required />
+                   </div>
+               </div>
+               
+               <div>
+                   <Label>Type</Label>
+                   <Select name="type" defaultValue="PHYSICAL">
+                       <SelectTrigger>
+                           <SelectValue placeholder="Select type" />
+                       </SelectTrigger>
+                       <SelectContent>
+                           <SelectItem value="PHYSICAL">Physical Good</SelectItem>
+                           <SelectItem value="DIGITAL">Digital Download</SelectItem>
+                       </SelectContent>
+                   </Select>
+               </div>
+
+               <FileUpload 
+                  label="Product Image" 
+                  name="featuredImageUrl" 
+                  accept="image/*" 
+                />
+               
+               <Button type="submit" className="w-full">Create Product</Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="border rounded-md">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Title</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Price</TableHead>
+              <TableHead>Commission</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+             {products.length === 0 && (
+                <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        No products available.
+                    </TableCell>
+                </TableRow>
+            )}
+            {products.map((p) => (
+              <TableRow key={p.id}>
+                <TableCell className="font-medium">{p.title}</TableCell>
+                <TableCell>{p.productType}</TableCell>
+                <TableCell>GHS {p.price.toString()}</TableCell>
+                <TableCell>GHS {p.affiliateCommissionAmount.toString()}</TableCell>
+                <TableCell>{p.isActive ? "Active" : "Archived"}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
