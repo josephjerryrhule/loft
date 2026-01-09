@@ -30,31 +30,47 @@ export function ViewOrderDialog({ open, onOpenChange, order, currency = "GHS" }:
 
         <div className="space-y-6">
           {/* Order Info */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Order Number</p>
                 <p className="text-lg font-semibold">{order.orderNumber}</p>
               </div>
-              <div className="flex gap-2">
-                <Badge variant={
-                  order.paymentStatus === "PAID" ? "default" : 
-                  order.paymentStatus === "FAILED" ? "destructive" : "outline"
-                }>
-                  {order.paymentStatus}
-                </Badge>
-                <Badge variant={
-                  order.status === "COMPLETED" ? "default" :
-                  order.status === "PROCESSING" ? "secondary" :
-                  order.status === "CANCELLED" ? "destructive" : "outline"
-                }>
-                  {order.status}
-                </Badge>
-              </div>
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" />
               <span>Placed on {new Date(order.createdAt).toLocaleString()}</span>
+            </div>
+            
+            {/* Status Badges with Labels */}
+            <div className="grid grid-cols-2 gap-4 pt-2">
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground font-medium">Payment Status</p>
+                <Badge 
+                  variant={
+                    order.paymentStatus === "PAID" ? "default" : 
+                    order.paymentStatus === "FAILED" ? "destructive" : "outline"
+                  }
+                  className="w-fit"
+                >
+                  <CreditCard className="h-3 w-3 mr-1" />
+                  {order.paymentStatus}
+                </Badge>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground font-medium">Order Status</p>
+                <Badge 
+                  variant={
+                    order.status === "COMPLETED" ? "default" :
+                    order.status === "PROCESSING" ? "secondary" :
+                    order.status === "CANCELLED" ? "destructive" : "outline"
+                  }
+                  className="w-fit"
+                >
+                  <Package className="h-3 w-3 mr-1" />
+                  {order.status}
+                </Badge>
+              </div>
             </div>
           </div>
 
