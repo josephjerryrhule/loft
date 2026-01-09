@@ -23,6 +23,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2 } from "lucide-react";
 import { revalidatePath } from "next/cache";
+import { EditPlanDialog } from "@/components/admin/EditPlanDialog";
 
 export default async function AdminPlansPage() {
     const plans = await getAllPlans();
@@ -108,12 +109,15 @@ export default async function AdminPlansPage() {
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
-                                        <form action={handleDelete}>
-                                            <input type="hidden" name="id" value={plan.id} />
-                                            <Button variant="ghost" size="sm" type="submit">
-                                                <Trash2 className="h-4 w-4 text-red-500" />
-                                            </Button>
-                                        </form>
+                                        <div className="flex items-center gap-2">
+                                            <EditPlanDialog plan={plan} />
+                                            <form action={handleDelete}>
+                                                <input type="hidden" name="id" value={plan.id} />
+                                                <Button variant="ghost" size="sm" type="submit">
+                                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                                </Button>
+                                            </form>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))

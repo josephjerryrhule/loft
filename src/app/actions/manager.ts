@@ -130,14 +130,16 @@ export async function getRecentManagerActivities() {
         },
         select: { id: true, firstName: true, lastName: true, createdAt: true, referredById: true },
         orderBy: { createdAt: "desc" },
-        take: 5
+        take: 10
     });
+
+    const customerIds = referredCustomers.map(c => c.id);
 
     // Get recent commissions earned by manager
     const managerCommissions = await prisma.commission.findMany({
         where: { userId: session.user.id },
         orderBy: { createdAt: "desc" },
-        take: 5
+        take: 10
     });
 
     // Get recent commissions earned by team members
@@ -145,7 +147,29 @@ export async function getRecentManagerActivities() {
         where: { userId: { in: teamIds } },
         include: { user: true },
         orderBy: { createdAt: "desc" },
-        take: 5
+        take: 10
+    });
+
+    // Get customer subscriptions from team's referred customers
+    const customerSubscriptions = await prisma.subscription.findMany({
+        where: { customerId: { in: customerIds } },
+        include: {
+            customer: { select: { firstName: true, lastName: true, referredById: true } },
+            plan: { select: { name: true, price: true } }
+        },
+        orderBy: { createdAt: "desc" },
+        take: 10
+    });
+
+    // Get customer purchases from team's referred customers
+    const customerOrders = await prisma.order.findMany({
+        where: { customerId: { in: customerIds } },
+        include: {
+            customer: { select: { firstName: true, lastName: true } },
+            product: { select: { title: true, price: true } }
+        },
+        orderBy: { createdAt: "desc" },
+        take: 10
     });
 
     // Build activity list
@@ -159,6 +183,30 @@ export async function getRecentManagerActivities() {
             description: `${customer.firstName || ""} ${customer.lastName || ""} joined via referral`,
             timestamp: customer.createdAt,
             status: "COMPLETED"
+        });
+    });
+
+    // Add customer subscriptions
+    customerSubscriptions.forEach((sub: any) => {
+        const customerName = `${sub.customer.firstName || ""} ${sub.customer.lastName || ""}`.trim() || "Customer";
+        activities.push({
+            id: `customer-sub-${sub.id}`,
+            action: "Customer Subscription",
+            description: `${customerName} subscribed to ${sub.plan.name} (GHS ${Number(sub.plan.price).toFixed(2)})`,
+            timestamp: sub.createdAt,
+            status: sub.status
+        });
+    });
+
+    // Add customer purchases
+    customerOrders.forEach((order: any) => {
+        const customerName = `${order.customer.firstName || ""} ${order.customer.lastName || ""}`.trim() || "Customer";
+        activities.push({
+            id: `customer-order-${order.id}`,
+            action: "Customer Purchase",
+            description: `${customerName} purchased ${order.product.title} (GHS ${Number(order.totalAmount).toFixed(2)})`,
+            timestamp: order.createdAt,
+            status: order.status
         });
     });
 
@@ -196,10 +244,10 @@ export async function getRecentManagerActivities() {
         });
     });
 
-    // Sort by timestamp and return top 15
+    // Sort by timestamp and return top 20
     return activities
         .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-        .slice(0, 15);
+        .slice(0, 20);
 }
 
 export async function getMonthlyEarningsData() {

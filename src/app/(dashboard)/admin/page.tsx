@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { PaymentStatus } from "@/lib/types";
+import { formatActivityDetails, getActionTypeLabel } from "@/lib/activity-formatter";
 
 async function getStats() {
     const totalUsers = await prisma.user.count();
@@ -220,10 +221,10 @@ export default async function AdminDashboardPage() {
                 <TableRow key={log.id}>
                   <TableCell className="font-medium">{log.user?.email || "System"}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{log.actionType}</Badge>
+                    <Badge variant="outline">{getActionTypeLabel(log.actionType)}</Badge>
                   </TableCell>
-                  <TableCell className="max-w-xs truncate">{log.actionDetails}</TableCell>
-                  <TableCell>{new Date(log.createdAt).toLocaleString()}</TableCell>
+                  <TableCell className="max-w-xs">{formatActivityDetails(log.actionType, log.actionDetails)}</TableCell>
+                  <TableCell className="text-muted-foreground">{new Date(log.createdAt).toLocaleString()}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
