@@ -111,3 +111,91 @@ export async function getAllFlipbooks() {
         throw error;
     }
 }
+
+export async function getCustomerFlipbooks() {
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("Unauthorized");
+    }
+
+    try {
+        // Check for active subscription
+        const activeSubscription = await prisma.subscription.findFirst({
+            where: { 
+                customerId: session.user.id,
+                status: "ACTIVE"
+            },
+            include: { plan: true }
+        });
+
+        // Get flipbooks with progress
+        const flipbooks = await prisma.flipbook.findMany({
+            where: { 
+                isPublished: true,
+                ...(activeSubscription ? {} : { isFree: true })
+            },
+            include: {
+                progress: {
+                    where: { customerId: session.user.id },
+                    take: 1
+                }
+            },
+            orderBy: { createdAt: "desc" }
+        });
+
+        // Flatten progress (take first item from array)
+        const flipbooksWithProgress = flipbooks.map(fb => ({
+            ...fb,
+            progress: fb.progress[0] || null
+        }));
+
+        return {
+            flipbooks: flipbooksWithProgress,
+            hasSubscription: !!activeSubscription
+        };
+    } catch (error) {
+        console.error("Failed to get customer flipbooks:", error);
+        throw error;
+    }
+}
+
+export async function updateFlipbookProgress(data: {
+    flipbookId: string;
+    lastPageRead: number;
+    completed: boolean;
+}) {
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("Unauthorized");
+    }
+
+    try {
+        await prisma.flipbookProgress.upsert({
+            where: {
+                customerId_flipbookId: {
+                    customerId: session.user.id,
+                    flipbookId: data.flipbookId
+                }
+            },
+            create: {
+                customerId: session.user.id,
+                flipbookId: data.flipbookId,
+                lastPageRead: data.lastPageRead,
+                completed: data.completed,
+                lastAccessedAt: new Date()
+            },
+            update: {
+                lastPageRead: data.lastPageRead,
+                completed: data.completed,
+                lastAccessedAt: new Date()
+            }
+        });
+
+        revalidatePath("/customer");
+        revalidatePath("/customer/flipbooks");
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to update flipbook progress:", error);
+        throw error;
+    }
+}

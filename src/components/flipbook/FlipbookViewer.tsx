@@ -16,11 +16,15 @@ interface FlipbookViewerProps {
     pdfUrl: string;
     onClose: () => void;
     title?: string;
+    initialPage?: number;
+    onPageChange?: (page: number) => void;
+    onComplete?: () => void;
 }
 
 
-export function FlipbookViewer({ pdfUrl, onClose, title }: FlipbookViewerProps) {
+export function FlipbookViewer({ pdfUrl, onClose, title, initialPage = 0, onPageChange, onComplete }: FlipbookViewerProps) {
     const [numPages, setNumPages] = useState<number>(0);
+    const [currentPage, setCurrentPage] = useState<number>(initialPage);
     const bookRef = useRef<any>(null);
     const [loading, setLoading] = useState(true);
     const [dimensions, setDimensions] = useState({ width: 800, height: 450 }); // 16:9 init
@@ -30,6 +34,24 @@ export function FlipbookViewer({ pdfUrl, onClose, title }: FlipbookViewerProps) 
     function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
         setNumPages(numPages);
         setLoading(false);
+        
+        // Jump to initial page after load
+        if (initialPage > 0) {
+            setTimeout(() => {
+                bookRef.current?.pageFlip()?.turnToPage(initialPage);
+            }, 500);
+        }
+    }
+    
+    function handlePageChange(pageData: any) {
+        const page = pageData.data || pageData;
+        setCurrentPage(page);
+        onPageChange?.(page);
+        
+        // Check if completed (reached last page)
+        if (page >= numPages - 1 && onComplete) {
+            onComplete();
+        }
     }
     
     // Capture aspect ratio from the first page
@@ -151,7 +173,7 @@ export function FlipbookViewer({ pdfUrl, onClose, title }: FlipbookViewerProps) 
                             ref={bookRef}
                             showCover={true}
                             className="shadow-2xl"
-                            startPage={0}
+                            startPage={initialPage || 0}
                             size="fixed"
                             minWidth={100}
                             maxWidth={2000}
@@ -169,6 +191,7 @@ export function FlipbookViewer({ pdfUrl, onClose, title }: FlipbookViewerProps) 
                             swipeDistance={30}
                             showPageCorners={true}
                             disableFlipByClick={false}
+                            onFlip={handlePageChange}
                         >
                             {[...Array(numPages)].map((_, index) => (
                                 <div key={index} className="bg-white overflow-hidden flex items-center justify-center shadow-inner">
