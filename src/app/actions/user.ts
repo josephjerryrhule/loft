@@ -1,8 +1,8 @@
 "use server";
 
-// ... existing code ...
-
-import { auth } from "@/auth"; // Need to import auth
+import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
+import { auth } from "@/auth";
 
 export async function updateUser(userId: string, data: {
     firstName: string;

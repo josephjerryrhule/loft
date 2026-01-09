@@ -32,10 +32,11 @@ export function SystemSettingsForm({ settings }: SystemSettingsFormProps) {
     return (
         <form action={handleSubmit}>
             <Tabs defaultValue="general" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-8">
+                <TabsList className="grid w-full grid-cols-4 mb-8">
                     <TabsTrigger value="general">General</TabsTrigger>
                     <TabsTrigger value="smtp">SMTP / Email</TabsTrigger>
                     <TabsTrigger value="payment">Payment Gateway</TabsTrigger>
+                    <TabsTrigger value="commissions">Commissions</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="general">
@@ -111,6 +112,43 @@ export function SystemSettingsForm({ settings }: SystemSettingsFormProps) {
                             <div className="space-y-2">
                                 <Label htmlFor="paystackSecretKey">Secret Key</Label>
                                 <Input id="paystackSecretKey" name="paystackSecretKey" type="password" defaultValue={settings.paystackSecretKey || ""} placeholder="sk_test_..." />
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="commissions">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Commission Structure</CardTitle>
+                            <CardDescription>Configure global commission rates.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="managerCommissionPercentage">Manager Commission (%)</Label>
+                                    <Input 
+                                        type="number" 
+                                        id="managerCommissionPercentage" 
+                                        name="managerCommissionPercentage" 
+                                        defaultValue={settings.managerCommissionPercentage || "20"} 
+                                        placeholder="20" 
+                                        min="0"
+                                        max="100"
+                                    />
+                                    <p className="text-[0.8rem] text-muted-foreground">Percentage of order/subscription total.</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="affiliateSubscriptionCommission">Affiliate Subscription Commission (Fixed Amount)</Label>
+                                    <Input 
+                                        type="number" 
+                                        id="affiliateSubscriptionCommission" 
+                                        name="affiliateSubscriptionCommission" 
+                                        defaultValue={settings.affiliateSubscriptionCommission || "10"} 
+                                        placeholder="10" 
+                                    />
+                                    <p className="text-[0.8rem] text-muted-foreground">Fixed amount earned per subscription.</p>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
