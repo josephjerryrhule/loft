@@ -1,9 +1,9 @@
-import { getPlans, getUserSubscription, subscribeToPlan } from "@/app/actions/plans";
+import { getPlans, getUserSubscription } from "@/app/actions/plans";
 import { auth } from "@/auth";
-import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
+import { SubscribePlanButton } from "@/components/payment/SubscribePlanButton";
 
 export default async function CustomerPlansPage() {
     const session = await auth();
@@ -11,12 +11,6 @@ export default async function CustomerPlansPage() {
     const currentSubscription = session?.user?.id 
         ? await getUserSubscription(session.user.id) 
         : null;
-
-    async function handleSubscribe(formData: FormData) {
-        "use server";
-        const planId = formData.get("planId") as string;
-        await subscribeToPlan(planId);
-    }
 
     return (
         <div className="space-y-6">
@@ -93,10 +87,13 @@ export default async function CustomerPlansPage() {
                             {currentSubscription?.planId === plan.id ? (
                                 <Badge variant="outline">Current Plan</Badge>
                             ) : (
-                                <form action={handleSubscribe} className="w-full">
-                                    <input type="hidden" name="planId" value={plan.id} />
-                                    <Button type="submit" className="w-full">Subscribe</Button>
-                                </form>
+                                session?.user?.email && (
+                                    <SubscribePlanButton 
+                                        plan={plan}
+                                        userEmail={session.user.email}
+                                        userId={session.user.id}
+                                    />
+                                )
                             )}
                         </CardFooter>
                     </Card>

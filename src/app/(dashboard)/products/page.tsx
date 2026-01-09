@@ -1,9 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { ShoppingBag } from "lucide-react";
+import { auth } from "@/auth";
+import { PurchaseProductButton } from "@/components/payment/PurchaseProductButton";
 
 export default async function ShopsPage() {
+  const session = await auth();
   const products = await prisma.product.findMany({
       where: { isActive: true }
   });
@@ -12,7 +14,6 @@ export default async function ShopsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
          <h1 className="text-3xl font-bold">Shop Products</h1>
-         {/* Cart button placeholder */}
       </div>
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -30,7 +31,15 @@ export default async function ShopsPage() {
                      <div className="mt-2 text-xs bg-slate-100 p-1 rounded inline-block">{product.productType}</div>
                 </CardContent>
                 <CardFooter>
-                    <Button className="w-full">Add to Cart</Button>
+                    {session?.user?.email ? (
+                        <PurchaseProductButton 
+                            product={product}
+                            userEmail={session.user.email}
+                            userId={session.user.id}
+                        />
+                    ) : (
+                        <div className="text-sm text-muted-foreground">Login to purchase</div>
+                    )}
                 </CardFooter>
              </Card>
         ))}

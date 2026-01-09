@@ -2,13 +2,14 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { updateSystemSettings } from "@/app/actions/settings";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Copy, Check } from "lucide-react";
 
 interface SystemSettingsFormProps {
     settings: Record<string, any>;
@@ -16,6 +17,21 @@ interface SystemSettingsFormProps {
 
 export function SystemSettingsForm({ settings }: SystemSettingsFormProps) {
     const [loading, setLoading] = useState(false);
+    const [paystackMode, setPaystackMode] = useState<"test" | "live">(
+        settings.paystackMode || "test"
+    );
+    const [copied, setCopied] = useState(false);
+
+    const webhookUrl = typeof window !== "undefined" 
+        ? `${window.location.origin}/api/webhooks/paystack`
+        : "";
+
+    const copyWebhookUrl = () => {
+        navigator.clipboard.writeText(webhookUrl);
+        setCopied(true);
+        toast.success("Webhook URL copied to clipboard");
+        setTimeout(() => setCopied(false), 2000);
+    };
 
     const handleSubmit = async (formData: FormData) => {
         setLoading(true);
@@ -86,7 +102,7 @@ export function SystemSettingsForm({ settings }: SystemSettingsFormProps) {
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="smtpPass">Password</Label>
-                                    <Input id="smtpPass" name="smtpPass" type="password" defaultValue={settings.smtpPass || ""} placeholder="••••••••" />
+                                    <PasswordInput id="smtpPass" name="smtpPass" defaultValue={settings.smtpPass || ""} placeholder="••••••••" />
                                 </div>
                             </div>
                             <div className="space-y-2">
@@ -103,15 +119,116 @@ export function SystemSettingsForm({ settings }: SystemSettingsFormProps) {
                             <CardTitle>Payment Gateway</CardTitle>
                             <CardDescription>Configure Paystack and other payment providers.</CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <h3 className="text-lg font-medium">Paystack</h3>
-                            <div className="space-y-2">
-                                <Label htmlFor="paystackPublicKey">Public Key</Label>
-                                <Input id="paystackPublicKey" name="paystackPublicKey" defaultValue={settings.paystackPublicKey || ""} placeholder="pk_test_..." />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="paystackSecretKey">Secret Key</Label>
-                                <Input id="paystackSecretKey" name="paystackSecretKey" type="password" defaultValue={settings.paystackSecretKey || ""} placeholder="sk_test_..." />
+                        <CardContent className="space-y-6">
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-medium">Paystack Configuration</h3>
+                                
+                                {/* Mode Toggle */}
+                                <div className="space-y-2">
+                                    <Label>Environment Mode</Label>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            type="button"
+                                            variant={paystackMode === "test" ? "default" : "outline"}
+                                            size="sm"
+                                            onClick={() => setPaystackMode("test")}
+                                        >
+                                            Test Mode
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant={paystackMode === "live" ? "default" : "outline"}
+                                            size="sm"
+                                            onClick={() => setPaystackMode("live")}
+                                        >
+                                            Live Mode
+                                        </Button>
+                                    </div>
+                                    <input type="hidden" name="paystackMode" value={paystackMode} />
+                                    <p className="text-[0.8rem] text-muted-foreground">
+                                        {paystackMode === "test" 
+                                            ? "Using test keys for development and testing"
+                                            : "⚠️ Using live keys - real transactions will be processed"
+                                        }
+                                    </p>
+                                </div>
+
+                                {/* Test Keys */}
+                                {paystackMode === "test" && (
+                                    <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                                        <h4 className="font-medium text-sm">Test API Keys</h4>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="paystackTestPublicKey">Test Public Key</Label>
+                                            <Input 
+                                                id="paystackTestPublicKey" 
+                                                name="paystackTestPublicKey" 
+                                                defaultValue={settings.paystackTestPublicKey || ""} 
+                                                placeholder="pk_test_..." 
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="paystackTestSecretKey">Test Secret Key</Label>
+                                            <PasswordInput 
+                                                id="paystackTestSecretKey" 
+                                                name="paystackTestSecretKey" 
+                                                defaultValue={settings.paystackTestSecretKey || ""} 
+                                                placeholder="sk_test_..." 
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Live Keys */}
+                                {paystackMode === "live" && (
+                                    <div className="space-y-4 p-4 border rounded-lg bg-destructive/5 border-destructive/20">
+                                        <h4 className="font-medium text-sm text-destructive">Live API Keys</h4>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="paystackLivePublicKey">Live Public Key</Label>
+                                            <Input 
+                                                id="paystackLivePublicKey" 
+                                                name="paystackLivePublicKey" 
+                                                defaultValue={settings.paystackLivePublicKey || ""} 
+                                                placeholder="pk_live_..." 
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="paystackLiveSecretKey">Live Secret Key</Label>
+                                            <PasswordInput 
+                                                id="paystackLiveSecretKey" 
+                                                name="paystackLiveSecretKey" 
+                                                defaultValue={settings.paystackLiveSecretKey || ""} 
+                                                placeholder="sk_live_..." 
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Webhook URL */}
+                                <div className="space-y-2">
+                                    <Label>Webhook URL</Label>
+                                    <div className="flex gap-2">
+                                        <Input 
+                                            value={webhookUrl} 
+                                            readOnly 
+                                            className="font-mono text-sm"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={copyWebhookUrl}
+                                        >
+                                            {copied ? (
+                                                <Check className="h-4 w-4" />
+                                            ) : (
+                                                <Copy className="h-4 w-4" />
+                                            )}
+                                        </Button>
+                                    </div>
+                                    <p className="text-[0.8rem] text-muted-foreground">
+                                        Add this URL to your Paystack dashboard under Settings → Webhooks
+                                    </p>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
