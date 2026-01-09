@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import { Role } from "@/lib/types";
 
 const registerSchema = z.object({
   firstName: z.string().min(2, "First name is too short"),

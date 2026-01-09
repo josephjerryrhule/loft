@@ -11,6 +11,7 @@ const flipbookSchema = z.object({
   pdfUrl: z.string().min(1, "PDF file is required"),
   coverImageUrl: z.string().optional(),
   category: z.string().optional(),
+  isFree: z.boolean().optional(),
   createdById: z.string(),
 });
 
@@ -21,14 +22,16 @@ export async function createFlipbook(formData: FormData) {
   const coverImageUrl = formData.get("coverImageUrl") as string;
   const createdById = formData.get("createdById") as string;
   const category = formData.get("category") as string;
+  const isFree = formData.get("isFree") === "on";
 
   try {
-    const validatedData = flipbookSchema.parse({ title, description, pdfUrl, coverImageUrl, createdById, category });
+    const validatedData = flipbookSchema.parse({ title, description, pdfUrl, coverImageUrl, createdById, category, isFree });
 
     await prisma.flipbook.create({
       data: {
         ...validatedData,
-        isPublished: true, 
+        isPublished: true,
+        isFree: validatedData.isFree || false,
       },
     });
 
@@ -49,6 +52,7 @@ export async function updateFlipbook(flipbookId: string, data: {
     pdfUrl?: string;
     coverImageUrl?: string;
     isPublished?: boolean;
+    isFree?: boolean;
 }) {
     try {
         await prisma.flipbook.update({
@@ -59,7 +63,8 @@ export async function updateFlipbook(flipbookId: string, data: {
                 category: data.category,
                 pdfUrl: data.pdfUrl,
                 coverImageUrl: data.coverImageUrl,
-                isPublished: data.isPublished
+                isPublished: data.isPublished,
+                isFree: data.isFree
             }
         });
         revalidatePath("/admin/flipbooks");

@@ -78,6 +78,11 @@ export default async function AdminFlipbooksPage(props: AdminFlipbooksPageProps)
                   accept="image/*" 
                 />
 
+               <div className="flex items-center space-x-2">
+                  <input type="checkbox" id="isFree" name="isFree" className="h-4 w-4" />
+                  <Label htmlFor="isFree">Free Access (available to all users)</Label>
+               </div>
+
                <Button type="submit" className="w-full">Create Flipbook</Button>
             </form>
           </DialogContent>

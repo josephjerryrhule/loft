@@ -22,10 +22,7 @@ const editFlipbookSchema = z.object({
   title: z.string().min(3),
   description: z.string().optional(),
   category: z.string().optional(),
-  // For now we don't force re-uploading files in edit unless changed, 
-  // but if we do, they are strings. 
-  // We can just keep them as optional strings here.
-  // Ideally specific upload logic is needed if changing file
+  isFree: z.boolean().optional(),
 });
 
 interface EditFlipbookDialogProps {
@@ -41,6 +38,7 @@ export function EditFlipbookDialog({ flipbook, open, onOpenChange }: EditFlipboo
       title: flipbook.title,
       description: flipbook.description || "",
       category: flipbook.category || "",
+      isFree: flipbook.isFree || false,
     },
   });
 
@@ -83,6 +81,21 @@ export function EditFlipbookDialog({ flipbook, open, onOpenChange }: EditFlipboo
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl><Textarea className="h-24" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="isFree" render={({ field }) => (
+                  <FormItem className="flex items-center space-x-2">
+                    <FormControl>
+                      <input 
+                        type="checkbox" 
+                        checked={field.value} 
+                        onChange={field.onChange} 
+                        className="h-4 w-4" 
+                      />
+                    </FormControl>
+                    <FormLabel className="!mt-0">Free Access (available to all users)</FormLabel>
                     <FormMessage />
                   </FormItem>
                 )} />

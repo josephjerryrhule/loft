@@ -77,3 +77,62 @@ export async function processSignupCommission(newUserId: string, referrerCode: s
         }
     });
 }
+
+export async function processSubscriptionCommission(subscriptionId: string, customerId: string, planPrice: number) {
+    // Get the customer and their referrer
+    const customer = await prisma.user.findUnique({
+        where: { id: customerId },
+        include: { referredBy: true }
+    });
+
+    if (!customer || !customer.referredBy) return;
+
+    const referrer = customer.referredBy;
+
+    // Affiliate earns flat amount per subscription
+    if (referrer.role === Role.AFFILIATE) {
+        await prisma.commission.create({
+            data: {
+                userId: referrer.id,
+                sourceType: "SUBSCRIPTION",
+                sourceId: subscriptionId,
+                amount: AFFILIATE_SUBSCRIPTION_FLAT,
+                status: "PENDING"
+            }
+        });
+
+        // Manager earns 20% of subscription price
+        if (referrer.managerId) {
+            await prisma.commission.create({
+                data: {
+                    userId: referrer.managerId,
+                    sourceType: "SUBSCRIPTION",
+                    sourceId: subscriptionId,
+                    amount: planPrice * MANAGER_PERCENTAGE,
+                    status: "PENDING"
+                }
+            });
+        }
+    } else if (referrer.role === Role.MANAGER) {
+        // Direct manager referral - earns 20%
+        await prisma.commission.create({
+            data: {
+                userId: referrer.id,
+                sourceType: "SUBSCRIPTION",
+                sourceId: subscriptionId,
+                amount: planPrice * MANAGER_PERCENTAGE,
+                status: "PENDING"
+            }
+        });
+    }
+
+    // Log activity
+    await prisma.activityLog.create({
+        data: {
+            userId: referrer.id,
+            actionType: "SUBSCRIPTION_COMMISSION",
+            actionDetails: `Earned commission from ${customer.firstName || ""} ${customer.lastName || ""}'s subscription`
+        }
+    });
+}
+

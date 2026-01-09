@@ -1,58 +1,85 @@
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { PaymentStatus } from "@/lib/types";
 
 async function getStats() {
     const totalUsers = await prisma.user.count();
     const totalOrders = await prisma.order.count();
     const totalFlipbooks = await prisma.flipbook.count();
+    const totalSubscriptions = await prisma.subscription.count({ where: { status: "ACTIVE" }});
     
-    // Calculate total revenue
-    const revenueResult = await prisma.order.aggregate({
+    // Calculate total revenue from orders
+    const orderRevenue = await prisma.order.aggregate({
         _sum: { totalAmount: true },
         where: { paymentStatus: "COMPLETED" } 
     });
-    const totalRevenue = revenueResult._sum.totalAmount?.toNumber() || 0;
+    
+    // Calculate total revenue from subscriptions
+    // Since there's no paymentStatus on Subscription, we count ALL that have a plan with a price
+    const subscriptions = await prisma.subscription.findMany({
+        include: { plan: true }
+    });
+    const subscriptionRevenue = subscriptions.reduce((sum: number, sub: any) => sum + Number(sub.plan.price), 0);
+    
+    // Calculate pending commissions
+    const pendingCommissions = await prisma.commission.aggregate({
+        _sum: { amount: true },
+        where: { status: "PENDING" }
+    });
+    
+    const totalRevenue = (orderRevenue._sum.totalAmount?.toNumber() || 0) + subscriptionRevenue;
+    const pendingPayout = pendingCommissions._sum.amount?.toNumber() || 0;
 
-    return { totalUsers, totalOrders, totalFlipbooks, totalRevenue };
+    return { totalUsers, totalOrders, totalFlipbooks, totalRevenue, totalSubscriptions, pendingPayout };
 }
 
-async function getRecentRevenueData() {
-    const orders = await prisma.order.findMany({
-        where: { paymentStatus: { not: "CANCELLED" } },
-        orderBy: { createdAt: 'desc' },
-        take: 50, 
-        select: { createdAt: true, totalAmount: true }
-    });
-
-    const dailyRevenue: Record<string, number> = {};
+async function getMonthlyRevenueData() {
+    const months = [];
+    const now = new Date();
     
-    // @ts-ignore - Prisma inference might be flaky if client not fully synced
-    orders.forEach((order: any) => {
-        const date = order.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        dailyRevenue[date] = (dailyRevenue[date] || 0) + order.totalAmount.toNumber();
-    });
+    for (let i = 5; i >= 0; i--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const endDate = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+        
+        const revenue = await prisma.order.aggregate({
+            where: {
+                paymentStatus: "COMPLETED",
+                createdAt: {
+                    gte: date,
+                    lte: endDate
+                }
+            },
+            _sum: { totalAmount: true }
+        });
 
-    const chartData = Object.entries(dailyRevenue)
-        .map(([name, total]) => ({ name, total }))
-        .reverse(); 
+        // Add subscription revenue for this month
+        const monthlySubscriptions = await prisma.subscription.findMany({
+            where: {
+                createdAt: {
+                    gte: date,
+                    lte: endDate
+                }
+            },
+            include: { plan: true }
+        });
+        const subRevenue = monthlySubscriptions.reduce((sum: number, sub: any) => sum + Number(sub.plan.price), 0);
 
-    if (chartData.length === 0) {
-        return [
-            { name: "Jan 1", total: 0 },
-            { name: "Jan 2", total: 0 },
-            { name: "Jan 3", total: 0 },
-        ];
+        months.push({
+            name: date.toLocaleString('default', { month: 'short' }),
+            total: (revenue._sum.totalAmount?.toNumber() || 0) + subRevenue
+        });
     }
-    
-    return chartData;
+
+    return months;
 }
 
 async function getRecentActivity() {
     return await prisma.activityLog.findMany({
-        take: 5,
+        take: 10,
         orderBy: { createdAt: 'desc' },
         include: { user: true }
     });
@@ -68,7 +95,7 @@ async function getRecentSales() {
 
 export default async function AdminDashboardPage() {
   const stats = await getStats();
-  const revenueData = await getRecentRevenueData();
+  const revenueData = await getMonthlyRevenueData();
   const recentActivity = await getRecentActivity();
   const recentSales = await getRecentSales();
 
@@ -78,14 +105,15 @@ export default async function AdminDashboardPage() {
         <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
       </div>
 
+      {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="border-l-4 border-l-green-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">GHS {stats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-            {/* <p className="text-xs text-muted-foreground">+20.1% from last month</p> */}
+            <div className="text-2xl font-bold text-green-600">GHS {stats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+            <p className="text-xs text-muted-foreground">All time earnings</p>
           </CardContent>
         </Card>
         <Card>
@@ -99,98 +127,108 @@ export default async function AdminDashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Flipbooks</CardTitle>
+            <CardTitle className="text-sm font-medium">Active Subscriptions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalFlipbooks}</div>
-            <p className="text-xs text-muted-foreground">Published content</p>
+            <div className="text-2xl font-bold">{stats.totalSubscriptions}</div>
+            <p className="text-xs text-muted-foreground">Paying customers</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-l-4 border-l-amber-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Orders</CardTitle>
+            <CardTitle className="text-sm font-medium">Pending Payouts</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalOrders}</div>
-            <p className="text-xs text-muted-foreground">Total orders placed</p>
+            <div className="text-2xl font-bold text-amber-600">GHS {stats.pendingPayout.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+            <p className="text-xs text-muted-foreground">Commissions to pay</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Recent Revenue</CardTitle>
-          </CardHeader>
-          <CardContent className="pl-2">
-             <div className="h-[300px]">
-                <RevenueChart data={revenueData} />
-             </div>
-          </CardContent>
-        </Card>
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>Recent Sales</CardTitle>
-          </CardHeader>
-          <CardContent>
-              {recentSales.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No sales yet.</p>
-              ) : (
-                <div className="space-y-8">
-                    {/* @ts-ignore */}
-                    {recentSales.map((order: any) => (
-                        <div key={order.id} className="flex items-center">
-                            <Avatar className="h-9 w-9">
-                                <AvatarImage src={order.customer.profilePictureUrl || ""} alt="Avatar" />
-                                <AvatarFallback>{order.customer.firstName?.[0] || order.customer.email[0]}</AvatarFallback>
-                            </Avatar>
-                            <div className="ml-4 space-y-1">
-                                <p className="text-sm font-medium leading-none">{order.product.title}</p>
-                                <p className="text-sm text-muted-foreground">{order.customer.email}</p>
-                            </div>
-                            <div className="ml-auto font-medium">+GHS {order.totalAmount.toString()}</div>
-                        </div>
-                    ))}
-                </div>
-              )}
-          </CardContent>
-        </Card>
-      </div>
-
+      {/* Full-width Revenue Chart */}
       <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>User</TableHead>
-                        <TableHead>Action</TableHead>
-                        <TableHead>Details</TableHead>
-                        <TableHead>Time</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                     {recentActivity.length === 0 && (
-                        <TableRow>
-                            <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
-                                No recent activity logged.
-                            </TableCell>
-                        </TableRow>
-                    )}
-                    {/* @ts-ignore */}
-                    {recentActivity.map((log: any) => (
-                        <TableRow key={log.id}>
-                            <TableCell className="font-medium">{log.user?.email || "System"}</TableCell>
-                            <TableCell>{log.actionType}</TableCell>
-                            <TableCell>{log.actionDetails}</TableCell>
-                            <TableCell>{new Date(log.createdAt).toLocaleString()}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-          </CardContent>
+        <CardHeader>
+          <CardTitle>Revenue Overview</CardTitle>
+          <CardDescription>Monthly revenue over the last 6 months</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RevenueChart data={revenueData} />
+        </CardContent>
+      </Card>
+
+      {/* Full-width Recent Sales */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Sales</CardTitle>
+          <CardDescription>Latest orders placed on the platform</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {recentSales.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-8 text-center">No sales yet.</p>
+          ) : (
+            <div className="space-y-4">
+              {recentSales.map((order: any) => (
+                <div key={order.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={order.customer.profilePictureUrl || ""} alt="Avatar" />
+                      <AvatarFallback>{order.customer.firstName?.[0] || order.customer.email[0]}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium">{order.product.title}</p>
+                      <p className="text-sm text-muted-foreground">{order.customer.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Badge variant={order.paymentStatus === "COMPLETED" ? "default" : "secondary"}>
+                      {order.paymentStatus}
+                    </Badge>
+                    <span className="font-bold text-green-600">+GHS {Number(order.totalAmount).toFixed(2)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Recent Activity Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Activity</CardTitle>
+          <CardDescription>Latest actions on the platform</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>User</TableHead>
+                <TableHead>Action</TableHead>
+                <TableHead>Details</TableHead>
+                <TableHead>Time</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {recentActivity.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                    No recent activity logged.
+                  </TableCell>
+                </TableRow>
+              )}
+              {recentActivity.map((log: any) => (
+                <TableRow key={log.id}>
+                  <TableCell className="font-medium">{log.user?.email || "System"}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{log.actionType}</Badge>
+                  </TableCell>
+                  <TableCell className="max-w-xs truncate">{log.actionDetails}</TableCell>
+                  <TableCell>{new Date(log.createdAt).toLocaleString()}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
       </Card>
     </div>
   );

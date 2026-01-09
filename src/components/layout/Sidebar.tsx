@@ -37,6 +37,7 @@ function getLinks(userRole?: string) {
     { href: "/admin/flipbooks", label: "Flipbooks", icon: BookOpen },
     { href: "/admin/products", label: "Products", icon: ShoppingBag },
     { href: "/admin/orders", label: "Orders", icon: FileText },
+    { href: "/admin/plans", label: "Plans", icon: CreditCard },
     { href: "/admin/finance", label: "Finance & Payouts", icon: CreditCard },
   ];
 
@@ -55,6 +56,7 @@ function getLinks(userRole?: string) {
   const customerLinks = [
     { href: "/customer", label: "Dashboard", icon: LayoutDashboard },
     { href: "/customer/flipbooks", label: "My Flipbooks", icon: BookOpen },
+    { href: "/customer/plans", label: "Plans", icon: CreditCard },
     { href: "/customer/orders", label: "My Orders", icon: ShoppingBag },
     { href: "/products", label: "Shop Products", icon: ShoppingBag },
   ];
