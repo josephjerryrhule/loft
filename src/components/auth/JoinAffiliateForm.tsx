@@ -7,11 +7,11 @@ import { useRouter } from "next/navigation";
 import { registerUser } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardContent, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import Link from "next/link";
+import { Role } from "@/lib/types";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 
@@ -22,12 +22,17 @@ const registerSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   phone: z.string().optional(),
   role: z.nativeEnum(Role),
-  managerCode: z.string().optional(),
+  managerCode: z.string().min(1, "Manager code is required"),
   referralCode: z.string().optional(),
 });
 
-export default function RegisterPage() {
+interface JoinAffiliateFormProps {
+    managerCode: string;
+}
+
+export function JoinAffiliateForm({ managerCode }: JoinAffiliateFormProps) {
   const router = useRouter();
+
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -36,30 +41,28 @@ export default function RegisterPage() {
       email: "",
       password: "",
       phone: "",
-      role: Role.CUSTOMER,
-      managerCode: "",
+      role: Role.AFFILIATE,
+      managerCode: managerCode,
       referralCode: "",
     },
   });
-
-  const selectedRole = form.watch("role");
 
   async function onSubmit(values: z.infer<typeof registerSchema>) {
     const result = await registerUser(values);
     if (result && result.error) {
       toast.error(result.error);
     } else {
-      toast.success("Registration successful! Please login.");
-      // Redirect handled by server action or here
+      toast.success("Affiliate account created! Please login.");
       router.push("/auth/login");
     }
   }
 
   return (
-    <div className="flex justify-center items-center min-h-screen p-4">
+    <div className="flex justify-center items-center min-h-screen p-4 bg-slate-50">
       <Card className="w-full max-w-lg my-8">
         <CardHeader>
-          <CardTitle>Create an Account</CardTitle>
+          <CardTitle>Join Team</CardTitle>
+          <CardDescription>Register as an Affiliate with Invite Code: <span className="font-mono font-bold">{managerCode}</span></CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -91,8 +94,19 @@ export default function RegisterPage() {
 
               <FormField control={form.control} name="phone" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone Number (Optional)</FormLabel>
-                  <FormControl><Input placeholder="+1234567890" {...field} /></FormControl>
+                  <FormLabel>Phone Number</FormLabel>
+                  <FormControl>
+                    <PhoneInput
+                      placeholder="Enter phone number"
+                      defaultCountry="GH"
+                      value={field.value}
+                      onChange={field.onChange}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      numberInputProps={{
+                          className: "border-0 bg-transparent focus:ring-0 outline-none w-full ml-2"
+                      }}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
@@ -105,47 +119,10 @@ export default function RegisterPage() {
                 </FormItem>
               )} />
 
-              <FormField control={form.control} name="role" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>I am a...</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value={Role.CUSTOMER}>Customer</SelectItem>
-                      <SelectItem value={Role.AFFILIATE}>Affiliate</SelectItem>
-                      <SelectItem value={Role.MANAGER}>Manager</SelectItem>
-                      {/* Admin registration usually hidden or seeded */}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )} />
+              <input type="hidden" {...form.register("role")} value={Role.AFFILIATE} />
+              <input type="hidden" {...form.register("managerCode")} value={managerCode} />
 
-              {selectedRole === Role.AFFILIATE && (
-                <FormField control={form.control} name="managerCode" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Manager Invite Code</FormLabel>
-                    <FormControl><Input placeholder="Enter code" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              )}
-
-              {selectedRole === Role.CUSTOMER && (
-                <FormField control={form.control} name="referralCode" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Referral Code (Optional)</FormLabel>
-                    <FormControl><Input placeholder="Enter code" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              )}
-
-              <Button type="submit" className="w-full">Sign Up</Button>
+              <Button type="submit" className="w-full">Create Affiliate Account</Button>
             </form>
           </Form>
         </CardContent>
