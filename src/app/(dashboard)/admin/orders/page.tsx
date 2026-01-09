@@ -6,11 +6,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { Loader2, Eye } from "lucide-react";
+import { Loader2, Eye, Pencil } from "lucide-react";
 import { getAllOrders } from "@/app/actions/admin";
 import { getSystemSettings } from "@/app/actions/settings";
 import { getCurrencySymbol } from "@/lib/utils";
 import { ViewOrderDialog } from "@/components/order/ViewOrderDialog";
+import { EditOrderDialog } from "@/components/order/EditOrderDialog";
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -20,6 +21,7 @@ export default function AdminOrdersPage() {
   const [currency, setCurrency] = useState("GHS");
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   useEffect(() => {
     loadOrders();
@@ -75,7 +77,7 @@ export default function AdminOrdersPage() {
           <TableBody>
             {paginatedOrders.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   No orders found.
                 </TableCell>
               </TableRow>
@@ -101,16 +103,28 @@ export default function AdminOrdersPage() {
                 <TableCell>{getCurrencySymbol(currency)}{order.totalAmount.toString()}</TableCell>
                 <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      setSelectedOrder(order);
-                      setViewDialogOpen(true);
-                    }}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
+                  <div className="flex justify-end gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setSelectedOrder(order);
+                        setViewDialogOpen(true);
+                      }}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setSelectedOrder(order);
+                        setEditDialogOpen(true);
+                      }}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -136,6 +150,15 @@ export default function AdminOrdersPage() {
         order={selectedOrder}
         currency={currency}
       />
+
+      {selectedOrder && (
+        <EditOrderDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          order={selectedOrder}
+          onSuccess={loadOrders}
+        />
+      )}
     </div>
   );
 }

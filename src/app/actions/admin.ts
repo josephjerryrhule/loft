@@ -291,3 +291,49 @@ export async function getFinanceData() {
         throw error;
     }
 }
+
+export async function updateOrderStatus(orderId: string, status: string) {
+    const session = await auth();
+    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+        return { error: "Unauthorized" };
+    }
+
+    try {
+        const order = await prisma.order.findUnique({
+            where: { id: orderId },
+            include: { customer: true, product: true }
+        });
+
+        if (!order) return { error: "Order not found" };
+
+        await prisma.$transaction(async (tx) => {
+            // Update order status
+            await tx.order.update({
+                where: { id: orderId },
+                data: { status }
+            });
+
+            // Log activity
+            await tx.activityLog.create({
+                data: {
+                    userId: session.user.id,
+                    actionType: "ADMIN_UPDATE_ORDER",
+                    actionDetails: JSON.stringify({
+                        orderId,
+                        orderNumber: order.orderNumber,
+                        previousStatus: order.status,
+                        newStatus: status,
+                        customerEmail: order.customer.email,
+                        productTitle: order.product.title
+                    })
+                }
+            });
+        });
+
+        revalidatePath("/admin/orders");
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to update order status:", error);
+        return { error: "Failed to update order" };
+    }
+}

@@ -50,3 +50,48 @@ export interface PaystackPaymentData {
   callback_url?: string;
   channels?: string[];
 }
+
+/**
+ * Initialize a Paystack transaction and get the authorization URL for redirect
+ */
+export async function initializePaystackTransaction(data: {
+  email: string;
+  amount: number; // in GHS (will be converted)
+  reference: string;
+  metadata?: Record<string, any>;
+  callbackUrl: string;
+}): Promise<{ success: boolean; authorizationUrl?: string; error?: string }> {
+  try {
+    const secretKey = await getPaystackSecretKey();
+    
+    if (!secretKey) {
+      return { success: false, error: "Payment configuration error" };
+    }
+
+    const response = await fetch("https://api.paystack.co/transaction/initialize", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${secretKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: data.email,
+        amount: formatAmountForPaystack(data.amount),
+        reference: data.reference,
+        callback_url: data.callbackUrl,
+        metadata: data.metadata,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (result.status && result.data?.authorization_url) {
+      return { success: true, authorizationUrl: result.data.authorization_url };
+    }
+
+    return { success: false, error: result.message || "Failed to initialize payment" };
+  } catch (error) {
+    console.error("Paystack initialization error:", error);
+    return { success: false, error: "Failed to initialize payment" };
+  }
+}

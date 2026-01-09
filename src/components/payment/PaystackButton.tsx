@@ -1,111 +1,86 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { initializePayment } from "@/app/actions/payment";
 
 interface PaystackButtonProps {
   email: string;
-  amount: number; // In GHS (will be converted to pesewas)
+  amount: number; // In GHS
   reference: string;
-  publicKey: string;
-  metadata?: Record<string, unknown>;
-  onSuccess: (response: { reference: string }) => void;
+  publicKey?: string; // No longer needed for redirect
+  metadata?: {
+    type: "subscription" | "product";
+    productId?: string;
+    planId?: string;
+    userId: string;
+    quantity?: number;
+    customizationData?: string;
+    [key: string]: unknown;
+  };
+  onSuccess?: (response: { reference: string }) => void; // Optional for redirect
   onClose?: () => void;
   className?: string;
   children?: React.ReactNode;
   disabled?: boolean;
 }
 
-interface PaystackPopHandler {
-  setup: (config: Record<string, unknown>) => { openIframe: () => void };
-}
-
-declare global {
-  interface Window {
-    PaystackPop: PaystackPopHandler;
-  }
-}
-
 export function PaystackButton({
   email,
   amount,
   reference,
-  publicKey,
   metadata,
-  onSuccess,
-  onClose,
   className,
   children,
   disabled
 }: PaystackButtonProps) {
   const [loading, setLoading] = useState(false);
-  const [scriptLoaded, setScriptLoaded] = useState(false);
 
-  useEffect(() => {
-    // Load Paystack inline script
-    const existingScript = document.getElementById("paystack-inline-js");
-    if (!existingScript) {
-      const script = document.createElement("script");
-      script.id = "paystack-inline-js";
-      script.src = "https://js.paystack.co/v1/inline.js";
-      script.async = true;
-      script.onload = () => setScriptLoaded(true);
-      document.body.appendChild(script);
-    } else {
-      // Check if script is loaded by testing window.PaystackPop
-      const checkInterval = setInterval(() => {
-        if (window.PaystackPop) {
-          setScriptLoaded(true);
-          clearInterval(checkInterval);
-        }
-      }, 100);
-      
-      // Cleanup interval after 5 seconds
-      setTimeout(() => clearInterval(checkInterval), 5000);
-      
-      return () => clearInterval(checkInterval);
-    }
-  }, []);
-
-  const handlePayment = () => {
-    if (!scriptLoaded || !window.PaystackPop) {
-      toast.error("Payment system is loading, please try again");
-      return;
-    }
-
-    if (!publicKey) {
-      toast.error("Payment configuration error. Please contact support.");
+  const handlePayment = async () => {
+    if (!metadata?.type) {
+      toast.error("Payment configuration error");
       return;
     }
 
     setLoading(true);
 
-    const handler = window.PaystackPop.setup({
-      key: publicKey,
-      email: email,
-      amount: Math.round(amount * 100), // Convert to pesewas
-      currency: "GHS",
-      ref: reference,
-      metadata: metadata,
-      callback: function (response: { reference: string }) {
-        setLoading(false);
-        onSuccess({ reference: response.reference });
-      },
-      onClose: function () {
-        setLoading(false);
-        if (onClose) onClose();
-      },
-    });
+    try {
+      const callbackUrl = `${window.location.origin}/payment/callback`;
+      
+      const result = await initializePayment({
+        type: metadata.type,
+        email: email,
+        amount: amount,
+        reference: reference,
+        itemId: metadata.type === "subscription" ? metadata.planId! : metadata.productId!,
+        quantity: metadata.quantity,
+        customizationData: metadata.customizationData,
+        callbackUrl: callbackUrl,
+      });
 
-    handler.openIframe();
+      if (result.error) {
+        toast.error(result.error);
+        setLoading(false);
+        return;
+      }
+
+      if (result.authorizationUrl) {
+        // Redirect to Paystack payment page
+        window.location.href = result.authorizationUrl;
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast.error("Failed to initialize payment");
+      setLoading(false);
+    }
   };
 
   return (
     <Button
       onClick={handlePayment}
-      disabled={disabled || loading || !scriptLoaded}
+      disabled={disabled || loading}
       className={className}
     >
       {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

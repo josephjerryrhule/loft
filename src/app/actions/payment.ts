@@ -128,7 +128,8 @@ export async function processSubscriptionPayment(reference: string, planId: stri
 export async function processProductPayment(
   reference: string,
   productId: string,
-  quantity: number = 1
+  quantity: number = 1,
+  customizationData?: string
 ) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
@@ -170,8 +171,9 @@ export async function processProductPayment(
         quantity: quantity,
         unitPrice: product.price,
         totalAmount: totalAmount,
+        customizationData: customizationData || null,
         status: "PROCESSING",
-        paymentStatus: "COMPLETED",
+        paymentStatus: "PAID",
         paymentReference: reference,
         referredById: user?.referredById || undefined,
       },
@@ -212,5 +214,47 @@ export async function processProductPayment(
   } catch (error) {
     console.error("Product payment processing error:", error);
     return { error: "Failed to process product payment" };
+  }
+}
+
+// Initialize payment for redirect flow
+export async function initializePayment(data: {
+  type: "subscription" | "product";
+  email: string;
+  amount: number;
+  reference: string;
+  itemId: string; // planId or productId
+  quantity?: number;
+  customizationData?: string;
+  callbackUrl: string;
+}) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
+
+  try {
+    const { initializePaystackTransaction } = await import("@/lib/paystack");
+    
+    const result = await initializePaystackTransaction({
+      email: data.email,
+      amount: data.amount,
+      reference: data.reference,
+      callbackUrl: data.callbackUrl,
+      metadata: {
+        type: data.type,
+        userId: session.user.id,
+        itemId: data.itemId,
+        quantity: data.quantity || 1,
+        customizationData: data.customizationData,
+      },
+    });
+
+    if (!result.success) {
+      return { error: result.error || "Failed to initialize payment" };
+    }
+
+    return { success: true, authorizationUrl: result.authorizationUrl };
+  } catch (error) {
+    console.error("Payment initialization error:", error);
+    return { error: "Failed to initialize payment" };
   }
 }
