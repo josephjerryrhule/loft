@@ -4,15 +4,22 @@ import { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye } from "lucide-react";
 import { getAllOrders } from "@/app/actions/admin";
+import { getSystemSettings } from "@/app/actions/settings";
+import { getCurrencySymbol } from "@/lib/utils";
+import { ViewOrderDialog } from "@/components/order/ViewOrderDialog";
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(12);
+  const [currency, setCurrency] = useState("GHS");
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
 
   useEffect(() => {
     loadOrders();
@@ -21,8 +28,12 @@ export default function AdminOrdersPage() {
   const loadOrders = async () => {
     try {
       setLoading(true);
-      const data = await getAllOrders();
-      setOrders(data);
+      const [ordersData, settings] = await Promise.all([
+        getAllOrders(),
+        getSystemSettings()
+      ]);
+      setOrders(ordersData);
+      setCurrency(settings.currency || "GHS");
     } catch (error) {
       console.error("Failed to load orders:", error);
     } finally {
@@ -58,6 +69,7 @@ export default function AdminOrdersPage() {
               <TableHead>Status</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>Date</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -86,8 +98,20 @@ export default function AdminOrdersPage() {
                     {order.paymentStatus}
                   </Badge>
                 </TableCell>
-                <TableCell>GHS {order.totalAmount.toString()}</TableCell>
+                <TableCell>{getCurrencySymbol(currency)}{order.totalAmount.toString()}</TableCell>
                 <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setSelectedOrder(order);
+                      setViewDialogOpen(true);
+                    }}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -104,6 +128,13 @@ export default function AdminOrdersPage() {
           setItemsPerPage(value);
           setCurrentPage(1);
         }}
+      />
+
+      <ViewOrderDialog
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        order={selectedOrder}
+        currency={currency}
       />
     </div>
   );

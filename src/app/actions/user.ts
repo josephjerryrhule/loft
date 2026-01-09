@@ -128,3 +128,57 @@ export async function getCustomerDashboardData() {
     }
 }
 
+export async function getCustomerOrders() {
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("Unauthorized");
+    }
+
+    try {
+        const orders = await prisma.order.findMany({
+            where: { customerId: session.user.id },
+            include: { 
+                product: true,
+                referredBy: {
+                    select: {
+                        firstName: true,
+                        lastName: true,
+                        email: true
+                    }
+                }
+            },
+            orderBy: { createdAt: "desc" }
+        });
+
+        // Serialize to plain objects
+        return orders.map(order => ({
+            id: order.id,
+            orderNumber: order.orderNumber,
+            quantity: order.quantity,
+            unitPrice: order.unitPrice.toNumber(),
+            totalAmount: order.totalAmount.toNumber(),
+            customizationData: order.customizationData,
+            status: order.status,
+            paymentStatus: order.paymentStatus,
+            paymentReference: order.paymentReference,
+            createdAt: order.createdAt.toISOString(),
+            product: {
+                id: order.product.id,
+                title: order.product.title,
+                description: order.product.description,
+                productType: order.product.productType,
+                price: order.product.price.toNumber(),
+                featuredImageUrl: order.product.featuredImageUrl
+            },
+            referredBy: order.referredBy ? {
+                firstName: order.referredBy.firstName,
+                lastName: order.referredBy.lastName,
+                email: order.referredBy.email
+            } : null
+        }));
+    } catch (error) {
+        console.error("Failed to get customer orders:", error);
+        throw error;
+    }
+}
+
