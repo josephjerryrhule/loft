@@ -50,7 +50,7 @@ export default async function CustomerFlipbooksPage() {
              <Card key={book.id} className="flex flex-col">
                 <div className="h-48 bg-slate-100 flex items-center justify-center text-slate-400 relative">
                     {/* Placeholder for cover image */}
-                    {book.coverImageUrl ? <img src={book.coverImageUrl} alt={book.title} className="h-full w-full object-cover rounded-t-xl" /> : <BookOpen size={48} />}
+                    {book.coverImageUrl ? <img src={book.coverImageUrl} alt={book.title} className="h-full w-full object-cover" /> : <BookOpen size={48} />}
                     {book.isFree && (
                       <Badge className="absolute top-2.5 right-2" variant="secondary">Free</Badge>
                     )}
