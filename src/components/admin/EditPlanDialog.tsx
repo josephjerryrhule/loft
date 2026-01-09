@@ -35,9 +35,10 @@ interface EditPlanDialogProps {
     features: string | null;
     isActive: boolean;
   };
+  onSuccess?: () => void;
 }
 
-export function EditPlanDialog({ plan }: EditPlanDialogProps) {
+export function EditPlanDialog({ plan, onSuccess }: EditPlanDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(plan.isActive ? "active" : "inactive");
@@ -53,6 +54,7 @@ export function EditPlanDialog({ plan }: EditPlanDialogProps) {
         toast.success("Plan updated successfully");
         setOpen(false);
         router.refresh();
+        onSuccess?.();
       }
     } catch {
       toast.error("Failed to update plan");

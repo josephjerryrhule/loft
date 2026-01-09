@@ -174,7 +174,7 @@ export default function AdminPlansPage() {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <EditPlanDialog plan={plan} />
+                                                    <EditPlanDialog plan={plan} onSuccess={loadPlans} />
                                                     <Button 
                                                         variant="ghost" 
                                                         size="sm" 
