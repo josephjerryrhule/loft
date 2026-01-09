@@ -18,16 +18,29 @@ interface FlipbookViewerProps {
     title?: string;
 }
 
+
 export function FlipbookViewer({ pdfUrl, onClose, title }: FlipbookViewerProps) {
     const [numPages, setNumPages] = useState<number>(0);
-    const [currentPage, setCurrentPage] = useState(0); // 0-indexed for internal logic if needed, or spread pages
     const bookRef = useRef<any>(null);
     const [loading, setLoading] = useState(true);
-    const [dimensions, setDimensions] = useState({ width: 400, height: 550 });
+    const [dimensions, setDimensions] = useState({ width: 800, height: 450 }); // 16:9 init
+    const [aspectRatio, setAspectRatio] = useState(0.7071); // Default A4
+    const [thumbsVisible, setThumbsVisible] = useState(true);
 
     function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
         setNumPages(numPages);
         setLoading(false);
+    }
+    
+    // Capture aspect ratio from the first page
+    function onPageLoadSuccess(page: any) {
+        if (page.originalWidth && page.originalHeight) {
+             const ratio = page.originalWidth / page.originalHeight;
+             // Only update if significantly different to avoid loops
+             if (Math.abs(ratio - aspectRatio) > 0.01) {
+                 setAspectRatio(ratio);
+             }
+        }
     }
 
     const nextFlip = () => {
@@ -37,23 +50,55 @@ export function FlipbookViewer({ pdfUrl, onClose, title }: FlipbookViewerProps) 
     const prevFlip = () => {
         bookRef.current?.pageFlip()?.flipPrev();
     };
+
+    const goToPage = (index: number) => {
+         bookRef.current?.pageFlip()?.turnToPage(index);
+    };
     
-    // Responsive sizing roughly
+    // Keyboard navigation
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "ArrowRight") nextFlip();
+            if (e.key === "ArrowLeft") prevFlip();
+            if (e.key === "Escape") onClose();
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [onClose]);
+
+    // Responsive sizing
     useEffect(() => {
         const handleResize = () => {
-             const width = Math.min(window.innerWidth * 0.4, 600);
-             const height = width * 1.414; // A4 Aspect Ratio roughly
-             setDimensions({ width, height });
+             // We want the *spread* (2 pages) to fit in the container.
+             // Available space:
+             const maxWidth = window.innerWidth * 0.95; 
+             const maxHeight = window.innerHeight * (thumbsVisible ? 0.75 : 0.9); // Reserve space for thumbs
+             
+             // Calculate max dimensions for a single page based on aspect ratio
+             // Constraint 1: Height
+             let pageHeight = maxHeight;
+             let pageWidth = pageHeight * aspectRatio;
+             
+             // Check Constraint 2: Width (Spread = 2 * pageWidth)
+             if (pageWidth * 2 > maxWidth) {
+                 pageWidth = maxWidth / 2;
+                 pageHeight = pageWidth / aspectRatio;
+             }
+             
+             setDimensions({ width: pageWidth, height: pageHeight });
         };
         handleResize();
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    }, [aspectRatio, thumbsVisible]);
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center">
              {/* Header */}
-             <div className="absolute top-4 right-4 z-50">
+             <div className="absolute top-4 right-4 z-50 flex gap-2">
+                 <Button variant="ghost" className="text-white hover:bg-white/20" onClick={() => setThumbsVisible(!thumbsVisible)}>
+                    {thumbsVisible ? "Hide Thumbs" : "Show Thumbs"}
+                 </Button>
                  <Button variant="ghost" size="icon" onClick={onClose} className="text-white hover:bg-white/20">
                      <X className="h-6 w-6" />
                  </Button>
@@ -65,56 +110,56 @@ export function FlipbookViewer({ pdfUrl, onClose, title }: FlipbookViewerProps) 
              )}
 
             {/* Viewer */}
-            <div className="relative flex items-center justify-center w-full h-full max-w-7xl">
+            <div className="flex-1 flex items-center justify-center w-full relative overflow-hidden p-4">
                 {/* Controls */}
                 <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="absolute left-4 z-50 text-white hover:bg-white/10 hidden md:flex" 
+                    className="absolute left-4 z-40 text-white hover:bg-white/10 hidden md:flex h-12 w-12 rounded-full border border-white/10 bg-black/20 backdrop-blur-sm" 
                     onClick={prevFlip}
                 >
-                    <ChevronLeft className="h-10 w-10" />
+                    <ChevronLeft className="h-8 w-8" />
                 </Button>
 
                 <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="absolute right-4 z-50 text-white hover:bg-white/10 hidden md:flex" 
+                    className="absolute right-4 z-40 text-white hover:bg-white/10 hidden md:flex h-12 w-12 rounded-full border border-white/10 bg-black/20 backdrop-blur-sm" 
                     onClick={nextFlip}
                 >
-                    <ChevronRight className="h-10 w-10" />
+                    <ChevronRight className="h-8 w-8" />
                 </Button>
 
                 {loading && (
-                    <div className="absolute inset-0 flex items-center justify-center text-white">
-                        <Loader2 className="h-10 w-10 animate-spin" />
+                    <div className="absolute inset-0 flex items-center justify-center text-white z-50">
+                        <Loader2 className="h-10 w-10 animate-spin mr-2" />
+                        <span>Loading Document...</span>
                     </div>
                 )}
 
                 <Document
                     file={pdfUrl}
                     onLoadSuccess={onDocumentLoadSuccess}
-                    loading={<div className="text-white">Loading PDF...</div>}
-                    className="flex justify-center"
+                    loading={null}
+                    className="flex justify-center items-center"
                 >
                     {numPages > 0 && (
-                         // @ts-ignore - types for react-pageflip can be tricky
+                         // @ts-ignore
                         <HTMLFlipBook 
                             width={dimensions.width} 
                             height={dimensions.height} 
                             ref={bookRef}
                             showCover={true}
-                            className={cn("demo-book")}
-                            style={{}}
+                            className="shadow-2xl"
                             startPage={0}
                             size="fixed"
-                            minWidth={300}
-                            maxWidth={1000}
-                            minHeight={400}
-                            maxHeight={1500}
+                            minWidth={100}
+                            maxWidth={2000}
+                            minHeight={100}
+                            maxHeight={2000}
                             drawShadow={true}
-                            flippingTime={1000}
-                            usePortrait={true}
+                            flippingTime={800}
+                            usePortrait={false} 
                             startZIndex={0}
                             autoSize={true}
                             maxShadowOpacity={0.5}
@@ -126,12 +171,15 @@ export function FlipbookViewer({ pdfUrl, onClose, title }: FlipbookViewerProps) 
                             disableFlipByClick={false}
                         >
                             {[...Array(numPages)].map((_, index) => (
-                                <div key={index} className="bg-white shadow-lg overflow-hidden flex items-center justify-center">
+                                <div key={index} className="bg-white overflow-hidden flex items-center justify-center shadow-inner">
                                     <Page 
                                         pageNumber={index + 1} 
                                         width={dimensions.width} 
+                                        height={dimensions.height}
+                                        onLoadSuccess={index === 0 ? onPageLoadSuccess : undefined}
                                         renderAnnotationLayer={false}
                                         renderTextLayer={false}
+                                        className="h-full w-full" 
                                     />
                                 </div>
                             ))}
@@ -140,10 +188,28 @@ export function FlipbookViewer({ pdfUrl, onClose, title }: FlipbookViewerProps) 
                 </Document>
             </div>
             
-            {/* Footer / Status */}
-             {!loading && (
-                 <div className="absolute bottom-4 text-white/50 text-sm">
-                     Use arrow keys or click corners to turn pages
+            {/* Thumbnails Strip */}
+             {!loading && thumbsVisible && (
+                 <div className="h-32 w-full bg-black/90 border-t border-white/10 flex items-center gap-4 overflow-x-auto p-4 z-50 backdrop-blur-sm bg-gradient-to-t from-black to-transparent">
+                     <Document file={pdfUrl} className="flex gap-4 px-4">
+                        {[...Array(numPages)].map((_, index) => (
+                            <div 
+                                key={`thumb-${index}`} 
+                                className="cursor-pointer hover:scale-105 transition-all opacity-70 hover:opacity-100 flex flex-col items-center"
+                                onClick={() => goToPage(index)}
+                            >
+                                <div className="border border-white/20 rounded overflow-hidden">
+                                    <Page 
+                                        pageNumber={index + 1} 
+                                        width={80} 
+                                        renderAnnotationLayer={false}
+                                        renderTextLayer={false}
+                                    />
+                                </div>
+                                <span className="text-[10px] text-white/70 mt-1">{index + 1}</span>
+                            </div>
+                        ))}
+                     </Document>
                  </div>
              )}
         </div>
