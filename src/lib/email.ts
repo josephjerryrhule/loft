@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { prisma } from "./prisma";
+import { getCurrencySymbol } from "./utils";
 
 interface EmailOptions {
   to: string | string[];
@@ -28,7 +29,13 @@ async function getSmtpConfig(): Promise<SmtpConfig | null> {
 
   const config: Record<string, string> = {};
   settings.forEach((s: { key: string; value: string }) => {
-    config[s.key] = s.value;
+    // Parse JSON-stringified values
+    try {
+      config[s.key] = JSON.parse(s.value);
+    } catch {
+      // If not JSON, use as-is
+      config[s.key] = s.value;
+    }
   });
 
   if (!config.smtpHost || !config.smtpPort || !config.smtpUser || !config.smtpPass) {
@@ -84,15 +91,25 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
 async function getBranding() {
   const settings = await prisma.systemSettings.findMany({
     where: {
-      key: { in: ["platformName", "logoUrl", "supportEmail"] },
+      key: { in: ["platformName", "logoUrl", "supportEmail", "siteUrl"] },
     },
   });
   const config: Record<string, string> = {};
-  settings.forEach((s: { key: string; value: string }) => (config[s.key] = s.value));
+  settings.forEach((s: { key: string; value: string }) => {
+    // Parse JSON-stringified values
+    try {
+      config[s.key] = JSON.parse(s.value);
+    } catch {
+      // If not JSON, use as-is
+      config[s.key] = s.value;
+    }
+  });
   return {
     platformName: config.platformName || "Loft",
     logoUrl: config.logoUrl || "",
     supportEmail: config.supportEmail || "",
+    siteUrl: config.siteUrl || process.env.NEXTAUTH_URL || "http://localhost:3000",
+    currency: getCurrencySymbol(config.currency || "GHS"),
   };
 }
 
@@ -164,7 +181,7 @@ export async function sendWelcomeEmail(user: {
       <p><strong>Email:</strong> ${user.email}</p>
     </div>
     <p>You can now log in to your account and start exploring.</p>
-    <a href="${process.env.NEXTAUTH_URL}/auth/login" class="button">Log In to Your Account</a>
+    <a href="${branding.siteUrl}/auth/login" class="button">Log In to Your Account</a>
     <p>If you have any questions, feel free to reach out to our support team.</p>
     <p>Best regards,<br>The ${branding.platformName} Team</p>
   `;
@@ -192,7 +209,7 @@ export async function sendOrderReceiptEmail(order: {
       <tr>
         <td>${item.name}</td>
         <td style="text-align: center;">${item.quantity}</td>
-        <td style="text-align: right;">₦${item.price.toLocaleString()}</td>
+        <td style="text-align: right;">${branding.currency}${item.price.toLocaleString()}</td>
       </tr>
     `
     )
@@ -218,7 +235,7 @@ export async function sendOrderReceiptEmail(order: {
         ${itemRows}
         <tr style="font-weight: bold;">
           <td colspan="2">Total</td>
-          <td style="text-align: right;">₦${order.total.toLocaleString()}</td>
+          <td style="text-align: right;">${branding.currency}${order.total.toLocaleString()}</td>
         </tr>
       </tbody>
     </table>
@@ -251,10 +268,10 @@ export async function sendOrderNotificationToSupport(order: {
       <p><strong>Order ID:</strong> ${order.id}</p>
       <p><strong>Customer:</strong> ${order.customerName}</p>
       <p><strong>Email:</strong> ${order.customerEmail}</p>
-      <p><strong>Total:</strong> ₦${order.total.toLocaleString()}</p>
+      <p><strong>Total:</strong> ${branding.currency}${order.total.toLocaleString()}</p>
       <p><strong>Items:</strong> ${order.items.map((i) => `${i.name} x${i.quantity}`).join(", ")}</p>
     </div>
-    <a href="${process.env.NEXTAUTH_URL}/admin/orders" class="button">View Order</a>
+    <a href="${branding.siteUrl}/admin/orders" class="button">View Order</a>
   `;
 
   return sendEmail({
@@ -280,12 +297,12 @@ export async function sendSubscriptionConfirmationEmail(subscription: {
     <p>Your subscription has been activated successfully.</p>
     <div class="info-box">
       <p><strong>Plan:</strong> ${subscription.planName}</p>
-      <p><strong>Amount:</strong> ₦${subscription.amount.toLocaleString()}</p>
+      <p><strong>Amount:</strong> ${branding.currency}${subscription.amount.toLocaleString()}</p>
       <p><strong>Start Date:</strong> ${subscription.startDate.toLocaleDateString()}</p>
       <p><strong>End Date:</strong> ${subscription.endDate.toLocaleDateString()}</p>
     </div>
     <p>Enjoy your subscription benefits!</p>
-    <a href="${process.env.NEXTAUTH_URL}/customer/plans" class="button">View My Subscription</a>
+    <a href="${branding.siteUrl}/customer/plans" class="button">View My Subscription</a>
     <p>Best regards,<br>The ${branding.platformName} Team</p>
   `;
 
@@ -313,7 +330,7 @@ export async function sendAffiliateJoinedManagerEmail(data: {
       <p><strong>Email:</strong> ${data.affiliateEmail}</p>
     </div>
     <p>You'll earn commissions on all sales they generate.</p>
-    <a href="${process.env.NEXTAUTH_URL}/manager/team" class="button">View Your Team</a>
+    <a href="${branding.siteUrl}/manager/team" class="button">View Your Team</a>
     <p>Best regards,<br>The ${branding.platformName} Team</p>
   `;
 
@@ -344,7 +361,7 @@ export async function sendAffiliateWelcomeEmail(data: {
         <li>Earn commissions on every sale</li>
       </ul>
     </div>
-    <a href="${process.env.NEXTAUTH_URL}/affiliate" class="button">Go to Dashboard</a>
+    <a href="${branding.siteUrl}/affiliate" class="button">Go to Dashboard</a>
     <p>Best regards,<br>The ${branding.platformName} Team</p>
   `;
 
@@ -371,17 +388,17 @@ export async function sendCommissionEarnedEmail(data: {
     <p>Hi ${data.recipientName},</p>
     <p>Great news! You've earned a ${data.type.toLowerCase()} commission.</p>
     <div class="info-box" style="text-align: center;">
-      <p class="amount">₦${data.amount.toLocaleString()}</p>
+      <p class="amount">${branding.currency}${data.amount.toLocaleString()}</p>
       <p>Commission from ${source}</p>
     </div>
     <p>This amount has been added to your pending balance.</p>
-    <a href="${process.env.NEXTAUTH_URL}/${data.type === "MANAGER" ? "manager" : "affiliate"}/commissions" class="button">View Commissions</a>
+    <a href="${branding.siteUrl}/${data.type === "MANAGER" ? "manager" : "affiliate"}/commissions" class="button">View Commissions</a>
     <p>Best regards,<br>The ${branding.platformName} Team</p>
   `;
 
   return sendEmail({
     to: data.recipientEmail,
-    subject: `Commission Earned - ₦${data.amount.toLocaleString()}`,
+    subject: `Commission Earned - ${branding.currency}${data.amount.toLocaleString()}`,
     html: emailWrapper(content, branding.platformName, branding.logoUrl),
   });
 }
@@ -404,16 +421,16 @@ export async function sendPayoutRequestToSupport(data: {
     <div class="info-box">
       <p><strong>User:</strong> ${data.userName}</p>
       <p><strong>Email:</strong> ${data.userEmail}</p>
-      <p><strong>Amount:</strong> ₦${data.amount.toLocaleString()}</p>
+      <p><strong>Amount:</strong> ${branding.currency}${data.amount.toLocaleString()}</p>
       <p><strong>Bank:</strong> ${data.bankName}</p>
       <p><strong>Account:</strong> ${data.accountNumber}</p>
     </div>
-    <a href="${process.env.NEXTAUTH_URL}/admin/finance" class="button">Review Payout</a>
+    <a href="${branding.siteUrl}/admin/finance" class="button">Review Payout</a>
   `;
 
   return sendEmail({
     to: branding.supportEmail,
-    subject: `Payout Request - ₦${data.amount.toLocaleString()}`,
+    subject: `Payout Request - ${branding.currency}${data.amount.toLocaleString()}`,
     html: emailWrapper(content, branding.platformName, branding.logoUrl),
   });
 }
@@ -433,18 +450,18 @@ export async function sendPayoutApprovalEmail(data: {
     <p>Hi ${data.userName},</p>
     <p>Your payout request has been <strong>${isApproved ? "approved" : "rejected"}</strong>.</p>
     <div class="info-box" style="text-align: center;">
-      <p class="amount">₦${data.amount.toLocaleString()}</p>
+      <p class="amount">${branding.currency}${data.amount.toLocaleString()}</p>
       <span class="status-badge ${isApproved ? "status-completed" : "status-pending"}">${data.status}</span>
     </div>
     ${isApproved ? "<p>The funds will be transferred to your bank account shortly.</p>" : ""}
     ${data.reason ? `<p><strong>Reason:</strong> ${data.reason}</p>` : ""}
-    <a href="${process.env.NEXTAUTH_URL}/settings" class="button">View Account</a>
+    <a href="${branding.siteUrl}/settings" class="button">View Account</a>
     <p>Best regards,<br>The ${branding.platformName} Team</p>
   `;
 
   return sendEmail({
     to: data.userEmail,
-    subject: `Payout ${data.status} - ₦${data.amount.toLocaleString()}`,
+    subject: `Payout ${data.status} - ${branding.currency}${data.amount.toLocaleString()}`,
     html: emailWrapper(content, branding.platformName, branding.logoUrl),
   });
 }
@@ -483,7 +500,7 @@ export async function sendSubscriptionReceiptEmail(subscription: {
         </tr>
         <tr style="font-weight: bold; font-size: 1.2em;">
           <td><strong>Total</strong></td>
-          <td style="text-align: right;">₦${subscription.amount.toLocaleString()}</td>
+          <td style="text-align: right;">${branding.currency}${subscription.amount.toLocaleString()}</td>
         </tr>
       </table>
     </div>
@@ -516,7 +533,7 @@ export async function sendPlanRenewalReminderEmail(subscription: {
       <p>Expires: ${subscription.expiryDate.toLocaleDateString()}</p>
     </div>
     <p>Renew now to continue enjoying all the benefits of your subscription.</p>
-    <a href="${process.env.NEXTAUTH_URL}/customer/plans" class="button">Renew Subscription</a>
+    <a href="${branding.siteUrl}/customer/plans" class="button">Renew Subscription</a>
     <p>Best regards,<br>The ${branding.platformName} Team</p>
   `;
 
@@ -552,7 +569,7 @@ export async function sendAccountStatusChangeEmail(data: {
       <p><strong>New Status:</strong> ${data.newStatus}</p>
       ${data.reason ? `<p><strong>Reason:</strong> ${data.reason}</p>` : ""}
     </div>
-    ${data.newStatus === "ACTIVE" ? `<a href="${process.env.NEXTAUTH_URL}/auth/login" class="button">Log In</a>` : ""}
+    ${data.newStatus === "ACTIVE" ? `<a href="${branding.siteUrl}/auth/login" class="button">Log In</a>` : ""}
     <p>If you have any questions, please contact support.</p>
     <p>Best regards,<br>The ${branding.platformName} Team</p>
   `;
@@ -589,7 +606,7 @@ export async function sendOrderStatusChangeEmail(order: {
       <p><strong>Order ID:</strong> ${order.orderId}</p>
       <p><strong>New Status:</strong> <span class="status-badge status-active">${order.newStatus}</span></p>
     </div>
-    <a href="${process.env.NEXTAUTH_URL}/customer" class="button">View Order</a>
+    <a href="${branding.siteUrl}/customer" class="button">View Order</a>
     <p>Best regards,<br>The ${branding.platformName} Team</p>
   `;
 
@@ -607,7 +624,7 @@ export async function sendPasswordResetEmail(data: {
   resetToken: string;
 }) {
   const branding = await getBranding();
-  const resetUrl = `${process.env.NEXTAUTH_URL}/auth/reset-password?token=${data.resetToken}`;
+  const resetUrl = `${branding.siteUrl}/auth/reset-password?token=${data.resetToken}`;
   
   const content = `
     <h2>Reset Your Password</h2>
