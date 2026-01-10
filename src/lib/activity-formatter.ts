@@ -23,6 +23,9 @@ export function formatActivityDetails(actionType: string, detailsJson: string): 
       case "PAYOUT_RECEIVED":
         return `Received payout of GHS ${details.amount?.toFixed(2) || "0.00"}`;
       
+      case "ADMIN_UPDATE_ORDER":
+        return `Order ${details.orderId || "unknown"} updated`;
+      
       case "PAYMENT_RECEIVED":
         return `Payment received (GHS ${(details.amount / 100)?.toFixed(2) || "0.00"}) - ${details.type || "transaction"}`;
       
@@ -66,6 +69,8 @@ export function getActionTypeLabel(actionType: string): string {
     USER_CREATED: "User Created",
     USER_UPDATED: "User Updated",
     REFERRAL: "Referral",
+    ADMIN_UPDATE_ORDER: "Order Updated",
+    ADMIN_APPROVE_COMMISSION: "Commission Approved",
   };
   
   return labels[actionType] || actionType.replace(/_/g, " ");

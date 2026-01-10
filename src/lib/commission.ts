@@ -2,8 +2,22 @@ import { prisma } from "@/lib/prisma";
 import { Role } from "@/lib/types";
 
 const SIGNUP_BONUS = 5.00;
-const MANAGER_PERCENTAGE = 0.20; // 20%
 const AFFILIATE_SUBSCRIPTION_FLAT = 10.00;
+
+async function getManagerCommissionPercentage(): Promise<number> {
+  try {
+    const setting = await prisma.systemSettings.findUnique({
+      where: { key: "managerCommissionPercentage" }
+    });
+    if (setting) {
+      const value = JSON.parse(setting.value);
+      return Number(value) / 100; // Convert percentage to decimal
+    }
+  } catch (e) {
+    console.error("Failed to get manager commission percentage:", e);
+  }
+  return 0.20; // Default 20%
+}
 
 export async function processOrderCommission(orderId: string) {
   const order = await prisma.order.findUnique({
@@ -17,6 +31,8 @@ export async function processOrderCommission(orderId: string) {
   const product = order.product;
   const totalAmount = parseFloat(order.totalAmount.toString());
 
+  const managerPercentage = await getManagerCommissionPercentage();
+
   // 1. Affiliate Commission (Flat rate per product)
   if (referrer.role === Role.AFFILIATE) {
       await prisma.commission.create({
@@ -29,27 +45,26 @@ export async function processOrderCommission(orderId: string) {
           }
       });
 
-      // 2. Manager Commission (20% of Product Price)
+      // 2. Manager Commission (percentage from settings)
       if (referrer.managerId) {
           await prisma.commission.create({
               data: {
                   userId: referrer.managerId,
                   sourceType: "PRODUCT",
                   sourceId: order.id,
-                  amount: totalAmount * MANAGER_PERCENTAGE,
+                  amount: totalAmount * managerPercentage,
                   status: "PENDING"
               }
           });
       }
   } else if (referrer.role === Role.MANAGER) {
-      // Direct Manager Sale? (Spec says Manager earns 20% + potentially signup bonus if new)
-      // For simplicity, we just give them the 20% commission on direct sale too per spec logic logic overlap
+      // Direct Manager Sale - earns the commission percentage from settings
       await prisma.commission.create({
           data: {
               userId: referrer.id,
               sourceType: "PRODUCT",
               sourceId: order.id,
-              amount: totalAmount * MANAGER_PERCENTAGE,
+              amount: totalAmount * managerPercentage,
               status: "PENDING"
           }
       });
@@ -88,6 +103,7 @@ export async function processSubscriptionCommission(subscriptionId: string, cust
     if (!customer || !customer.referredBy) return;
 
     const referrer = customer.referredBy;
+    const managerPercentage = await getManagerCommissionPercentage();
 
     // Affiliate earns flat amount per subscription
     if (referrer.role === Role.AFFILIATE) {
@@ -101,26 +117,26 @@ export async function processSubscriptionCommission(subscriptionId: string, cust
             }
         });
 
-        // Manager earns 20% of subscription price
+        // Manager earns percentage from settings
         if (referrer.managerId) {
             await prisma.commission.create({
                 data: {
                     userId: referrer.managerId,
                     sourceType: "SUBSCRIPTION",
                     sourceId: subscriptionId,
-                    amount: planPrice * MANAGER_PERCENTAGE,
+                    amount: planPrice * managerPercentage,
                     status: "PENDING"
                 }
             });
         }
     } else if (referrer.role === Role.MANAGER) {
-        // Direct manager referral - earns 20%
+        // Direct manager referral - earns percentage from settings
         await prisma.commission.create({
             data: {
                 userId: referrer.id,
                 sourceType: "SUBSCRIPTION",
                 sourceId: subscriptionId,
-                amount: planPrice * MANAGER_PERCENTAGE,
+                amount: planPrice * managerPercentage,
                 status: "PENDING"
             }
         });

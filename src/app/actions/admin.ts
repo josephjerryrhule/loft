@@ -247,7 +247,7 @@ export async function getFinanceData() {
         // Total revenue from orders
         const orderRevenue = await prisma.order.aggregate({
             _sum: { totalAmount: true },
-            where: { paymentStatus: "COMPLETED" as any }
+            where: { paymentStatus: { in: ["PAID", "COMPLETED"] } }
         });
 
         // Total revenue from subscriptions

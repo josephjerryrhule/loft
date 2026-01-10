@@ -16,7 +16,7 @@ async function getStats() {
     // Calculate total revenue from orders
     const orderRevenue = await prisma.order.aggregate({
         _sum: { totalAmount: true },
-        where: { paymentStatus: "COMPLETED" } 
+        where: { paymentStatus: { in: ["PAID", "COMPLETED"] } } 
     });
     
     // Calculate total revenue from subscriptions
@@ -48,7 +48,7 @@ async function getMonthlyRevenueData() {
         
         const revenue = await prisma.order.aggregate({
             where: {
-                paymentStatus: "COMPLETED",
+                paymentStatus: { in: ["PAID", "COMPLETED"] },
                 createdAt: {
                     gte: date,
                     lte: endDate
