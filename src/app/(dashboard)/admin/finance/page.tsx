@@ -146,7 +146,7 @@ export default function AdminFinancePage() {
                   </TableCell>
                   <TableCell>{new Date(req.requestedAt).toLocaleDateString()}</TableCell>
                   <TableCell>
-                    <AdminPayoutActions payout={req} />
+                    <AdminPayoutActions payout={req} onSuccess={loadFinanceData} />
                   </TableCell>
                 </TableRow>
               ))}
@@ -212,7 +212,7 @@ export default function AdminFinancePage() {
                   </TableCell>
                   <TableCell>{new Date(comm.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>
-                    <AdminCommissionActions id={comm.id} status={comm.status} />
+                    <AdminCommissionActions id={comm.id} status={comm.status} onSuccess={loadFinanceData} />
                   </TableCell>
                 </TableRow>
               ))}

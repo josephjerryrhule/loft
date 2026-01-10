@@ -2,7 +2,6 @@
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { revalidatePath } from "next/cache";
 import { processSubscriptionCommission } from "@/lib/commission";
 import { getPaystackSecretKey } from "@/lib/paystack";
 
@@ -184,18 +183,9 @@ export async function processProductPayment(
       },
     });
 
-    // Process commission for affiliate
-    if (user?.referredById) {
-      await prisma.commission.create({
-        data: {
-          userId: user.referredById,
-          sourceType: "ORDER",
-          sourceId: order.id,
-          amount: product.affiliateCommissionAmount,
-          status: "PENDING",
-        },
-      });
-    }
+    // Process commissions (affiliate + manager if applicable)
+    const { processOrderCommission } = await import("@/lib/commission");
+    await processOrderCommission(order.id);
 
     // Log activity
     await prisma.activityLog.create({

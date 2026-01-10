@@ -319,12 +319,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
                     userId: session.user.id,
                     actionType: "ADMIN_UPDATE_ORDER",
                     actionDetails: JSON.stringify({
-                        orderId,
-                        orderNumber: order.orderNumber,
-                        previousStatus: order.status,
-                        newStatus: status,
-                        customerEmail: order.customer.email,
-                        productTitle: order.product.title
+                        orderId
                     })
                 }
             });

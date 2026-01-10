@@ -15,7 +15,7 @@ import { useState } from "react";
 import { Loader2, CheckCircle, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-export function AdminCommissionActions({ id, status }: { id: string, status: string }) {
+export function AdminCommissionActions({ id, status, onSuccess }: { id: string, status: string, onSuccess?: () => void }) {
     const [loading, setLoading] = useState(false);
 
     if (status !== "PENDING") return null;
@@ -26,6 +26,7 @@ export function AdminCommissionActions({ id, status }: { id: string, status: str
         setLoading(false);
         if (res.success) {
             toast.success("Commission approved");
+            onSuccess?.();
         } else {
             toast.error(res.error || "Failed to approve");
         }
@@ -53,7 +54,7 @@ interface PayoutRequest {
     };
 }
 
-export function AdminPayoutActions({ payout }: { payout: PayoutRequest }) {
+export function AdminPayoutActions({ payout, onSuccess }: { payout: PayoutRequest, onSuccess?: () => void }) {
     const [loading, setLoading] = useState(false);
     const [viewOpen, setViewOpen] = useState(false);
 
@@ -63,6 +64,7 @@ export function AdminPayoutActions({ payout }: { payout: PayoutRequest }) {
         setLoading(false);
         if (res.success) {
             toast.success("Payout marked as paid");
+            onSuccess?.();
         } else {
             toast.error(res.error || "Failed to process");
         }
