@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { PaymentStatus } from "@/lib/types";
-import { formatActivityDetails, getActionTypeLabel } from "@/lib/activity-formatter";
+import { RecentActivityTable } from "@/components/admin/RecentActivityTable";
 
 async function getStats() {
     const totalUsers = await prisma.user.count();
@@ -80,7 +80,7 @@ async function getMonthlyRevenueData() {
 
 async function getRecentActivity() {
     return await prisma.activityLog.findMany({
-        take: 10,
+        take: 50,
         orderBy: { createdAt: 'desc' },
         include: { user: true }
     });
@@ -200,35 +200,7 @@ export default async function AdminDashboardPage() {
           <CardDescription>Latest actions on the platform</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Action</TableHead>
-                <TableHead>Details</TableHead>
-                <TableHead>Time</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recentActivity.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
-                    No recent activity logged.
-                  </TableCell>
-                </TableRow>
-              )}
-              {recentActivity.map((log: any) => (
-                <TableRow key={log.id}>
-                  <TableCell className="font-medium">{log.user?.email || "System"}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{getActionTypeLabel(log.actionType)}</Badge>
-                  </TableCell>
-                  <TableCell className="max-w-xs">{formatActivityDetails(log.actionType, log.actionDetails)}</TableCell>
-                  <TableCell className="text-muted-foreground">{new Date(log.createdAt).toLocaleString()}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <RecentActivityTable activities={recentActivity} />
         </CardContent>
       </Card>
     </div>

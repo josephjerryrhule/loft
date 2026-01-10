@@ -68,7 +68,8 @@ export default function AdminOrdersPage() {
               <TableHead>Order #</TableHead>
               <TableHead>Customer</TableHead>
               <TableHead>Product</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Order Status</TableHead>
+              <TableHead>Payment Status</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>Date</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -77,7 +78,7 @@ export default function AdminOrdersPage() {
           <TableBody>
             {paginatedOrders.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   No orders found.
                 </TableCell>
               </TableRow>
@@ -96,7 +97,16 @@ export default function AdminOrdersPage() {
                 </TableCell>
                 <TableCell>{order.product.title}</TableCell>
                 <TableCell>
-                  <Badge variant={order.paymentStatus === "COMPLETED" ? "secondary" : "default"}>
+                  <Badge variant={
+                    order.status === "COMPLETED" ? "default" : 
+                    order.status === "PROCESSING" ? "secondary" : 
+                    order.status === "CANCELLED" ? "destructive" : "outline"
+                  }>
+                    {order.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={order.paymentStatus === "PAID" || order.paymentStatus === "COMPLETED" ? "default" : "outline"}>
                     {order.paymentStatus}
                   </Badge>
                 </TableCell>
