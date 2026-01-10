@@ -116,15 +116,15 @@ export default function CustomerFlipbooksPage() {
     try {
       await updateFlipbookProgress({
         flipbookId: selectedFlipbook.id,
-        lastPageRead: selectedFlipbook.totalPages || 999,
+        lastPageRead: 0, // Reset to start so user can re-read from beginning
         completed: true
       });
       
       // Show success message
       toast.success(`"${selectedFlipbook.title}" marked as complete!`);
       
-      // Reload flipbooks to show updated status (viewer stays open)
-      await loadFlipbooks();
+      // Don't reload - just keep the viewer open
+      // User can close manually when ready
       
       console.log("Marked as complete"); // Debug log
     } catch (error) {
@@ -287,10 +287,17 @@ export default function CustomerFlipbooksPage() {
         <ReliableFlipbookViewer
           pdfUrl={selectedFlipbook.pdfUrl}
           title={selectedFlipbook.title}
-          initialPage={selectedFlipbook.progress?.lastPageRead || 0}
+          initialPage={
+            // If completed, start from beginning. Otherwise resume from last page.
+            selectedFlipbook.progress?.completed 
+              ? 0 
+              : (selectedFlipbook.progress?.lastPageRead || 0)
+          }
           onClose={() => {
             setViewerOpen(false);
             setSelectedFlipbook(null);
+            // Reload flipbooks when closing to show updated progress/status
+            loadFlipbooks();
           }}
           onPageChange={(page) => {
             handlePageChange(page);
