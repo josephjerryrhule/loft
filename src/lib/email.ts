@@ -652,3 +652,34 @@ export async function sendPasswordResetEmail(data: {
     html: emailWrapper(content, branding.platformName, branding.logoUrl),
   });
 }
+
+// Email: Verify email address
+export async function sendEmailVerification(data: { userEmail: string; verificationUrl: string }) {
+  const branding = await getBranding();
+
+  const content = `
+    <h2>Verify Your Email Address</h2>
+    <p>Hi there,</p>
+    <p>
+      Thank you for registering with ${branding.platformName}! Please verify your email address 
+      to complete your registration and access all features.
+    </p>
+    <p style="text-align: center;">
+      <a href="${data.verificationUrl}" class="button" style="color: #ffffff;">Verify Email Address</a>
+    </p>
+    <p style="font-size: 14px; color: #666;">
+      This link will expire in 24 hours. If you didn't create an account, you can safely ignore this email.
+    </p>
+    <p style="font-size: 12px; color: #666;">
+      If the button doesn't work, copy and paste this URL into your browser:<br>
+      <a href="${data.verificationUrl}">${data.verificationUrl}</a>
+    </p>
+    <p>Best regards,<br>The ${branding.platformName} Team</p>
+  `;
+
+  return sendEmail({
+    to: data.userEmail,
+    subject: `Verify Your Email - ${branding.platformName}`,
+    html: emailWrapper(content, branding.platformName, branding.logoUrl),
+  });
+}

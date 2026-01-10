@@ -6,8 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { Role } from "@/lib/types";
 import { processSignupCommission } from "@/lib/commission";
-import { sendPasswordResetEmail, sendWelcomeEmail, sendAffiliateWelcomeEmail, sendAffiliateJoinedManagerEmail } from "@/lib/email";
-import { randomBytes } from "crypto";
+import { sendPasswordResetEmail, sendWelcomeEmail, sendAffiliateWelcomeEmail, sendAffiliateJoinedManagerEmail, sendEmailVerification } from "@/lib/email";
+import { randomBytes, createHash } from "crypto";
 
 const registerSchema = z.object({
   firstName: z.string().min(2),
@@ -106,7 +106,27 @@ export async function registerUser(formData: z.infer<typeof registerSchema>) {
       }
     }
 
-    return { success: true };
+    // Create email verification token
+    const verificationToken = randomBytes(32).toString("hex");
+    const hashedToken = createHash("sha256").update(verificationToken).digest("hex");
+    const verificationUrl = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/auth/verify-email?token=${verificationToken}`;
+
+    await prisma.emailVerificationToken.create({
+      data: {
+        userId: newUser.id,
+        token: verificationToken,
+        hashedToken,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+      },
+    });
+
+    // Send verification email
+    sendEmailVerification({
+      userEmail: newUser.email,
+      verificationUrl,
+    }).catch(console.error);
+
+    return { success: true, message: "Registration successful! Please check your email to verify your account." };
   } catch (e) {
       console.error(e);
       return { error: "Failed to create user." };
@@ -140,13 +160,15 @@ export async function requestPasswordReset(email: string) {
 
     // Generate a secure token
     const token = randomBytes(32).toString("hex");
+    const hashedToken = createHash("sha256").update(token).digest("hex");
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
-    // Create the reset token
+    // Create the reset token with hashed version
     await prisma.passwordResetToken.create({
       data: {
         userId: user.id,
         token,
+        hashedToken,
         expiresAt,
       },
     });
@@ -167,8 +189,9 @@ export async function requestPasswordReset(email: string) {
 
 export async function validateResetToken(token: string) {
   try {
-    const resetToken = await prisma.passwordResetToken.findUnique({
-      where: { token },
+    const hashedToken = createHash("sha256").update(token).digest("hex");
+    const resetToken = await prisma.passwordResetToken.findFirst({
+      where: { hashedToken },
       include: { user: true },
     });
 
@@ -193,8 +216,9 @@ export async function validateResetToken(token: string) {
 
 export async function resetPassword(token: string, newPassword: string) {
   try {
-    const resetToken = await prisma.passwordResetToken.findUnique({
-      where: { token },
+    const hashedToken = createHash("sha256").update(token).digest("hex");
+    const resetToken = await prisma.passwordResetToken.findFirst({
+      where: { hashedToken },
       include: { user: true },
     });
 

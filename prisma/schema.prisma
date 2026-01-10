@@ -35,6 +35,14 @@ model User {
 
   status          String     @default("ACTIVE") // Enum: ACTIVE, SUSPENDED, PENDING
   
+  // Email verification
+  isEmailVerified Boolean    @default(false) @map("is_email_verified")
+  
+  // Account lockout
+  failedLoginAttempts Int    @default(0) @map("failed_login_attempts")
+  lastFailedLogin     DateTime? @map("last_failed_login")
+  lockedUntil         DateTime? @map("locked_until")
+  
   createdAt       DateTime   @default(now()) @map("created_at")
   updatedAt       DateTime   @updatedAt @map("updated_at")
 
@@ -49,6 +57,7 @@ model User {
   payoutRequests  PayoutRequest[]
   activityLogs    ActivityLog[]
   passwordResetTokens PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
 
   @@map("users")
 }
@@ -231,9 +240,23 @@ model PasswordResetToken {
   userId    String   @map("user_id")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   token     String   @unique
+  hashedToken String @map("hashed_token")
   expiresAt DateTime @map("expires_at")
   usedAt    DateTime? @map("used_at")
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  hashedToken String @map("hashed_token")
+  expiresAt DateTime @map("expires_at")
+  verifiedAt DateTime? @map("verified_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("email_verification_tokens")
 }

@@ -4,8 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -22,6 +22,7 @@ const loginSchema = z.object({
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -30,6 +31,18 @@ export default function LoginPage() {
       password: "",
     },
   });
+
+  useEffect(() => {
+    // Show verification success message
+    if (searchParams.get("verified") === "true") {
+      toast.success("Email verified successfully! You can now log in.");
+    }
+    // Show verification error message
+    if (searchParams.get("error")) {
+      const error = searchParams.get("error");
+      toast.error(error || "An error occurred during verification");
+    }
+  }, [searchParams]);
 
   async function onSubmit(values: z.infer<typeof loginSchema>) {
     setIsLoading(true);
@@ -41,7 +54,7 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        toast.error("Invalid email or password");
+        toast.error("Invalid credentials or email not verified. Please check your email.");
       } else {
         toast.success("Logged in successfully");
         router.push("/");
