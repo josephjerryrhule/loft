@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -23,6 +24,7 @@ interface UserActionsProps {
 }
 
 export function UserActions({ user }: UserActionsProps) {
+    const router = useRouter();
     const [editOpen, setEditOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
 
@@ -30,6 +32,7 @@ export function UserActions({ user }: UserActionsProps) {
         const result = await deleteUser(user.id);
         if (result.success) {
             toast.success("User deleted.");
+            router.refresh();
         } else {
             toast.error(result.error || "Failed to delete.");
         }

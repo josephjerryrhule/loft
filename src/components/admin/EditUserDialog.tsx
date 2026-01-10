@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { PhoneInputComponent } from "@/components/ui/phone-input";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const editUserSchema = z.object({
   firstName: z.string().min(2),
@@ -36,6 +37,7 @@ interface EditUserDialogProps {
 }
 
 export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps) {
+  const router = useRouter();
   const form = useForm<z.infer<typeof editUserSchema>>({
     resolver: zodResolver(editUserSchema),
     defaultValues: {
@@ -55,6 +57,7 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
     } else {
       toast.success("User updated successfully!");
       onOpenChange(false);
+      router.refresh();
     }
   }
 
