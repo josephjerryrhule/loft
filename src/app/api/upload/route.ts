@@ -14,13 +14,10 @@ const ALLOWED_FILE_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '15mb',
-    },
-  },
-};
+// Route segment config for App Router
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const maxDuration = 30; // Max execution time in seconds
 
 export async function POST(request: NextRequest) {
   try {
