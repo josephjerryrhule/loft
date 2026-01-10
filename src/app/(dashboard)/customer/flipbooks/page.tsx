@@ -123,8 +123,32 @@ export default function CustomerFlipbooksPage() {
       // Show success message
       toast.success(`"${selectedFlipbook.title}" marked as complete!`);
       
-      // Reload flipbooks to update the badge in library (viewer stays open)
-      await loadFlipbooks();
+      // Update local state without reloading to prevent glitches
+      const updatedFlipbooks = flipbooks.map(f => {
+        if (f.id === selectedFlipbook.id) {
+          return {
+            ...f,
+            progress: {
+              ...f.progress,
+              completed: true,
+              lastPageRead: 0
+            }
+          };
+        }
+        return f;
+      });
+      
+      setFlipbooks(updatedFlipbooks);
+      
+      // Also update the selected flipbook
+      setSelectedFlipbook({
+        ...selectedFlipbook,
+        progress: {
+          ...selectedFlipbook.progress,
+          completed: true,
+          lastPageRead: 0
+        }
+      });
       
       console.log("Marked as complete"); // Debug log
     } catch (error) {
@@ -296,8 +320,6 @@ export default function CustomerFlipbooksPage() {
           onClose={() => {
             setViewerOpen(false);
             setSelectedFlipbook(null);
-            // Reload flipbooks when closing to show updated progress/status
-            loadFlipbooks();
           }}
           onPageChange={(page) => {
             handlePageChange(page);
