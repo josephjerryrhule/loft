@@ -241,7 +241,7 @@ export function ReliableFlipbookViewer({
 
             {/* Flipbook */}
             {!loading && !error && pageImages.length > 0 && (
-                <div className="flex-1 flex flex-col items-center justify-center w-full relative pb-20 md:pb-0">
+                <div className="flex-1 flex flex-col items-center justify-center w-full relative pb-24 md:pb-0">
                     <HTMLFlipBook
                         ref={bookRef}
                         width={dimensions.width}
@@ -308,8 +308,8 @@ export function ReliableFlipbookViewer({
                         </button>
                     </div>
 
-                    {/* Mobile Navigation - Bottom */}
-                    <div className="md:hidden fixed bottom-20 left-0 right-0 flex justify-center gap-4 z-50 px-4">
+                    {/* Mobile Navigation - Bottom (both portrait and landscape) */}
+                    <div className="md:hidden fixed bottom-16 left-0 right-0 flex justify-center gap-4 z-50 px-4">
                         <button
                             onClick={() => bookRef.current?.pageFlip()?.flipPrev()}
                             disabled={currentPage === 0}
