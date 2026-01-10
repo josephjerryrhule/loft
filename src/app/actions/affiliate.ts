@@ -203,19 +203,32 @@ export async function getAffiliateMonthlyEarningsData() {
         .reverse();
 }
 
-export async function getAffiliateCommissions() {
+export async function getAffiliateCommissions(page = 1, pageSize = 10) {
     const session = await auth();
-    if (!session?.user?.id) return [];
+    if (!session?.user?.id) return { commissions: [], total: 0, totalPages: 0 };
 
-    const commissions = await prisma.commission.findMany({
-        where: { userId: session.user.id },
-        orderBy: { createdAt: "desc" }
-    });
+    const skip = (page - 1) * pageSize;
 
-    return commissions.map((comm: any) => ({
-        ...comm,
-        amount: Number(comm.amount)
-    }));
+    const [commissions, total] = await Promise.all([
+        prisma.commission.findMany({
+            where: { userId: session.user.id },
+            orderBy: { createdAt: "desc" },
+            skip,
+            take: pageSize
+        }),
+        prisma.commission.count({
+            where: { userId: session.user.id }
+        })
+    ]);
+
+    return {
+        commissions: commissions.map((comm: any) => ({
+            ...comm,
+            amount: Number(comm.amount)
+        })),
+        total,
+        totalPages: Math.ceil(total / pageSize)
+    };
 }
 
 export async function getAffiliateLinks() {

@@ -10,6 +10,7 @@ import { getCustomerOrders } from "@/app/actions/user";
 import { getSystemSettings } from "@/app/actions/settings";
 import { getCurrencySymbol } from "@/lib/utils";
 import { ViewOrderDialog } from "@/components/order/ViewOrderDialog";
+import { Pagination } from "@/components/ui/pagination";
 
 interface Order {
   id: string;
@@ -43,21 +44,37 @@ export default function CustomerOrdersPage() {
   const [currency, setCurrency] = useState("GHS");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const pageSize = 10;
 
   useEffect(() => {
-    loadData();
+    loadSettings();
   }, []);
 
-  async function loadData() {
+  useEffect(() => {
+    loadOrders(currentPage);
+  }, [currentPage]);
+
+  async function loadSettings() {
     try {
-      const [ordersData, settings] = await Promise.all([
-        getCustomerOrders(),
-        getSystemSettings()
-      ]);
-      setOrders(ordersData);
+      const settings = await getSystemSettings();
       setCurrency(settings.currency || "GHS");
     } catch (error) {
-      console.error("Failed to load data:", error);
+      console.error("Failed to load settings:", error);
+    }
+  }
+
+  async function loadOrders(page: number) {
+    setLoading(true);
+    try {
+      const data = await getCustomerOrders(page, pageSize);
+      setOrders(data.orders);
+      setTotalPages(data.totalPages);
+      setTotal(data.total);
+    } catch (error) {
+      console.error("Failed to load orders:", error);
     } finally {
       setLoading(false);
     }
@@ -91,7 +108,7 @@ export default function CustomerOrdersPage() {
     }
   }
 
-  if (loading) {
+  if (loading && orders.length === 0) {
     return (
       <div className="flex items-center justify-center h-96">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -110,7 +127,7 @@ export default function CustomerOrdersPage() {
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <ShoppingCart className="h-5 w-5" />
-          <span className="text-sm font-medium">{orders.length} Orders</span>
+          <span className="text-sm font-medium">{total} Orders</span>
         </div>
       </div>
 
@@ -209,6 +226,14 @@ export default function CustomerOrdersPage() {
                 </TableBody>
               </Table>
             </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={total}
+              itemsPerPage={pageSize}
+              onPageChange={setCurrentPage}
+            />
           </CardContent>
         </Card>
       )}

@@ -78,35 +78,62 @@ export async function getManagerStats() {
   };
 }
 
-export async function getTeamMembers() {
+export async function getTeamMembers(page = 1, pageSize = 10) {
     const session = await auth();
-    if (!session?.user?.id) return [];
+    if (!session?.user?.id) return { members: [], total: 0, totalPages: 0 };
 
-    const members = await prisma.user.findMany({
-        where: { managerId: session.user.id, role: Role.AFFILIATE },
-        include: {
-            _count: {
-                select: { referrals: true } // Customers referred
-            }
-        }
-    });
+    const skip = (page - 1) * pageSize;
+
+    const [members, total] = await Promise.all([
+        prisma.user.findMany({
+            where: { managerId: session.user.id, role: Role.AFFILIATE },
+            include: {
+                _count: {
+                    select: { referrals: true }
+                }
+            },
+            skip,
+            take: pageSize,
+            orderBy: { createdAt: "desc" }
+        }),
+        prisma.user.count({
+            where: { managerId: session.user.id, role: Role.AFFILIATE }
+        })
+    ]);
     
-    // We might want to calculate earnings per affiliate if commissions table allows
-    // For now, return basic info
-    return members.map(m => ({
-        ...m,
-        referralsCount: m._count.referrals
-    }));
+    return {
+        members: members.map(m => ({
+            ...m,
+            referralsCount: m._count.referrals
+        })),
+        total,
+        totalPages: Math.ceil(total / pageSize)
+    };
 }
 
-export async function getManagerCommissions() {
+export async function getManagerCommissions(page = 1, pageSize = 10) {
     const session = await auth();
-    if (!session?.user?.id) return [];
+    if (!session?.user?.id) return { commissions: [], total: 0, totalPages: 0 };
 
-    return await prisma.commission.findMany({
-        where: { userId: session.user.id },
-        orderBy: { createdAt: "desc" },
-    });
+    const skip = (page - 1) * pageSize;
+
+    const [commissions, total] = await Promise.all([
+        prisma.commission.findMany({
+            where: { userId: session.user.id },
+            orderBy: { createdAt: "desc" },
+            skip,
+            take: pageSize
+        }),
+        prisma.commission.count({
+            where: { userId: session.user.id }
+        })
+    ]);
+
+    return { 
+        commissions, 
+        total, 
+        totalPages: Math.ceil(total / pageSize) 
+    };
 }
 
 export async function getRecentManagerActivities() {

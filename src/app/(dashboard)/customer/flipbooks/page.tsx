@@ -7,12 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { BookOpen, Filter, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import dynamic from "next/dynamic";
 import { getCustomerFlipbooks, updateFlipbookProgress } from "@/app/actions/flipbooks";
 import { toast } from "sonner";
+import { Pagination } from "@/components/ui/pagination";
 
 const FlipbookViewer = dynamic(() => import("@/components/flipbook/FlipbookViewer").then(mod => ({ default: mod.FlipbookViewer })), { ssr: false });
+
+const PAGE_SIZE = 8;
 
 export default function CustomerFlipbooksPage() {
   const [flipbooks, setFlipbooks] = useState<any[]>([]);
@@ -25,6 +27,7 @@ export default function CustomerFlipbooksPage() {
   const [dateType, setDateType] = useState<"day" | "month" | "year">("month");
   const [selectedFlipbook, setSelectedFlipbook] = useState<any>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     loadFlipbooks();
@@ -32,6 +35,7 @@ export default function CustomerFlipbooksPage() {
 
   useEffect(() => {
     applyFilters();
+    setCurrentPage(1); // Reset to page 1 when filters change
   }, [flipbooks, categoryFilter, dateFilter, dateType]);
 
   async function loadFlipbooks() {
@@ -211,24 +215,32 @@ export default function CustomerFlipbooksPage() {
           )}
         </div>
       </div>
-      
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {filteredFlipbooks.length === 0 ? (
-          <div className="col-span-full text-center py-12">
-            <p className="text-muted-foreground">No flipbooks found matching your filters</p>
-          </div>
-        ) : (
-          filteredFlipbooks.map((book) => {
-            const progress = book.progress;
-            const hasProgress = progress && progress.lastPageRead > 0;
-            
-            return (
-              <Card key={book.id} className="flex flex-col">
-                  <div className="h-48 bg-slate-100 flex items-center justify-center text-slate-400 relative">
-                      {book.coverImageUrl ? (
-                        <img src={book.coverImageUrl} alt={book.title} className="h-full w-full object-cover" />
-                      ) : (
-                        <BookOpen size={48} />
+
+      {/* Paginated grid */}
+      {(() => {
+        const totalPages = Math.ceil(filteredFlipbooks.length / PAGE_SIZE);
+        const startIndex = (currentPage - 1) * PAGE_SIZE;
+        const paginatedFlipbooks = filteredFlipbooks.slice(startIndex, startIndex + PAGE_SIZE);
+
+        return (
+          <>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              {paginatedFlipbooks.length === 0 ? (
+                <div className="col-span-full text-center py-12">
+                  <p className="text-muted-foreground">No flipbooks found matching your filters</p>
+                </div>
+              ) : (
+                paginatedFlipbooks.map((book) => {
+                  const progress = book.progress;
+                  const hasProgress = progress && progress.lastPageRead > 0;
+                  
+                  return (
+                    <Card key={book.id} className="flex flex-col">
+                        <div className="h-48 bg-slate-100 flex items-center justify-center text-slate-400 relative">
+                            {book.coverImageUrl ? (
+                              <img src={book.coverImageUrl} alt={book.title} className="h-full w-full object-cover" />
+                            ) : (
+                              <BookOpen size={48} />
                       )}
                       {book.isFree && (
                         <Badge className="absolute top-2.5 right-2" variant="secondary">Free</Badge>
@@ -257,10 +269,21 @@ export default function CustomerFlipbooksPage() {
                       </Button>
                   </CardFooter>
               </Card>
-            );
-          })
-        )}
-      </div>
+                  );
+                })
+              )}
+            </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredFlipbooks.length}
+              itemsPerPage={PAGE_SIZE}
+              onPageChange={setCurrentPage}
+            />
+          </>
+        );
+      })()}
 
       {/* Flipbook Viewer */}
       {viewerOpen && selectedFlipbook && (

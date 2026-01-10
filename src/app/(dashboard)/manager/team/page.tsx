@@ -1,7 +1,8 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { getTeamMembers } from "@/app/actions/manager";
 import { InviteAffiliateDialog } from "@/components/manager/InviteAffiliateDialog";
-import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
 import {
   Table,
   TableBody,
@@ -11,15 +12,52 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Pagination } from "@/components/ui/pagination";
+import { Loader2 } from "lucide-react";
 
-export default async function ManagerTeamPage() {
-    const session = await auth();
-    const user = await prisma.user.findUnique({ 
-        where: { id: session?.user?.id },
-        select: { inviteCode: true }
-    });
-    
-    const team = await getTeamMembers();
+interface TeamMember {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+    status: string;
+    createdAt: string;
+    referralsCount: number;
+}
+
+export default function ManagerTeamPage() {
+    const [team, setTeam] = useState<TeamMember[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [total, setTotal] = useState(0);
+    const pageSize = 10;
+
+    useEffect(() => {
+        loadTeam(currentPage);
+    }, [currentPage]);
+
+    async function loadTeam(page: number) {
+        setLoading(true);
+        try {
+            const data = await getTeamMembers(page, pageSize);
+            setTeam(data.members as TeamMember[]);
+            setTotalPages(data.totalPages);
+            setTotal(data.total);
+        } catch (error) {
+            console.error("Failed to load team:", error);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    if (loading && team.length === 0) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -28,7 +66,7 @@ export default async function ManagerTeamPage() {
                     <h1 className="text-3xl font-bold tracking-tight">My Team</h1>
                     <p className="text-muted-foreground">Manage your affiliates and track their performance.</p>
                 </div>
-                {user?.inviteCode && <InviteAffiliateDialog inviteCode={user.inviteCode} />}
+                <InviteAffiliateDialog />
             </div>
 
             <div className="rounded-md border">
@@ -69,6 +107,14 @@ export default async function ManagerTeamPage() {
                     </TableBody>
                 </Table>
             </div>
+
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={total}
+                itemsPerPage={pageSize}
+                onPageChange={setCurrentPage}
+            />
         </div>
     );
 }

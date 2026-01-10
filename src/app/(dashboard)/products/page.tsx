@@ -1,25 +1,63 @@
-import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
+"use client";
+
+import { useState, useEffect } from "react";
+import { getActiveProducts } from "@/app/actions/products";
 import { ProductCard } from "@/components/product/ProductCard";
+import { Pagination } from "@/components/ui/pagination";
+import { Loader2 } from "lucide-react";
 
-export default async function ShopsPage() {
-  const session = await auth();
-  const products = await prisma.product.findMany({
-      where: { isActive: true }
-  });
+const PAGE_SIZE = 8;
 
-  // Serialize products to plain objects
-  const serializedProducts = products.map(p => ({
-    id: p.id,
-    title: p.title,
-    description: p.description,
-    price: p.price.toNumber(),
-    featuredImageUrl: p.featuredImageUrl,
-    productType: p.productType,
-    stockQuantity: p.stockQuantity,
-    requiresCustomization: p.requiresCustomization,
-    customizationFields: p.customizationFields
-  }));
+interface Product {
+  id: string;
+  title: string;
+  description: string | null;
+  price: number;
+  featuredImageUrl: string | null;
+  productType: string;
+  stockQuantity: number | null;
+  requiresCustomization: boolean;
+  customizationFields: string | null;
+}
+
+export default function ShopsPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [userEmail, setUserEmail] = useState<string | undefined>();
+  const [userId, setUserId] = useState<string | undefined>();
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  async function loadProducts() {
+    try {
+      const { getSession } = await import("@/app/actions/auth");
+      const session = await getSession();
+      setUserEmail(session?.user?.email || undefined);
+      setUserId(session?.user?.id || undefined);
+
+      const data = await getActiveProducts();
+      setProducts(data);
+    } catch (error) {
+      console.error("Failed to load products:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  const totalPages = Math.ceil(products.length / PAGE_SIZE);
+  const startIndex = (currentPage - 1) * PAGE_SIZE;
+  const paginatedProducts = products.slice(startIndex, startIndex + PAGE_SIZE);
 
   return (
     <div className="space-y-6">
@@ -28,15 +66,23 @@ export default async function ShopsPage() {
       </div>
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {serializedProducts.map((product) => (
+        {paginatedProducts.map((product) => (
           <ProductCard 
             key={product.id}
             product={product}
-            userEmail={session?.user?.email || undefined}
-            userId={session?.user?.id || undefined}
+            userEmail={userEmail}
+            userId={userId}
           />
         ))}
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={products.length}
+        itemsPerPage={PAGE_SIZE}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 }

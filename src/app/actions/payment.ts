@@ -128,11 +128,17 @@ export async function processSubscriptionPayment(reference: string, planId: stri
 export async function processProductPayment(
   reference: string,
   productId: string,
-  quantity: number = 1,
+  quantity: number | string = 1,
   customizationData?: string
 ) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
+
+  // Ensure quantity is an integer
+  const quantityInt = typeof quantity === 'string' ? parseInt(quantity, 10) : quantity;
+  if (isNaN(quantityInt) || quantityInt < 1) {
+    return { error: "Invalid quantity" };
+  }
 
   try {
     // Verify payment with Paystack
@@ -148,7 +154,7 @@ export async function processProductPayment(
 
     if (!product) return { error: "Product not found" };
 
-    const totalAmount = Number(product.price) * quantity;
+    const totalAmount = Number(product.price) * quantityInt;
     const amountPaid = verification.data.amount / 100; // Convert from pesewas to GHS
 
     // Verify amount matches
@@ -168,7 +174,7 @@ export async function processProductPayment(
         orderNumber: `ORD-${Date.now()}`,
         customerId: session.user.id,
         productId: productId,
-        quantity: quantity,
+        quantity: quantityInt,
         unitPrice: product.price,
         totalAmount: totalAmount,
         customizationData: customizationData || null,
@@ -199,7 +205,7 @@ export async function processProductPayment(
         actionType: "CREATE_ORDER",
         actionDetails: JSON.stringify({
           productTitle: product.title,
-          quantity: quantity,
+          quantity: quantityInt,
           totalAmount: totalAmount,
           reference: reference,
           orderId: order.id,

@@ -128,54 +128,67 @@ export async function getCustomerDashboardData() {
     }
 }
 
-export async function getCustomerOrders() {
+export async function getCustomerOrders(page = 1, pageSize = 10) {
     const session = await auth();
     if (!session?.user?.id) {
         throw new Error("Unauthorized");
     }
 
+    const skip = (page - 1) * pageSize;
+
     try {
-        const orders = await prisma.order.findMany({
-            where: { customerId: session.user.id },
-            include: { 
-                product: true,
-                referredBy: {
-                    select: {
-                        firstName: true,
-                        lastName: true,
-                        email: true
+        const [orders, total] = await Promise.all([
+            prisma.order.findMany({
+                where: { customerId: session.user.id },
+                include: { 
+                    product: true,
+                    referredBy: {
+                        select: {
+                            firstName: true,
+                            lastName: true,
+                            email: true
+                        }
                     }
-                }
-            },
-            orderBy: { createdAt: "desc" }
-        });
+                },
+                orderBy: { createdAt: "desc" },
+                skip,
+                take: pageSize
+            }),
+            prisma.order.count({
+                where: { customerId: session.user.id }
+            })
+        ]);
 
         // Serialize to plain objects
-        return orders.map(order => ({
-            id: order.id,
-            orderNumber: order.orderNumber,
-            quantity: order.quantity,
-            unitPrice: order.unitPrice.toNumber(),
-            totalAmount: order.totalAmount.toNumber(),
-            customizationData: order.customizationData,
-            status: order.status,
-            paymentStatus: order.paymentStatus,
-            paymentReference: order.paymentReference,
-            createdAt: order.createdAt.toISOString(),
-            product: {
-                id: order.product.id,
-                title: order.product.title,
-                description: order.product.description,
-                productType: order.product.productType,
-                price: order.product.price.toNumber(),
-                featuredImageUrl: order.product.featuredImageUrl
-            },
-            referredBy: order.referredBy ? {
-                firstName: order.referredBy.firstName,
-                lastName: order.referredBy.lastName,
-                email: order.referredBy.email
-            } : null
-        }));
+        return {
+            orders: orders.map(order => ({
+                id: order.id,
+                orderNumber: order.orderNumber,
+                quantity: order.quantity,
+                unitPrice: order.unitPrice.toNumber(),
+                totalAmount: order.totalAmount.toNumber(),
+                customizationData: order.customizationData,
+                status: order.status,
+                paymentStatus: order.paymentStatus,
+                paymentReference: order.paymentReference,
+                createdAt: order.createdAt.toISOString(),
+                product: {
+                    id: order.product.id,
+                    title: order.product.title,
+                    description: order.product.description,
+                    productType: order.product.productType,
+                    price: order.product.price.toNumber(),
+                    featuredImageUrl: order.product.featuredImageUrl
+                },
+                referredBy: order.referredBy ? {
+                    firstName: order.referredBy.firstName,
+                    lastName: order.referredBy.lastName,
+                    email: order.referredBy.email
+                } : null
+            })),
+            total,
+            totalPages: Math.ceil(total / pageSize)
+        };
     } catch (error) {
         console.error("Failed to get customer orders:", error);
         throw error;

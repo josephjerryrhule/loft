@@ -165,6 +165,10 @@ export function ViewOrderDialog({ open, onOpenChange, order, currency = "GHS" }:
             </div>
             <div className="bg-muted/50 rounded-lg p-4 space-y-2">
               <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Payment Method</span>
+                <span className="text-sm font-medium">Paystack</span>
+              </div>
+              <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Subtotal</span>
                 <span className="text-sm font-medium">
                   {getCurrencySymbol(currency)}{(order.unitPrice * order.quantity).toLocaleString()}

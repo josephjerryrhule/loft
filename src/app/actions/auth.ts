@@ -83,3 +83,10 @@ export async function registerUser(formData: z.infer<typeof registerSchema>) {
   }
 }
 
+import { auth } from "@/auth";
+
+export async function getSession() {
+    const session = await auth();
+    return session;
+}
+

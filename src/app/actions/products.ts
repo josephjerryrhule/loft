@@ -126,3 +126,28 @@ export async function getAllProducts() {
     }
 }
 
+export async function getActiveProducts() {
+    try {
+        const products = await prisma.product.findMany({
+            where: { isActive: true },
+            orderBy: { createdAt: "desc" }
+        });
+        
+        // Serialize to plain objects
+        return products.map(p => ({
+            id: p.id,
+            title: p.title,
+            description: p.description,
+            price: p.price.toNumber(),
+            featuredImageUrl: p.featuredImageUrl,
+            productType: p.productType,
+            stockQuantity: p.stockQuantity,
+            requiresCustomization: p.requiresCustomization,
+            customizationFields: p.customizationFields
+        }));
+    } catch (error) {
+        console.error("Failed to get active products:", error);
+        throw error;
+    }
+}
+
