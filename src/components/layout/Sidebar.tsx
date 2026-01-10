@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Role } from "@/lib/types";
@@ -23,6 +24,8 @@ import { useState } from "react";
 
 interface SidebarProps {
   userRole?: string;
+  logoUrl?: string;
+  platformName?: string;
 }
 
 // Shared Navigation Logic
@@ -68,15 +71,34 @@ function getLinks(userRole?: string) {
   return commonLinks;
 }
 
-function NavContent({ userRole, setOpen }: { userRole?: string, setOpen?: (open: boolean) => void }) {
+function NavContent({ userRole, setOpen, logoUrl, platformName }: { userRole?: string, setOpen?: (open: boolean) => void, logoUrl?: string, platformName?: string }) {
     const pathname = usePathname();
     const links = getLinks(userRole);
 
     return (
         <div className="flex flex-col h-full bg-slate-900 text-white w-full p-4">
           <div className="mb-8 px-4">
-            <h1 className="text-2xl font-bold tracking-tight">Loft</h1>
-            <p className="text-xs text-slate-400 mt-1 uppercase tracking-wider">{userRole || "Guest"}</p>
+            {logoUrl ? (
+              <div className="flex items-center gap-3">
+                <div className="relative w-10 h-10">
+                  <Image 
+                    src={logoUrl} 
+                    alt={platformName || "Logo"} 
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold tracking-tight">{platformName || "Loft"}</h1>
+                  <p className="text-xs text-slate-400 uppercase tracking-wider">{userRole || "Guest"}</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <h1 className="text-2xl font-bold tracking-tight">{platformName || "Loft"}</h1>
+                <p className="text-xs text-slate-400 mt-1 uppercase tracking-wider">{userRole || "Guest"}</p>
+              </>
+            )}
           </div>
     
           <nav className="flex-1 space-y-1">
@@ -120,15 +142,15 @@ function NavContent({ userRole, setOpen }: { userRole?: string, setOpen?: (open:
     );
 }
 
-export function Sidebar({ userRole }: SidebarProps) {
+export function Sidebar({ userRole, logoUrl, platformName }: SidebarProps) {
   return (
     <div className="hidden md:flex flex-col h-full bg-slate-900 text-white w-64 border-r border-slate-800">
-         <NavContent userRole={userRole} />
+         <NavContent userRole={userRole} logoUrl={logoUrl} platformName={platformName} />
     </div>
   );
 }
 
-export function MobileNav({ userRole }: SidebarProps) {
+export function MobileNav({ userRole, logoUrl, platformName }: SidebarProps) {
     const [open, setOpen] = useState(false);
     
     return (
@@ -140,7 +162,7 @@ export function MobileNav({ userRole }: SidebarProps) {
             </SheetTrigger>
             <SheetContent side="left" className="p-0 border-r-0 bg-slate-900 w-72 text-white">
                  <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-                 <NavContent userRole={userRole} setOpen={setOpen} />
+                 <NavContent userRole={userRole} setOpen={setOpen} logoUrl={logoUrl} platformName={platformName} />
             </SheetContent>
         </Sheet>
     )

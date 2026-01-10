@@ -69,7 +69,7 @@ function RegisterForm() {
   }
 
   return (
-    <div className="flex justify-center items-center min-h-screen p-4">
+    <div className="flex justify-center items-center p-4 w-full">
       <Card className="w-full max-w-lg my-8">
         <CardHeader>
           <CardTitle>Create an Account</CardTitle>

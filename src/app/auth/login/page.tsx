@@ -53,7 +53,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex justify-center items-center get-h-[calc(100vh-100px)] min-h-screen p-4">
+    <div className="flex justify-center items-center p-4 w-full">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Sign In</CardTitle>
