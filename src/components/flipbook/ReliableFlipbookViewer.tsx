@@ -39,6 +39,7 @@ export function ReliableFlipbookViewer({
     const [dimensions, setDimensions] = useState({ width: 600, height: 800 });
     const bookRef = useRef<any>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    const hasMarkedCompleteRef = useRef(false);
 
     // Initialize audio with actual sound file
     useEffect(() => {
@@ -179,7 +180,9 @@ export function ReliableFlipbookViewer({
             }
         }
         
-        if (page >= numPages - 1 && onComplete) {
+        // Mark as complete when reaching the last page (only once)
+        if (page >= numPages - 1 && onComplete && !hasMarkedCompleteRef.current) {
+            hasMarkedCompleteRef.current = true;
             onComplete();
         }
     };
