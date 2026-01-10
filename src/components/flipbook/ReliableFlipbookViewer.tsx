@@ -293,8 +293,24 @@ export function ReliableFlipbookViewer({
                     </button>
 
                     {/* Page Counter */}
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 bg-black/70 text-white px-4 py-2 rounded-full text-sm">
-                        Page {currentPage + 1} of {numPages}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 bg-black/70 text-white px-4 py-2 rounded-full text-sm flex items-center gap-3">
+                        <span>Page {currentPage + 1} of {numPages}</span>
+                        
+                        {/* Mark Complete Button when on last page */}
+                        {currentPage >= numPages - 1 && !hasMarkedCompleteRef.current && onComplete && (
+                            <Button
+                                onClick={() => {
+                                    if (!hasMarkedCompleteRef.current) {
+                                        hasMarkedCompleteRef.current = true;
+                                        onComplete();
+                                    }
+                                }}
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700 text-white h-7 px-3 text-xs"
+                            >
+                                Mark Complete
+                            </Button>
+                        )}
                     </div>
                 </div>
             )}
