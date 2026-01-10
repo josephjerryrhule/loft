@@ -787,7 +787,16 @@ npx tsx prisma/seed.ts
 
 ## 📄 License
 
-This project is proprietary software. All rights reserved.
+This project is proprietary software. All rights reserved. See [LICENSE](LICENSE) for details.
+
+## 📜 Legal Documents
+
+- [Privacy Policy](PRIVACY_POLICY.md) - How we collect and use your data
+- [Terms of Service](TERMS_OF_SERVICE.md) - Rules for using the platform
+- [Cookie Policy](COOKIE_POLICY.md) - Information about cookies and tracking
+- [Acceptable Use Policy](ACCEPTABLE_USE_POLICY.md) - Prohibited activities and enforcement
+
+**Important:** Review these documents carefully before using or deploying this platform.
 
 ---
 
