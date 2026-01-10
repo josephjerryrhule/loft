@@ -38,10 +38,16 @@ async function getSettings() {
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSettings();
   
+  // Use faviconUrl from settings if it's a full URL, otherwise fall back to default
+  const faviconUrl = settings.faviconUrl && 
+    (settings.faviconUrl.startsWith('http://') || settings.faviconUrl.startsWith('https://')) 
+    ? `${settings.faviconUrl}?v=${Date.now()}` // Add cache buster
+    : undefined;
+  
   return {
     title: settings.websiteTitle || settings.platformName || "Loft",
     description: settings.metaDescription || "Your digital learning platform",
-    icons: settings.faviconUrl ? { icon: settings.faviconUrl } : undefined,
+    icons: faviconUrl ? { icon: faviconUrl } : { icon: "/favicon.ico" },
   };
 }
 
