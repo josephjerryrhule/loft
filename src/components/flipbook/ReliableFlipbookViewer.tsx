@@ -37,6 +37,7 @@ export function ReliableFlipbookViewer({
     const [loadingProgress, setLoadingProgress] = useState(0);
     const [error, setError] = useState<string | null>(null);
     const [dimensions, setDimensions] = useState({ width: 600, height: 800 });
+    const [isMobile, setIsMobile] = useState(false);
     const bookRef = useRef<any>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const hasMarkedCompleteRef = useRef(false);
@@ -143,9 +144,20 @@ export function ReliableFlipbookViewer({
     // Responsive sizing
     useEffect(() => {
         const handleResize = () => {
-            const maxWidth = window.innerWidth * 0.45;
-            const maxHeight = window.innerHeight * 0.8;
-            setDimensions({ width: maxWidth, height: maxHeight });
+            const isMobileDevice = window.innerWidth < 768;
+            setIsMobile(isMobileDevice);
+            
+            if (isMobileDevice) {
+                // Mobile: single page, use most of the screen
+                const maxWidth = window.innerWidth * 0.9;
+                const maxHeight = window.innerHeight * 0.65;
+                setDimensions({ width: maxWidth, height: maxHeight });
+            } else {
+                // Desktop: two-page spread
+                const maxWidth = window.innerWidth * 0.45;
+                const maxHeight = window.innerHeight * 0.8;
+                setDimensions({ width: maxWidth, height: maxHeight });
+            }
         };
         handleResize();
         window.addEventListener('resize', handleResize);
@@ -229,7 +241,7 @@ export function ReliableFlipbookViewer({
 
             {/* Flipbook */}
             {!loading && !error && pageImages.length > 0 && (
-                <div className="flex-1 flex items-center justify-center w-full relative">
+                <div className="flex-1 flex flex-col items-center justify-center w-full relative pb-20 md:pb-0">
                     <HTMLFlipBook
                         ref={bookRef}
                         width={dimensions.width}
@@ -241,7 +253,7 @@ export function ReliableFlipbookViewer({
                         maxHeight={1400}
                         drawShadow={true}
                         flippingTime={600}
-                        usePortrait={false}
+                        usePortrait={isMobile}
                         startPage={initialPage}
                         className="flipbook"
                         style={{}}
@@ -268,31 +280,59 @@ export function ReliableFlipbookViewer({
                         ))}
                     </HTMLFlipBook>
 
-                    {/* Navigation Controls */}
-                    <button
-                        onClick={() => bookRef.current?.pageFlip()?.flipPrev()}
-                        disabled={currentPage === 0}
-                        className={cn(
-                            "absolute left-4 top-1/2 -translate-y-1/2 z-50",
-                            "bg-white/90 hover:bg-white p-3 rounded-full shadow-lg",
-                            "disabled:opacity-30 disabled:cursor-not-allowed",
-                            "transition-all hover:scale-110"
-                        )}
-                    >
-                        <ChevronLeft className="h-6 w-6" />
-                    </button>
-                    <button
-                        onClick={() => bookRef.current?.pageFlip()?.flipNext()}
-                        disabled={currentPage >= numPages - 1}
-                        className={cn(
-                            "absolute right-4 top-1/2 -translate-y-1/2 z-50",
-                            "bg-white/90 hover:bg-white p-3 rounded-full shadow-lg",
-                            "disabled:opacity-30 disabled:cursor-not-allowed",
-                            "transition-all hover:scale-110"
-                        )}
-                    >
-                        <ChevronRight className="h-6 w-6" />
-                    </button>
+                    {/* Navigation Controls - Desktop: sides, Mobile: bottom */}
+                    <div className="hidden md:block">
+                        <button
+                            onClick={() => bookRef.current?.pageFlip()?.flipPrev()}
+                            disabled={currentPage === 0}
+                            className={cn(
+                                "absolute left-4 top-1/2 -translate-y-1/2 z-50",
+                                "bg-white/90 hover:bg-white p-3 rounded-full shadow-lg",
+                                "disabled:opacity-30 disabled:cursor-not-allowed",
+                                "transition-all hover:scale-110"
+                            )}
+                        >
+                            <ChevronLeft className="h-6 w-6" />
+                        </button>
+                        <button
+                            onClick={() => bookRef.current?.pageFlip()?.flipNext()}
+                            disabled={currentPage >= numPages - 1}
+                            className={cn(
+                                "absolute right-4 top-1/2 -translate-y-1/2 z-50",
+                                "bg-white/90 hover:bg-white p-3 rounded-full shadow-lg",
+                                "disabled:opacity-30 disabled:cursor-not-allowed",
+                                "transition-all hover:scale-110"
+                            )}
+                        >
+                            <ChevronRight className="h-6 w-6" />
+                        </button>
+                    </div>
+
+                    {/* Mobile Navigation - Bottom */}
+                    <div className="md:hidden fixed bottom-20 left-0 right-0 flex justify-center gap-4 z-50 px-4">
+                        <button
+                            onClick={() => bookRef.current?.pageFlip()?.flipPrev()}
+                            disabled={currentPage === 0}
+                            className={cn(
+                                "bg-white/90 hover:bg-white p-4 rounded-full shadow-lg",
+                                "disabled:opacity-30 disabled:cursor-not-allowed",
+                                "transition-all active:scale-95"
+                            )}
+                        >
+                            <ChevronLeft className="h-6 w-6" />
+                        </button>
+                        <button
+                            onClick={() => bookRef.current?.pageFlip()?.flipNext()}
+                            disabled={currentPage >= numPages - 1}
+                            className={cn(
+                                "bg-white/90 hover:bg-white p-4 rounded-full shadow-lg",
+                                "disabled:opacity-30 disabled:cursor-not-allowed",
+                                "transition-all active:scale-95"
+                            )}
+                        >
+                            <ChevronRight className="h-6 w-6" />
+                        </button>
+                    </div>
 
                     {/* Page Counter */}
                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 bg-black/70 text-white px-4 py-2 rounded-full text-sm flex items-center gap-3">
