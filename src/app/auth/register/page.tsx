@@ -127,7 +127,7 @@ function RegisterForm() {
               {/* Address fields - show for all roles but mark as optional for non-customers */}
               <div className="space-y-4 border-t pt-4 mt-4">
                 <h3 className="text-sm font-medium">
-                  {selectedRole === Role.CUSTOMER ? "Shipping Address" : "Address (Optional)"}
+                  {selectedRole === Role.CUSTOMER ? "Address" : "Address (Optional)"}
                 </h3>
                 
                 <FormField control={form.control} name="address" render={({ field }) => (
