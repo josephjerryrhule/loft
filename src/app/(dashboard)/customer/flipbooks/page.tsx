@@ -114,9 +114,6 @@ export default function CustomerFlipbooksPage() {
     console.log("Marking flipbook as complete"); // Debug log
     
     try {
-      // Close the viewer first
-      setViewerOpen(false);
-      
       await updateFlipbookProgress({
         flipbookId: selectedFlipbook.id,
         lastPageRead: selectedFlipbook.totalPages || 999,
@@ -126,7 +123,7 @@ export default function CustomerFlipbooksPage() {
       // Show success message
       toast.success(`"${selectedFlipbook.title}" marked as complete!`);
       
-      // Reload flipbooks to show updated status
+      // Reload flipbooks to show updated status (viewer stays open)
       await loadFlipbooks();
       
       console.log("Marked as complete"); // Debug log
