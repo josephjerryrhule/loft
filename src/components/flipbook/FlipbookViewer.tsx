@@ -34,6 +34,13 @@ export function FlipbookViewer({ pdfUrl, onClose, title, initialPage = 0, onPage
     const [dimensions, setDimensions] = useState({ width: 800, height: 565 }); // Landscape init
     const [aspectRatio, setAspectRatio] = useState(1.414); // Default A4 Landscape (297/210)
 
+    // Log component mount and PDF URL
+    useEffect(() => {
+        console.log('FlipbookViewer mounted with URL:', pdfUrl);
+        console.log('PDF.js worker source:', pdfjs.GlobalWorkerOptions.workerSrc);
+        return () => console.log('FlipbookViewer unmounted');
+    }, [pdfUrl]);
+
     // Memoize PDF.js options to prevent unnecessary reloads
     const pdfOptions = useMemo(() => ({
         cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
@@ -42,7 +49,7 @@ export function FlipbookViewer({ pdfUrl, onClose, title, initialPage = 0, onPage
     }), []);
 
     function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
-        console.log('PDF loaded successfully with', numPages, 'pages');
+        console.log('✅ PDF loaded successfully with', numPages, 'pages');
         setNumPages(numPages);
         setLoading(false);
         setError(null);
@@ -56,9 +63,13 @@ export function FlipbookViewer({ pdfUrl, onClose, title, initialPage = 0, onPage
     }
 
     function onDocumentLoadError(error: Error) {
-        console.error('Error loading PDF:', error);
+        console.error('❌ Error loading PDF:', error);
         setError(error.message || 'Failed to load document');
         setLoading(false);
+    }
+
+    function onDocumentLoadStart() {
+        console.log('⏳ Starting to load PDF...');
     }
     
     function handlePageChange(pageData: any) {
@@ -105,6 +116,19 @@ export function FlipbookViewer({ pdfUrl, onClose, title, initialPage = 0, onPage
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [onClose]);
+
+    // Add timeout for loading
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            if (loading && !error) {
+                console.error('⏱️ PDF loading timeout after 30 seconds');
+                setError('Document loading timeout. The PDF might be too large or the URL is invalid.');
+                setLoading(false);
+            }
+        }, 30000); // 30 second timeout
+
+        return () => clearTimeout(timeout);
+    }, [loading, error]);
 
     // Responsive sizing
     useEffect(() => {
@@ -187,6 +211,13 @@ export function FlipbookViewer({ pdfUrl, onClose, title, initialPage = 0, onPage
                     file={pdfUrl}
                     onLoadSuccess={onDocumentLoadSuccess}
                     onLoadError={onDocumentLoadError}
+                    onLoadProgress={(progress) => {
+                        if (progress.loaded && progress.total) {
+                            const percent = Math.round((progress.loaded / progress.total) * 100);
+                            console.log(`📥 Loading PDF: ${percent}%`);
+                        }
+                    }}
+                    onSourceSuccess={() => console.log('✅ PDF source loaded successfully')}
                     loading={null}
                     className="flex justify-center items-center"
                     options={pdfOptions}
