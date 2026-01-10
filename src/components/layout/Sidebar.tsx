@@ -131,7 +131,7 @@ function NavContent({ userRole, setOpen, logoUrl, platformName }: { userRole?: s
           <div className="pt-4 border-t border-slate-800">
             <Button
                 variant="ghost"
-                className="w-full justify-start gap-3 text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                className="w-full justify-start gap-3 text-white hover:text-red-300 hover:bg-red-900/20"
                 onClick={() => signOut({ callbackUrl: "/auth/login" })}
             >
                 <LogOut size={18} />
