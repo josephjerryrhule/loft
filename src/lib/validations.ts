@@ -54,8 +54,8 @@ export const nameSchema = z
 export const fileUploadSchema = z.object({
   file: z
     .instanceof(File)
-    .refine((file) => file.size <= 10 * 1024 * 1024, {
-      message: "File size must not exceed 10MB",
+    .refine((file) => file.size <= 15 * 1024 * 1024, {
+      message: "File size must not exceed 15MB",
     })
     .refine(
       (file) => {

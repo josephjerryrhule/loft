@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { saveFileLocally } from "@/lib/upload";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
 const ALLOWED_FILE_TYPES = [
   "application/pdf",
   "image/jpeg",
@@ -13,6 +13,14 @@ const ALLOWED_FILE_TYPES = [
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
+
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '15mb',
+    },
+  },
+};
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,7 +35,7 @@ export async function POST(request: NextRequest) {
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: "File size must not exceed 10MB" },
+        { error: "File size must not exceed 15MB" },
         { status: 400 }
       );
     }
