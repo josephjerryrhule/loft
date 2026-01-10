@@ -120,7 +120,7 @@ export async function registerUser(formData: z.infer<typeof registerSchema>) {
     // Create email verification token
     const verificationToken = randomBytes(32).toString("hex");
     const hashedToken = createHash("sha256").update(verificationToken).digest("hex");
-    const verificationUrl = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/auth/verify-email?token=${verificationToken}`;
+    const verificationUrl = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/verify-email?token=${verificationToken}`;
 
     await prisma.emailVerificationToken.create({
       data: {
