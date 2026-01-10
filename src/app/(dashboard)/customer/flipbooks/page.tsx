@@ -123,8 +123,8 @@ export default function CustomerFlipbooksPage() {
       // Show success message
       toast.success(`"${selectedFlipbook.title}" marked as complete!`);
       
-      // Don't reload - just keep the viewer open
-      // User can close manually when ready
+      // Reload flipbooks to update the badge in library (viewer stays open)
+      await loadFlipbooks();
       
       console.log("Marked as complete"); // Debug log
     } catch (error) {
