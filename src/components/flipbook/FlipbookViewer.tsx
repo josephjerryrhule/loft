@@ -2,23 +2,18 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import { ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-// Lazy load heavy PDF libraries
-const Document = dynamic(() => import('react-pdf').then(mod => mod.Document), { ssr: false });
-const Page = dynamic(() => import('react-pdf').then(mod => mod.Page), { ssr: false });
-const HTMLFlipBook = dynamic(() => import('react-pageflip'), { ssr: false });
+// Set PDF worker before any PDF operations
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-// Dynamically set PDF worker
-if (typeof window !== 'undefined') {
-  import('react-pdf').then((pdfjs) => {
-    pdfjs.pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.pdfjs.version}/build/pdf.worker.min.mjs`;
-  });
-}
+// Only lazy load the flipbook library (PDF.js needs to be loaded synchronously)
+const HTMLFlipBook = dynamic(() => import('react-pageflip'), { ssr: false });
 
 interface FlipbookViewerProps {
     pdfUrl: string;
@@ -35,13 +30,16 @@ export function FlipbookViewer({ pdfUrl, onClose, title, initialPage = 0, onPage
     const [currentPage, setCurrentPage] = useState<number>(initialPage);
     const bookRef = useRef<any>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [dimensions, setDimensions] = useState({ width: 800, height: 450 }); // 16:9 init
     const [aspectRatio, setAspectRatio] = useState(0.7071); // Default A4
     const [thumbsVisible, setThumbsVisible] = useState(true);
 
     function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
+        console.log('PDF loaded successfully with', numPages, 'pages');
         setNumPages(numPages);
         setLoading(false);
+        setError(null);
         
         // Jump to initial page after load
         if (initialPage > 0) {
@@ -49,6 +47,12 @@ export function FlipbookViewer({ pdfUrl, onClose, title, initialPage = 0, onPage
                 bookRef.current?.pageFlip()?.turnToPage(initialPage);
             }, 500);
         }
+    }
+
+    function onDocumentLoadError(error: Error) {
+        console.error('Error loading PDF:', error);
+        setError(error.message || 'Failed to load document');
+        setLoading(false);
     }
     
     function handlePageChange(pageData: any) {
@@ -160,18 +164,33 @@ export function FlipbookViewer({ pdfUrl, onClose, title, initialPage = 0, onPage
                     <ChevronRight className="h-8 w-8" />
                 </Button>
 
-                {loading && (
+                {loading && !error && (
                     <div className="absolute inset-0 flex items-center justify-center text-white z-50">
                         <Loader2 className="h-10 w-10 animate-spin mr-2" />
                         <span>Loading Document...</span>
                     </div>
                 )}
 
+                {error && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-50 p-8 text-center">
+                        <X className="h-16 w-16 text-red-500 mb-4" />
+                        <h3 className="text-xl font-semibold mb-2">Failed to Load Document</h3>
+                        <p className="text-white/70 mb-4">{error}</p>
+                        <Button onClick={onClose} variant="outline">Close</Button>
+                    </div>
+                )}
+
                 <Document
                     file={pdfUrl}
                     onLoadSuccess={onDocumentLoadSuccess}
+                    onLoadError={onDocumentLoadError}
                     loading={null}
                     className="flex justify-center items-center"
+                    options={{
+                        cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
+                        cMapPacked: true,
+                        standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
+                    }}
                 >
                     {numPages > 0 && (
                          // @ts-ignore
@@ -220,9 +239,16 @@ export function FlipbookViewer({ pdfUrl, onClose, title, initialPage = 0, onPage
             </div>
             
             {/* Thumbnails Strip */}
-             {!loading && thumbsVisible && (
+             {!loading && !error && thumbsVisible && numPages > 0 && (
                  <div className="h-32 w-full bg-black/90 border-t border-white/10 flex items-center gap-4 overflow-x-auto p-4 z-50 backdrop-blur-sm bg-gradient-to-t from-black to-transparent">
-                     <Document file={pdfUrl} className="flex gap-4 px-4">
+                     <Document 
+                        file={pdfUrl} 
+                        className="flex gap-4 px-4"
+                        options={{
+                            cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
+                            cMapPacked: true,
+                        }}
+                    >
                         {[...Array(numPages)].map((_, index) => (
                             <div 
                                 key={`thumb-${index}`} 
