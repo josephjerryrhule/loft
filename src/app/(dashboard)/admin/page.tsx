@@ -7,8 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { PaymentStatus } from "@/lib/types";
 import { cache } from "@/lib/cache";
-import { Suspense } from "react";
-import { LoadingSpinner, DashboardSkeleton } from "@/components/ui/loading-skeleton";
 
 // Force dynamic rendering - this page requires authentication and real-time data
 export const dynamic = 'force-dynamic';
