@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, UploadCloud } from "lucide-react";
+import { Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface FileUploadProps {
@@ -67,26 +67,25 @@ export function FileUpload({ label, name, accept, required }: FileUploadProps) {
           className="cursor-pointer"
         />
         {uploading && <Loader2 className="animate-spin text-slate-500" />}
+        {uploadedUrl && (
+          <div className="flex items-center gap-2 text-green-600">
+            <CheckCircle2 size={20} />
+            <span className="text-sm font-medium">Uploaded</span>
+            <Button 
+              type="button" 
+              variant="ghost" 
+              size="sm" 
+              className="h-6 text-xs text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setUploadedUrl("");
+                setFile(null);
+              }}
+            >
+              Change
+            </Button>
+          </div>
+        )}
       </div>
-
-      {uploadedUrl && (
-        <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm text-green-700 flex items-center gap-2">
-           <UploadCloud size={16} />
-           <span>Uploaded: {uploadedUrl}</span>
-           <Button 
-             type="button" 
-             variant="ghost" 
-             size="sm" 
-             className="h-6 ml-auto text-red-500 hover:text-red-700 hover:bg-red-50"
-             onClick={() => {
-                 setUploadedUrl("");
-                 setFile(null);
-             }}
-           >
-            Change
-           </Button>
-        </div>
-      )}
     </div>
   );
 }
