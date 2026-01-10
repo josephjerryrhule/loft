@@ -59,6 +59,13 @@ model User {
   passwordResetTokens PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
 
+  @@index([email])
+  @@index([role])
+  @@index([status])
+  @@index([managerId])
+  @@index([referredById])
+  @@index([inviteCode])
+  @@index([createdAt])
   @@map("users")
 }
 
@@ -86,9 +93,15 @@ model Subscription {
   startDate   DateTime           @map("start_date")
   endDate     DateTime           @map("end_date")
   autoRenew   Boolean            @default(false) @map("auto_renew")
-  createdAt   DateTime           @default(now()) @map("created_at")
-  updatedAt   DateTime           @updatedAt @map("updated_at")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
 
+  @@index([customerId])
+  @@index([planId])
+  @@index([status])
+  @@index([startDate])
+  @@index([endDate])
+  @@index([createdAt])
   @@map("subscriptions")
 }
 
@@ -125,6 +138,11 @@ model Flipbook {
 
   progress      FlipbookProgress[]
 
+  @@index([createdById])
+  @@index([category])
+  @@index([isPublished])
+  @@index([isFree])
+  @@index([createdAt])
   @@map("flipbooks")
 }
 
@@ -183,6 +201,12 @@ model Order {
   createdAt        DateTime    @default(now()) @map("created_at")
   updatedAt        DateTime    @updatedAt @map("updated_at")
 
+  @@index([customerId])
+  @@index([productId])
+  @@index([referredById])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([createdAt])
   @@map("orders")
 }
 
@@ -197,6 +221,10 @@ model Commission {
   createdAt   DateTime           @default(now()) @map("created_at")
   paidAt      DateTime?          @map("paid_at")
 
+  @@index([userId])
+  @@index([status])
+  @@index([sourceType])
+  @@index([createdAt])
   @@map("commissions")
 }
 
@@ -232,6 +260,9 @@ model ActivityLog {
   ipAddress     String?    @map("ip_address")
   createdAt     DateTime   @default(now()) @map("created_at")
 
+  @@index([userId])
+  @@index([actionType])
+  @@index([createdAt])
   @@map("activity_logs")
 }
 

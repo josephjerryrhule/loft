@@ -1,16 +1,24 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
-import HTMLFlipBook from 'react-pageflip';
+import dynamic from 'next/dynamic';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import { ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-// Set up the worker for react-pdf
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+// Lazy load heavy PDF libraries
+const Document = dynamic(() => import('react-pdf').then(mod => mod.Document), { ssr: false });
+const Page = dynamic(() => import('react-pdf').then(mod => mod.Page), { ssr: false });
+const HTMLFlipBook = dynamic(() => import('react-pageflip'), { ssr: false });
+
+// Dynamically set PDF worker
+if (typeof window !== 'undefined') {
+  import('react-pdf').then((pdfjs) => {
+    pdfjs.pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.pdfjs.version}/build/pdf.worker.min.mjs`;
+  });
+}
 
 interface FlipbookViewerProps {
     pdfUrl: string;

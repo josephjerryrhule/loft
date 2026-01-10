@@ -1,108 +1,182 @@
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
+import { RecentActivityTable } from "@/components/admin/RecentActivityTable";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { PaymentStatus } from "@/lib/types";
-import { RecentActivityTable } from "@/components/admin/RecentActivityTable";
+import { cache } from "@/lib/cache";
+import { Suspense } from "react";
+import { LoadingSpinner, DashboardSkeleton } from "@/components/ui/loading-skeleton";
 
 // Force dynamic rendering - this page requires authentication and real-time data
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 async function getStats() {
-    const totalUsers = await prisma.user.count();
-    const totalOrders = await prisma.order.count();
-    const totalFlipbooks = await prisma.flipbook.count();
-    const totalSubscriptions = await prisma.subscription.count({ where: { status: "ACTIVE" }});
+    // Check cache first (5 minute TTL)
+    const cacheKey = 'admin:stats';
+    const cached = cache.get<{ totalUsers: number; totalOrders: number; totalFlipbooks: number; totalRevenue: number; totalSubscriptions: number; pendingPayout: number }>(cacheKey);
+    if (cached) return cached;
+
+    // Run all queries in parallel for better performance
+    const [
+        totalUsers,
+        totalOrders,
+        totalFlipbooks,
+        totalSubscriptions,
+        orderRevenue,
+        subscriptions,
+        pendingCommissions
+    ] = await Promise.all([
+        prisma.user.count(),
+        prisma.order.count(),
+        prisma.flipbook.count(),
+        prisma.subscription.count({ where: { status: "ACTIVE" }}),
+        prisma.order.aggregate({
+            _sum: { totalAmount: true },
+            where: { paymentStatus: { in: ["PAID", "COMPLETED"] } }
+        }),
+        prisma.subscription.findMany({
+            where: { status: "ACTIVE" },
+            include: { plan: true }
+        }),
+        prisma.commission.aggregate({
+            _sum: { amount: true },
+            where: { status: "PENDING" }
+        })
+    ]);
     
-    // Calculate total revenue from orders
-    const orderRevenue = await prisma.order.aggregate({
-        _sum: { totalAmount: true },
-        where: { paymentStatus: { in: ["PAID", "COMPLETED"] } } 
-    });
-    
-    // Calculate total revenue from subscriptions
-    // Since there's no paymentStatus on Subscription, we count ALL that have a plan with a price
-    const subscriptions = await prisma.subscription.findMany({
-        include: { plan: true }
-    });
     const subscriptionRevenue = subscriptions.reduce((sum: number, sub: any) => sum + Number(sub.plan.price), 0);
-    
-    // Calculate pending commissions
-    const pendingCommissions = await prisma.commission.aggregate({
-        _sum: { amount: true },
-        where: { status: "PENDING" }
-    });
-    
     const totalRevenue = (orderRevenue._sum.totalAmount?.toNumber() || 0) + subscriptionRevenue;
     const pendingPayout = pendingCommissions._sum.amount?.toNumber() || 0;
 
-    return { totalUsers, totalOrders, totalFlipbooks, totalRevenue, totalSubscriptions, pendingPayout };
+    const stats = { totalUsers, totalOrders, totalFlipbooks, totalRevenue, totalSubscriptions, pendingPayout };
+    
+    // Cache for 5 minutes
+    cache.set(cacheKey, stats, 300000);
+    
+    return stats;
 }
 
 async function getMonthlyRevenueData() {
-    const months = [];
+    // Check cache first (10 minute TTL)
+    const cacheKey = 'admin:monthly-revenue';
+    const cached = cache.get<{ name: string; total: number }[]>(cacheKey);
+    if (cached) return cached;
+
     const now = new Date();
+    const monthDates = [];
     
+    // Prepare date ranges
     for (let i = 5; i >= 0; i--) {
         const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const endDate = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
-        
-        const revenue = await prisma.order.aggregate({
-            where: {
-                paymentStatus: { in: ["PAID", "COMPLETED"] },
-                createdAt: {
-                    gte: date,
-                    lte: endDate
-                }
-            },
-            _sum: { totalAmount: true }
-        });
-
-        // Add subscription revenue for this month
-        const monthlySubscriptions = await prisma.subscription.findMany({
-            where: {
-                createdAt: {
-                    gte: date,
-                    lte: endDate
-                }
-            },
-            include: { plan: true }
-        });
-        const subRevenue = monthlySubscriptions.reduce((sum: number, sub: any) => sum + Number(sub.plan.price), 0);
-
-        months.push({
-            name: date.toLocaleString('default', { month: 'short' }),
-            total: (revenue._sum.totalAmount?.toNumber() || 0) + subRevenue
-        });
+        monthDates.push({ date, endDate, name: date.toLocaleString('default', { month: 'short' }) });
     }
 
-    return months;
+    // Fetch all months in parallel
+    const monthlyData = await Promise.all(
+        monthDates.map(async ({ date, endDate, name }) => {
+            const [orderRevenue, subscriptions] = await Promise.all([
+                prisma.order.aggregate({
+                    where: {
+                        paymentStatus: { in: ["PAID", "COMPLETED"] },
+                        createdAt: { gte: date, lte: endDate }
+                    },
+                    _sum: { totalAmount: true }
+                }),
+                prisma.subscription.findMany({
+                    where: {
+                        status: "ACTIVE",
+                        createdAt: { gte: date, lte: endDate }
+                    },
+                    include: { plan: true }
+                })
+            ]);
+
+            const subRevenue = subscriptions.reduce((sum: number, sub: any) => sum + Number(sub.plan.price), 0);
+            return {
+                name,
+                total: (orderRevenue._sum.totalAmount?.toNumber() || 0) + subRevenue
+            };
+        })
+    );
+
+    // Cache for 10 minutes
+    cache.set(cacheKey, monthlyData, 600000);
+    
+    return monthlyData;
 }
 
 async function getRecentActivity() {
-    return await prisma.activityLog.findMany({
+    // Cache for 2 minutes
+    const cacheKey = 'admin:recent-activity';
+    const cached = cache.get<any[]>(cacheKey);
+    if (cached) return cached;
+
+    const activities = await prisma.activityLog.findMany({
         take: 50,
         orderBy: { createdAt: 'desc' },
-        include: { user: true }
+        include: { 
+            user: { 
+                select: { 
+                    id: true, 
+                    email: true, 
+                    firstName: true, 
+                    lastName: true, 
+                    profilePictureUrl: true 
+                } 
+            } 
+        }
     });
+    
+    cache.set(cacheKey, activities, 120000);
+    return activities;
 }
 
 async function getRecentSales() {
-    return await prisma.order.findMany({
+    // Cache for 2 minutes
+    const cacheKey = 'admin:recent-sales';
+    const cached = cache.get<any[]>(cacheKey);
+    if (cached) return cached;
+
+    const sales = await prisma.order.findMany({
         take: 5,
         orderBy: { createdAt: 'desc' },
-        include: { customer: true, product: true }
+        include: { 
+            customer: { 
+                select: { 
+                    id: true, 
+                    email: true, 
+                    firstName: true, 
+                    lastName: true, 
+                    profilePictureUrl: true 
+                } 
+            }, 
+            product: { 
+                select: { 
+                    id: true, 
+                    title: true, 
+                    price: true 
+                } 
+            } 
+        }
     });
+    
+    cache.set(cacheKey, sales, 120000);
+    return sales;
 }
 
 export default async function AdminDashboardPage() {
-  const stats = await getStats();
-  const revenueData = await getMonthlyRevenueData();
-  const recentActivity = await getRecentActivity();
-  const recentSales = await getRecentSales();
+  // Fetch all data in parallel for maximum performance
+  const [stats, revenueData, recentActivity, recentSales] = await Promise.all([
+    getStats(),
+    getMonthlyRevenueData(),
+    getRecentActivity(),
+    getRecentSales()
+  ]);
 
   return (
     <div className="space-y-6">
