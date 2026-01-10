@@ -224,7 +224,7 @@ export default function CustomerFlipbooksPage() {
 
         return (
           <>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {paginatedFlipbooks.length === 0 ? (
                 <div className="col-span-full text-center py-12">
                   <p className="text-muted-foreground">No flipbooks found matching your filters</p>
