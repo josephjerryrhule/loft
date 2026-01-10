@@ -268,3 +268,93 @@ export async function resetPassword(token: string, newPassword: string) {
   }
 }
 
+export async function resendEmailVerification(email: string) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return { error: "User not found" };
+    }
+
+    if (user.isEmailVerified) {
+      return { error: "Email is already verified" };
+    }
+
+    // Delete any existing unused verification tokens for this user
+    await prisma.emailVerificationToken.deleteMany({
+      where: {
+        userId: user.id,
+        verifiedAt: null,
+      },
+    });
+
+    // Generate new verification token
+    const token = randomBytes(32).toString("hex");
+    const hashedToken = createHash("sha256").update(token).digest("hex");
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    await prisma.emailVerificationToken.create({
+      data: {
+        userId: user.id,
+        token,
+        hashedToken,
+        expiresAt,
+      },
+    });
+
+    // Send verification email
+    const verificationUrl = `${process.env.NEXTAUTH_URL}/api/verify-email?token=${token}`;
+    await sendEmailVerification({
+      userEmail: user.email,
+      verificationUrl,
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Resend verification error:", error);
+    return { error: "Failed to resend verification email. Please try again." };
+  }
+}
+
+export async function checkLoginStatus(email: string, password: string) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return { error: "INVALID_CREDENTIALS" };
+    }
+
+    // Check if account is locked
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      return { 
+        error: "ACCOUNT_LOCKED", 
+        lockedUntil: user.lockedUntil.toISOString() 
+      };
+    }
+
+    // Check if user is suspended or banned
+    if (user.status === "SUSPENDED" || user.status === "BANNED") {
+      return { error: "ACCOUNT_SUSPENDED", status: user.status };
+    }
+
+    // Check password first
+    const passwordsMatch = await compare(password, user.passwordHash);
+    if (!passwordsMatch) {
+      return { error: "INVALID_CREDENTIALS" };
+    }
+
+    // Then check email verification (skip for ADMIN)
+    if (user.role !== "ADMIN" && !user.isEmailVerified) {
+      return { error: "EMAIL_NOT_VERIFIED", email: user.email };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Check login status error:", error);
+    return { error: "UNKNOWN_ERROR" };
+  }
+}
