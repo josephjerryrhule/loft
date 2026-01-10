@@ -7,8 +7,9 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { AdminCommissionActions, AdminPayoutActions } from "@/components/admin/AdminFinanceActions";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { Loader2 } from "lucide-react";
-import { getFinanceData } from "@/app/actions/admin";
+import { Loader2, CheckCircle2 } from "lucide-react";
+import { getFinanceData, bulkApproveCommissions } from "@/app/actions/admin";
+import { toast } from "sonner";
 
 
 export default function AdminFinancePage() {
@@ -16,6 +17,7 @@ export default function AdminFinancePage() {
   const [payoutRequests, setPayoutRequests] = useState<any[]>([]);
   const [recentCommissions, setRecentCommissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [bulkApproving, setBulkApproving] = useState(false);
   const [payoutPage, setPayoutPage] = useState(1);
   const [payoutItemsPerPage, setPayoutItemsPerPage] = useState(12);
   const [commissionPage, setCommissionPage] = useState(1);
@@ -36,6 +38,34 @@ export default function AdminFinancePage() {
       console.error("Failed to load finance data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    const pendingCount = recentCommissions.filter(c => c.status === "PENDING").length;
+    
+    if (pendingCount === 0) {
+      toast.error("No pending commissions to approve");
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to approve all ${pendingCount} pending commissions?`)) {
+      return;
+    }
+
+    setBulkApproving(true);
+    try {
+      const result = await bulkApproveCommissions();
+      if ("error" in result) {
+        toast.error(result.error);
+      } else {
+        toast.success(`Successfully approved ${result.approved} commissions totaling GHS ${result.totalAmount.toFixed(2)}`);
+        await loadFinanceData();
+      }
+    } catch (error) {
+      toast.error("Failed to approve commissions");
+    } finally {
+      setBulkApproving(false);
     }
   };
 
@@ -172,8 +202,26 @@ export default function AdminFinancePage() {
       {/* Recent Commissions */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Commissions</CardTitle>
-          <CardDescription>All commission entries</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Recent Commissions</CardTitle>
+              <CardDescription>All commission entries</CardDescription>
+            </div>
+            {recentCommissions.some(c => c.status === "PENDING") && (
+              <Button 
+                onClick={handleBulkApprove}
+                disabled={bulkApproving}
+                className="gap-2"
+              >
+                {bulkApproving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4" />
+                )}
+                Approve All Pending
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <Table>

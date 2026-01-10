@@ -67,6 +67,86 @@ export async function approveCommission(commissionId: string) {
     }
 }
 
+export async function bulkApproveCommissions() {
+    const session = await auth();
+    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+        return { error: "Unauthorized" };
+    }
+
+    try {
+        // Get all pending commissions
+        const pendingCommissions = await prisma.commission.findMany({
+            where: { status: "PENDING" },
+            include: { user: true }
+        });
+
+        if (pendingCommissions.length === 0) {
+            return { error: "No pending commissions to approve" };
+        }
+
+        const results = await prisma.$transaction(async (tx) => {
+            // Update all pending commissions to APPROVED
+            await tx.commission.updateMany({
+                where: { status: "PENDING" },
+                data: { status: "APPROVED" }
+            });
+
+            // Create activity logs for each user's commissions
+            const userCommissions = new Map<string, { count: number; total: number }>();
+            pendingCommissions.forEach(comm => {
+                const existing = userCommissions.get(comm.userId) || { count: 0, total: 0 };
+                userCommissions.set(comm.userId, {
+                    count: existing.count + 1,
+                    total: existing.total + Number(comm.amount)
+                });
+            });
+
+            // Log activity for each user
+            for (const [userId, data] of userCommissions.entries()) {
+                await tx.activityLog.create({
+                    data: {
+                        userId: userId,
+                        actionType: "COMMISSION_APPROVED",
+                        actionDetails: JSON.stringify({
+                            bulkApproval: true,
+                            count: data.count,
+                            totalAmount: data.total
+                        })
+                    }
+                });
+            }
+
+            // Log activity for admin
+            await tx.activityLog.create({
+                data: {
+                    userId: session.user!.id,
+                    actionType: "ADMIN_BULK_APPROVE_COMMISSIONS",
+                    actionDetails: JSON.stringify({
+                        count: pendingCommissions.length,
+                        totalAmount: pendingCommissions.reduce((sum, c) => sum + Number(c.amount), 0),
+                        userCount: userCommissions.size
+                    })
+                }
+            });
+
+            return {
+                approved: pendingCommissions.length,
+                totalAmount: pendingCommissions.reduce((sum, c) => sum + Number(c.amount), 0)
+            };
+        });
+
+        revalidatePath("/admin/finance");
+        revalidatePath("/admin");
+        revalidatePath("/affiliate/commissions");
+        revalidatePath("/manager/commissions");
+        
+        return { success: true, ...results };
+    } catch (e) {
+        console.error("Failed to bulk approve commissions:", e);
+        return { error: "Failed to approve commissions" };
+    }
+}
+
 export async function approvePayoutRequest(requestId: string) {
     const session = await auth();
     if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
