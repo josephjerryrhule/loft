@@ -21,7 +21,7 @@ interface TeamMember {
     lastName: string | null;
     email: string;
     status: string;
-    createdAt: string;
+    createdAt: string | Date;
     referralsCount: number;
 }
 

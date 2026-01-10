@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { sendPayoutRequestToSupport, sendPayoutApprovalEmail } from "@/lib/email";
 
 async function getMinimumPayoutAmount(): Promise<number> {
     try {
@@ -73,6 +74,23 @@ export async function requestPayout(amount: number, method: any) {
                 }
             });
         });
+
+        // Send email notification to support
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { email: true, firstName: true, lastName: true },
+        });
+        
+        if (user) {
+          sendPayoutRequestToSupport({
+            userName: `${user.firstName || ""} ${user.lastName || ""}`.trim() || "User",
+            userEmail: user.email,
+            amount,
+            bankName: method.bankName || method.type || "Unknown",
+            accountNumber: method.accountNumber || "N/A",
+            payoutId: userId,
+          }).catch(console.error);
+        }
 
         // Revalidate based on role
         if ((session.user as any).role === "MANAGER") {

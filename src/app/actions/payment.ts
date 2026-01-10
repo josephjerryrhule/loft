@@ -4,6 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { processSubscriptionCommission } from "@/lib/commission";
 import { getPaystackSecretKey } from "@/lib/paystack";
+import { 
+  sendSubscriptionConfirmationEmail, 
+  sendSubscriptionReceiptEmail,
+  sendOrderReceiptEmail,
+  sendOrderNotificationToSupport
+} from "@/lib/email";
 
 // Verify payment with Paystack
 interface PaystackVerificationData {
@@ -113,6 +119,36 @@ export async function processSubscriptionPayment(reference: string, planId: stri
       },
     });
 
+    // Send subscription emails
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { email: true, firstName: true, lastName: true },
+    });
+    
+    if (user) {
+      const userName = `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Customer";
+      
+      // Send confirmation email
+      sendSubscriptionConfirmationEmail({
+        userEmail: user.email,
+        userName,
+        planName: plan.name,
+        amount: amountPaid,
+        startDate,
+        endDate,
+      }).catch(console.error);
+      
+      // Send receipt email
+      sendSubscriptionReceiptEmail({
+        userEmail: user.email,
+        userName,
+        planName: plan.name,
+        amount: amountPaid,
+        transactionId: reference,
+        billingPeriod: `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`,
+      }).catch(console.error);
+    }
+
     // Note: revalidatePath is handled by the calling page, not here
     // to avoid errors when called during render
 
@@ -163,7 +199,7 @@ export async function processProductPayment(
     // Get user's referrer for commission
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { referredById: true },
+      select: { referredById: true, email: true, firstName: true, lastName: true },
     });
 
     // Create order
@@ -201,6 +237,30 @@ export async function processProductPayment(
         }),
       },
     });
+
+    // Send order emails
+    if (user) {
+      const customerName = `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Customer";
+      
+      // Send receipt to customer
+      sendOrderReceiptEmail({
+        id: order.orderNumber,
+        customerEmail: user.email,
+        customerName,
+        items: [{ name: product.title, quantity: quantityInt, price: totalAmount }],
+        total: totalAmount,
+        paymentMethod: "Paystack",
+      }).catch(console.error);
+      
+      // Notify support
+      sendOrderNotificationToSupport({
+        id: order.orderNumber,
+        customerName,
+        customerEmail: user.email,
+        total: totalAmount,
+        items: [{ name: product.title, quantity: quantityInt }],
+      }).catch(console.error);
+    }
 
     // Note: revalidatePath is handled by the calling page, not here
     // to avoid errors when called during render

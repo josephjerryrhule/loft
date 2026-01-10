@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { Role } from "@/lib/types";
+import { sendCommissionEarnedEmail } from "@/lib/email";
 
 const SIGNUP_BONUS = 5.00;
 const AFFILIATE_SUBSCRIPTION_FLAT = 10.00;
@@ -44,30 +45,62 @@ export async function processOrderCommission(orderId: string) {
               status: "PENDING"
           }
       });
+      
+      // Send commission email to affiliate
+      sendCommissionEarnedEmail({
+        recipientEmail: referrer.email,
+        recipientName: `${referrer.firstName || ""} ${referrer.lastName || ""}`.trim() || "Affiliate",
+        amount: Number(product.affiliateCommissionAmount),
+        orderId: order.id,
+        type: "AFFILIATE",
+      }).catch(console.error);
 
       // 2. Manager Commission (percentage from settings)
       if (referrer.managerId) {
+          const managerCommissionAmount = totalAmount * managerPercentage;
           await prisma.commission.create({
               data: {
                   userId: referrer.managerId,
                   sourceType: "PRODUCT",
                   sourceId: order.id,
-                  amount: totalAmount * managerPercentage,
+                  amount: managerCommissionAmount,
                   status: "PENDING"
               }
           });
+          
+          // Send commission email to manager
+          const manager = await prisma.user.findUnique({ where: { id: referrer.managerId } });
+          if (manager) {
+            sendCommissionEarnedEmail({
+              recipientEmail: manager.email,
+              recipientName: `${manager.firstName || ""} ${manager.lastName || ""}`.trim() || "Manager",
+              amount: managerCommissionAmount,
+              orderId: order.id,
+              type: "MANAGER",
+            }).catch(console.error);
+          }
       }
   } else if (referrer.role === Role.MANAGER) {
       // Direct Manager Sale - earns the commission percentage from settings
+      const managerCommissionAmount = totalAmount * managerPercentage;
       await prisma.commission.create({
           data: {
               userId: referrer.id,
               sourceType: "PRODUCT",
               sourceId: order.id,
-              amount: totalAmount * managerPercentage,
+              amount: managerCommissionAmount,
               status: "PENDING"
           }
       });
+      
+      // Send commission email to manager
+      sendCommissionEarnedEmail({
+        recipientEmail: referrer.email,
+        recipientName: `${referrer.firstName || ""} ${referrer.lastName || ""}`.trim() || "Manager",
+        amount: managerCommissionAmount,
+        orderId: order.id,
+        type: "MANAGER",
+      }).catch(console.error);
   }
 }
 
@@ -116,30 +149,62 @@ export async function processSubscriptionCommission(subscriptionId: string, cust
                 status: "PENDING"
             }
         });
+        
+        // Send commission email to affiliate
+        sendCommissionEarnedEmail({
+          recipientEmail: referrer.email,
+          recipientName: `${referrer.firstName || ""} ${referrer.lastName || ""}`.trim() || "Affiliate",
+          amount: AFFILIATE_SUBSCRIPTION_FLAT,
+          subscriptionId,
+          type: "AFFILIATE",
+        }).catch(console.error);
 
         // Manager earns percentage from settings
         if (referrer.managerId) {
+            const managerCommissionAmount = planPrice * managerPercentage;
             await prisma.commission.create({
                 data: {
                     userId: referrer.managerId,
                     sourceType: "SUBSCRIPTION",
                     sourceId: subscriptionId,
-                    amount: planPrice * managerPercentage,
+                    amount: managerCommissionAmount,
                     status: "PENDING"
                 }
             });
+            
+            // Send commission email to manager
+            const manager = await prisma.user.findUnique({ where: { id: referrer.managerId } });
+            if (manager) {
+              sendCommissionEarnedEmail({
+                recipientEmail: manager.email,
+                recipientName: `${manager.firstName || ""} ${manager.lastName || ""}`.trim() || "Manager",
+                amount: managerCommissionAmount,
+                subscriptionId,
+                type: "MANAGER",
+              }).catch(console.error);
+            }
         }
     } else if (referrer.role === Role.MANAGER) {
         // Direct manager referral - earns percentage from settings
+        const managerCommissionAmount = planPrice * managerPercentage;
         await prisma.commission.create({
             data: {
                 userId: referrer.id,
                 sourceType: "SUBSCRIPTION",
                 sourceId: subscriptionId,
-                amount: planPrice * managerPercentage,
+                amount: managerCommissionAmount,
                 status: "PENDING"
             }
         });
+        
+        // Send commission email to manager
+        sendCommissionEarnedEmail({
+          recipientEmail: referrer.email,
+          recipientName: `${referrer.firstName || ""} ${referrer.lastName || ""}`.trim() || "Manager",
+          amount: managerCommissionAmount,
+          subscriptionId,
+          type: "MANAGER",
+        }).catch(console.error);
     }
 
     // Log activity

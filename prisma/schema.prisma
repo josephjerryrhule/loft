@@ -47,6 +47,7 @@ model User {
   commissions     Commission[]
   payoutRequests  PayoutRequest[]
   activityLogs    ActivityLog[]
+  passwordResetTokens PasswordResetToken[]
 
   @@map("users")
 }
@@ -222,4 +223,16 @@ model ActivityLog {
   createdAt     DateTime   @default(now()) @map("created_at")
 
   @@map("activity_logs")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("password_reset_tokens")
 }

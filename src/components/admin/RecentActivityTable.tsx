@@ -9,7 +9,7 @@ import { formatActivityDetails, getActionTypeLabel } from "@/lib/activity-format
 interface ActivityLog {
   id: string;
   actionType: string;
-  actionDetails: string;
+  actionDetails: string | null;
   createdAt: Date;
   user?: {
     email: string;
@@ -53,7 +53,7 @@ export function RecentActivityTable({ activities }: RecentActivityTableProps) {
               <TableCell>
                 <Badge variant="outline">{getActionTypeLabel(log.actionType)}</Badge>
               </TableCell>
-              <TableCell className="max-w-xs truncate">{formatActivityDetails(log.actionType, log.actionDetails)}</TableCell>
+              <TableCell className="max-w-xs truncate">{formatActivityDetails(log.actionType, log.actionDetails || "")}</TableCell>
               <TableCell className="text-muted-foreground">{new Date(log.createdAt).toLocaleString()}</TableCell>
             </TableRow>
           ))}

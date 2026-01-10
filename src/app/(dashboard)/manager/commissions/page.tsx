@@ -19,9 +19,9 @@ import { getCurrencySymbol } from "@/lib/utils";
 
 interface Commission {
     id: string;
-    createdAt: string;
+    createdAt: string | Date;
     sourceType: string;
-    amount: number;
+    amount: number | { toString: () => string };
     status: string;
 }
 

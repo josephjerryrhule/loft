@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 
 export async function getManagerStats() {
   const session = await auth();
-  if (!session?.user?.id || session.user.role !== Role.MANAGER) {
+  if (!session?.user?.id || (session.user as any).role !== Role.MANAGER) {
     return null;
   }
 

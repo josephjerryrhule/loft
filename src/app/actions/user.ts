@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
+import { sendAccountStatusChangeEmail } from "@/lib/email";
 
 export async function updateUser(userId: string, data: {
     firstName: string;
@@ -12,8 +13,15 @@ export async function updateUser(userId: string, data: {
     role: string;
     status: string;
 }) {
-    // ... existing implementation ...
     try {
+        // Get current user to check if status is changing
+        const currentUser = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { status: true, email: true, firstName: true, lastName: true },
+        });
+        
+        const statusChanged = currentUser && currentUser.status !== data.status;
+        
         await prisma.user.update({
             where: { id: userId },
             data: {
@@ -25,6 +33,17 @@ export async function updateUser(userId: string, data: {
                 status: data.status, 
             }
         });
+        
+        // Send email notification if status changed
+        if (statusChanged && currentUser) {
+          sendAccountStatusChangeEmail({
+            userEmail: data.email,
+            userName: `${data.firstName} ${data.lastName}`.trim() || "User",
+            oldStatus: currentUser.status,
+            newStatus: data.status,
+          }).catch(console.error);
+        }
+        
         revalidatePath("/admin/users");
         return { success: true };
     } catch (error) {

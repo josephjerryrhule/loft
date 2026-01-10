@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { sendPayoutApprovalEmail, sendAccountStatusChangeEmail, sendOrderStatusChangeEmail } from "@/lib/email";
 
 export async function approveCommission(commissionId: string) {
     const session = await auth();
@@ -42,7 +43,7 @@ export async function approveCommission(commissionId: string) {
             // Log activity for admin who approved it
             await tx.activityLog.create({
                 data: {
-                    userId: session.user.id,
+                    userId: session.user!.id,
                     actionType: "ADMIN_APPROVE_COMMISSION",
                     actionDetails: JSON.stringify({
                         commissionId: commissionId,
@@ -144,7 +145,7 @@ export async function approvePayoutRequest(requestId: string) {
             // Log activity for the admin who approved the payout
             await tx.activityLog.create({
                 data: {
-                    userId: session.user.id,
+                    userId: session.user!.id,
                     actionType: "PAYOUT_APPROVED",
                     actionDetails: JSON.stringify({
                         payoutRequestId: requestId,
@@ -155,6 +156,14 @@ export async function approvePayoutRequest(requestId: string) {
                 }
             });
         });
+
+        // Send email notification to user about payout approval
+        sendPayoutApprovalEmail({
+          userEmail: request.user.email,
+          userName: `${request.user.firstName || ""} ${request.user.lastName || ""}`.trim() || "User",
+          amount: payoutAmount,
+          status: "APPROVED",
+        }).catch(console.error);
 
         revalidatePath("/admin/finance");
         revalidatePath("/admin");
@@ -306,6 +315,8 @@ export async function updateOrderStatus(orderId: string, status: string) {
 
         if (!order) return { error: "Order not found" };
 
+        const oldStatus = order.status;
+
         await prisma.$transaction(async (tx) => {
             // Update order status
             await tx.order.update({
@@ -316,7 +327,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
             // Log activity
             await tx.activityLog.create({
                 data: {
-                    userId: session.user.id,
+                    userId: session.user!.id,
                     actionType: "ADMIN_UPDATE_ORDER",
                     actionDetails: JSON.stringify({
                         orderId
@@ -324,6 +335,17 @@ export async function updateOrderStatus(orderId: string, status: string) {
                 }
             });
         });
+
+        // Send email notification to customer about order status change
+        if (order.customer && oldStatus !== status) {
+          sendOrderStatusChangeEmail({
+            customerEmail: order.customer.email,
+            customerName: `${order.customer.firstName || ""} ${order.customer.lastName || ""}`.trim() || "Customer",
+            orderId: order.orderNumber,
+            oldStatus,
+            newStatus: status,
+          }).catch(console.error);
+        }
 
         revalidatePath("/admin/orders");
         return { success: true };

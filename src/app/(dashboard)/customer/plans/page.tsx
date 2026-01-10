@@ -87,7 +87,7 @@ export default async function CustomerPlansPage() {
                             {currentSubscription?.planId === plan.id ? (
                                 <Badge variant="outline">Current Plan</Badge>
                             ) : (
-                                session?.user?.email && (
+                                session?.user?.email && session?.user?.id && (
                                     <SubscribePlanButton 
                                         plan={plan}
                                         userEmail={session.user.email}
