@@ -196,10 +196,20 @@ export async function processProductPayment(
       return { error: "Payment amount mismatch" };
     }
 
-    // Get user's referrer for commission
+    // Get user's referrer and address for commission and shipping
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { referredById: true, email: true, firstName: true, lastName: true },
+      select: { 
+        referredById: true, 
+        email: true, 
+        firstName: true, 
+        lastName: true,
+        address: true,
+        city: true,
+        state: true,
+        postalCode: true,
+        country: true,
+      },
     });
 
     // Create order
@@ -216,6 +226,12 @@ export async function processProductPayment(
         paymentStatus: "PAID",
         paymentReference: reference,
         referredById: user?.referredById || undefined,
+        // Copy shipping address from user profile
+        shippingAddress: user?.address || null,
+        shippingCity: user?.city || null,
+        shippingState: user?.state || null,
+        shippingPostalCode: user?.postalCode || null,
+        shippingCountry: user?.country || null,
       },
     });
 

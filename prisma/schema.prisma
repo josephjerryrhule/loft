@@ -23,6 +23,13 @@ model User {
   phoneNumber     String?    @map("phone_number")
   profilePictureUrl String?  @map("profile_picture_url")
   
+  // Address fields
+  address         String?
+  city            String?
+  state           String?
+  postalCode      String?    @map("postal_code")
+  country         String?
+  
   managerId       String?    @map("manager_id")
   manager         User?      @relation("ManagerAffiliates", fields: [managerId], references: [id])
   affiliates      User[]     @relation("ManagerAffiliates")
@@ -196,6 +203,14 @@ model Order {
   status           String      @default("PENDING") // Enum: PENDING, PROCESSING, COMPLETED, CANCELLED
   paymentStatus    String      @default("PENDING") @map("payment_status") // Enum
   paymentReference String?     @map("payment_reference")
+  
+  // Shipping address
+  shippingAddress  String?     @map("shipping_address")
+  shippingCity     String?     @map("shipping_city")
+  shippingState    String?     @map("shipping_state")
+  shippingPostalCode String?   @map("shipping_postal_code")
+  shippingCountry  String?     @map("shipping_country")
+  
   referredById     String?     @map("referred_by_id")
   referredBy       User?       @relation("AffiliateReferredOrders", fields: [referredById], references: [id])
   createdAt        DateTime    @default(now()) @map("created_at")

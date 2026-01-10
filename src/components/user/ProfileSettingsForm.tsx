@@ -16,6 +16,11 @@ interface ProfileSettingsFormProps {
         lastName: string | null;
         email: string;
         phoneNumber: string | null;
+        address: string | null;
+        city: string | null;
+        state: string | null;
+        postalCode: string | null;
+        country: string | null;
     };
 }
 
@@ -72,6 +77,37 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
                         className: "border-0 bg-transparent focus:ring-0 outline-none w-full ml-2" // styling fix
                     }}
                 />
+            </div>
+
+            <div className="space-y-4 border-t pt-4 mt-4">
+                <h3 className="text-sm font-medium">Shipping Address</h3>
+                
+                <div className="space-y-2">
+                    <Label htmlFor="address">Street Address</Label>
+                    <Input id="address" name="address" defaultValue={user.address || ""} placeholder="123 Main St" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="city">City</Label>
+                        <Input id="city" name="city" defaultValue={user.city || ""} placeholder="Accra" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="state">State/Region</Label>
+                        <Input id="state" name="state" defaultValue={user.state || ""} placeholder="Greater Accra" />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="postalCode">Postal Code</Label>
+                        <Input id="postalCode" name="postalCode" defaultValue={user.postalCode || ""} placeholder="00233" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="country">Country</Label>
+                        <Input id="country" name="country" defaultValue={user.country || "Ghana"} placeholder="Ghana" />
+                    </div>
+                </div>
             </div>
 
             <div className="pt-4">

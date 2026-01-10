@@ -18,10 +18,16 @@ const registerSchema = z.object({
   role: z.nativeEnum(Role),
   managerCode: z.string().optional(), // For affiliates
   referralCode: z.string().optional(), // For customers
+  // Address fields
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  postalCode: z.string().optional(),
+  country: z.string().optional(),
 });
 
 export async function registerUser(formData: z.infer<typeof registerSchema>) {
-  const { firstName, lastName, email, password, phone, role, managerCode, referralCode } = formData;
+  const { firstName, lastName, email, password, phone, role, managerCode, referralCode, address, city, state, postalCode, country } = formData;
 
   const existingUser = await prisma.user.findUnique({
     where: { email },
@@ -70,6 +76,11 @@ export async function registerUser(formData: z.infer<typeof registerSchema>) {
         managerId,
         referredById,
         inviteCode: newInviteCode,
+        address: address || null,
+        city: city || null,
+        state: state || null,
+        postalCode: postalCode || null,
+        country: country || null,
       },
     });
 

@@ -76,6 +76,11 @@ export async function updateProfile(formData: FormData) {
     const firstName = formData.get("firstName") as string;
     const lastName = formData.get("lastName") as string;
     const phoneNumber = formData.get("phoneNumber") as string;
+    const address = formData.get("address") as string;
+    const city = formData.get("city") as string;
+    const state = formData.get("state") as string;
+    const postalCode = formData.get("postalCode") as string;
+    const country = formData.get("country") as string;
     
     try {
         await prisma.user.update({
@@ -83,7 +88,12 @@ export async function updateProfile(formData: FormData) {
             data: {
                 firstName,
                 lastName,
-                phoneNumber
+                phoneNumber,
+                address: address || null,
+                city: city || null,
+                state: state || null,
+                postalCode: postalCode || null,
+                country: country || null,
             }
         });
         revalidatePath("/settings");

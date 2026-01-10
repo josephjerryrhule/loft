@@ -38,6 +38,11 @@ function RegisterForm() {
       role: roleFromQuery,
       managerCode: roleFromQuery === Role.AFFILIATE ? ref : "",
       referralCode: roleFromQuery === Role.CUSTOMER ? ref : "",
+      address: "",
+      city: "",
+      state: "",
+      postalCode: "",
+      country: "Ghana",
     },
   });
 
@@ -118,6 +123,57 @@ function RegisterForm() {
                   <FormMessage />
                 </FormItem>
               )} />
+
+              {/* Address fields - show for all roles but mark as optional for non-customers */}
+              <div className="space-y-4 border-t pt-4 mt-4">
+                <h3 className="text-sm font-medium">
+                  {selectedRole === Role.CUSTOMER ? "Shipping Address" : "Address (Optional)"}
+                </h3>
+                
+                <FormField control={form.control} name="address" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Street Address {selectedRole === Role.CUSTOMER && "*"}</FormLabel>
+                    <FormControl><Input placeholder="123 Main St" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={form.control} name="city" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>City {selectedRole === Role.CUSTOMER && "*"}</FormLabel>
+                      <FormControl><Input placeholder="Accra" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  
+                  <FormField control={form.control} name="state" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>State/Region {selectedRole === Role.CUSTOMER && "*"}</FormLabel>
+                      <FormControl><Input placeholder="Greater Accra" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={form.control} name="postalCode" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Postal Code</FormLabel>
+                      <FormControl><Input placeholder="00233" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  
+                  <FormField control={form.control} name="country" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Country</FormLabel>
+                      <FormControl><Input placeholder="Ghana" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+              </div>
 
               {!ref && (
                 <FormField control={form.control} name="role" render={({ field }) => (

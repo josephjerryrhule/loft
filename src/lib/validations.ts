@@ -131,6 +131,12 @@ export const registrationSchema = z.object({
   role: z.nativeEnum(Role),
   managerCode: z.string().optional(),
   referralCode: z.string().optional(),
+  // Address fields (optional for affiliates/managers, recommended for customers)
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  postalCode: z.string().optional(),
+  country: z.string().optional(),
 });
 
 // Login schema
