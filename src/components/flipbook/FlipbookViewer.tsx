@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -31,9 +31,15 @@ export function FlipbookViewer({ pdfUrl, onClose, title, initialPage = 0, onPage
     const bookRef = useRef<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [dimensions, setDimensions] = useState({ width: 800, height: 450 }); // 16:9 init
-    const [aspectRatio, setAspectRatio] = useState(0.7071); // Default A4
-    const [thumbsVisible, setThumbsVisible] = useState(true);
+    const [dimensions, setDimensions] = useState({ width: 800, height: 565 }); // Landscape init
+    const [aspectRatio, setAspectRatio] = useState(1.414); // Default A4 Landscape (297/210)
+
+    // Memoize PDF.js options to prevent unnecessary reloads
+    const pdfOptions = useMemo(() => ({
+        cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
+        cMapPacked: true,
+        standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
+    }), []);
 
     function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
         console.log('PDF loaded successfully with', numPages, 'pages');
@@ -71,7 +77,7 @@ export function FlipbookViewer({ pdfUrl, onClose, title, initialPage = 0, onPage
         if (page.originalWidth && page.originalHeight) {
              const ratio = page.originalWidth / page.originalHeight;
              // Only update if significantly different to avoid loops
-             if (Math.abs(ratio - aspectRatio) > 0.01) {
+             if (Math.abs(ratio - aspectRatio) > 0.1) {
                  setAspectRatio(ratio);
              }
         }
@@ -106,7 +112,7 @@ export function FlipbookViewer({ pdfUrl, onClose, title, initialPage = 0, onPage
              // We want the *spread* (2 pages) to fit in the container.
              // Available space:
              const maxWidth = window.innerWidth * 0.95; 
-             const maxHeight = window.innerHeight * (thumbsVisible ? 0.75 : 0.9); // Reserve space for thumbs
+             const maxHeight = window.innerHeight * 0.9;
              
              // Calculate max dimensions for a single page based on aspect ratio
              // Constraint 1: Height
@@ -124,15 +130,12 @@ export function FlipbookViewer({ pdfUrl, onClose, title, initialPage = 0, onPage
         handleResize();
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
-    }, [aspectRatio, thumbsVisible]);
+    }, [aspectRatio]);
 
     return (
         <div className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center">
              {/* Header */}
-             <div className="absolute top-4 right-4 z-50 flex gap-2">
-                 <Button variant="ghost" className="text-white hover:bg-white/20" onClick={() => setThumbsVisible(!thumbsVisible)}>
-                    {thumbsVisible ? "Hide Thumbs" : "Show Thumbs"}
-                 </Button>
+             <div className="absolute top-4 right-4 z-50">
                  <Button variant="ghost" size="icon" onClick={onClose} className="text-white hover:bg-white/20">
                      <X className="h-6 w-6" />
                  </Button>
@@ -186,11 +189,7 @@ export function FlipbookViewer({ pdfUrl, onClose, title, initialPage = 0, onPage
                     onLoadError={onDocumentLoadError}
                     loading={null}
                     className="flex justify-center items-center"
-                    options={{
-                        cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
-                        cMapPacked: true,
-                        standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
-                    }}
+                    options={pdfOptions}
                 >
                     {numPages > 0 && (
                          // @ts-ignore
@@ -229,7 +228,9 @@ export function FlipbookViewer({ pdfUrl, onClose, title, initialPage = 0, onPage
                                         onLoadSuccess={index === 0 ? onPageLoadSuccess : undefined}
                                         renderAnnotationLayer={false}
                                         renderTextLayer={false}
-                                        className="h-full w-full" 
+                                        loading={null}
+                                        className="h-full w-full"
+                                        scale={1.0}
                                     />
                                 </div>
                             ))}
@@ -237,38 +238,6 @@ export function FlipbookViewer({ pdfUrl, onClose, title, initialPage = 0, onPage
                     )}
                 </Document>
             </div>
-            
-            {/* Thumbnails Strip */}
-             {!loading && !error && thumbsVisible && numPages > 0 && (
-                 <div className="h-32 w-full bg-black/90 border-t border-white/10 flex items-center gap-4 overflow-x-auto p-4 z-50 backdrop-blur-sm bg-gradient-to-t from-black to-transparent">
-                     <Document 
-                        file={pdfUrl} 
-                        className="flex gap-4 px-4"
-                        options={{
-                            cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
-                            cMapPacked: true,
-                        }}
-                    >
-                        {[...Array(numPages)].map((_, index) => (
-                            <div 
-                                key={`thumb-${index}`} 
-                                className="cursor-pointer hover:scale-105 transition-all opacity-70 hover:opacity-100 flex flex-col items-center"
-                                onClick={() => goToPage(index)}
-                            >
-                                <div className="border border-white/20 rounded overflow-hidden">
-                                    <Page 
-                                        pageNumber={index + 1} 
-                                        width={80} 
-                                        renderAnnotationLayer={false}
-                                        renderTextLayer={false}
-                                    />
-                                </div>
-                                <span className="text-[10px] text-white/70 mt-1">{index + 1}</span>
-                            </div>
-                        ))}
-                     </Document>
-                 </div>
-             )}
         </div>
     );
 }

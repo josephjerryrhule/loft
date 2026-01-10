@@ -294,7 +294,6 @@ export default function CustomerFlipbooksPage() {
           onClose={() => {
             setViewerOpen(false);
             setSelectedFlipbook(null);
-            loadFlipbooks();
           }}
           onPageChange={handlePageChange}
           onComplete={handleComplete}
