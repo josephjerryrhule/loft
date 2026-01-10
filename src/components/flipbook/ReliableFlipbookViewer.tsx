@@ -40,33 +40,19 @@ export function ReliableFlipbookViewer({
     const bookRef = useRef<any>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
-    // Initialize audio
+    // Initialize audio with actual sound file
     useEffect(() => {
-        // Create a simple page flip sound using Web Audio API
-        const createFlipSound = () => {
-            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-            
-            return () => {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                // Quick swoosh sound
-                oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
-                oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.1);
-                
-                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-                
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 0.1);
-            };
-        };
+        const audio = new Audio('/sounds/page-flip.mp3');
+        audio.volume = 0.3; // Set volume to 30% so it's not too loud
+        audio.preload = 'auto';
+        audioRef.current = audio;
         
-        const playSound = createFlipSound();
-        (audioRef as any).current = playSound;
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current = null;
+            }
+        };
     }, []);
 
     useEffect(() => {
@@ -184,7 +170,10 @@ export function ReliableFlipbookViewer({
         // Play flip sound
         if (audioRef.current) {
             try {
-                (audioRef.current as any)();
+                audioRef.current.currentTime = 0; // Reset to start
+                audioRef.current.play().catch(() => {
+                    // Ignore if autoplay is blocked
+                });
             } catch (err) {
                 // Ignore audio errors
             }
