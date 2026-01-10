@@ -290,7 +290,7 @@ export default function CustomerFlipbooksPage() {
         <ReliableFlipbookViewer
           pdfUrl={selectedFlipbook.pdfUrl}
           title={selectedFlipbook.title}
-          initialPage={selectedFlipbook.currentPage || 0}
+          initialPage={selectedFlipbook.progress?.lastPageRead || 0}
           onClose={() => {
             setViewerOpen(false);
             setSelectedFlipbook(null);

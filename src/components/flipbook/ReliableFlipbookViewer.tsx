@@ -180,8 +180,10 @@ export function ReliableFlipbookViewer({
             }
         }
         
-        // Mark as complete when reaching the last page (only once)
-        if (page >= numPages - 1 && onComplete && !hasMarkedCompleteRef.current) {
+        // Mark as complete when reaching the last page or last spread (only once)
+        // For two-page spread: numPages=16 means last flip shows pages 15-16 at index 14
+        // So we check if page >= numPages - 2 to catch the last spread
+        if (page >= numPages - 2 && onComplete && !hasMarkedCompleteRef.current) {
             hasMarkedCompleteRef.current = true;
             onComplete();
         }
@@ -296,8 +298,8 @@ export function ReliableFlipbookViewer({
                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 bg-black/70 text-white px-4 py-2 rounded-full text-sm flex items-center gap-3">
                         <span>Page {currentPage + 1} of {numPages}</span>
                         
-                        {/* Mark Complete Button when on last page */}
-                        {currentPage >= numPages - 1 && !hasMarkedCompleteRef.current && onComplete && (
+                        {/* Mark Complete Button when on last page or last spread */}
+                        {currentPage >= numPages - 2 && !hasMarkedCompleteRef.current && onComplete && (
                             <Button
                                 onClick={() => {
                                     if (!hasMarkedCompleteRef.current) {
