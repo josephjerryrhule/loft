@@ -223,6 +223,11 @@ export async function sendOrderReceiptEmail(order: {
   items: Array<{ name: string; quantity: number; price: number }>;
   total: number;
   paymentMethod?: string;
+  shippingAddress?: string | null;
+  shippingCity?: string | null;
+  shippingState?: string | null;
+  shippingPostalCode?: string | null;
+  shippingCountry?: string | null;
 }) {
   const branding = await getBranding();
   const itemRows = order.items
@@ -237,6 +242,18 @@ export async function sendOrderReceiptEmail(order: {
     )
     .join("");
 
+  const hasShippingAddress = order.shippingAddress || order.shippingCity || order.shippingCountry;
+  const shippingAddressHtml = hasShippingAddress ? `
+    <div class="info-box">
+      <p><strong>Shipping Address:</strong></p>
+      ${order.shippingAddress ? `<p>${order.shippingAddress}</p>` : ''}
+      <p>
+        ${order.shippingCity ? order.shippingCity : ''}${order.shippingCity && order.shippingState ? ', ' : ''}${order.shippingState || ''} ${order.shippingPostalCode || ''}
+      </p>
+      ${order.shippingCountry ? `<p>${order.shippingCountry}</p>` : ''}
+    </div>
+  ` : '';
+
   const content = `
     <h2>Order Confirmation</h2>
     <p>Hi ${order.customerName},</p>
@@ -245,6 +262,7 @@ export async function sendOrderReceiptEmail(order: {
       <p><strong>Order ID:</strong> ${order.id}</p>
       <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
     </div>
+    ${shippingAddressHtml}
     <table>
       <thead>
         <tr>
@@ -279,9 +297,24 @@ export async function sendOrderNotificationToSupport(order: {
   customerEmail: string;
   total: number;
   items: Array<{ name: string; quantity: number }>;
+  shippingAddress?: string | null;
+  shippingCity?: string | null;
+  shippingState?: string | null;
+  shippingPostalCode?: string | null;
+  shippingCountry?: string | null;
 }) {
   const branding = await getBranding();
   if (!branding.supportEmail) return false;
+
+  const hasShippingAddress = order.shippingAddress || order.shippingCity || order.shippingCountry;
+  const shippingInfo = hasShippingAddress ? `
+      <p><strong>Shipping Address:</strong></p>
+      <p style="margin-left: 1em;">
+        ${order.shippingAddress ? order.shippingAddress + '<br>' : ''}
+        ${order.shippingCity ? order.shippingCity : ''}${order.shippingCity && order.shippingState ? ', ' : ''}${order.shippingState || ''} ${order.shippingPostalCode || ''}<br>
+        ${order.shippingCountry || ''}
+      </p>
+  ` : '';
 
   const content = `
     <h2>New Order Received</h2>
@@ -292,6 +325,7 @@ export async function sendOrderNotificationToSupport(order: {
       <p><strong>Email:</strong> ${order.customerEmail}</p>
       <p><strong>Total:</strong> ${branding.currency}${order.total.toLocaleString()}</p>
       <p><strong>Items:</strong> ${order.items.map((i) => `${i.name} x${i.quantity}`).join(", ")}</p>
+      ${shippingInfo}
     </div>
     <a href="${branding.siteUrl}/admin/orders" class="button">View Order</a>
   `;

@@ -100,6 +100,29 @@ export function ViewOrderDialog({ open, onOpenChange, order, currency = "GHS" }:
             </>
           )}
 
+          {/* Shipping Address */}
+          {(order.shippingAddress || order.shippingCity || order.shippingCountry) && (
+            <>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Package className="h-4 w-4" />
+                  <span>Shipping Address</span>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-4 space-y-1">
+                  {order.shippingAddress && <p className="text-sm">{order.shippingAddress}</p>}
+                  <p className="text-sm">
+                    {order.shippingCity && <span>{order.shippingCity}</span>}
+                    {order.shippingCity && order.shippingState && <span>, </span>}
+                    {order.shippingState && <span>{order.shippingState}</span>}
+                    {order.shippingPostalCode && <span> {order.shippingPostalCode}</span>}
+                  </p>
+                  {order.shippingCountry && <p className="text-sm">{order.shippingCountry}</p>}
+                </div>
+              </div>
+              <Separator />
+            </>
+          )}
+
           {/* Product Info */}
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm font-medium">

@@ -266,6 +266,11 @@ export async function processProductPayment(
         items: [{ name: product.title, quantity: quantityInt, price: totalAmount }],
         total: totalAmount,
         paymentMethod: "Paystack",
+        shippingAddress: order.shippingAddress,
+        shippingCity: order.shippingCity,
+        shippingState: order.shippingState,
+        shippingPostalCode: order.shippingPostalCode,
+        shippingCountry: order.shippingCountry,
       }).catch(console.error);
       
       // Notify support
@@ -275,6 +280,11 @@ export async function processProductPayment(
         customerEmail: user.email,
         total: totalAmount,
         items: [{ name: product.title, quantity: quantityInt }],
+        shippingAddress: order.shippingAddress,
+        shippingCity: order.shippingCity,
+        shippingState: order.shippingState,
+        shippingPostalCode: order.shippingPostalCode,
+        shippingCountry: order.shippingCountry,
       }).catch(console.error);
     }
 
