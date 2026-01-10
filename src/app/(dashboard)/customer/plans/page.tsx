@@ -5,6 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
 import { SubscribePlanButton } from "@/components/payment/SubscribePlanButton";
 
+// Force dynamic rendering - this page requires authentication and real-time data
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function CustomerPlansPage() {
     const session = await auth();
     const plans = await getPlans();

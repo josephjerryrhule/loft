@@ -5,6 +5,10 @@ import { EarningsChart } from "@/components/dashboard/EarningsChart";
 import { ActivityTable } from "@/components/dashboard/ActivityTable";
 import { RequestPayoutDialog } from "@/components/dashboard/RequestPayoutDialog";
 
+// Force dynamic rendering - this page requires authentication and real-time data
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function ManagerDashboardPage() {
   const stats = await getManagerStats();
   const activities = await getRecentManagerActivities();

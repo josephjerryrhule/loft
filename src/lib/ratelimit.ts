@@ -5,17 +5,17 @@ import { Redis } from "@upstash/redis";
 // For production, use Upstash Redis or similar
 class InMemoryRatelimit {
   private requests: Map<string, number[]> = new Map();
-  private limit: number;
-  private window: number;
+  private maxTokens: number;
+  private windowMs: number;
 
   constructor(tokens: number, window: string) {
-    this.limit = tokens;
+    this.maxTokens = tokens;
     // Convert window string to milliseconds
     const windowMatch = window.match(/(\d+)(\w)/);
     if (!windowMatch) throw new Error("Invalid window format");
     const value = parseInt(windowMatch[1]);
     const unit = windowMatch[2];
-    this.window = unit === 's' ? value * 1000 : unit === 'm' ? value * 60000 : value * 3600000;
+    this.windowMs = unit === 's' ? value * 1000 : unit === 'm' ? value * 60000 : value * 3600000;
   }
 
   async limit(identifier: string): Promise<{ success: boolean; remaining: number; reset: number }> {
@@ -23,14 +23,14 @@ class InMemoryRatelimit {
     const timestamps = this.requests.get(identifier) || [];
     
     // Remove expired timestamps
-    const validTimestamps = timestamps.filter(t => now - t < this.window);
+    const validTimestamps = timestamps.filter(t => now - t < this.windowMs);
     
-    if (validTimestamps.length >= this.limit) {
+    if (validTimestamps.length >= this.maxTokens) {
       const oldestTimestamp = validTimestamps[0];
       return {
         success: false,
         remaining: 0,
-        reset: oldestTimestamp + this.window,
+        reset: oldestTimestamp + this.windowMs,
       };
     }
     
@@ -39,8 +39,8 @@ class InMemoryRatelimit {
     
     return {
       success: true,
-      remaining: this.limit - validTimestamps.length,
-      reset: now + this.window,
+      remaining: this.maxTokens - validTimestamps.length,
+      reset: now + this.windowMs,
     };
   }
 }
@@ -54,9 +54,16 @@ function createRateLimiter(tokens: number, window: string) {
       token: process.env.UPSTASH_REDIS_REST_TOKEN,
     });
 
+    // Convert window format to milliseconds for Upstash
+    const windowMatch = window.match(/(\d+)(\w)/);
+    if (!windowMatch) throw new Error("Invalid window format");
+    const value = parseInt(windowMatch[1]);
+    const unit = windowMatch[2];
+    const windowMs = unit === 's' ? value * 1000 : unit === 'm' ? value * 60000 : value * 3600000;
+
     return new Ratelimit({
       redis,
-      limiter: Ratelimit.slidingWindow(tokens, window),
+      limiter: Ratelimit.slidingWindow(tokens, `${windowMs}ms`),
       analytics: true,
     });
   }

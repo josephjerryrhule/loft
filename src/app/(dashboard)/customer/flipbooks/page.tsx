@@ -7,12 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { BookOpen, Filter, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import dynamic from "next/dynamic";
+import { default as dynamicImport } from "next/dynamic";
 import { getCustomerFlipbooks, updateFlipbookProgress } from "@/app/actions/flipbooks";
 import { toast } from "sonner";
 import { Pagination } from "@/components/ui/pagination";
 
-const FlipbookViewer = dynamic(() => import("@/components/flipbook/FlipbookViewer").then(mod => ({ default: mod.FlipbookViewer })), { ssr: false });
+const FlipbookViewer = dynamicImport(() => import("@/components/flipbook/FlipbookViewer").then(mod => ({ default: mod.FlipbookViewer })), { ssr: false });
 
 const PAGE_SIZE = 8;
 

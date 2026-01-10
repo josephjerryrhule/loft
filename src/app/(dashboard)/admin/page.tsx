@@ -7,6 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { PaymentStatus } from "@/lib/types";
 import { RecentActivityTable } from "@/components/admin/RecentActivityTable";
 
+// Force dynamic rendering - this page requires authentication and real-time data
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function getStats() {
     const totalUsers = await prisma.user.count();
     const totalOrders = await prisma.order.count();

@@ -8,6 +8,10 @@ import { RequestPayoutDialog } from "@/components/dashboard/RequestPayoutDialog"
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
+// Force dynamic rendering - this page requires authentication and real-time data
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function AffiliateDashboardPage() {
   const session = await auth();
   const user = await prisma.user.findUnique({

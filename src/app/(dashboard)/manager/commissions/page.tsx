@@ -31,6 +31,7 @@ interface Stats {
     pendingBalance: number;
 }
 
+
 export default function ManagerCommissionsPage() {
     const [stats, setStats] = useState<Stats | null>(null);
     const [commissions, setCommissions] = useState<Commission[]>([]);

@@ -9,6 +9,10 @@ import { SystemSettingsForm } from "@/components/admin/SystemSettingsForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Role } from "@/lib/types";
 
+// Force dynamic rendering - this page requires authentication
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function SettingsPage() {
     const session = await auth();
     if (!session?.user?.id) {

@@ -2,6 +2,10 @@ import { getAffiliateLinks } from "@/app/actions/affiliate";
 import { CopyInviteLinkButton } from "@/components/affiliate/CopyInviteLinkButton";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 
+// Force dynamic rendering - this page requires authentication and real-time data
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function AffiliateLinksPage() {
     const links = await getAffiliateLinks();
 

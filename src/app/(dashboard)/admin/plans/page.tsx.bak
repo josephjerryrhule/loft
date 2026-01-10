@@ -29,6 +29,9 @@ import { TablePagination } from "@/components/ui/table-pagination";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
+// Force dynamic rendering - this page requires authentication and real-time data
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default function AdminPlansPage() {
     const router = useRouter();

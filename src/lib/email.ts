@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import { prisma } from "./prisma";
 import { getCurrencySymbol } from "./utils";
+import { cache } from "./cache";
 
 interface EmailOptions {
   to: string | string[];
@@ -87,11 +88,23 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
   }
 }
 
-// Helper to get platform branding
-async function getBranding() {
+// Helper to get platform branding with caching
+async function getBranding(): Promise<{
+  platformName: string;
+  logoUrl: string;
+  supportEmail: string;
+  siteUrl: string;
+  currency: string;
+}> {
+  const cacheKey = "system:branding";
+  
+  // Check cache first
+  const cached = cache.get<ReturnType<typeof getBranding>>(cacheKey);
+  if (cached) return cached;
+
   const settings = await prisma.systemSettings.findMany({
     where: {
-      key: { in: ["platformName", "logoUrl", "supportEmail", "siteUrl"] },
+      key: { in: ["platformName", "logoUrl", "supportEmail", "siteUrl", "currency"] },
     },
   });
   const config: Record<string, string> = {};
@@ -104,13 +117,19 @@ async function getBranding() {
       config[s.key] = s.value;
     }
   });
-  return {
+  
+  const branding = {
     platformName: config.platformName || "Loft",
     logoUrl: config.logoUrl || "",
     supportEmail: config.supportEmail || "",
     siteUrl: config.siteUrl || process.env.NEXTAUTH_URL || "http://localhost:3000",
     currency: getCurrencySymbol(config.currency || "GHS"),
   };
+
+  // Cache for 5 minutes
+  cache.set(cacheKey, branding);
+  
+  return branding;
 }
 
 // Base email template wrapper

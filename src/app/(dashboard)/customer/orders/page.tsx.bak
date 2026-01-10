@@ -38,6 +38,9 @@ interface Order {
   } | null;
 }
 
+// Force dynamic rendering - this page requires authentication and real-time data
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default function CustomerOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);

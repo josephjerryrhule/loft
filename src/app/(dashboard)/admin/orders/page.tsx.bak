@@ -13,6 +13,9 @@ import { getCurrencySymbol } from "@/lib/utils";
 import { ViewOrderDialog } from "@/components/order/ViewOrderDialog";
 import { EditOrderDialog } from "@/components/order/EditOrderDialog";
 
+// Force dynamic rendering - this page requires authentication and real-time data
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);

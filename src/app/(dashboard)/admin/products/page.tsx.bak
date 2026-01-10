@@ -14,6 +14,9 @@ import { ProductActions } from "@/components/product/ProductActions";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { Loader2 } from "lucide-react";
 
+// Force dynamic rendering - this page requires authentication and real-time data
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<any[]>([]);

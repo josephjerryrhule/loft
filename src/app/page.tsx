@@ -2,6 +2,10 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { Role } from "@/lib/types";
 
+// Force dynamic rendering - this page checks authentication
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function Home() {
   const session = await auth();
 
