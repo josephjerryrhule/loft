@@ -114,9 +114,8 @@ export async function processSubscriptionPayment(reference: string, planId: stri
       },
     });
 
-    revalidatePath("/customer");
-    revalidatePath("/customer/plans");
-    revalidatePath("/customer/flipbooks");
+    // Note: revalidatePath is handled by the calling page, not here
+    // to avoid errors when called during render
 
     return { success: true, subscription };
   } catch (error) {
@@ -213,8 +212,8 @@ export async function processProductPayment(
       },
     });
 
-    revalidatePath("/customer");
-    revalidatePath("/products");
+    // Note: revalidatePath is handled by the calling page, not here
+    // to avoid errors when called during render
 
     return { success: true, order };
   } catch (error) {

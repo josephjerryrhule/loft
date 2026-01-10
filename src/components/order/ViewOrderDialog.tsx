@@ -145,12 +145,26 @@ export function ViewOrderDialog({ open, onOpenChange, order, currency = "GHS" }:
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm font-medium">
                   <FileText className="h-4 w-4" />
-                  <span>Customization Details</span>
+                  <span>Order Notes & Details</span>
                 </div>
-                <div className="bg-muted/50 rounded-lg p-4">
-                  <pre className="text-sm whitespace-pre-wrap font-mono">
-                    {JSON.stringify(customizationData, null, 2)}
-                  </pre>
+                <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                  {customizationData.notes && (
+                    <div>
+                      <p className="text-xs text-muted-foreground font-medium mb-1">Notes</p>
+                      <p className="text-sm">{customizationData.notes}</p>
+                    </div>
+                  )}
+                  {Object.entries(customizationData)
+                    .filter(([key]) => key !== 'notes')
+                    .map(([key, value]) => (
+                      <div key={key}>
+                        <p className="text-xs text-muted-foreground font-medium mb-1 capitalize">
+                          {key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ')}
+                        </p>
+                        <p className="text-sm">{String(value)}</p>
+                      </div>
+                    ))
+                  }
                 </div>
               </div>
             </>

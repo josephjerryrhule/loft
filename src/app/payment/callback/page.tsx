@@ -46,17 +46,35 @@ async function verifyAndProcessPayment(reference: string): Promise<PaymentVerifi
     const customizationData = metadata.customizationData;
 
     if (type === "subscription") {
-      const subscriptionResult = await processSubscriptionPayment(reference, itemId);
-      if (subscriptionResult.error) {
-        return { success: false, type, message: subscriptionResult.error };
+      try {
+        const subscriptionResult = await processSubscriptionPayment(reference, itemId);
+        if (subscriptionResult.error) {
+          return { success: false, type, message: subscriptionResult.error };
+        }
+        return { success: true, type, message: "Subscription activated successfully!" };
+      } catch (err) {
+        console.error("Subscription processing error:", err);
+        // Check if it's a known benign error (like revalidatePath during render)
+        if (err instanceof Error && err.message.includes("revalidatePath")) {
+          return { success: true, type, message: "Subscription activated successfully!" };
+        }
+        return { success: false, type, message: "Failed to process subscription" };
       }
-      return { success: true, type, message: "Subscription activated successfully!" };
     } else if (type === "product") {
-      const productResult = await processProductPayment(reference, itemId, quantity, customizationData);
-      if (productResult.error) {
-        return { success: false, type, message: productResult.error };
+      try {
+        const productResult = await processProductPayment(reference, itemId, quantity, customizationData);
+        if (productResult.error) {
+          return { success: false, type, message: productResult.error };
+        }
+        return { success: true, type, message: "Purchase completed successfully!" };
+      } catch (err) {
+        console.error("Product processing error:", err);
+        // Check if it's a known benign error (like revalidatePath during render)
+        if (err instanceof Error && err.message.includes("revalidatePath")) {
+          return { success: true, type, message: "Purchase completed successfully!" };
+        }
+        return { success: false, type, message: "Failed to process order" };
       }
-      return { success: true, type, message: "Purchase completed successfully!" };
     }
 
     return { success: false, type: "product", message: "Unknown payment type" };

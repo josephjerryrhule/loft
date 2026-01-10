@@ -71,3 +71,30 @@ export async function updateSystemSettings(formData: FormData) {
         return { error: "Failed to update settings" };
     }
 }
+
+import { auth } from "@/auth";
+
+export async function getUserProfile() {
+    const session = await auth();
+    if (!session?.user?.id) return null;
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                phoneNumber: true,
+                inviteCode: true,
+                role: true,
+                status: true
+            }
+        });
+        return user;
+    } catch (error) {
+        console.error("Failed to get user profile:", error);
+        return null;
+    }
+}
