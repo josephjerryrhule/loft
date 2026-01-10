@@ -147,7 +147,10 @@ function emailWrapper(content: string, platformName: string, logoUrl?: string): 
 <body>
   <div class="container">
     <div class="header">
-      ${logoUrl ? `<img src="${logoUrl}" alt="${platformName}" />` : `<h1>${platformName}</h1>`}
+      ${logoUrl && (logoUrl.startsWith('http://') || logoUrl.startsWith('https://')) 
+        ? `<img src="${logoUrl}" alt="${platformName}" style="max-height: 50px; height: auto;" />` 
+        : `<h1>${platformName}</h1>`
+      }
     </div>
     <div class="content">
       ${content}
