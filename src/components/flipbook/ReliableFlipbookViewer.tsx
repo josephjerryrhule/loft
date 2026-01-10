@@ -38,6 +38,36 @@ export function ReliableFlipbookViewer({
     const [error, setError] = useState<string | null>(null);
     const [dimensions, setDimensions] = useState({ width: 600, height: 800 });
     const bookRef = useRef<any>(null);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+
+    // Initialize audio
+    useEffect(() => {
+        // Create a simple page flip sound using Web Audio API
+        const createFlipSound = () => {
+            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+            
+            return () => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Quick swoosh sound
+                oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.1);
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            };
+        };
+        
+        const playSound = createFlipSound();
+        (audioRef as any).current = playSound;
+    }, []);
 
     useEffect(() => {
         let isMounted = true;
@@ -150,6 +180,15 @@ export function ReliableFlipbookViewer({
         const page = pageData.data || pageData;
         setCurrentPage(page);
         onPageChange?.(page);
+        
+        // Play flip sound
+        if (audioRef.current) {
+            try {
+                (audioRef.current as any)();
+            } catch (err) {
+                // Ignore audio errors
+            }
+        }
         
         if (page >= numPages - 1 && onComplete) {
             onComplete();
