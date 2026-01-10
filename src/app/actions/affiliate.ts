@@ -65,7 +65,7 @@ export async function getRecentAffiliateActivities() {
     const commissions = await prisma.commission.findMany({
         where: { userId: userId },
         orderBy: { createdAt: "desc" },
-        take: 10,
+        take: 25,
         include: {
             user: {
                 select: { firstName: true, lastName: true }
@@ -99,7 +99,7 @@ export async function getRecentAffiliateActivities() {
         where: { referredById: userId, role: "CUSTOMER" },
         select: { id: true, firstName: true, lastName: true, createdAt: true },
         orderBy: { createdAt: "desc" },
-        take: 5
+        take: 25
     });
 
     referredCustomers.forEach((customer: any) => {
@@ -121,7 +121,7 @@ export async function getRecentAffiliateActivities() {
             plan: { select: { name: true, price: true } }
         },
         orderBy: { createdAt: "desc" },
-        take: 5
+        take: 25
     });
 
     subscriptions.forEach((sub: any) => {
@@ -142,7 +142,7 @@ export async function getRecentAffiliateActivities() {
             product: { select: { title: true } }
         },
         orderBy: { createdAt: "desc" },
-        take: 5
+        take: 25
     });
 
     orders.forEach((order: any) => {
@@ -155,10 +155,10 @@ export async function getRecentAffiliateActivities() {
         });
     });
 
-    // Sort all activities by timestamp (newest first) and take top 15
+    // Sort all activities by timestamp (newest first) and take top 50
     return activities
         .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-        .slice(0, 15);
+        .slice(0, 50);
 }
 
 export async function getAffiliateMonthlyEarningsData() {

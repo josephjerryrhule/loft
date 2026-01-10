@@ -157,7 +157,7 @@ export async function getRecentManagerActivities() {
         },
         select: { id: true, firstName: true, lastName: true, createdAt: true, referredById: true },
         orderBy: { createdAt: "desc" },
-        take: 10
+        take: 25
     });
 
     const customerIds = referredCustomers.map(c => c.id);
@@ -166,7 +166,7 @@ export async function getRecentManagerActivities() {
     const managerCommissions = await prisma.commission.findMany({
         where: { userId: session.user.id },
         orderBy: { createdAt: "desc" },
-        take: 10
+        take: 25
     });
 
     // Get recent commissions earned by team members
@@ -174,7 +174,7 @@ export async function getRecentManagerActivities() {
         where: { userId: { in: teamIds } },
         include: { user: true },
         orderBy: { createdAt: "desc" },
-        take: 10
+        take: 25
     });
 
     // Get customer subscriptions from team's referred customers
@@ -185,7 +185,7 @@ export async function getRecentManagerActivities() {
             plan: { select: { name: true, price: true } }
         },
         orderBy: { createdAt: "desc" },
-        take: 10
+        take: 25
     });
 
     // Get customer purchases from team's referred customers
@@ -196,7 +196,7 @@ export async function getRecentManagerActivities() {
             product: { select: { title: true, price: true } }
         },
         orderBy: { createdAt: "desc" },
-        take: 10
+        take: 25
     });
 
     // Build activity list
@@ -271,10 +271,10 @@ export async function getRecentManagerActivities() {
         });
     });
 
-    // Sort by timestamp and return top 20
+    // Sort by timestamp and return top 50
     return activities
         .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-        .slice(0, 20);
+        .slice(0, 50);
 }
 
 export async function getMonthlyEarningsData() {
