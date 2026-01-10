@@ -12,7 +12,7 @@ import { getCustomerFlipbooks, updateFlipbookProgress } from "@/app/actions/flip
 import { toast } from "sonner";
 import { Pagination } from "@/components/ui/pagination";
 
-const FlipbookViewer = dynamicImport(() => import("@/components/flipbook/FlipbookViewer").then(mod => ({ default: mod.FlipbookViewer })), { ssr: false });
+const ReliableFlipbookViewer = dynamicImport(() => import("@/components/flipbook/ReliableFlipbookViewer").then(mod => ({ default: mod.ReliableFlipbookViewer })), { ssr: false });
 
 const PAGE_SIZE = 8;
 
@@ -287,16 +287,20 @@ export default function CustomerFlipbooksPage() {
 
       {/* Flipbook Viewer */}
       {viewerOpen && selectedFlipbook && (
-        <FlipbookViewer
+        <ReliableFlipbookViewer
           pdfUrl={selectedFlipbook.pdfUrl}
           title={selectedFlipbook.title}
-          initialPage={selectedFlipbook.progress?.lastPageRead || 0}
+          initialPage={selectedFlipbook.currentPage || 0}
           onClose={() => {
             setViewerOpen(false);
             setSelectedFlipbook(null);
           }}
-          onPageChange={handlePageChange}
-          onComplete={handleComplete}
+          onPageChange={(page) => {
+            handlePageChange(page);
+          }}
+          onComplete={() => {
+            handleComplete();
+          }}
         />
       )}
     </div>

@@ -18,8 +18,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const FlipbookViewer = dynamic(
-  () => import("./FlipbookViewer").then((mod) => mod.FlipbookViewer),
+const ReliableFlipbookViewer = dynamic(
+  () => import("./ReliableFlipbookViewer").then((mod) => mod.ReliableFlipbookViewer),
   { ssr: false }
 );
 
@@ -80,7 +80,7 @@ export function FlipbookActions({ flipbook }: FlipbookActionsProps) {
             </AlertDialog>
 
             {viewOpen && (
-                 <FlipbookViewer 
+                 <ReliableFlipbookViewer 
                     pdfUrl={flipbook.pdfUrl || ""} 
                     onClose={() => setViewOpen(false)} 
                     title={flipbook.title}

@@ -9,8 +9,8 @@ import { ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-// Set PDF worker before any PDF operations
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+// Set PDF worker to local file
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 // Only lazy load the flipbook library (PDF.js needs to be loaded synchronously)
 const HTMLFlipBook = dynamic(() => import('react-pageflip'), { ssr: false });
@@ -31,27 +31,117 @@ export function FlipbookViewer({ pdfUrl, onClose, title, initialPage = 0, onPage
     const bookRef = useRef<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [loadingProgress, setLoadingProgress] = useState(0);
     const [dimensions, setDimensions] = useState({ width: 800, height: 565 }); // Landscape init
     const [aspectRatio, setAspectRatio] = useState(1.414); // Default A4 Landscape (297/210)
-
-    // Log component mount and PDF URL
+    const [renderRange, setRenderRange] = useState(4); // How many pages to pre-render around current page
+    const [pdfBlob, setPdfBlob] = useState<string | null>(null);
+    
+    // Track document load start
     useEffect(() => {
-        console.log('FlipbookViewer mounted with URL:', pdfUrl);
-        console.log('PDF.js worker source:', pdfjs.GlobalWorkerOptions.workerSrc);
-        return () => console.log('FlipbookViewer unmounted');
+        console.log('📖 FlipbookViewer mounted. PDF URL:', pdfUrl);
+        setLoading(true);
+        setPdfBlob(null);
+        
+        let isMounted = true;
+        const abortController = new AbortController();
+        
+        // Fetch PDF via proxy to avoid browser CORS/timeout issues
+        const fetchPdfBlob = async () => {
+            try {
+                // Use API proxy for Supabase URLs
+                const proxyUrl = `/api/proxy-pdf?url=${encodeURIComponent(pdfUrl)}`;
+                console.log('🔍 Fetching PDF via proxy...');
+                
+                // Create a timeout promise  
+                const timeout = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Fetch timeout after 30 seconds')), 30000)
+                );
+                
+                // Race between fetch and timeout
+                const response = await Promise.race([
+                    fetch(proxyUrl, { 
+                        signal: abortController.signal,
+                    }),
+                    timeout
+                ]) as Response;
+                
+                console.log('📡 Proxy response received:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    contentType: response.headers.get('content-type'),
+                    contentLength: response.headers.get('content-length')
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                console.log('📥 Reading blob data...');
+                const blob = await response.blob();
+                
+                if (!isMounted) {
+                    console.log('⚠️ Component unmounted, skipping blob URL creation');
+                    return;
+                }
+                
+                const blobUrl = URL.createObjectURL(blob);
+                console.log('✅ PDF blob created:', {
+                    size: `${(blob.size / 1024 / 1024).toFixed(2)}MB`,
+                    type: blob.type,
+                    blobUrl: blobUrl.substring(0, 50) + '...'
+                });
+                setPdfBlob(blobUrl);
+            } catch (err: any) {
+                if (!isMounted) return;
+                
+                console.error('❌ Failed to fetch PDF:', err);
+                if (err.name === 'AbortError') {
+                    console.log('⚠️ Fetch was aborted (component unmounted)');
+                } else {
+                    setError(`Cannot load PDF: ${err.message}`);
+                    setLoading(false);
+                }
+            }
+        };
+        
+        fetchPdfBlob();
+        
+        return () => {
+            console.log('🧹 Cleaning up FlipbookViewer');
+            isMounted = false;
+            abortController.abort();
+            if (pdfBlob) {
+                URL.revokeObjectURL(pdfBlob);
+            }
+        };
     }, [pdfUrl]);
 
-    // Memoize PDF.js options to prevent unnecessary reloads
+    // Memoize PDF.js options
     const pdfOptions = useMemo(() => ({
         cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
         cMapPacked: true,
         standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
+        withCredentials: false,
+        isEvalSupported: false,
+        // Try to force CORS mode
+        httpHeaders: {
+            'Accept': 'application/pdf',
+        },
     }), []);
+
+    function onDocumentLoadProgress({ loaded, total }: { loaded: number; total: number }) {
+        const progress = Math.round((loaded / total) * 100);
+        setLoadingProgress(progress);
+        console.log(`📥 Loading PDF: ${progress}% (${(loaded / 1024 / 1024).toFixed(2)}MB / ${(total / 1024 / 1024).toFixed(2)}MB)`);
+    }
 
     function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
         console.log('✅ PDF loaded successfully with', numPages, 'pages');
         setNumPages(numPages);
         setLoading(false);
+        setLoadingProgress(100);
         setError(null);
         
         // Jump to initial page after load
@@ -64,12 +154,21 @@ export function FlipbookViewer({ pdfUrl, onClose, title, initialPage = 0, onPage
 
     function onDocumentLoadError(error: Error) {
         console.error('❌ Error loading PDF:', error);
-        setError(error.message || 'Failed to load document');
+        console.error('Error details:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        });
+        setError(`Failed to load PDF: ${error.message}. Click "Open in New Tab" to view directly.`);
         setLoading(false);
     }
 
     function onDocumentLoadStart() {
-        console.log('⏳ Starting to load PDF...');
+        console.log('⏳ Starting to load PDF document...');
+    }
+
+    function onSourceError(error: Error) {
+        console.error('❌ Source error:', error);
     }
     
     function handlePageChange(pageData: any) {
@@ -121,14 +220,14 @@ export function FlipbookViewer({ pdfUrl, onClose, title, initialPage = 0, onPage
     useEffect(() => {
         const timeout = setTimeout(() => {
             if (loading && !error) {
-                console.error('⏱️ PDF loading timeout after 30 seconds');
-                setError('Document loading timeout. The PDF might be too large or the URL is invalid.');
+                console.error('⏱️ PDF loading timeout after 60 seconds');
+                setError(`Document loading timeout at ${loadingProgress}%. Please try again or check your internet connection.`);
                 setLoading(false);
             }
-        }, 30000); // 30 second timeout
+        }, 60000); // 60 second timeout
 
         return () => clearTimeout(timeout);
-    }, [loading, error]);
+    }, [loading, error, loadingProgress]);
 
     // Responsive sizing
     useEffect(() => {
@@ -159,7 +258,7 @@ export function FlipbookViewer({ pdfUrl, onClose, title, initialPage = 0, onPage
     return (
         <div className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center">
              {/* Header */}
-             <div className="absolute top-4 right-4 z-50">
+             <div className="absolute top-4 right-4 z-50 flex gap-2">
                  <Button variant="ghost" size="icon" onClick={onClose} className="text-white hover:bg-white/20">
                      <X className="h-6 w-6" />
                  </Button>
@@ -170,105 +269,172 @@ export function FlipbookViewer({ pdfUrl, onClose, title, initialPage = 0, onPage
                  </div>
              )}
 
-            {/* Viewer */}
-            <div className="flex-1 flex items-center justify-center w-full relative overflow-hidden p-4">
-                {/* Controls */}
-                <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="absolute left-4 z-40 text-white hover:bg-white/10 hidden md:flex h-12 w-12 rounded-full border border-white/10 bg-black/20 backdrop-blur-sm" 
-                    onClick={prevFlip}
-                >
-                    <ChevronLeft className="h-8 w-8" />
-                </Button>
-
-                <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="absolute right-4 z-40 text-white hover:bg-white/10 hidden md:flex h-12 w-12 rounded-full border border-white/10 bg-black/20 backdrop-blur-sm" 
-                    onClick={nextFlip}
-                >
-                    <ChevronRight className="h-8 w-8" />
-                </Button>
-
-                {loading && !error && (
-                    <div className="absolute inset-0 flex items-center justify-center text-white z-50">
-                        <Loader2 className="h-10 w-10 animate-spin mr-2" />
-                        <span>Loading Document...</span>
-                    </div>
-                )}
-
-                {error && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-50 p-8 text-center">
-                        <X className="h-16 w-16 text-red-500 mb-4" />
-                        <h3 className="text-xl font-semibold mb-2">Failed to Load Document</h3>
-                        <p className="text-white/70 mb-4">{error}</p>
-                        <Button onClick={onClose} variant="outline">Close</Button>
-                    </div>
-                )}
-
-                <Document
-                    file={pdfUrl}
-                    onLoadSuccess={onDocumentLoadSuccess}
-                    onLoadError={onDocumentLoadError}
-                    onLoadProgress={(progress) => {
-                        if (progress.loaded && progress.total) {
-                            const percent = Math.round((progress.loaded / progress.total) * 100);
-                            console.log(`📥 Loading PDF: ${percent}%`);
-                        }
-                    }}
-                    onSourceSuccess={() => console.log('✅ PDF source loaded successfully')}
-                    loading={null}
-                    className="flex justify-center items-center"
-                    options={pdfOptions}
-                >
-                    {numPages > 0 && (
-                         // @ts-ignore
-                        <HTMLFlipBook 
-                            width={dimensions.width} 
-                            height={dimensions.height} 
-                            ref={bookRef}
-                            showCover={true}
-                            className="shadow-2xl"
-                            startPage={initialPage || 0}
-                            size="fixed"
-                            minWidth={100}
-                            maxWidth={2000}
-                            minHeight={100}
-                            maxHeight={2000}
-                            drawShadow={true}
-                            flippingTime={800}
-                            usePortrait={false} 
-                            startZIndex={0}
-                            autoSize={true}
-                            maxShadowOpacity={0.5}
-                            mobileScrollSupport={true}
-                            clickEventForward={true}
-                            useMouseEvents={true}
-                            swipeDistance={30}
-                            showPageCorners={true}
-                            disableFlipByClick={false}
-                            onFlip={handlePageChange}
-                        >
-                            {[...Array(numPages)].map((_, index) => (
-                                <div key={index} className="bg-white overflow-hidden flex items-center justify-center shadow-inner">
-                                    <Page 
-                                        pageNumber={index + 1} 
-                                        width={dimensions.width} 
-                                        height={dimensions.height}
-                                        onLoadSuccess={index === 0 ? onPageLoadSuccess : undefined}
-                                        renderAnnotationLayer={false}
-                                        renderTextLayer={false}
-                                        loading={null}
-                                        className="h-full w-full"
-                                        scale={1.0}
-                                    />
-                                </div>
-                            ))}
-                        </HTMLFlipBook>
+            {/* Loading State */}
+            {loading && (
+                <div className="flex flex-col items-center gap-4 max-w-md">
+                    <Loader2 className="h-12 w-12 animate-spin text-white" />
+                    <p className="text-white text-lg">Loading flipbook...</p>
+                    {loadingProgress > 0 ? (
+                        <>
+                            <div className="w-full bg-white/20 rounded-full h-2 overflow-hidden">
+                                <div 
+                                    className="bg-white h-full transition-all duration-300"
+                                    style={{ width: `${loadingProgress}%` }}
+                                />
+                            </div>
+                            <p className="text-white/70 text-sm">{loadingProgress}% complete</p>
+                        </>
+                    ) : (
+                        <p className="text-white/50 text-xs">Connecting to PDF source...</p>
                     )}
-                </Document>
-            </div>
+                </div>
+            )}
+
+            {/* Error State */}
+            {error && (
+                <div className="flex flex-col items-center gap-4 max-w-md text-center">
+                    <div className="text-red-500 text-6xl">⚠️</div>
+                    <p className="text-white text-lg">{error}</p>
+                    <div className="flex gap-2">
+                        <Button onClick={onClose} variant="outline">Close</Button>
+                        <Button 
+                            onClick={() => window.open(pdfUrl, '_blank')}
+                            variant="default"
+                        >
+                            Open in New Tab
+                        </Button>
+                    </div>
+                    <p className="text-white/70 text-sm mt-2">
+                        Or try the <button 
+                            onClick={() => {
+                                // Reload page and use iframe directly
+                                const iframe = document.createElement('div');
+                                iframe.innerHTML = `
+                                    <div class="fixed inset-0 z-50 bg-black/95 flex flex-col">
+                                        <div class="absolute top-4 right-4 z-50">
+                                            <button onclick="this.closest('div').parentElement.remove()" class="text-white hover:bg-white/20 p-2 rounded">
+                                                ✕
+                                            </button>
+                                        </div>
+                                        <iframe src="${pdfUrl}" class="w-full h-full" title="PDF Viewer"></iframe>
+                                    </div>
+                                `;
+                                document.body.appendChild(iframe.firstElementChild!);
+                            }}
+                            className="text-blue-400 underline hover:text-blue-300"
+                        >
+                            simple browser viewer
+                        </button>
+                    </p>
+                </div>
+            )}
+
+            {/* Flipbook Viewer */}
+            {!loading && !error && pdfBlob && (
+                <div className="flex-1 flex items-center justify-center w-full relative">
+                    <Document
+                        file={pdfBlob}
+                        onLoadSuccess={onDocumentLoadSuccess}
+                        onLoadError={onDocumentLoadError}
+                        onLoadProgress={onDocumentLoadProgress}
+                        onSourceError={onSourceError}
+                        loading={null}
+                        options={pdfOptions}
+                    >
+                        <div className="relative">
+                            <HTMLFlipBook
+                                ref={bookRef}
+                                width={dimensions.width}
+                                height={dimensions.height}
+                                size="stretch"
+                                minWidth={300}
+                                maxWidth={1200}
+                                minHeight={400}
+                                maxHeight={1533}
+                                drawShadow={true}
+                                flippingTime={600}
+                                usePortrait={aspectRatio < 1}
+                                startPage={initialPage}
+                                className="flipbook"
+                                style={{}}
+                                startZIndex={0}
+                                autoSize={true}
+                                maxShadowOpacity={0.5}
+                                showCover={false}
+                                mobileScrollSupport={true}
+                                clickEventForward={true}
+                                useMouseEvents={true}
+                                swipeDistance={30}
+                                showPageCorners={true}
+                                disableFlipByClick={false}
+                                onFlip={handlePageChange}
+                            >
+                                {Array.from(new Array(numPages), (_, index) => {
+                                    // Only render pages within range of current page for better performance
+                                    const shouldRender = Math.abs(index - currentPage) <= renderRange;
+                                    
+                                    return (
+                                        <div key={`page_${index + 1}`} className="bg-white shadow-2xl">
+                                            {shouldRender ? (
+                                                <Page
+                                                    pageNumber={index + 1}
+                                                    width={dimensions.width}
+                                                    renderTextLayer={false}
+                                                    renderAnnotationLayer={false}
+                                                    loading={<div className="flex items-center justify-center h-full bg-gray-100"><Loader2 className="h-8 w-8 animate-spin text-gray-400" /></div>}
+                                                    onLoadSuccess={index === 0 ? onPageLoadSuccess : undefined}
+                                                />
+                                            ) : (
+                                                <div 
+                                                    className="flex items-center justify-center h-full bg-gray-50"
+                                                    style={{ width: dimensions.width, height: dimensions.height }}
+                                                >
+                                                    <p className="text-gray-400 text-sm">Page {index + 1}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </HTMLFlipBook>
+                        </div>
+                    </Document>
+
+                    {/* Navigation Controls */}
+                    {numPages > 0 && (
+                        <>
+                            <button
+                                onClick={prevFlip}
+                                disabled={currentPage === 0}
+                                className={cn(
+                                    "absolute left-4 top-1/2 -translate-y-1/2 z-50",
+                                    "bg-white/90 hover:bg-white p-3 rounded-full shadow-lg",
+                                    "disabled:opacity-30 disabled:cursor-not-allowed",
+                                    "transition-all hover:scale-110"
+                                )}
+                            >
+                                <ChevronLeft className="h-6 w-6" />
+                            </button>
+                            <button
+                                onClick={nextFlip}
+                                disabled={currentPage >= numPages - 1}
+                                className={cn(
+                                    "absolute right-4 top-1/2 -translate-y-1/2 z-50",
+                                    "bg-white/90 hover:bg-white p-3 rounded-full shadow-lg",
+                                    "disabled:opacity-30 disabled:cursor-not-allowed",
+                                    "transition-all hover:scale-110"
+                                )}
+                            >
+                                <ChevronRight className="h-6 w-6" />
+                            </button>
+
+                            {/* Page Counter */}
+                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 bg-black/70 text-white px-4 py-2 rounded-full text-sm">
+                                Page {currentPage + 1} of {numPages}
+                            </div>
+                        </>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
