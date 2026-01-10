@@ -30,7 +30,7 @@ const nextConfig: NextConfig = {
 
   // Experimental features for better performance
   experimental: {
-    optimizePackageImports: ['lucide-react', 'recharts', 'react-pdf'],
+    optimizePackageImports: ['lucide-react', 'recharts', 'pdfjs-dist'],
   },
 
   // Headers for caching and security
