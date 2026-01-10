@@ -13,8 +13,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { toast } from "sonner";
 import { resetPassword, validateResetToken } from "@/app/actions/auth";
 import { ArrowLeft, Lock, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { passwordResetSchema } from "@/lib/validations";
 
-const resetPasswordSchema = z.object({
+// Local schema for form (since we don't include token in the form)
+const resetFormSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -33,8 +35,8 @@ function ResetPasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const form = useForm<z.infer<typeof resetPasswordSchema>>({
-    resolver: zodResolver(resetPasswordSchema),
+  const form = useForm<z.infer<typeof resetFormSchema>>({
+    resolver: zodResolver(resetFormSchema),
     defaultValues: {
       password: "",
       confirmPassword: "",
@@ -61,7 +63,7 @@ function ResetPasswordForm() {
     checkToken();
   }, [token]);
 
-  async function onSubmit(values: z.infer<typeof resetPasswordSchema>) {
+  async function onSubmit(values: z.infer<typeof resetFormSchema>) {
     if (!token) return;
     
     setIsLoading(true);

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { Role } from "./types";
 
 // Email validation with additional checks
 export const emailSchema = z
@@ -127,7 +128,7 @@ export const registrationSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   phone: phoneSchema,
-  role: z.enum(["CUSTOMER", "AFFILIATE", "MANAGER", "ADMIN"]),
+  role: z.nativeEnum(Role),
   managerCode: z.string().optional(),
   referralCode: z.string().optional(),
 });

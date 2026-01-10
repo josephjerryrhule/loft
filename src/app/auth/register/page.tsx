@@ -18,17 +18,7 @@ import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { Role } from "@/lib/types";
 import { Suspense, useState } from "react";
-
-const registerSchema = z.object({
-  firstName: z.string().min(2, "First name is too short"),
-  lastName: z.string().min(2, "Last name is too short"),
-  email: z.string().email("Invalid email"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  phone: z.string().optional(),
-  role: z.nativeEnum(Role),
-  managerCode: z.string().optional(),
-  referralCode: z.string().optional(),
-});
+import { registrationSchema } from "@/lib/validations";
 
 function RegisterForm() {
   const router = useRouter();
@@ -37,8 +27,8 @@ function RegisterForm() {
   const roleFromQuery = searchParams.get("role") as Role || Role.CUSTOMER;
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<z.infer<typeof registerSchema>>({
-    resolver: zodResolver(registerSchema),
+  const form = useForm<z.infer<typeof registrationSchema>>({
+    resolver: zodResolver(registrationSchema),
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -53,7 +43,7 @@ function RegisterForm() {
 
   const selectedRole = form.watch("role");
 
-  async function onSubmit(values: z.infer<typeof registerSchema>) {
+  async function onSubmit(values: z.infer<typeof registrationSchema>) {
     setIsLoading(true);
     try {
       const result = await registerUser(values);

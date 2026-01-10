@@ -1,5 +1,5 @@
-import { v4 as uuidv4 } from "uuid";
 import { supabase } from "./supabase";
+import { randomUUID } from "crypto";
 
 export async function uploadToSupabase(
   file: File,
@@ -10,7 +10,7 @@ export async function uploadToSupabase(
 
   // Create unique filename
   const extension = file.name.split(".").pop() || "bin";
-  const fileName = `${uuidv4()}.${extension}`;
+  const fileName = `${randomUUID()}.${extension}`;
   const filePath = `${folder}/${fileName}`;
 
   // Upload to Supabase Storage

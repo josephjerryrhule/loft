@@ -14,11 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
-
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1, "Password is required"),
-});
+import { loginSchema } from "@/lib/validations";
 
 function LoginForm() {
   const router = useRouter();

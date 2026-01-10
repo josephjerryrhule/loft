@@ -12,23 +12,20 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { toast } from "sonner";
 import { requestPasswordReset } from "@/app/actions/auth";
 import { ArrowLeft, Mail, CheckCircle } from "lucide-react";
-
-const forgotPasswordSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-});
+import { passwordResetRequestSchema } from "@/lib/validations";
 
 export default function ForgotPasswordPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<z.infer<typeof forgotPasswordSchema>>({
-    resolver: zodResolver(forgotPasswordSchema),
+  const form = useForm<z.infer<typeof passwordResetRequestSchema>>({
+    resolver: zodResolver(passwordResetRequestSchema),
     defaultValues: {
       email: "",
     },
   });
 
-  async function onSubmit(values: z.infer<typeof forgotPasswordSchema>) {
+  async function onSubmit(values: z.infer<typeof passwordResetRequestSchema>) {
     setIsLoading(true);
     try {
       const result = await requestPasswordReset(values.email);
