@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { loginSchema } from "@/lib/validations";
+import { Role } from "@/lib/types";
 
 function LoginForm() {
   const router = useRouter();
@@ -52,8 +53,33 @@ function LoginForm() {
       if (result?.error) {
         toast.error("Invalid credentials or email not verified. Please check your email.");
       } else {
+        // Get session to determine redirect path
+        const response = await fetch("/api/auth/session");
+        const sessionData = await response.json();
+        
         toast.success("Logged in successfully");
-        router.push("/");
+        
+        // Direct redirect based on role
+        if (sessionData?.user?.role) {
+          switch (sessionData.user.role) {
+            case Role.ADMIN:
+              router.push("/admin");
+              break;
+            case Role.MANAGER:
+              router.push("/manager");
+              break;
+            case Role.AFFILIATE:
+              router.push("/affiliate");
+              break;
+            case Role.CUSTOMER:
+              router.push("/customer");
+              break;
+            default:
+              router.push("/");
+          }
+        } else {
+          router.push("/");
+        }
         router.refresh();
       }
     } finally {
