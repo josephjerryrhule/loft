@@ -4,13 +4,16 @@ import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Filter, Loader2 } from "lucide-react";
+import { BookOpen, Filter, Loader2, Calendar as CalendarIcon } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { default as dynamicImport } from "next/dynamic";
 import { getCustomerFlipbooks, updateFlipbookProgress } from "@/app/actions/flipbooks";
 import { toast } from "sonner";
 import { Pagination } from "@/components/ui/pagination";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const ReliableFlipbookViewer = dynamicImport(() => import("@/components/flipbook/ReliableFlipbookViewer").then(mod => ({ default: mod.ReliableFlipbookViewer })), { ssr: false });
 
@@ -23,7 +26,7 @@ export default function CustomerFlipbooksPage() {
   const [hasSubscription, setHasSubscription] = useState(false);
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [dateFilter, setDateFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
   const [dateType, setDateType] = useState<"day" | "month" | "year">("month");
   const [selectedFlipbook, setSelectedFlipbook] = useState<any>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -69,15 +72,14 @@ export default function CustomerFlipbooksPage() {
     if (dateFilter) {
       filtered = filtered.filter(f => {
         const flipbookDate = new Date(f.createdAt);
-        const filterDate = new Date(dateFilter);
         
         if (dateType === "day") {
-          return flipbookDate.toDateString() === filterDate.toDateString();
+          return flipbookDate.toDateString() === dateFilter.toDateString();
         } else if (dateType === "month") {
-          return flipbookDate.getMonth() === filterDate.getMonth() && 
-                 flipbookDate.getFullYear() === filterDate.getFullYear();
+          return flipbookDate.getMonth() === dateFilter.getMonth() && 
+                 flipbookDate.getFullYear() === dateFilter.getFullYear();
         } else if (dateType === "year") {
-          return flipbookDate.getFullYear() === filterDate.getFullYear();
+          return flipbookDate.getFullYear() === dateFilter.getFullYear();
         }
         return true;
       });
@@ -215,31 +217,34 @@ export default function CustomerFlipbooksPage() {
 
           {/* Date Filter */}
           <div className="flex-1">
-            {dateType === "year" ? (
-              <Input
-                type="number"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                placeholder="YYYY (e.g., 2024)"
-                min="2000"
-                max="2100"
-              />
-            ) : dateType === "month" ? (
-              <Input
-                type="text"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                placeholder="YYYY-MM (e.g., 2024-01)"
-                pattern="[0-9]{4}-[0-9]{2}"
-              />
-            ) : (
-              <Input
-                type="date"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                placeholder="Filter by date..."
-              />
-            )}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !dateFilter && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateFilter ? (
+                    dateType === "year" ? format(dateFilter, "yyyy") :
+                    dateType === "month" ? format(dateFilter, "MMMM yyyy") :
+                    format(dateFilter, "PPP")
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dateFilter}
+                  onSelect={setDateFilter}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Clear Filters */}
@@ -248,7 +253,7 @@ export default function CustomerFlipbooksPage() {
               variant="outline" 
               onClick={() => {
                 setCategoryFilter("all");
-                setDateFilter("");
+                setDateFilter(undefined);
               }}
             >
               Clear
