@@ -140,13 +140,14 @@ export default function CustomerFlipbooksPage() {
       
       setFlipbooks(updatedFlipbooks);
       
-      // Also update the selected flipbook
+      // Update selected flipbook but keep the current page intact to prevent re-render
+      // Don't update lastPageRead in the selected flipbook to avoid triggering viewer reload
       setSelectedFlipbook({
         ...selectedFlipbook,
         progress: {
           ...selectedFlipbook.progress,
           completed: true,
-          lastPageRead: 0
+          // Keep current lastPageRead in viewer, don't reset to 0 yet
         }
       });
       
@@ -199,7 +200,7 @@ export default function CustomerFlipbooksPage() {
           </div>
 
           {/* Date Type Filter */}
-          <div className="w-full sm:w-[120px]">
+          <div className="sm:w-30">
             <Select value={dateType} onValueChange={(v: any) => setDateType(v)}>
               <SelectTrigger>
                 <SelectValue />
@@ -214,12 +215,31 @@ export default function CustomerFlipbooksPage() {
 
           {/* Date Filter */}
           <div className="flex-1">
-            <Input
-              type={dateType === "day" ? "date" : "month"}
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              placeholder="Filter by date..."
-            />
+            {dateType === "year" ? (
+              <Input
+                type="number"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                placeholder="YYYY (e.g., 2024)"
+                min="2000"
+                max="2100"
+              />
+            ) : dateType === "month" ? (
+              <Input
+                type="text"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                placeholder="YYYY-MM (e.g., 2024-01)"
+                pattern="[0-9]{4}-[0-9]{2}"
+              />
+            ) : (
+              <Input
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                placeholder="Filter by date..."
+              />
+            )}
           </div>
 
           {/* Clear Filters */}

@@ -41,6 +41,7 @@ export function ReliableFlipbookViewer({
     const bookRef = useRef<any>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const hasMarkedCompleteRef = useRef(false);
+    const initialLoadRef = useRef(false);
 
     // Initialize audio with actual sound file
     useEffect(() => {
@@ -58,7 +59,14 @@ export function ReliableFlipbookViewer({
     }, []);
 
     useEffect(() => {
+        // Prevent re-loading if PDF is already loaded
+        if (initialLoadRef.current && pageImages.length > 0) {
+            console.log('⏭️ Skipping PDF reload, already loaded');
+            return;
+        }
+        
         let isMounted = true;
+        initialLoadRef.current = true;
         
         const loadPDF = async () => {
             try {
@@ -176,7 +184,17 @@ export function ReliableFlipbookViewer({
     }, [onClose]);
 
     const handlePageChange = (pageData: any) => {
-        const page = pageData.data || pageData;
+        // Extract page number from the event object
+        let page: number;
+        if (typeof pageData === 'number') {
+            page = pageData;
+        } else if (pageData && typeof pageData.data === 'number') {
+            page = pageData.data;
+        } else {
+            console.warn('Unexpected page data format:', pageData);
+            return;
+        }
+        
         setCurrentPage(page);
         onPageChange?.(page);
         
@@ -192,13 +210,8 @@ export function ReliableFlipbookViewer({
             }
         }
         
-        // Mark as complete when reaching the last page or last spread (only once)
-        // For two-page spread: numPages=16 means last flip shows pages 15-16 at index 14
-        // So we check if page >= numPages - 2 to catch the last spread
-        if (page >= numPages - 2 && onComplete && !hasMarkedCompleteRef.current) {
-            hasMarkedCompleteRef.current = true;
-            onComplete();
-        }
+        // Do NOT auto-mark as complete on page flip
+        // Only allow manual completion via button click
     };
 
     return (
@@ -335,23 +348,26 @@ export function ReliableFlipbookViewer({
                     </div>
 
                     {/* Page Counter */}
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 bg-black/70 text-white px-4 py-2 rounded-full text-sm flex items-center gap-3">
-                        <span>Page {currentPage + 1} of {numPages}</span>
+                    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-black/80 backdrop-blur-sm text-white px-4 py-2 rounded-full text-xs flex md:flex-row flex-col items-center gap-3 shadow-lg">
+                        <span className="font-medium">Page {currentPage + 1} of {numPages}</span>
                         
                         {/* Mark Complete Button when on last page or last spread */}
                         {currentPage >= numPages - 2 && !hasMarkedCompleteRef.current && onComplete && (
-                            <Button
-                                onClick={() => {
-                                    if (!hasMarkedCompleteRef.current) {
-                                        hasMarkedCompleteRef.current = true;
-                                        onComplete();
-                                    }
-                                }}
-                                size="sm"
-                                className="bg-green-600 hover:bg-green-700 text-white h-7 px-3 text-xs"
-                            >
-                                Mark Complete
-                            </Button>
+                            <>
+                                <div className="w-px h-4 bg-white/30 hidden" />
+                                <Button
+                                    onClick={() => {
+                                        if (!hasMarkedCompleteRef.current) {
+                                            hasMarkedCompleteRef.current = true;
+                                            onComplete();
+                                        }
+                                    }}
+                                    size="sm"
+                                    className="bg-green-600 hover:bg-green-700 text-white h-7 px-3 text-xs font-medium"
+                                >
+                                    Mark Complete
+                                </Button>
+                            </>
                         )}
                     </div>
                 </div>
