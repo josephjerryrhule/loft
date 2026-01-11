@@ -12,6 +12,7 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "public/**", // Ignore public assets including pdf.worker.min.mjs
   ]),
 ]);
 
