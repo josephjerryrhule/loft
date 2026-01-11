@@ -66,19 +66,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           
           // Check if account is locked
           if (user.lockedUntil && user.lockedUntil > new Date()) {
-            console.log(`Login blocked: User ${email} is locked until ${user.lockedUntil}`);
             return null;
           }
           
           // Check if user is suspended or banned
           if (user.status === "SUSPENDED" || user.status === "BANNED") {
-            console.log(`Login blocked: User ${email} is ${user.status}`);
             return null;
           }
 
           // Check if email is verified (skip for ADMIN users)
           if (user.role !== "ADMIN" && !user.isEmailVerified) {
-            console.log(`Login blocked: User ${email} has not verified their email`);
             return null;
           }
           
@@ -91,12 +88,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           } else {
             // Track failed login attempt
             await handleFailedLogin(user.id);
-            console.log(`Invalid credentials for ${email}. Failed attempts incremented.`);
             return null;
           }
         }
 
-        console.log("Invalid credentials");
         return null;
       },
     }),

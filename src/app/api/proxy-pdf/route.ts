@@ -13,8 +13,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
     }
 
-    console.log('🔄 Proxying PDF request:', url);
-
     // Fetch the PDF from Supabase
     const response = await fetch(url, {
       cache: 'no-store',
@@ -32,7 +30,6 @@ export async function GET(request: NextRequest) {
     }
 
     const pdfBuffer = await response.arrayBuffer();
-    console.log(`✅ PDF fetched successfully: ${(pdfBuffer.byteLength / 1024 / 1024).toFixed(2)}MB`);
 
     // Return the PDF with proper headers
     return new NextResponse(pdfBuffer, {

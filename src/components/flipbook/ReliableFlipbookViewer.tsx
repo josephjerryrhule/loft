@@ -61,7 +61,6 @@ export function ReliableFlipbookViewer({
     useEffect(() => {
         // Prevent re-loading if PDF is already loaded
         if (initialLoadRef.current && pageImages.length > 0) {
-            console.log('⏭️ Skipping PDF reload, already loaded');
             return;
         }
         
@@ -70,7 +69,6 @@ export function ReliableFlipbookViewer({
         
         const loadPDF = async () => {
             try {
-                console.log('📖 Loading PDF:', pdfUrl);
                 setLoading(true);
                 
                 // Fetch via proxy
@@ -82,7 +80,6 @@ export function ReliableFlipbookViewer({
                 }
                 
                 const pdfData = await response.arrayBuffer();
-                console.log('✅ PDF downloaded:', (pdfData.byteLength / 1024 / 1024).toFixed(2), 'MB');
                 
                 // Load PDF with PDF.js
                 const loadingTask = pdfjsLib.getDocument({ data: pdfData });
@@ -90,7 +87,6 @@ export function ReliableFlipbookViewer({
                 
                 if (!isMounted) return;
                 
-                console.log('📄 PDF loaded, pages:', pdf.numPages);
                 setNumPages(pdf.numPages);
                 
                 // Render all pages to images
@@ -118,7 +114,6 @@ export function ReliableFlipbookViewer({
                         
                         const progress = Math.round((pageNum / pdf.numPages) * 100);
                         setLoadingProgress(progress);
-                        console.log(`📸 Rendered page ${pageNum}/${pdf.numPages}`);
                     }
                 }
                 
@@ -126,7 +121,6 @@ export function ReliableFlipbookViewer({
                 
                 setPageImages(images);
                 setLoading(false);
-                console.log('✅ All pages rendered');
                 
                 // Jump to initial page
                 if (initialPage > 0) {

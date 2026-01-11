@@ -96,15 +96,12 @@ export default function CustomerFlipbooksPage() {
   async function handlePageChange(page: number) {
     if (!selectedFlipbook) return;
     
-    console.log("Page changed to:", page); // Debug log
-    
     try {
       await updateFlipbookProgress({
         flipbookId: selectedFlipbook.id,
         lastPageRead: page,
         completed: false
       });
-      console.log("Progress saved successfully"); // Debug log
     } catch (error) {
       console.error("Failed to update progress:", error);
     }
@@ -112,8 +109,6 @@ export default function CustomerFlipbooksPage() {
 
   async function handleComplete() {
     if (!selectedFlipbook) return;
-    
-    console.log("Marking flipbook as complete"); // Debug log
     
     try {
       await updateFlipbookProgress({
@@ -153,7 +148,6 @@ export default function CustomerFlipbooksPage() {
         }
       });
       
-      console.log("Marked as complete"); // Debug log
     } catch (error) {
       console.error("Failed to mark as complete:", error);
       toast.error("Failed to mark book as complete");
