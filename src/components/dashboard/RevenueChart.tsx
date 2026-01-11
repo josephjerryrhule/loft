@@ -1,12 +1,13 @@
 "use client";
 
+import { memo } from "react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 
 interface RevenueChartProps {
   data: { name: string; total: number }[];
 }
 
-export function RevenueChart({ data }: RevenueChartProps) {
+export const RevenueChart = memo(function RevenueChart({ data }: RevenueChartProps) {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
@@ -28,4 +29,4 @@ export function RevenueChart({ data }: RevenueChartProps) {
       </AreaChart>
     </ResponsiveContainer>
   );
-}
+});

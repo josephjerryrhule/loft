@@ -98,7 +98,8 @@ export async function getUserSubscription(userId: string) {
     return await prisma.subscription.findFirst({
         where: { 
             customerId: userId,
-            status: "ACTIVE"
+            status: "ACTIVE",
+            endDate: { gte: new Date() }
         },
         include: { plan: true }
     });

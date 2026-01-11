@@ -14,11 +14,29 @@ if ! command -v psql &> /dev/null; then
     exit 1
 fi
 
+# Try to load from .env file if it exists
+if [ -f .env ]; then
+    echo "📁 Loading environment from .env file..."
+    export $(grep -v '^#' .env | xargs)
+fi
+
 # Get database URL from environment
 if [ -z "$DATABASE_URL" ]; then
+    echo ""
     echo "❌ DATABASE_URL environment variable is not set"
-    echo "   Please set it in your .env file or export it:"
+    echo ""
+    echo "Please create a .env file in the project root with your DATABASE_URL:"
+    echo "   DATABASE_URL='postgresql://user:password@host:5432/database'"
+    echo ""
+    echo "Or export it in your shell:"
     echo "   export DATABASE_URL='postgresql://user:password@host:5432/database'"
+    echo ""
+    echo "You can find your database URL in your Supabase project settings:"
+    echo "   1. Go to https://supabase.com/dashboard"
+    echo "   2. Select your project"
+    echo "   3. Go to Project Settings > Database"
+    echo "   4. Copy the connection string under 'Connection string' (URI format)"
+    echo ""
     exit 1
 fi
 

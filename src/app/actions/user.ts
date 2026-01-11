@@ -113,9 +113,10 @@ export async function getCustomerDashboardData() {
     try {
         // Get active subscription
         const subscription = await prisma.subscription.findFirst({
-            where: { 
+            where: {
                 customerId: session.user.id,
-                status: "ACTIVE"
+                status: "ACTIVE",
+                endDate: { gte: new Date() }
             },
             include: { plan: true }
         });

@@ -119,11 +119,12 @@ export async function getCustomerFlipbooks() {
     }
 
     try {
-        // Check for active subscription
+        // Check for active subscription (must be ACTIVE and not expired)
         const activeSubscription = await prisma.subscription.findFirst({
             where: { 
                 customerId: session.user.id,
-                status: "ACTIVE"
+                status: "ACTIVE",
+                endDate: { gte: new Date() }
             },
             include: { plan: true }
         });

@@ -600,6 +600,37 @@ export async function sendPlanRenewalReminderEmail(subscription: {
   });
 }
 
+// Subscription Expired Email
+export async function sendSubscriptionExpiredEmail(
+  userEmail: string,
+  data: {
+    firstName: string;
+    planName: string;
+    endDate: Date;
+  }
+) {
+  const branding = await getBranding();
+  const content = `
+    <h2>Subscription Expired</h2>
+    <p>Hi ${data.firstName},</p>
+    <p>Your subscription to <strong>${data.planName}</strong> has expired.</p>
+    <div class="info-box" style="text-align: center; background-color: #fee; border-color: #fcc;">
+      <p><strong>${data.planName}</strong></p>
+      <p>Expired on: ${data.endDate.toLocaleDateString()}</p>
+    </div>
+    <p>Your access to premium content has been restricted. Renew your subscription to continue enjoying all the benefits.</p>
+    <a href="${branding.siteUrl}/customer/plans" class="button">Renew Now</a>
+    <p>Thank you for being part of ${branding.platformName}!</p>
+    <p>Best regards,<br>The ${branding.platformName} Team</p>
+  `;
+
+  return sendEmail({
+    to: userEmail,
+    subject: `Your ${data.planName} Subscription Has Expired`,
+    html: emailWrapper(content, branding.platformName, branding.logoUrl),
+  });
+}
+
 // 10. User Account Status Change
 export async function sendAccountStatusChangeEmail(data: {
   userEmail: string;

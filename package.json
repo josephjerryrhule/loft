@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "analyze": "node scripts/analyze-performance.js",
+    "optimize-db": "./scripts/optimize-performance.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import {
   Table,
   TableBody,
@@ -24,7 +24,7 @@ interface ActivityTableProps {
   activities: Activity[];
 }
 
-export function ActivityTable({ activities }: ActivityTableProps) {
+export const ActivityTable = memo(function ActivityTable({ activities }: ActivityTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -95,4 +95,4 @@ export function ActivityTable({ activities }: ActivityTableProps) {
       )}
     </div>
   );
-}
+});
