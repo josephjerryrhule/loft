@@ -17,16 +17,23 @@ fi
 # Try to load from .env file if it exists
 if [ -f .env ]; then
     echo "📁 Loading environment from .env file..."
-    export $(grep -v '^#' .env | xargs)
+    # Load environment variables properly
+    set -a
+    source .env
+    set +a
 fi
 
 # Get database URL from environment
-if [ -z "$DATABASE_URL" ]; then
+# Prefer DIRECT_URL for database operations (migrations, indexes)
+DB_URL="${DIRECT_URL:-$DATABASE_URL}"
+
+if [ -z "$DB_URL" ]; then
     echo ""
-    echo "❌ DATABASE_URL environment variable is not set"
+    echo "❌ DATABASE_URL or DIRECT_URL environment variable is not set"
     echo ""
-    echo "Please create a .env file in the project root with your DATABASE_URL:"
+    echo "Please create a .env file in the project root with your database URLs:"
     echo "   DATABASE_URL='postgresql://user:password@host:5432/database'"
+    echo "   DIRECT_URL='postgresql://user:password@host:5432/database'"
     echo ""
     echo "Or export it in your shell:"
     echo "   export DATABASE_URL='postgresql://user:password@host:5432/database'"
@@ -45,7 +52,7 @@ echo ""
 
 # Apply indexes
 echo "📊 Adding performance indexes to database..."
-psql "$DATABASE_URL" -f scripts/add-performance-indexes.sql
+psql "$DB_URL" -f scripts/add-performance-indexes.sql
 
 if [ $? -eq 0 ]; then
     echo "✅ Indexes added successfully"
@@ -58,7 +65,7 @@ echo ""
 echo "📈 Verifying indexes..."
 
 # Verify indexes were created
-psql "$DATABASE_URL" -c "
+psql "$DB_URL" -c "
 SELECT 
     schemaname,
     tablename,
