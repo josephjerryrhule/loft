@@ -84,6 +84,34 @@ export async function registerUser(formData: z.infer<typeof registerSchema>) {
       },
     });
 
+    // Assign free plan to new customers
+    if (role === Role.CUSTOMER) {
+      // Use the seeded free plan (created by prisma/seed.ts)
+      const freePlan = await prisma.subscriptionPlan.findUnique({
+        where: { id: "free-plan-default" }
+      });
+
+      if (!freePlan) {
+        throw new Error("Free plan not found. Please run: npx prisma db seed");
+      }
+
+      // Create free subscription for the customer
+      const freeStartDate = new Date();
+      const freeEndDate = new Date();
+      freeEndDate.setDate(freeEndDate.getDate() + freePlan.durationDays);
+
+      await prisma.subscription.create({
+        data: {
+          customerId: newUser.id,
+          planId: freePlan.id,
+          status: "ACTIVE",
+          startDate: freeStartDate,
+          endDate: freeEndDate,
+          autoRenew: false
+        }
+      });
+    }
+
     // Process signup commission if customer was referred
     if (role === Role.CUSTOMER && referralCode) {
       await processSignupCommission(newUser.id, referralCode);

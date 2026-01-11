@@ -96,26 +96,14 @@ export async function GET(request: NextRequest) {
 
           // If no other active subscriptions, assign to free plan
           if (!otherActiveSubscriptions) {
-            // Find or create free plan
-            let freePlan = await prisma.subscriptionPlan.findFirst({
-              where: { 
-                price: 0,
-                isActive: true
-              }
+            // Use the seeded free plan (created by prisma/seed.ts)
+            const freePlan = await prisma.subscriptionPlan.findUnique({
+              where: { id: "free-plan-default" }
             });
 
             if (!freePlan) {
-              // Create free plan if it doesn't exist
-              freePlan = await prisma.subscriptionPlan.create({
-                data: {
-                  name: "Free",
-                  description: "Access to free content only",
-                  price: 0,
-                  durationDays: 36500, // 100 years
-                  features: "Access to all free flipbooks",
-                  isActive: true
-                }
-              });
+              console.error(`[CRON] Free plan not found for user ${subscription.customer.email}`);
+              return; // Skip this user, don't fail the entire cron job
             }
 
             // Assign user to free plan

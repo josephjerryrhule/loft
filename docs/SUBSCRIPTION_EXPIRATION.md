@@ -1,15 +1,39 @@
 # Subscription Expiration System
 
 ## Overview
-Implemented a comprehensive subscription expiration system with automatic status updates and email notifications.
+Implemented a comprehensive subscription expiration system with automatic status updates, free plan assignment, and email notifications.
+
+## Key Features
+
+### Free Plan Assignment
+- **New Customers**: Automatically assigned a free plan subscription upon registration
+- **Expired Customers**: Automatically downgraded to free plan when all paid subscriptions expire
+- **Consistency**: Ensures all customers always have access to free content
+
+### Expiration Logic
+1. Cron job checks for expired subscriptions (endDate < now)
+2. Updates subscription status from `ACTIVE` → `EXPIRED`
+3. Checks if user has other active subscriptions
+4. If no active subscriptions remain, assigns free plan
+5. Creates activity log and sends notification email
 
 ## What Was Implemented
 
-### 1. Cron API Endpoint
+### 1. Registration with Free Plan
+**File**: `src/app/actions/auth.ts`
+
+When a customer registers:
+- User account is created
+- Free plan is automatically assigned
+- Free subscription is created with 100-year duration
+- Customer immediately has access to free content
+
+### 2. Cron API Endpoint
 **File**: `src/app/api/cron/expire-subscriptions/route.ts`
 
 - Automatically expires subscriptions past their `endDate`
 - Updates subscription status from `ACTIVE` → `EXPIRED`
+- Assigns free plan if no other active subscriptions exist
 - Creates activity log entries
 - Sends expiration email notifications
 - Secured with `CRON_SECRET` authorization

@@ -11,7 +11,9 @@ export const revalidate = 0;
 
 export default async function CustomerPlansPage() {
     const session = await auth();
-    const plans = await getPlans();
+    const allPlans = await getPlans();
+    // Filter out free plan since we have a hardcoded card for it
+    const plans = allPlans.filter(plan => Number(plan.price) > 0);
     const currentSubscription = session?.user?.id 
         ? await getUserSubscription(session.user.id) 
         : null;
