@@ -390,10 +390,18 @@ export async function updateOrderStatus(orderId: string, status: string) {
     try {
         const order = await prisma.order.findUnique({
             where: { id: orderId },
-            include: { customer: true, product: true }
+            include: { 
+                customer: true, 
+                product: true
+            }
         });
 
         if (!order) return { error: "Order not found" };
+
+        // Prevent cancelling completed/shipped orders
+        if (status === "CANCELLED" && (order.status === "COMPLETED" || order.status === "SHIPPED")) {
+            return { error: "Cannot cancel a completed or shipped order" };
+        }
 
         const oldStatus = order.status;
 
@@ -404,13 +412,43 @@ export async function updateOrderStatus(orderId: string, status: string) {
                 data: { status }
             });
 
+            // If order is being cancelled, handle commission reversal
+            if (status === "CANCELLED" && oldStatus !== "CANCELLED") {
+                // Cancel all commissions related to this order
+                const cancelledCommissions = await tx.commission.updateMany({
+                    where: { 
+                        sourceId: orderId,
+                        sourceType: "PRODUCT",
+                        status: { in: ["PENDING", "APPROVED"] }
+                    },
+                    data: { status: "CANCELLED" }
+                });
+
+                // Log commission cancellations
+                if (cancelledCommissions.count > 0) {
+                    await tx.activityLog.create({
+                        data: {
+                            userId: session.user!.id,
+                            actionType: "COMMISSION_CANCELLED",
+                            actionDetails: JSON.stringify({
+                                orderId,
+                                commissionsCount: cancelledCommissions.count,
+                                reason: "Order cancelled"
+                            })
+                        }
+                    });
+                }
+            }
+
             // Log activity
             await tx.activityLog.create({
                 data: {
                     userId: session.user!.id,
                     actionType: "ADMIN_UPDATE_ORDER",
                     actionDetails: JSON.stringify({
-                        orderId
+                        orderId,
+                        oldStatus,
+                        newStatus: status
                     })
                 }
             });
