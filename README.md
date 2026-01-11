@@ -785,16 +785,26 @@ npx tsx prisma/seed.ts
 
 ---
 
+## � Additional Documentation
+
+Project-specific documentation is in the `/docs` folder:
+
+- **[Subscription Expiration](docs/SUBSCRIPTION_EXPIRATION.md)** - Subscription lifecycle, free plan assignment, and cron setup
+- **[Performance Optimizations](docs/PERFORMANCE_OPTIMIZATIONS.md)** - Database indexes, caching strategies, and optimization techniques
+- **[Optimization Summary](docs/OPTIMIZATION_SUMMARY.md)** - Quick reference for all performance improvements
+
+---
+
 ## 📄 License
 
 This project is proprietary software. All rights reserved. See [LICENSE](LICENSE) for details.
 
 ## 📜 Legal Documents
 
-- [Privacy Policy](PRIVACY_POLICY.md) - How we collect and use your data
-- [Terms of Service](TERMS_OF_SERVICE.md) - Rules for using the platform
-- [Cookie Policy](COOKIE_POLICY.md) - Information about cookies and tracking
-- [Acceptable Use Policy](ACCEPTABLE_USE_POLICY.md) - Prohibited activities and enforcement
+- [Privacy Policy](docs/PRIVACY_POLICY.md) - How we collect and use your data
+- [Terms of Service](docs/TERMS_OF_SERVICE.md) - Rules for using the platform
+- [Cookie Policy](docs/COOKIE_POLICY.md) - Information about cookies and tracking
+- [Acceptable Use Policy](docs/ACCEPTABLE_USE_POLICY.md) - Prohibited activities and enforcement
 
 **Important:** Review these documents carefully before using or deploying this platform.
 
@@ -813,5 +823,5 @@ Built with:
 
 ---
 
-**Last Updated:** January 10, 2026  
+**Last Updated:** January 11, 2026  
 **Version:** 1.0.0
