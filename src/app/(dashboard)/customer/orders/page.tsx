@@ -83,6 +83,23 @@ export default function CustomerOrdersPage() {
     }
   }
 
+  async function handleDownload(url: string, filename: string) {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Failed to download file:", error);
+    }
+  }
+
   function getStatusColor(status: string) {
     switch (status.toUpperCase()) {
       case "COMPLETED":
@@ -238,16 +255,12 @@ export default function CustomerOrdersPage() {
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  asChild
+                                  onClick={() => handleDownload(
+                                    order.completedFileUrl!,
+                                    `${order.orderNumber}-${order.product.title}.${order.completedFileUrl!.split('.').pop()}`
+                                  )}
                                 >
-                                  <a 
-                                    href={order.completedFileUrl} 
-                                    download 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                  >
-                                    <Download className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                  </a>
+                                  <Download className="h-4 w-4 text-green-600 dark:text-green-400" />
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>

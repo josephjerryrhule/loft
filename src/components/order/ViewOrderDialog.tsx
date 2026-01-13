@@ -19,6 +19,23 @@ export function ViewOrderDialog({ open, onOpenChange, order, currency = "GHS" }:
 
   const customizationData = order.customizationData ? JSON.parse(order.customizationData) : null;
 
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Failed to download file:", error);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -176,13 +193,14 @@ export function ViewOrderDialog({ open, onOpenChange, order, currency = "GHS" }:
                     ✓ Your order is complete! Download your file below:
                   </p>
                   <Button
-                    asChild
                     className="w-full"
+                    onClick={() => handleDownload(
+                      order.completedFileUrl,
+                      `${order.orderNumber}-${order.product.title}.${order.completedFileUrl.split('.').pop()}`
+                    )}
                   >
-                    <a href={order.completedFileUrl} download target="_blank" rel="noopener noreferrer">
-                      <Download className="h-4 w-4 mr-2" />
-                      Download File
-                    </a>
+                    <Download className="h-4 w-4 mr-2" />
+                    Download File
                   </Button>
                 </div>
               </div>
