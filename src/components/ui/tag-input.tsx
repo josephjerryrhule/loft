@@ -95,18 +95,24 @@ export function TagInput({
           />
         </div>
 
-        {showSuggestions && filteredSuggestions.length > 0 && (
+        {showSuggestions && inputValue && (
           <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover p-1 shadow-md">
             <div className="max-h-[200px] overflow-y-auto">
-              {filteredSuggestions.map((suggestion) => (
-                <div
-                  key={suggestion}
-                  onClick={() => addTag(suggestion)}
-                  className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
-                >
-                  {suggestion}
+              {filteredSuggestions.length > 0 ? (
+                filteredSuggestions.map((suggestion) => (
+                  <div
+                    key={suggestion}
+                    onClick={() => addTag(suggestion)}
+                    className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
+                  >
+                    {suggestion}
+                  </div>
+                ))
+              ) : (
+                <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                  Press <kbd className="px-1 py-0.5 text-xs bg-muted border rounded">Enter</kbd> to add "{inputValue}"
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}
