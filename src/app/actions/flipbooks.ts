@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { z } from "zod";
+import { z, ZodError } from "zod";
 
 const flipbookSchema = z.object({
   title: z.string().min(3),
@@ -45,7 +45,7 @@ export async function createFlipbook(formData: FormData) {
     });
 
     const publishDate = schedulePublish && publishedAt ? new Date(publishedAt) : null;
-    const isPublishedNow = !schedulePublish || (publishDate && publishDate <= new Date());
+    const isPublishedNow = !schedulePublish || (publishDate ? publishDate <= new Date() : false);
 
     await prisma.flipbook.create({
       data: {
@@ -67,9 +67,9 @@ export async function createFlipbook(formData: FormData) {
     return { success: true };
   } catch (error) {
     console.error("Failed to create flipbook:", error);
-    if (error instanceof z.ZodError) {
-      console.error("Validation errors:", error.errors);
-      return { error: `Validation failed: ${error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')}` };
+    if (error instanceof ZodError) {
+      console.error("Validation errors:", error.issues);
+      return { error: `Validation failed: ${error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')}` };
     }
     return { error: "Failed to create flipbook" };
   }
