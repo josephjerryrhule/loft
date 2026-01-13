@@ -7,6 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { PaymentStatus } from "@/lib/types";
 import { cache } from "@/lib/cache";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 
 // Force dynamic rendering - this page requires authentication and real-time data
 export const dynamic = 'force-dynamic';
@@ -168,6 +170,13 @@ async function getRecentSales() {
 }
 
 export default async function AdminDashboardPage() {
+  // Role protection - only admins can access
+  const session = await auth();
+  // @ts-ignore - role exists in our custom session type
+  if (!session?.user || session.user.role !== "ADMIN") {
+    redirect("/customer");
+  }
+
   // Fetch all data in parallel for maximum performance
   const [stats, revenueData, recentActivity, recentSales] = await Promise.all([
     getStats(),

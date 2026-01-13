@@ -96,8 +96,9 @@ export async function registerUser(formData: z.infer<typeof registerSchema>) {
       }
 
       // Create free subscription for the customer
+      // Calculate free subscription dates (start: now, end: now + duration days)
       const freeStartDate = new Date();
-      const freeEndDate = new Date();
+      const freeEndDate = new Date(freeStartDate.getTime());
       freeEndDate.setDate(freeEndDate.getDate() + freePlan.durationDays);
 
       await prisma.subscription.create({

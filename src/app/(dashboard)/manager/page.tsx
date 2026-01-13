@@ -4,12 +4,21 @@ import { getMinimumPayoutAmount } from "@/app/actions/settings";
 import { EarningsChart } from "@/components/dashboard/EarningsChart";
 import { ActivityTable } from "@/components/dashboard/ActivityTable";
 import { RequestPayoutDialog } from "@/components/dashboard/RequestPayoutDialog";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 
 // Force dynamic rendering - this page requires authentication and real-time data
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function ManagerDashboardPage() {
+  // Role protection - only managers can access
+  const session = await auth();
+  // @ts-ignore - role exists in our custom session type
+  if (!session?.user || session.user.role !== "MANAGER") {
+    redirect("/customer");
+  }
+
   const stats = await getManagerStats();
   const activities = await getRecentManagerActivities();
   const chartData = await getMonthlyEarningsData();

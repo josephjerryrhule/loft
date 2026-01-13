@@ -115,8 +115,9 @@ export async function subscribeToPlan(planId: string) {
     
     if (!plan) return { error: "Plan not found" };
 
+    // Calculate subscription dates (start: now, end: now + duration days)
     const startDate = new Date();
-    const endDate = new Date();
+    const endDate = new Date(startDate.getTime());
     endDate.setDate(endDate.getDate() + plan.durationDays);
 
     try {

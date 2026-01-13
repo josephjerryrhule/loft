@@ -2,8 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { Role } from "@/lib/types";
 import { sendCommissionEarnedEmail } from "@/lib/email";
 
-const SIGNUP_BONUS = 5.00;
-const AFFILIATE_SUBSCRIPTION_FLAT = 10.00;
+const SIGNUP_BONUS = 5.00; // Fallback default
+const AFFILIATE_SUBSCRIPTION_FLAT = 10.00; // Fallback default
 
 async function getManagerCommissionPercentage(): Promise<number> {
   try {
@@ -18,6 +18,36 @@ async function getManagerCommissionPercentage(): Promise<number> {
     console.error("Failed to get manager commission percentage:", e);
   }
   return 0.20; // Default 20%
+}
+
+async function getAffiliateSubscriptionCommission(): Promise<number> {
+  try {
+    const setting = await prisma.systemSettings.findUnique({
+      where: { key: "affiliateSubscriptionCommission" }
+    });
+    if (setting) {
+      const value = JSON.parse(setting.value);
+      return Number(value);
+    }
+  } catch (e) {
+    console.error("Failed to get affiliate subscription commission:", e);
+  }
+  return AFFILIATE_SUBSCRIPTION_FLAT; // Default 10.00
+}
+
+async function getSignupCommission(): Promise<number> {
+  try {
+    const setting = await prisma.systemSettings.findUnique({
+      where: { key: "signupBonus" }
+    });
+    if (setting) {
+      const value = JSON.parse(setting.value);
+      return Number(value);
+    }
+  } catch (e) {
+    console.error("Failed to get signup commission:", e);
+  }
+  return SIGNUP_BONUS; // Default 5.00
 }
 
 export async function processOrderCommission(orderId: string) {
@@ -108,19 +138,21 @@ export async function processSignupCommission(newUserId: string, referrerCode: s
     const referrer = await prisma.user.findUnique({ where: { inviteCode: referrerCode }});
     if (!referrer) return;
 
-    // Spec: Affiliate earns GHS 5.00 per signup
-    // Manager earns GHS 5.00 only when direct signup
+    // Spec: Affiliate earns signup bonus per signup (from system settings)
+    // Manager earns signup bonus only when direct signup
     
     // We only pay if it's a Customer signup
     const newUser = await prisma.user.findUnique({ where: { id: newUserId }});
     if (newUser?.role !== Role.CUSTOMER) return;
+
+    const signupBonus = await getSignupCommission();
 
     await prisma.commission.create({
         data: {
             userId: referrer.id,
             sourceType: "SIGNUP",
             sourceId: newUserId,
-            amount: SIGNUP_BONUS,
+            amount: signupBonus,
             status: "PENDING"
         }
     });
@@ -137,15 +169,16 @@ export async function processSubscriptionCommission(subscriptionId: string, cust
 
     const referrer = customer.referredBy;
     const managerPercentage = await getManagerCommissionPercentage();
+    const affiliateCommission = await getAffiliateSubscriptionCommission();
 
-    // Affiliate earns flat amount per subscription
+    // Affiliate earns flat amount per subscription (from system settings)
     if (referrer.role === Role.AFFILIATE) {
         await prisma.commission.create({
             data: {
                 userId: referrer.id,
                 sourceType: "SUBSCRIPTION",
                 sourceId: subscriptionId,
-                amount: AFFILIATE_SUBSCRIPTION_FLAT,
+                amount: affiliateCommission,
                 status: "PENDING"
             }
         });
@@ -154,7 +187,7 @@ export async function processSubscriptionCommission(subscriptionId: string, cust
         sendCommissionEarnedEmail({
           recipientEmail: referrer.email,
           recipientName: `${referrer.firstName || ""} ${referrer.lastName || ""}`.trim() || "Affiliate",
-          amount: AFFILIATE_SUBSCRIPTION_FLAT,
+          amount: affiliateCommission,
           subscriptionId,
           type: "AFFILIATE",
         }).catch(console.error);

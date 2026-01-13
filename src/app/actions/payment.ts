@@ -73,8 +73,9 @@ export async function processSubscriptionPayment(reference: string, planId: stri
       return { error: "Payment amount mismatch" };
     }
 
+    // Calculate subscription dates (start: now, end: now + duration days)
     const startDate = new Date();
-    const endDate = new Date();
+    const endDate = new Date(startDate.getTime());
     endDate.setDate(endDate.getDate() + plan.durationDays);
 
     // Cancel any existing active subscriptions

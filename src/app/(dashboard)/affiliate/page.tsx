@@ -7,6 +7,7 @@ import { CopyInviteLinkButton } from "@/components/affiliate/CopyInviteLinkButto
 import { RequestPayoutDialog } from "@/components/dashboard/RequestPayoutDialog";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
 
 // Force dynamic rendering - this page requires authentication and real-time data
 export const dynamic = 'force-dynamic';
@@ -14,6 +15,13 @@ export const revalidate = 0;
 
 export default async function AffiliateDashboardPage() {
   const session = await auth();
+  
+  // Role protection - only affiliates can access
+  // @ts-ignore - role exists in our custom session type
+  if (!session?.user || session.user.role !== "AFFILIATE") {
+    redirect("/customer");
+  }
+  
   const user = await prisma.user.findUnique({
     where: { id: session?.user?.id },
     select: { inviteCode: true }

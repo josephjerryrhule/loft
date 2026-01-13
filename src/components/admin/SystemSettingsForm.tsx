@@ -424,6 +424,34 @@ export function SystemSettingsForm({ settings }: SystemSettingsFormProps) {
                         <CardContent className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
+                                    <Label htmlFor="signupBonus">Signup Bonus (Fixed Amount)</Label>
+                                    <Input 
+                                        type="number" 
+                                        id="signupBonus" 
+                                        name="signupBonus" 
+                                        defaultValue={settings.signupBonus || "5"} 
+                                        placeholder="5" 
+                                        min="0"
+                                        step="0.01"
+                                    />
+                                    <p className="text-[0.8rem] text-muted-foreground">Fixed amount earned per customer signup.</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="affiliateSubscriptionCommission">Affiliate Subscription Commission (Fixed Amount)</Label>
+                                    <Input 
+                                        type="number" 
+                                        id="affiliateSubscriptionCommission" 
+                                        name="affiliateSubscriptionCommission" 
+                                        defaultValue={settings.affiliateSubscriptionCommission || "10"} 
+                                        placeholder="10" 
+                                        min="0"
+                                        step="0.01"
+                                    />
+                                    <p className="text-[0.8rem] text-muted-foreground">Fixed amount earned per subscription.</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
                                     <Label htmlFor="managerCommissionPercentage">Manager Commission (%)</Label>
                                     <Input 
                                         type="number" 
@@ -437,29 +465,18 @@ export function SystemSettingsForm({ settings }: SystemSettingsFormProps) {
                                     <p className="text-[0.8rem] text-muted-foreground">Percentage of order/subscription total.</p>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="affiliateSubscriptionCommission">Affiliate Subscription Commission (Fixed Amount)</Label>
+                                    <Label htmlFor="minimumPayoutAmount">Minimum Payout Amount (GHS)</Label>
                                     <Input 
                                         type="number" 
-                                        id="affiliateSubscriptionCommission" 
-                                        name="affiliateSubscriptionCommission" 
-                                        defaultValue={settings.affiliateSubscriptionCommission || "10"} 
-                                        placeholder="10" 
+                                        id="minimumPayoutAmount" 
+                                        name="minimumPayoutAmount" 
+                                        defaultValue={settings.minimumPayoutAmount || "50"} 
+                                        placeholder="50" 
+                                        min="0"
+                                        step="0.01"
                                     />
-                                    <p className="text-[0.8rem] text-muted-foreground">Fixed amount earned per subscription.</p>
+                                    <p className="text-[0.8rem] text-muted-foreground">Minimum approved balance required to request payouts.</p>
                                 </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="minimumPayoutAmount">Minimum Payout Amount (GHS)</Label>
-                                <Input 
-                                    type="number" 
-                                    id="minimumPayoutAmount" 
-                                    name="minimumPayoutAmount" 
-                                    defaultValue={settings.minimumPayoutAmount || "50"} 
-                                    placeholder="50" 
-                                    min="0"
-                                    step="0.01"
-                                />
-                                <p className="text-[0.8rem] text-muted-foreground">Minimum approved balance required before affiliates and managers can request payouts.</p>
                             </div>
                         </CardContent>
                     </Card>
