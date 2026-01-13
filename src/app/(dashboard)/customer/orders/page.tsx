@@ -11,6 +11,7 @@ import { getSystemSettings } from "@/app/actions/settings";
 import { getCurrencySymbol } from "@/lib/utils";
 import { ViewOrderDialog } from "@/components/order/ViewOrderDialog";
 import { Pagination } from "@/components/ui/pagination";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Order {
   id: string;
@@ -119,8 +120,9 @@ export default function CustomerOrdersPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <TooltipProvider>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">My Orders</h1>
           <p className="text-muted-foreground mt-1">
@@ -213,31 +215,45 @@ export default function CustomerOrdersPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => {
-                              setSelectedOrder(order);
-                              setViewDialogOpen(true);
-                            }}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          {order.status === "COMPLETED" && order.completedFileUrl && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              asChild
-                            >
-                              <a 
-                                href={order.completedFileUrl} 
-                                download 
-                                target="_blank" 
-                                rel="noopener noreferrer"
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setSelectedOrder(order);
+                                  setViewDialogOpen(true);
+                                }}
                               >
-                                <Download className="h-4 w-4 text-green-600 dark:text-green-400" />
-                              </a>
-                            </Button>
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>View order details</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          {order.status === "COMPLETED" && order.completedFileUrl && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  asChild
+                                >
+                                  <a 
+                                    href={order.completedFileUrl} 
+                                    download 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                  >
+                                    <Download className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                  </a>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Download completed file</p>
+                              </TooltipContent>
+                            </Tooltip>
                           )}
                         </div>
                       </TableCell>
@@ -264,6 +280,7 @@ export default function CustomerOrdersPage() {
         order={selectedOrder}
         currency={currency}
       />
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }
