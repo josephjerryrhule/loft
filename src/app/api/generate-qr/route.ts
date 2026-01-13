@@ -57,10 +57,10 @@ export async function GET(request: NextRequest) {
     
     if (user.role === "MANAGER") {
       // Manager QR code links to affiliate signup
-      inviteUrl = `${baseUrl}/join/affiliate?code=${user.inviteCode}`;
+      inviteUrl = `${baseUrl}/join/affiliate/${user.inviteCode}`;
     } else if (user.role === "AFFILIATE") {
       // Affiliate QR code links to customer signup
-      inviteUrl = `${baseUrl}/join/customer?code=${user.inviteCode}`;
+      inviteUrl = `${baseUrl}/join/customer/${user.inviteCode}`;
     } else {
       return NextResponse.json(
         { error: "Invalid user role for QR code" },
