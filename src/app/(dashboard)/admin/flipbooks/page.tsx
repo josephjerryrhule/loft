@@ -5,13 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createFlipbook, getAllFlipbooks } from "@/app/actions/flipbooks";
+import { createFlipbook, getAllFlipbooks, getAllCategories } from "@/app/actions/flipbooks";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { FileUpload } from "@/components/ui/file-upload";
 import { FlipbookActions } from "@/components/flipbook/FlipbookActions";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { Loader2 } from "lucide-react";
+import { TagInput } from "@/components/ui/tag-input";
+import { DateTimePicker } from "@/components/ui/datetime-picker";
+import { toast } from "sonner";
 
 
 export default function AdminFlipbooksPage() {
@@ -19,9 +22,15 @@ export default function AdminFlipbooksPage() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(12);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
+  const [schedulePublish, setSchedulePublish] = useState(false);
+  const [publishDate, setPublishDate] = useState<Date | undefined>(undefined);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     loadFlipbooks();
+    loadCategories();
   }, []);
 
   const loadFlipbooks = async () => {
@@ -33,6 +42,43 @@ export default function AdminFlipbooksPage() {
       console.error("Failed to load flipbooks:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCategories = async () => {
+    try {
+      const cats = await getAllCategories();
+      setCategories(cats);
+    } catch (error) {
+      console.error("Failed to load categories:", error);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    // Add category from state
+    if (selectedCategory.length > 0) {
+      formData.set("category", selectedCategory[0]);
+    }
+    
+    // Add publish date if scheduled
+    if (schedulePublish && publishDate) {
+      formData.set("publishedAt", publishDate.toISOString());
+    }
+    
+    try {
+      await createFlipbook(formData);
+      toast.success("Flipbook created successfully");
+      setDialogOpen(false);
+      setSelectedCategory([]);
+      setSchedulePublish(false);
+      setPublishDate(undefined);
+      loadFlipbooks();
+      loadCategories(); // Refresh categories
+    } catch (error) {
+      toast.error("Failed to create flipbook");
     }
   };
 
@@ -52,22 +98,31 @@ export default function AdminFlipbooksPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Flipbooks</h1>
-        <Dialog>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button>+ Add Flipbook</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Flipbook</DialogTitle>
             </DialogHeader>
-            <form action={createFlipbook} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
                <div>
                   <Label>Title</Label>
                   <Input name="title" placeholder="E.g. Monthly Gazette" required />
                </div>
                <div>
                   <Label>Category</Label>
-                  <Input name="category" placeholder="e.g. Magazine, Catalog" />
+                  <TagInput
+                    value={selectedCategory}
+                    onChange={setSelectedCategory}
+                    suggestions={categories}
+                    placeholder="Type to search or add new category..."
+                    maxTags={1}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Select from existing categories or type and press Enter to add a new one
+                  </p>
                </div>
                <div>
                   <Label>Description</Label>
@@ -90,6 +145,34 @@ export default function AdminFlipbooksPage() {
                <div className="flex items-center space-x-2">
                   <input type="checkbox" id="isFree" name="isFree" className="h-4 w-4" />
                   <Label htmlFor="isFree">Free Access (available to all users)</Label>
+               </div>
+
+               <div className="space-y-3 border-t pt-4">
+                  <div className="flex items-center space-x-2">
+                     <input 
+                        type="checkbox" 
+                        id="schedulePublish" 
+                        name="schedulePublish" 
+                        className="h-4 w-4"
+                        checked={schedulePublish}
+                        onChange={(e) => setSchedulePublish(e.target.checked)}
+                     />
+                     <Label htmlFor="schedulePublish">Schedule publication</Label>
+                  </div>
+
+                  {schedulePublish && (
+                     <div>
+                        <Label>Publish Date & Time</Label>
+                        <DateTimePicker
+                           value={publishDate}
+                           onChange={setPublishDate}
+                           placeholder="Select publish date and time"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                           The flipbook will automatically be published at this date and time
+                        </p>
+                     </div>
+                  )}
                </div>
 
                <Button type="submit" className="w-full">Create Flipbook</Button>

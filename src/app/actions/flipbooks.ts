@@ -13,6 +13,8 @@ const flipbookSchema = z.object({
   coverImageUrl: z.string().optional(),
   category: z.string().optional(),
   isFree: z.boolean().optional(),
+  schedulePublish: z.boolean().optional(),
+  publishedAt: z.string().optional(),
 });
 
 export async function createFlipbook(formData: FormData) {
@@ -27,14 +29,35 @@ export async function createFlipbook(formData: FormData) {
   const coverImageUrl = formData.get("coverImageUrl") as string;
   const category = formData.get("category") as string;
   const isFree = formData.get("isFree") === "on";
+  const schedulePublish = formData.get("schedulePublish") === "on";
+  const publishedAt = formData.get("publishedAt") as string;
 
   try {
-    const validatedData = flipbookSchema.parse({ title, description, pdfUrl, coverImageUrl, category, isFree });
+    const validatedData = flipbookSchema.parse({ 
+      title, 
+      description, 
+      pdfUrl, 
+      coverImageUrl, 
+      category, 
+      isFree,
+      schedulePublish,
+      publishedAt
+    });
+
+    const publishDate = schedulePublish && publishedAt ? new Date(publishedAt) : null;
+    const isPublishedNow = !schedulePublish || (publishDate && publishDate <= new Date());
 
     await prisma.flipbook.create({
       data: {
-        ...validatedData,        createdById: session.user.id,        isPublished: true,
+        title: validatedData.title,
+        description: validatedData.description,
+        pdfUrl: validatedData.pdfUrl,
+        coverImageUrl: validatedData.coverImageUrl,
+        category: validatedData.category,
+        createdById: session.user.id,
+        isPublished: isPublishedNow,
         isFree: validatedData.isFree || false,
+        publishedAt: publishDate,
       },
     });
 
@@ -216,5 +239,27 @@ export async function updateFlipbookProgress(data: {
     } catch (error) {
         console.error("Failed to update flipbook progress:", error);
         throw error;
+    }
+}
+
+export async function getAllCategories() {
+    try {
+        const categories = await prisma.flipbook.findMany({
+            where: {
+                category: { not: null }
+            },
+            select: {
+                category: true
+            },
+            distinct: ['category']
+        });
+
+        return categories
+            .map(f => f.category)
+            .filter((cat): cat is string => cat !== null)
+            .sort();
+    } catch (error) {
+        console.error("Failed to get categories:", error);
+        return [];
     }
 }

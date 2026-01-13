@@ -141,6 +141,7 @@ model Flipbook {
   category      String?    
   isPublished   Boolean  @default(false) @map("is_published")
   isFree        Boolean  @default(false) @map("is_free")
+  publishedAt   DateTime? @map("published_at")
   createdById   String   @map("created_by")
   createdBy     User     @relation(fields: [createdById], references: [id])
   createdAt     DateTime @default(now()) @map("created_at")
@@ -153,6 +154,7 @@ model Flipbook {
   @@index([isPublished])
   @@index([isFree])
   @@index([createdAt])
+  @@index([publishedAt])
   @@map("flipbooks")
 }
 
