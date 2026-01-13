@@ -68,8 +68,17 @@ export default function AdminFlipbooksPage() {
       formData.set("publishedAt", publishDate.toISOString());
     }
     
-    try {
-      await createFlipbook(formData);
+    // Debug: Log form data
+    console.log("Form submission data:");
+    for (const [key, value] of formData.entries()) {
+      console.log(`${key}:`, value);
+    }
+    
+    const result = await createFlipbook(formData);
+    
+    if (result.error) {
+      toast.error(result.error);
+    } else {
       toast.success("Flipbook created successfully");
       setDialogOpen(false);
       setSelectedCategory([]);
@@ -77,8 +86,6 @@ export default function AdminFlipbooksPage() {
       setPublishDate(undefined);
       loadFlipbooks();
       loadCategories(); // Refresh categories
-    } catch (error) {
-      toast.error("Failed to create flipbook");
     }
   };
 

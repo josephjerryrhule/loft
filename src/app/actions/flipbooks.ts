@@ -63,12 +63,16 @@ export async function createFlipbook(formData: FormData) {
 
     revalidatePath("/admin/flipbooks");
     revalidatePath("/customer/flipbooks");
+    
+    return { success: true };
   } catch (error) {
     console.error("Failed to create flipbook:", error);
-    throw new Error("Failed to create flipbook");
+    if (error instanceof z.ZodError) {
+      console.error("Validation errors:", error.errors);
+      return { error: `Validation failed: ${error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')}` };
+    }
+    return { error: "Failed to create flipbook" };
   }
-    
-  redirect("/admin/flipbooks");
 }
 
 export async function updateFlipbook(flipbookId: string, data: {
@@ -81,6 +85,16 @@ export async function updateFlipbook(flipbookId: string, data: {
     isFree?: boolean;
 }) {
     try {
+        // Get old file URLs if new ones are provided (for cleanup)
+        let oldFiles: { pdfUrl?: string | null, coverImageUrl?: string | null } = {};
+        if (data.pdfUrl || data.coverImageUrl) {
+            const existing = await prisma.flipbook.findUnique({
+                where: { id: flipbookId },
+                select: { pdfUrl: true, coverImageUrl: true }
+            });
+            oldFiles = existing || {};
+        }
+
         await prisma.flipbook.update({
             where: { id: flipbookId },
             data: {
@@ -93,6 +107,18 @@ export async function updateFlipbook(flipbookId: string, data: {
                 isFree: data.isFree
             }
         });
+
+        // Delete old files from storage if they were replaced
+        const { deleteFromSupabase } = await import("@/lib/upload");
+        
+        if (data.pdfUrl && oldFiles.pdfUrl && oldFiles.pdfUrl !== data.pdfUrl) {
+            await deleteFromSupabase(oldFiles.pdfUrl);
+        }
+        
+        if (data.coverImageUrl && oldFiles.coverImageUrl && oldFiles.coverImageUrl !== data.coverImageUrl) {
+            await deleteFromSupabase(oldFiles.coverImageUrl);
+        }
+
         revalidatePath("/admin/flipbooks");
         revalidatePath("/customer/flipbooks");
         return { success: true };
@@ -104,14 +130,34 @@ export async function updateFlipbook(flipbookId: string, data: {
 
 export async function deleteFlipbook(flipbookId: string) {
     try {
-        // Optional: Delete related progress first if cascade isn't set
+        // Get flipbook to retrieve file URLs
+        const flipbook = await prisma.flipbook.findUnique({
+            where: { id: flipbookId },
+            select: { pdfUrl: true, coverImageUrl: true }
+        });
+
+        // Delete related progress first if cascade isn't set
         await prisma.flipbookProgress.deleteMany({
             where: { flipbookId }
         });
 
+        // Delete the flipbook record
         await prisma.flipbook.delete({
             where: { id: flipbookId }
         });
+
+        // Delete files from storage after successful DB deletion
+        if (flipbook) {
+            const { deleteFromSupabase } = await import("@/lib/upload");
+            
+            if (flipbook.pdfUrl) {
+                await deleteFromSupabase(flipbook.pdfUrl);
+            }
+            
+            if (flipbook.coverImageUrl) {
+                await deleteFromSupabase(flipbook.coverImageUrl);
+            }
+        }
         
         revalidatePath("/admin/flipbooks");
         revalidatePath("/customer/flipbooks");

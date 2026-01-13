@@ -32,6 +32,9 @@ interface EditFlipbookDialogProps {
 }
 
 export function EditFlipbookDialog({ flipbook, open, onOpenChange }: EditFlipbookDialogProps) {
+  const [pdfUrl, setPdfUrl] = useState(flipbook.pdfUrl || "");
+  const [coverImageUrl, setCoverImageUrl] = useState(flipbook.coverImageUrl || "");
+  
   const form = useForm<z.infer<typeof editFlipbookSchema>>({
     resolver: zodResolver(editFlipbookSchema),
     defaultValues: {
@@ -43,7 +46,11 @@ export function EditFlipbookDialog({ flipbook, open, onOpenChange }: EditFlipboo
   });
 
   async function onSubmit(values: z.infer<typeof editFlipbookSchema>) {
-    const result = await updateFlipbook(flipbook.id, values);
+    const result = await updateFlipbook(flipbook.id, {
+      ...values,
+      pdfUrl: pdfUrl || undefined,
+      coverImageUrl: coverImageUrl || undefined,
+    });
     if (result && result.error) {
       toast.error(result.error);
     } else {
@@ -54,7 +61,7 @@ export function EditFlipbookDialog({ flipbook, open, onOpenChange }: EditFlipboo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Flipbook</DialogTitle>
         </DialogHeader>
@@ -84,6 +91,34 @@ export function EditFlipbookDialog({ flipbook, open, onOpenChange }: EditFlipboo
                     <FormMessage />
                   </FormItem>
                 )} />
+
+                <div className="space-y-4 border-t pt-4">
+                  <FileUpload 
+                    label="PDF File" 
+                    name="pdfUrl" 
+                    accept=".pdf"
+                    defaultValue={pdfUrl}
+                    onUpload={(url) => setPdfUrl(url)}
+                  />
+                  {pdfUrl && (
+                    <p className="text-xs text-muted-foreground">
+                      Current: {pdfUrl.split('/').pop()}
+                    </p>
+                  )}
+
+                  <FileUpload 
+                    label="Cover Image" 
+                    name="coverImageUrl" 
+                    accept="image/*"
+                    defaultValue={coverImageUrl}
+                    onUpload={(url) => setCoverImageUrl(url)}
+                  />
+                  {coverImageUrl && (
+                    <p className="text-xs text-muted-foreground">
+                      Current: {coverImageUrl.split('/').pop()}
+                    </p>
+                  )}
+                </div>
 
                 <FormField control={form.control} name="isFree" render={({ field }) => (
                   <FormItem className="flex items-center space-x-2">

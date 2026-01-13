@@ -40,3 +40,31 @@ export async function saveFileLocally(
 ): Promise<string> {
   return uploadToSupabase(file, folder);
 }
+
+export async function deleteFromSupabase(fileUrl: string): Promise<boolean> {
+  try {
+    // Extract file path from URL
+    // URL format: https://{project}.supabase.co/storage/v1/object/public/uploads/{filePath}
+    const urlParts = fileUrl.split('/uploads/');
+    if (urlParts.length < 2) {
+      console.error('Invalid file URL format');
+      return false;
+    }
+    
+    const filePath = urlParts[1];
+    
+    const { error } = await supabase.storage
+      .from('uploads')
+      .remove([filePath]);
+    
+    if (error) {
+      console.error('Failed to delete file from storage:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    return false;
+  }
+}

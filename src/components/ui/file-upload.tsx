@@ -12,12 +12,14 @@ interface FileUploadProps {
   name: string; // The hidden input name
   accept?: string;
   required?: boolean;
+  defaultValue?: string;
+  onUpload?: (url: string) => void;
 }
 
-export function FileUpload({ label, name, accept, required }: FileUploadProps) {
+export function FileUpload({ label, name, accept, required, defaultValue, onUpload }: FileUploadProps) {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [uploadedUrl, setUploadedUrl] = useState("");
+  const [uploadedUrl, setUploadedUrl] = useState(defaultValue || "");
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.[0]) return;
@@ -41,6 +43,9 @@ export function FileUpload({ label, name, accept, required }: FileUploadProps) {
 
       const data = await response.json();
       setUploadedUrl(data.url);
+      if (onUpload) {
+        onUpload(data.url);
+      }
       toast.success("File uploaded successfully!");
     } catch (error) {
       console.error(error);
