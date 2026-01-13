@@ -7,13 +7,16 @@ import { useRouter } from "next/navigation";
 import { registerUser } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Card, CardHeader, CardContent, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Role } from "@/lib/types";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import { useState } from "react";
 
 const registerSchema = z.object({
   firstName: z.string().min(2, "First name is too short"),
@@ -32,6 +35,7 @@ interface JoinAffiliateFormProps {
 
 export function JoinAffiliateForm({ managerCode }: JoinAffiliateFormProps) {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
@@ -48,12 +52,17 @@ export function JoinAffiliateForm({ managerCode }: JoinAffiliateFormProps) {
   });
 
   async function onSubmit(values: z.infer<typeof registerSchema>) {
-    const result = await registerUser(values);
-    if (result && result.error) {
-      toast.error(result.error);
-    } else {
-      toast.success("Affiliate account created! Please login.");
-      router.push("/auth/login");
+    setIsLoading(true);
+    try {
+      const result = await registerUser(values);
+      if (result && result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Affiliate account created! Please login.");
+        router.push("/auth/login");
+      }
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -114,7 +123,7 @@ export function JoinAffiliateForm({ managerCode }: JoinAffiliateFormProps) {
               <FormField control={form.control} name="password" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Password</FormLabel>
-                  <FormControl><Input type="password" placeholder="******" {...field} /></FormControl>
+                  <FormControl><PasswordInput placeholder="******" showStrength {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
@@ -122,7 +131,10 @@ export function JoinAffiliateForm({ managerCode }: JoinAffiliateFormProps) {
               <input type="hidden" {...form.register("role")} value={Role.AFFILIATE} />
               <input type="hidden" {...form.register("managerCode")} value={managerCode} />
 
-              <Button type="submit" className="w-full">Create Affiliate Account</Button>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isLoading ? "Creating account..." : "Create Affiliate Account"}
+              </Button>
             </form>
           </Form>
         </CardContent>

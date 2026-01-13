@@ -119,7 +119,7 @@ function RegisterForm() {
               <FormField control={form.control} name="password" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Password</FormLabel>
-                  <FormControl><PasswordInput placeholder="******" {...field} /></FormControl>
+                  <FormControl><PasswordInput placeholder="******" showStrength {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
