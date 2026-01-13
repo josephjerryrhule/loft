@@ -58,6 +58,25 @@ export async function processOrderCommission(orderId: string) {
 
   if (!order || !order.referredBy) return;
 
+  // Check if commissions already exist for this order to prevent duplicates
+  const existingCommissions = await prisma.commission.findFirst({
+    where: {
+      sourceType: "PRODUCT",
+      sourceId: orderId
+    }
+  });
+
+  if (existingCommissions) {
+    console.log(`Commissions already exist for order ${orderId}, skipping...`);
+    return;
+  }
+
+  // Only process commissions for COMPLETED orders
+  if (order.status !== "COMPLETED") {
+    console.log(`Order ${orderId} is not completed (status: ${order.status}), skipping commission processing...`);
+    return;
+  }
+
   const referrer = order.referredBy;
   const product = order.product;
   const totalAmount = parseFloat(order.totalAmount.toString());
