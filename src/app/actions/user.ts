@@ -201,6 +201,7 @@ export async function getCustomerOrders(page = 1, pageSize = 10) {
                 status: order.status,
                 paymentStatus: order.paymentStatus,
                 paymentReference: order.paymentReference,
+                completedFileUrl: order.completedFileUrl,
                 createdAt: order.createdAt.toISOString(),
                 product: {
                     id: order.product.id,

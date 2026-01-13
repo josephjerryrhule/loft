@@ -17,7 +17,7 @@ interface EditOrderDialogProps {
     orderNumber: string;
     status: string;
     product?: {
-      type: string;
+      productType: string;
     };
     completedFileUrl?: string | null;
   };
@@ -31,7 +31,7 @@ export function EditOrderDialog({ open, onOpenChange, order, onSuccess }: EditOr
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const isDigitalProduct = order.product?.type === "DIGITAL";
+  const isDigitalProduct = order.product?.productType === "DIGITAL";
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

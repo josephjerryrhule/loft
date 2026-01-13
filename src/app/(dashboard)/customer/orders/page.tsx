@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Package, ShoppingCart, Eye } from "lucide-react";
+import { Loader2, Package, ShoppingCart, Eye, Download } from "lucide-react";
 import { getCustomerOrders } from "@/app/actions/user";
 import { getSystemSettings } from "@/app/actions/settings";
 import { getCurrencySymbol } from "@/lib/utils";
@@ -22,6 +22,7 @@ interface Order {
   status: string;
   paymentStatus: string;
   paymentReference: string | null;
+  completedFileUrl: string | null;
   createdAt: string;
   product: {
     id: string;
@@ -211,16 +212,34 @@ export default function CustomerOrdersPage() {
                         {new Date(order.createdAt).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setSelectedOrder(order);
-                            setViewDialogOpen(true);
-                          }}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setSelectedOrder(order);
+                              setViewDialogOpen(true);
+                            }}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          {order.status === "COMPLETED" && order.completedFileUrl && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              asChild
+                            >
+                              <a 
+                                href={order.completedFileUrl} 
+                                download 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                              >
+                                <Download className="h-4 w-4 text-green-600 dark:text-green-400" />
+                              </a>
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

@@ -298,7 +298,16 @@ export async function getAllOrders() {
             orderBy: { createdAt: "desc" },
             include: {
                 customer: true,
-                product: true,
+                product: {
+                    select: {
+                        id: true,
+                        title: true,
+                        description: true,
+                        price: true,
+                        productType: true,
+                        featuredImageUrl: true,
+                    }
+                },
             },
         });
         return orders;
@@ -405,6 +414,9 @@ export async function updateOrderStatus(orderId: string, status: string, complet
 
         const oldStatus = order.status;
 
+        // Process commissions outside of transaction to avoid timeout
+        let commissionProcessed = false;
+        
         await prisma.$transaction(async (tx) => {
             // Update order status and file URL if provided
             await tx.order.update({
@@ -414,25 +426,6 @@ export async function updateOrderStatus(orderId: string, status: string, complet
                     ...(completedFileUrl && { completedFileUrl })
                 }
             });
-
-            // If order is being marked as COMPLETED, process commissions
-            if (status === "COMPLETED" && oldStatus !== "COMPLETED") {
-                // Import commission processing
-                const { processOrderCommission } = await import("@/lib/commission");
-                await processOrderCommission(orderId);
-                
-                // Log commission creation
-                await tx.activityLog.create({
-                    data: {
-                        userId: session.user!.id,
-                        actionType: "COMMISSION_CREATED",
-                        actionDetails: JSON.stringify({
-                            orderId,
-                            reason: "Order completed"
-                        })
-                    }
-                });
-            }
 
             // If order is being cancelled, handle commission reversal
             if (status === "CANCELLED" && oldStatus !== "CANCELLED") {
@@ -474,7 +467,33 @@ export async function updateOrderStatus(orderId: string, status: string, complet
                     })
                 }
             });
+        }, {
+            timeout: 10000, // Increase timeout to 10 seconds
         });
+
+        // Process commissions after transaction completes (for COMPLETED orders)
+        if (status === "COMPLETED" && oldStatus !== "COMPLETED") {
+            try {
+                const { processOrderCommission } = await import("@/lib/commission");
+                await processOrderCommission(orderId);
+                
+                // Log commission creation separately
+                await prisma.activityLog.create({
+                    data: {
+                        userId: session.user!.id,
+                        actionType: "COMMISSION_CREATED",
+                        actionDetails: JSON.stringify({
+                            orderId,
+                            reason: "Order completed"
+                        })
+                    }
+                });
+                commissionProcessed = true;
+            } catch (error) {
+                console.error("Failed to process commission:", error);
+                // Don't fail the order update if commission processing fails
+            }
+        }
 
         // Send email notification to customer
         if (order.customer && oldStatus !== status) {
