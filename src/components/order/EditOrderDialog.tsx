@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { updateOrderStatus } from "@/app/actions/admin";
+import { Upload, X, FileIcon, Loader2 } from "lucide-react";
 
 interface EditOrderDialogProps {
   open: boolean;
@@ -15,6 +16,10 @@ interface EditOrderDialogProps {
     id: string;
     orderNumber: string;
     status: string;
+    product?: {
+      type: string;
+    };
+    completedFileUrl?: string | null;
   };
   onSuccess?: () => void;
 }
@@ -22,20 +27,52 @@ interface EditOrderDialogProps {
 export function EditOrderDialog({ open, onOpenChange, order, onSuccess }: EditOrderDialogProps) {
   const [status, setStatus] = useState(order.status);
   const [loading, setLoading] = useState(false);
+  const [uploadedFileUrl, setUploadedFileUrl] = useState(order.completedFileUrl || "");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isDigitalProduct = order.product?.type === "DIGITAL";
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "orders");
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("Upload failed");
+
+      const data = await response.json();
+      setUploadedFileUrl(data.url);
+      toast.success("File uploaded successfully");
+    } catch (error) {
+      toast.error("Failed to upload file");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const result = await updateOrderStatus(order.id, status);
+      const result = await updateOrderStatus(order.id, status, uploadedFileUrl || undefined);
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("Order status updated successfully");
+        toast.success("Order updated successfully");
         onOpenChange(false);
         onSuccess?.();
       }
     } catch {
-      toast.error("Failed to update order status");
+      toast.error("Failed to update order");
     } finally {
       setLoading(false);
     }
@@ -63,13 +100,64 @@ export function EditOrderDialog({ open, onOpenChange, order, onSuccess }: EditOr
               </SelectContent>
             </Select>
           </div>
+
+          {isDigitalProduct && (
+            <div className="space-y-2">
+              <Label>Completed File (Digital Product)</Label>
+              {uploadedFileUrl ? (
+                <div className="flex items-center gap-2 p-3 border rounded-md">
+                  <FileIcon className="h-4 w-4" />
+                  <span className="text-sm flex-1 truncate">File uploaded</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setUploadedFileUrl("")}
+                    disabled={uploading || loading}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading || loading}
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Upload Completed File
+                    </>
+                  )}
+                </Button>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                onChange={handleFileUpload}
+                accept=".pdf,.zip,.doc,.docx,.jpg,.jpeg,.png"
+              />
+              <p className="text-xs text-muted-foreground">
+                Upload the completed digital product file for the customer to download
+              </p>
+            </div>
+          )}
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={loading}>
+          <Button onClick={handleSubmit} disabled={loading || uploading}>
             {loading ? "Saving..." : "Save Changes"}
           </Button>
         </DialogFooter>

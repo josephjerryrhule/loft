@@ -381,7 +381,7 @@ export async function getFinanceData() {
     }
 }
 
-export async function updateOrderStatus(orderId: string, status: string) {
+export async function updateOrderStatus(orderId: string, status: string, completedFileUrl?: string) {
     const session = await auth();
     if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
         return { error: "Unauthorized" };
@@ -406,11 +406,33 @@ export async function updateOrderStatus(orderId: string, status: string) {
         const oldStatus = order.status;
 
         await prisma.$transaction(async (tx) => {
-            // Update order status
+            // Update order status and file URL if provided
             await tx.order.update({
                 where: { id: orderId },
-                data: { status }
+                data: { 
+                    status,
+                    ...(completedFileUrl && { completedFileUrl })
+                }
             });
+
+            // If order is being marked as COMPLETED, process commissions
+            if (status === "COMPLETED" && oldStatus !== "COMPLETED") {
+                // Import commission processing
+                const { processOrderCommission } = await import("@/lib/commission");
+                await processOrderCommission(orderId);
+                
+                // Log commission creation
+                await tx.activityLog.create({
+                    data: {
+                        userId: session.user!.id,
+                        actionType: "COMMISSION_CREATED",
+                        actionDetails: JSON.stringify({
+                            orderId,
+                            reason: "Order completed"
+                        })
+                    }
+                });
+            }
 
             // If order is being cancelled, handle commission reversal
             if (status === "CANCELLED" && oldStatus !== "CANCELLED") {
@@ -454,15 +476,28 @@ export async function updateOrderStatus(orderId: string, status: string) {
             });
         });
 
-        // Send email notification to customer about order status change
+        // Send email notification to customer
         if (order.customer && oldStatus !== status) {
-          sendOrderStatusChangeEmail({
-            customerEmail: order.customer.email,
-            customerName: `${order.customer.firstName || ""} ${order.customer.lastName || ""}`.trim() || "Customer",
-            orderId: order.orderNumber,
-            oldStatus,
-            newStatus: status,
-          }).catch(console.error);
+          if (status === "COMPLETED") {
+            // Send order completed email with download link
+            const { sendOrderCompletedEmail } = await import("@/lib/email");
+            sendOrderCompletedEmail({
+              customerEmail: order.customer.email,
+              customerName: `${order.customer.firstName || ""} ${order.customer.lastName || ""}`.trim() || "Customer",
+              orderId: order.orderNumber,
+              productName: order.product.title,
+              downloadUrl: completedFileUrl || undefined,
+            }).catch(console.error);
+          } else {
+            // Send regular status change email
+            sendOrderStatusChangeEmail({
+              customerEmail: order.customer.email,
+              customerName: `${order.customer.firstName || ""} ${order.customer.lastName || ""}`.trim() || "Customer",
+              orderId: order.orderNumber,
+              oldStatus,
+              newStatus: status,
+            }).catch(console.error);
+          }
         }
 
         revalidatePath("/admin/orders");

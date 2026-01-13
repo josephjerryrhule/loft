@@ -93,13 +93,15 @@ export async function processSubscriptionPayment(reference: string, planId: stri
         customerId: session.user.id,
         planId,
         status: "ACTIVE",
+        paymentStatus: "COMPLETED", // Payment verified via Paystack
+        paymentReference: reference,
         startDate,
         endDate,
         autoRenew: false,
       },
     });
 
-    // Process commission for referrer
+    // Process commission for referrer immediately on successful payment
     await processSubscriptionCommission(
       subscription.id,
       session.user.id,
@@ -236,9 +238,7 @@ export async function processProductPayment(
       },
     });
 
-    // Process commissions (affiliate + manager if applicable)
-    const { processOrderCommission } = await import("@/lib/commission");
-    await processOrderCommission(order.id);
+    // Note: Order commissions are processed when order status is marked as COMPLETED by admin
 
     // Log activity
     await prisma.activityLog.create({

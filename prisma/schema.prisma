@@ -97,6 +97,8 @@ model Subscription {
   planId      String             @map("plan_id")
   plan        SubscriptionPlan   @relation(fields: [planId], references: [id])
   status      String             // Enum: ACTIVE, EXPIRED, CANCELLED
+  paymentStatus String           @default("PENDING") @map("payment_status") // Enum: PENDING, PROCESSING, COMPLETED, CANCELLED
+  paymentReference String?        @map("payment_reference")
   startDate   DateTime           @map("start_date")
   endDate     DateTime           @map("end_date")
   autoRenew   Boolean            @default(false) @map("auto_renew")
@@ -106,6 +108,7 @@ model Subscription {
   @@index([customerId])
   @@index([planId])
   @@index([status])
+  @@index([paymentStatus])
   @@index([startDate])
   @@index([endDate])
   @@index([createdAt])
@@ -203,6 +206,7 @@ model Order {
   status           String      @default("PENDING") // Enum: PENDING, PROCESSING, COMPLETED, CANCELLED
   paymentStatus    String      @default("PENDING") @map("payment_status") // Enum
   paymentReference String?     @map("payment_reference")
+  completedFileUrl String?     @map("completed_file_url") // URL to completed digital product file
   
   // Shipping address
   shippingAddress  String?     @map("shipping_address")

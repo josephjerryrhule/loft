@@ -53,7 +53,20 @@ export async function GET(request: NextRequest) {
 
     // Construct the invite URL
     const baseUrl = process.env.NEXTAUTH_URL || request.nextUrl.origin;
-    const inviteUrl = `${baseUrl}/join/${user.role.toLowerCase()}?code=${user.inviteCode}`;
+    let inviteUrl: string;
+    
+    if (user.role === "MANAGER") {
+      // Manager QR code links to affiliate signup
+      inviteUrl = `${baseUrl}/join/affiliate?code=${user.inviteCode}`;
+    } else if (user.role === "AFFILIATE") {
+      // Affiliate QR code links to customer signup
+      inviteUrl = `${baseUrl}/join/customer?code=${user.inviteCode}`;
+    } else {
+      return NextResponse.json(
+        { error: "Invalid user role for QR code" },
+        { status: 400 }
+      );
+    }
 
     // Generate QR code as data URL
     const qrCodeDataUrl = await QRCode.toDataURL(inviteUrl, {

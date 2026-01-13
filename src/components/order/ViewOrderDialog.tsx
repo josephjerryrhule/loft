@@ -3,7 +3,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Package, User, CreditCard, Calendar, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Package, User, CreditCard, Calendar, FileText, Download } from "lucide-react";
 import { getCurrencySymbol } from "@/lib/utils";
 
 interface ViewOrderDialogProps {
@@ -160,6 +161,33 @@ export function ViewOrderDialog({ open, onOpenChange, order, currency = "GHS" }:
               </div>
             </div>
           </div>
+
+          {/* Download Section for Completed Digital Orders */}
+          {order.status === "COMPLETED" && order.completedFileUrl && (
+            <>
+              <Separator />
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Download className="h-4 w-4" />
+                  <span>Download Files</span>
+                </div>
+                <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                  <p className="text-sm text-green-800 dark:text-green-200 mb-3">
+                    ✓ Your order is complete! Download your file below:
+                  </p>
+                  <Button
+                    asChild
+                    className="w-full"
+                  >
+                    <a href={order.completedFileUrl} download target="_blank" rel="noopener noreferrer">
+                      <Download className="h-4 w-4 mr-2" />
+                      Download File
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Customization Data */}
           {customizationData && (

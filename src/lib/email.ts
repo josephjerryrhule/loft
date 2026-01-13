@@ -704,6 +704,47 @@ export async function sendOrderStatusChangeEmail(order: {
   });
 }
 
+// Order Completed with Download Link
+export async function sendOrderCompletedEmail(order: {
+  customerEmail: string;
+  customerName: string;
+  orderId: string;
+  productName: string;
+  downloadUrl?: string;
+}) {
+  const branding = await getBranding();
+  
+  const content = `
+    <h2>🎉 Your Order is Complete!</h2>
+    <p>Hi ${order.customerName},</p>
+    <p>Great news! Your order has been completed and is ready for you.</p>
+    <div class="info-box">
+      <p><strong>Order ID:</strong> ${order.orderId}</p>
+      <p><strong>Product:</strong> ${order.productName}</p>
+      <p><strong>Status:</strong> <span class="status-badge status-active">COMPLETED</span></p>
+    </div>
+    ${order.downloadUrl ? `
+    <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+      <h3 style="margin-top: 0;">📥 Download Your File</h3>
+      <p>Your completed digital product is ready to download:</p>
+      <a href="${order.downloadUrl}" class="button">Download Now</a>
+      <p style="font-size: 12px; color: #666; margin-bottom: 0;">
+        You can also download this file from your orders page anytime.
+      </p>
+    </div>
+    ` : ''}
+    <a href="${branding.siteUrl}/customer" class="button" style="background: #6366f1;">View Order Details</a>
+    <p>Thank you for your business!</p>
+    <p>Best regards,<br>The ${branding.platformName} Team</p>
+  `;
+
+  return sendEmail({
+    to: order.customerEmail,
+    subject: `🎉 Order ${order.orderId} Completed - Download Ready!`,
+    html: emailWrapper(content, branding.platformName, branding.logoUrl),
+  });
+}
+
 // 12. Password Reset
 export async function sendPasswordResetEmail(data: {
   userEmail: string;
