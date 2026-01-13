@@ -128,6 +128,28 @@ export async function getAllFlipbooks() {
             include: { createdBy: true },
             orderBy: { createdAt: "desc" }
         });
+
+        // Auto-publish scheduled flipbooks that have reached their publish date
+        const now = new Date();
+        const toPublish = flipbooks.filter(
+            fb => !fb.isPublished && fb.publishedAt && fb.publishedAt <= now
+        );
+
+        if (toPublish.length > 0) {
+            await prisma.flipbook.updateMany({
+                where: {
+                    id: { in: toPublish.map(fb => fb.id) }
+                },
+                data: { isPublished: true }
+            });
+
+            // Refetch to get updated data
+            return await prisma.flipbook.findMany({
+                include: { createdBy: true },
+                orderBy: { createdAt: "desc" }
+            });
+        }
+
         return flipbooks;
     } catch (error) {
         console.error("Failed to get all flipbooks:", error);
@@ -142,20 +164,35 @@ export async function getCustomerFlipbooks() {
     }
 
     try {
+        const now = new Date();
+        
         // Check for active subscription (must be ACTIVE and not expired)
         const activeSubscription = await prisma.subscription.findFirst({
             where: { 
                 customerId: session.user.id,
                 status: "ACTIVE",
-                endDate: { gte: new Date() }
+                endDate: { gte: now }
             },
             include: { plan: true }
         });
 
-        // Get flipbooks with progress
+        // Auto-publish scheduled flipbooks that have reached their publish date
+        await prisma.flipbook.updateMany({
+            where: {
+                isPublished: false,
+                publishedAt: { lte: now }
+            },
+            data: { isPublished: true }
+        });
+
+        // Get flipbooks with progress - only show published ones or scheduled for past
         const flipbooks = await prisma.flipbook.findMany({
             where: { 
                 isPublished: true,
+                OR: [
+                    { publishedAt: null },
+                    { publishedAt: { lte: now } }
+                ],
                 ...(activeSubscription ? {} : { isFree: true })
             },
             include: {

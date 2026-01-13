@@ -191,6 +191,7 @@ export default function AdminFlipbooksPage() {
               <TableHead>Category</TableHead>
               <TableHead>Author</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Publish Date</TableHead>
               <TableHead>Created</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -198,7 +199,7 @@ export default function AdminFlipbooksPage() {
           <TableBody>
             {paginatedFlipbooks.length === 0 && (
                 <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         No flipbooks found.
                     </TableCell>
                 </TableRow>
@@ -214,7 +215,31 @@ export default function AdminFlipbooksPage() {
                     )}
                 </TableCell>
                 <TableCell>{book.createdBy?.email}</TableCell>
-                <TableCell>{book.isPublished ? "Published" : "Draft"}</TableCell>
+                <TableCell>
+                  {book.publishedAt && new Date(book.publishedAt) > new Date() ? (
+                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                      Scheduled
+                    </span>
+                  ) : book.isPublished ? (
+                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                      Published
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
+                      Draft
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {book.publishedAt ? (
+                    <div>
+                      <div className="text-sm">{new Date(book.publishedAt).toLocaleDateString()}</div>
+                      <div className="text-xs text-muted-foreground">{new Date(book.publishedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">-</span>
+                  )}
+                </TableCell>
                 <TableCell>{new Date(book.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">
                     {/* @ts-ignore */}
