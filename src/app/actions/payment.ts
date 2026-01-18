@@ -347,6 +347,7 @@ export async function initializePayment(data: {
   itemId: string; // planId or productId
   quantity?: number;
   customizationData?: string;
+  customerUploadUrl?: string;
   callbackUrl: string;
   userId?: string; // Optional userId for direct initialization (e.g. from registration)
 }) {
@@ -373,6 +374,7 @@ export async function initializePayment(data: {
         itemId: data.itemId,
         quantity: data.quantity || 1,
         customizationData: data.customizationData,
+        customerUploadUrl: data.customerUploadUrl,
       },
     });
 

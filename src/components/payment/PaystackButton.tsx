@@ -57,6 +57,7 @@ export function PaystackButton({
         itemId: metadata.type === "subscription" ? metadata.planId! : metadata.productId!,
         quantity: metadata.quantity,
         customizationData: metadata.customizationData,
+        customerUploadUrl: metadata.customerUploadUrl as string | undefined,
         callbackUrl: callbackUrl,
       });
 
