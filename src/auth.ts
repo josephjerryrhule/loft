@@ -56,6 +56,39 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
       async authorize(credentials) {
+        // 1. Check for payment-based auto-login (no password required)
+        const paymentAuth = z.object({ paymentReference: z.string() }).safeParse(credentials);
+        
+        if (paymentAuth.success) {
+            const { paymentReference } = paymentAuth.data;
+            
+            // Find subscription with this reference
+            // Must be recent (e.g., within 20 mins) to prevent reuse/replay attacks
+            // and must be COMPLETED/ACTIVE status
+            const subscription = await prisma.subscription.findFirst({
+                where: {
+                    paymentReference: paymentReference,
+                    paymentStatus: "COMPLETED",
+                    createdAt: {
+                        gte: new Date(Date.now() - 20 * 60 * 1000) // 20 mins ago
+                    }
+                },
+                include: { customer: true }
+            });
+
+            if (subscription && subscription.customer) {
+                const user = subscription.customer;
+                // Double check user status
+                if (user.status === "SUSPENDED" || user.status === "BANNED") return null;
+                
+                return user;
+            }
+            // If not found or invalid, fall through to normal login? 
+            // Better to return null strictly if paymentReference was intended but failed.
+            return null; 
+        }
+
+        // 2. Normal Email/Password Login
         const parsedCredentials = z
           .object({ email: z.string().email(), password: z.string().min(6) })
           .safeParse(credentials);

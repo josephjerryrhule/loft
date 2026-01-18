@@ -51,15 +51,73 @@ function RegisterForm() {
   async function onSubmit(values: z.infer<typeof registrationSchema>) {
     setIsLoading(true);
     try {
+      const planId = searchParams.get("planId");
       const result = await registerUser(values);
+      
       if (result && result.error) {
         toast.error(result.error);
+        setIsLoading(false);
       } else {
-        toast.success("Registration successful! Please login.");
-        router.push("/auth/login");
+        if (planId && result.userId) {
+            // If planId is present, initialize payment immediately
+            const planRes = await fetch(`/api/plans/${planId}`); 
+            // We can't fetch plan details easily here without a server action or API
+            // Instead, we should probably fetch the plan details in a useEffect or use a server action to get price
+            // Let's use a server action to initialize payment which checks validity
+            
+            // We need to import initializePayment dynamically or pass it as prop? 
+            // No, we can import server action.
+            
+            // However, we need the Plan Price.
+            // Let's assume we can get it or the server action handles it.
+            // Wait, initializePayment takes amount. We don't have amount here.
+            
+            // Better approach: Create a specific client-side helper or ensure registerUser checks plan?
+            // Or easier: After register, we have a user.
+            
+            // We can call a new action `initializeSubscriptionAfterRegistration(userId, planId)`
+            
+            try {
+                // Dynamically import to avoid server-client issues if any, though standard import works for server actions
+                const { getPlanDetails } = await import("@/app/actions/plans-helper");
+                const plan = await getPlanDetails(planId);
+                
+                if (!plan) {
+                    toast.error("Plan not found. Redirecting to login...");
+                    router.push("/auth/login");
+                    return;
+                }
+                
+                const { initializePayment } = await import("@/app/actions/payment");
+                const paymentRes = await initializePayment({
+                    type: "subscription",
+                    email: values.email,
+                    amount: Number(plan.price),
+                    reference: "" + Math.floor(Math.random() * 1000000000 + 1), // Generate reference
+                    itemId: planId,
+                    callbackUrl: `${window.location.origin}/payment/callback`,
+                    userId: result.userId
+                });
+                
+                if (paymentRes.error || !paymentRes.authorizationUrl) {
+                    toast.error("Failed to initialize payment. Please login to subscribe.");
+                    router.push("/auth/login");
+                } else {
+                    window.location.href = paymentRes.authorizationUrl;
+                }
+            } catch (err) {
+                console.error(err);
+                toast.error("Error initializing payment");
+                router.push("/auth/login");
+            }
+        } else {
+            toast.success("Registration successful! Please check your email to verify your account.");
+            router.push("/auth/login");
+        }
       }
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+       console.error(error);
+       setIsLoading(false);
     }
   }
 

@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { PaymentSuccessActions } from "@/components/payment/PaymentSuccessActions";
 
 interface PaymentVerificationResult {
   success: boolean;
@@ -101,27 +102,35 @@ async function PaymentResult({ reference }: { reference: string }) {
               <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
               <h1 className="text-2xl font-bold text-green-600">Payment Successful!</h1>
               <p className="text-muted-foreground">{result.message}</p>
+              
+              {result.type === "subscription" ? (
+                  <PaymentSuccessActions reference={reference} />
+              ) : (
+                  <div className="pt-4 space-y-2">
+                    <Link href="/customer/orders">
+                      <Button className="w-full">View My Orders</Button>
+                    </Link>
+                    <Link href="/products">
+                      <Button variant="outline" className="w-full">Continue Shopping</Button>
+                    </Link>
+                  </div>
+              )}
             </>
           ) : (
             <>
               <XCircle className="h-16 w-16 text-red-500 mx-auto" />
               <h1 className="text-2xl font-bold text-red-600">Payment Failed</h1>
               <p className="text-muted-foreground">{result.message}</p>
+              
+              <div className="pt-4 space-y-2">
+                <Link href="/products">
+                  <Button variant="outline" className="w-full">
+                    Continue Shopping
+                  </Button>
+                </Link>
+              </div>
             </>
           )}
-          
-          <div className="pt-4 space-y-2">
-            <Link href={redirectPath}>
-              <Button className="w-full">
-                {result.type === "subscription" ? "View My Plans" : "View My Orders"}
-              </Button>
-            </Link>
-            <Link href="/products">
-              <Button variant="outline" className="w-full">
-                Continue Shopping
-              </Button>
-            </Link>
-          </div>
         </CardContent>
       </Card>
     </div>

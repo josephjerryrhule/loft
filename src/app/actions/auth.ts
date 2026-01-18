@@ -169,7 +169,7 @@ export async function registerUser(formData: z.infer<typeof registerSchema>) {
       verificationUrl,
     }).catch(console.error);
 
-    return { success: true, message: "Registration successful! Please check your email to verify your account." };
+    return { success: true, message: "Registration successful! Please check your email to verify your account.", userId: newUser.id };
   } catch (e) {
       console.error(e);
       return { error: "Failed to create user." };

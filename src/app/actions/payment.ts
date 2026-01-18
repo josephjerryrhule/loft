@@ -16,6 +16,12 @@ interface PaystackVerificationData {
   amount: number;
   reference: string;
   status: string;
+  metadata?: {
+      userId?: string;
+      type?: string;
+      itemId?: string;
+      [key: string]: any;
+  };
 }
 
 async function verifyPaystackPayment(reference: string): Promise<{ success: boolean; data?: PaystackVerificationData; error?: string }> {
@@ -49,16 +55,42 @@ async function verifyPaystackPayment(reference: string): Promise<{ success: bool
   }
 }
 
-export async function processSubscriptionPayment(reference: string, planId: string) {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Unauthorized" };
+export async function processSubscriptionPayment(reference: string, planId: string, userId?: string) {
+  // 1. Verify payment first to get metadata if possible (since we might not have a session)
+  let verificationData;
+  try {
+    const verification = await verifyPaystackPayment(reference);
+    if (verification.success && verification.data) {
+        verificationData = verification.data;
+    }
+  } catch (e) {
+      console.error("Verification error pre-check", e);
+  }
+
+  // 2. Determine Customer ID
+  let customerId = userId;
+  
+  // If not passed, check metadata
+  if (!customerId && verificationData?.metadata?.userId) {
+      customerId = verificationData.metadata.userId;
+  }
+
+  // If still not found, check session
+  if (!customerId) {
+      const session = await auth();
+      customerId = session?.user?.id;
+  }
+
+  if (!customerId) return { error: "Unauthorized" };
 
   try {
-    // Verify payment with Paystack
-    const verification = await verifyPaystackPayment(reference);
-    
-    if (!verification.success || !verification.data) {
-      return { error: verification.error || "Payment verification failed" };
+    // 3. If we didn't verify successfully above (rare), try again or use the data we have
+    if (!verificationData) {
+        const verification = await verifyPaystackPayment(reference);
+        if (!verification.success || !verification.data) {
+           return { error: verification.error || "Payment verification failed" };
+        }
+        verificationData = verification.data;
     }
 
     const plan = await prisma.subscriptionPlan.findUnique({
@@ -68,7 +100,7 @@ export async function processSubscriptionPayment(reference: string, planId: stri
     if (!plan) return { error: "Plan not found" };
 
     // Verify amount matches
-    const amountPaid = verification.data.amount / 100; // Convert from pesewas to GHS
+    const amountPaid = verificationData.amount / 100; // Convert from pesewas to GHS
     if (amountPaid < Number(plan.price)) {
       return { error: "Payment amount mismatch" };
     }
@@ -81,7 +113,7 @@ export async function processSubscriptionPayment(reference: string, planId: stri
     // Cancel any existing active subscriptions
     await prisma.subscription.updateMany({
       where: {
-        customerId: session.user.id,
+        customerId: customerId,
         status: "ACTIVE",
       },
       data: { status: "CANCELLED" },
@@ -90,7 +122,7 @@ export async function processSubscriptionPayment(reference: string, planId: stri
     // Create new subscription
     const subscription = await prisma.subscription.create({
       data: {
-        customerId: session.user.id,
+        customerId: customerId,
         planId,
         status: "ACTIVE",
         paymentStatus: "COMPLETED", // Payment verified via Paystack
@@ -99,19 +131,29 @@ export async function processSubscriptionPayment(reference: string, planId: stri
         endDate,
         autoRenew: false,
       },
+      include: {
+        customer: true // Include customer to get details for email
+      }
+    });
+
+    // MARK USER AS VERIFIED
+    // Since payment is successful, we can trust this user is real/active
+    await prisma.user.update({
+        where: { id: customerId },
+        data: { isEmailVerified: true }
     });
 
     // Process commission for referrer immediately on successful payment
     await processSubscriptionCommission(
       subscription.id,
-      session.user.id,
+      customerId,
       Number(plan.price)
     );
 
     // Log activity
     await prisma.activityLog.create({
       data: {
-        userId: session.user.id,
+        userId: customerId,
         actionType: "SUBSCRIPTION",
         actionDetails: JSON.stringify({
           planName: plan.name,
@@ -123,17 +165,12 @@ export async function processSubscriptionPayment(reference: string, planId: stri
     });
 
     // Send subscription emails
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { email: true, firstName: true, lastName: true },
-    });
-    
-    if (user) {
-      const userName = `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Customer";
+    if (subscription.customer) {
+      const userName = `${subscription.customer.firstName || ""} ${subscription.customer.lastName || ""}`.trim() || "Customer";
       
       // Send confirmation email
       sendSubscriptionConfirmationEmail({
-        userEmail: user.email,
+        userEmail: subscription.customer.email,
         userName,
         planName: plan.name,
         amount: amountPaid,
@@ -143,7 +180,7 @@ export async function processSubscriptionPayment(reference: string, planId: stri
       
       // Send receipt email
       sendSubscriptionReceiptEmail({
-        userEmail: user.email,
+        userEmail: subscription.customer.email,
         userName,
         planName: plan.name,
         amount: amountPaid,
@@ -311,9 +348,16 @@ export async function initializePayment(data: {
   quantity?: number;
   customizationData?: string;
   callbackUrl: string;
+  userId?: string; // Optional userId for direct initialization (e.g. from registration)
 }) {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Unauthorized" };
+  let userId = data.userId;
+  
+  if (!userId) {
+      const session = await auth();
+      userId = session?.user?.id;
+  }
+
+  if (!userId) return { error: "Unauthorized" };
 
   try {
     const { initializePaystackTransaction } = await import("@/lib/paystack");
@@ -325,7 +369,7 @@ export async function initializePayment(data: {
       callbackUrl: data.callbackUrl,
       metadata: {
         type: data.type,
-        userId: session.user.id,
+        userId: userId,
         itemId: data.itemId,
         quantity: data.quantity || 1,
         customizationData: data.customizationData,
