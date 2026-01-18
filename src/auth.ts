@@ -52,6 +52,7 @@ async function resetFailedLoginAttempts(userId: string) {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost: true,
   providers: [
     Credentials({
       async authorize(credentials) {
