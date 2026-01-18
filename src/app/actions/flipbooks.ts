@@ -14,7 +14,7 @@ const flipbookSchema = z.object({
   category: z.string().optional(),
   isFree: z.boolean().optional(),
   schedulePublish: z.boolean().optional(),
-  publishedAt: z.string().optional(),
+  publishedAt: z.string().optional().nullable(),
 });
 
 export async function createFlipbook(formData: FormData) {
