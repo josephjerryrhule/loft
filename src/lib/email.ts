@@ -126,14 +126,22 @@ async function getBranding(): Promise<{
     currency: getCurrencySymbol(config.currency || "GHS"),
   };
 
-  // Cache for 5 minutes
-  cache.set(cacheKey, branding);
+  // Ensure logoUrl is absolute for emails
+  let logoUrl = config.logoUrl || "";
+  if (logoUrl && logoUrl.startsWith("/")) {
+      logoUrl = `${branding.siteUrl}${logoUrl}`;
+  }
   
-  return branding;
+  // Cache for 5 minutes
+  cache.set(cacheKey, { ...branding, logoUrl });
+  
+  return { ...branding, logoUrl };
 }
 
 // Base email template wrapper
 function emailWrapper(content: string, platformName: string, logoUrl?: string): string {
+  // Logic to display logo: allow http/https, but now we also expect absolute URLs from getBranding
+  // We can just check if it exists.
   return `
 <!DOCTYPE html>
 <html>
@@ -166,7 +174,7 @@ function emailWrapper(content: string, platformName: string, logoUrl?: string): 
 <body>
   <div class="container">
     <div class="header">
-      ${logoUrl && (logoUrl.startsWith('http://') || logoUrl.startsWith('https://')) 
+      ${logoUrl 
         ? `<img src="${logoUrl}" alt="${platformName}" style="max-height: 50px; height: auto;" />` 
         : `<h1>${platformName}</h1>`
       }
