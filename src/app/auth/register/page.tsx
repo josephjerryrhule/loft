@@ -37,7 +37,7 @@ function RegisterForm() {
       phone: "",
       role: roleFromQuery,
       managerCode: roleFromQuery === Role.AFFILIATE ? ref : "",
-      referralCode: roleFromQuery === Role.CUSTOMER ? ref : "",
+      referralCode: (roleFromQuery === Role.CUSTOMER || !roleFromQuery) ? ref : "",
       address: "",
       city: "",
       state: "",
@@ -175,25 +175,13 @@ function RegisterForm() {
                 </div>
               </div>
 
+              {/* Only show role selector if coming from affiliate or manager link */}
+              {ref && roleFromQuery !== Role.CUSTOMER && (
+                <input type="hidden" {...form.register("role")} value={roleFromQuery} />
+              )}
+
               {!ref && (
-                <FormField control={form.control} name="role" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>I am a...</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a role" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value={Role.CUSTOMER}>Customer</SelectItem>
-                        <SelectItem value={Role.AFFILIATE}>Affiliate</SelectItem>
-                        <SelectItem value={Role.MANAGER}>Manager</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+                <input type="hidden" {...form.register("role")} value={Role.CUSTOMER} />
               )}
 
               {selectedRole === Role.AFFILIATE && (
