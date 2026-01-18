@@ -14,25 +14,25 @@ interface ViewOrderDialogProps {
   currency?: string;
 }
 
+function getFileExtension(url: string) {
+    if (!url) return '';
+    return url.split('.').pop()?.toLowerCase() || '';
+}
+
 export function ViewOrderDialog({ open, onOpenChange, order, currency = "GHS" }: ViewOrderDialogProps) {
   if (!order) return null;
 
   const customizationData = order.customizationData ? JSON.parse(order.customizationData) : null;
 
-  const handleDownload = async (url: string, filename: string) => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (error) {
-      console.error("Failed to download file:", error);
+  const handleDownload = (url: string) => {
+    // Determine if it's a local upload or remote file
+    if (url.startsWith('/uploads/')) {
+        // Use our safe download handler for local files to force proper headers
+        const downloadUrl = `/api/download?url=${encodeURIComponent(url)}`;
+        window.open(downloadUrl, '_blank');
+    } else {
+        // Fallback for remote URLs (e.g. Supabase legacy)
+        window.open(url, '_blank');
     }
   };
 
@@ -194,10 +194,7 @@ export function ViewOrderDialog({ open, onOpenChange, order, currency = "GHS" }:
                   </p>
                   <Button
                     className="w-full"
-                    onClick={() => handleDownload(
-                      order.completedFileUrl,
-                      `${order.orderNumber}-${order.product.title}.${order.completedFileUrl.split('.').pop()}`
-                    )}
+                    onClick={() => handleDownload(order.completedFileUrl)}
                   >
                     <Download className="h-4 w-4 mr-2" />
                     Download File
@@ -218,20 +215,26 @@ export function ViewOrderDialog({ open, onOpenChange, order, currency = "GHS" }:
                 </div>
                 <div className="bg-muted/50 rounded-lg p-4 space-y-3">
                   <div className="flex items-center gap-4">
-                    <img 
-                      src={order.customerUploadUrl} 
-                      alt="Customer upload" 
-                      className="h-32 w-32 rounded-lg object-cover border"
-                    />
+                    {getFileExtension(order.customerUploadUrl) === 'pdf' ? (
+                        <div className="h-32 w-32 rounded-lg border bg-white flex flex-col items-center justify-center p-2 text-center">
+                            <svg className="h-10 w-10 text-red-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 2H7a2 2 0 00-2 2v15a2 2 0 002 2z" />
+                            </svg>
+                            <span className="text-xs font-medium text-muted-foreground truncate w-full">PDF Document</span>
+                        </div>
+                    ) : (
+                        <img 
+                        src={order.customerUploadUrl} 
+                        alt="Customer upload" 
+                        className="h-32 w-32 rounded-lg object-cover border bg-white"
+                        />
+                    )}
                     <Button
                       variant="outline"
-                      onClick={() => handleDownload(
-                        order.customerUploadUrl,
-                        `customer-upload-${order.orderNumber}.${order.customerUploadUrl.split('.').pop()}`
-                      )}
+                      onClick={() => handleDownload(order.customerUploadUrl)}
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      Download Image
+                      Download File
                     </Button>
                   </div>
                 </div>

@@ -7,11 +7,12 @@ const ALLOWED_FILE_TYPES = [
   "image/jpeg",
   "image/jpg",
   "image/png",
-  "image/gif",
-  "image/webp",
-  "text/plain",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "image/avif",
+  // "image/gif", // Removed per user request
+  // "image/webp", // Removed per user request
+  // "text/plain", // Removed per user request
+  // "application/msword", // Removed per user request
+  // "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // Removed per user request
 ];
 
 // Route segment config for App Router

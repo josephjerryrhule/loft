@@ -12,6 +12,11 @@ import { PaystackButton } from "@/components/payment/PaystackButton";
 import { getSystemSettings } from "@/app/actions/settings";
 import { getCurrencySymbol } from "@/lib/utils";
 
+function getFileExtension(url: string) {
+  if (!url) return '';
+  return url.split('.').pop()?.toLowerCase() || '';
+}
+
 interface PurchaseProductDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -198,14 +203,14 @@ export function PurchaseProductDialog({
           {/* Upload Image for Digital Products */}
           {product.productType === "DIGITAL" && (
             <div className="space-y-2">
-              <Label htmlFor="customerUpload">Upload Image (Optional)</Label>
+              <Label htmlFor="customerUpload">Upload File (Optional)</Label>
               <p className="text-xs text-muted-foreground mb-2">
-                Upload a picture if needed for your digital product order
+                Supported formats: PNG, JPG, PDF, AVIF
               </p>
               <input
                 type="file"
                 id="customerUpload"
-                accept="image/*"
+                accept=".png,.jpg,.jpeg,.pdf,.avif"
                 onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
@@ -234,11 +239,32 @@ export function PurchaseProductDialog({
                   cursor-pointer"
               />
               {uploadedImageUrl && (
-                <div className="flex items-center gap-2 text-xs text-green-600">
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Image uploaded successfully
+                <div className="mt-2">
+                  <p className="text-xs text-green-600 mb-2 flex items-center gap-1">
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    File uploaded successfully
+                  </p>
+                  
+                  {getFileExtension(uploadedImageUrl) === 'pdf' ? (
+                     <div className="relative h-20 w-full rounded-lg border bg-muted/30 flex items-center justify-center p-4">
+                        <div className="flex items-center gap-2">
+                            <svg className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 2H7a2 2 0 00-2 2v15a2 2 0 002 2z" />
+                            </svg>
+                            <span className="text-sm font-medium">PDF Document</span>
+                        </div>
+                     </div>
+                  ) : (
+                    <div className="relative h-32 w-full rounded-lg overflow-hidden border bg-muted/30">
+                        <img 
+                        src={uploadedImageUrl} 
+                        alt="Uploaded preview" 
+                        className="h-full w-full object-contain"
+                        />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
