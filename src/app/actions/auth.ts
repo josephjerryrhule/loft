@@ -29,7 +29,8 @@ const registerSchema = z.object({
 });
 
 export async function registerUser(formData: z.infer<typeof registerSchema>) {
-  const { firstName, lastName, email, password, phone, role, managerCode, referralCode, isAdminCreated, address, city, state, postalCode, country } = formData;
+  const { firstName, lastName, password, phone, role, managerCode, referralCode, isAdminCreated, address, city, state, postalCode, country } = formData;
+  const email = formData.email.toLowerCase();
 
   const existingUser = await prisma.user.findUnique({
     where: { email },
@@ -304,7 +305,7 @@ export async function resetPassword(token: string, newPassword: string) {
 export async function resendEmailVerification(email: string) {
   try {
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email: email.toLowerCase() },
     });
 
     if (!user) {
@@ -354,7 +355,7 @@ export async function resendEmailVerification(email: string) {
 export async function checkLoginStatus(email: string, password: string) {
   try {
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email: email.toLowerCase() },
     });
 
     if (!user) {

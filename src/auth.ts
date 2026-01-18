@@ -10,7 +10,7 @@ const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
 async function getUser(email: string) {
   try {
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email: email.toLowerCase() },
     });
     return user;
   } catch (error) {
@@ -95,7 +95,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (parsedCredentials.success) {
           const { email, password } = parsedCredentials.data;
-          const user = await getUser(email);
+          const user = await getUser(email.toLowerCase());
           if (!user) return null;
           
           // Check if account is locked
