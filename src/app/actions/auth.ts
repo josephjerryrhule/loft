@@ -18,6 +18,7 @@ const registerSchema = z.object({
   role: z.nativeEnum(Role),
   managerCode: z.string().optional(), // For affiliates
   referralCode: z.string().optional(), // For customers
+  isAdminCreated: z.boolean().optional(), // Flag for admin-created users
   // Address fields
   address: z.string().optional(),
   city: z.string().optional(),
@@ -27,7 +28,7 @@ const registerSchema = z.object({
 });
 
 export async function registerUser(formData: z.infer<typeof registerSchema>) {
-  const { firstName, lastName, email, password, phone, role, managerCode, referralCode, address, city, state, postalCode, country } = formData;
+  const { firstName, lastName, email, password, phone, role, managerCode, referralCode, isAdminCreated, address, city, state, postalCode, country } = formData;
 
   const existingUser = await prisma.user.findUnique({
     where: { email },
@@ -76,6 +77,7 @@ export async function registerUser(formData: z.infer<typeof registerSchema>) {
         managerId,
         referredById,
         inviteCode: newInviteCode,
+        requirePasswordReset: isAdminCreated || false, // Force password reset for admin-created users
         address: address || null,
         city: city || null,
         state: state || null,
@@ -385,5 +387,35 @@ export async function checkLoginStatus(email: string, password: string) {
   } catch (error) {
     console.error("Check login status error:", error);
     return { error: "UNKNOWN_ERROR" };
+  }
+}
+
+export async function updateUserPassword(newPassword: string) {
+  const { auth } = await import("@/auth");
+  const session = await auth();
+  
+  if (!session?.user?.id) {
+    return { error: "Unauthorized" };
+  }
+
+  if (newPassword.length < 6) {
+    return { error: "Password must be at least 6 characters" };
+  }
+
+  try {
+    const hashedPassword = await hash(newPassword, 10);
+    
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        passwordHash: hashedPassword,
+        requirePasswordReset: false,
+      },
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Update password error:", error);
+    return { error: "Failed to update password" };
   }
 }

@@ -36,6 +36,11 @@ export default async function DashboardLayout({
     redirect("/auth/login");
   }
 
+  // @ts-ignore - Check if user needs to reset password
+  if (session.user.requirePasswordReset) {
+    redirect("/auth/force-reset-password");
+  }
+
   // @ts-ignore - session.user.role exists in our custom session type
   const userRole = session.user.role;
   const branding = await getBrandingSettings();

@@ -56,11 +56,11 @@ export function AddUserDialog() {
   const selectedRole = form.watch("role");
 
   async function onSubmit(values: z.infer<typeof registerSchema>) {
-    const result = await registerUser(values);
+    const result = await registerUser({ ...values, isAdminCreated: true });
     if (result && result.error) {
       toast.error(result.error);
     } else {
-      toast.success("User created successfully!");
+      toast.success("User created successfully! They will need to reset their password on first login.");
       setOpen(false);
       form.reset();
       router.refresh(); 

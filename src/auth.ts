@@ -114,6 +114,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 }
                 // @ts-ignore
                 session.user.role = user.role;
+                // @ts-ignore
+                session.user.requirePasswordReset = user.requirePasswordReset;
             }
         }
         return session;
