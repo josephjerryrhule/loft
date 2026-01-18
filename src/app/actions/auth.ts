@@ -78,6 +78,7 @@ export async function registerUser(formData: z.infer<typeof registerSchema>) {
         referredById,
         inviteCode: newInviteCode,
         requirePasswordReset: isAdminCreated || false, // Force password reset for admin-created users
+        isEmailVerified: isAdminCreated || false, // Auto-verify email for admin-created users
         address: address || null,
         city: city || null,
         state: state || null,
