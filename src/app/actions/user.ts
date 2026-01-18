@@ -53,17 +53,79 @@ export async function updateUser(userId: string, data: {
 }
 
 export async function deleteUser(userId: string) {
-    // ... existing implementation ...
     try {
-        await prisma.user.delete({
-            where: { id: userId }
+        await prisma.$transaction(async (tx) => {
+            // 1. Detach managed users (if this user was a manager)
+            await tx.user.updateMany({
+                where: { managerId: userId },
+                data: { managerId: null }
+            });
+
+            // 2. Detach referrals
+            await tx.user.updateMany({
+                where: { referredById: userId },
+                data: { referredById: null }
+            });
+
+            // 3. Detach referred orders
+            await tx.order.updateMany({
+                where: { referredById: userId },
+                data: { referredById: null }
+            });
+
+            // 4. Delete ActivityLog
+            await tx.activityLog.deleteMany({ where: { userId } });
+
+            // 5. Delete Commission
+            await tx.commission.deleteMany({ where: { userId } });
+
+            // 6. Delete PayoutRequest
+            await tx.payoutRequest.deleteMany({ where: { userId } });
+
+            // 7. Delete Subscription
+            await tx.subscription.deleteMany({ where: { customerId: userId } });
+
+            // 8. Delete Order
+            await tx.order.deleteMany({ where: { customerId: userId } });
+
+            // 9. Delete Invitations sent by user
+            await tx.invitation.deleteMany({ where: { inviterId: userId } });
+
+            // 10. Handle Flipbooks and Progress
+            // First, delete progress records for flipbooks OWNED by this user (others reading their books)
+            const userFlipbooks = await tx.flipbook.findMany({
+                where: { createdById: userId },
+                select: { id: true }
+            });
+            
+            if (userFlipbooks.length > 0) {
+                const flipbookIds = userFlipbooks.map(f => f.id);
+                await tx.flipbookProgress.deleteMany({
+                    where: { flipbookId: { in: flipbookIds } }
+                });
+            }
+
+            // Delete progress records OF this user (books they are reading)
+            await tx.flipbookProgress.deleteMany({ where: { customerId: userId } });
+
+            // 11. Delete Flipbooks created by user
+            await tx.flipbook.deleteMany({ where: { createdById: userId } });
+
+            // Note: PasswordResetToken and EmailVerificationToken have onDelete: Cascade in schema,
+            // so they will be automatically deleted when the user is deleted.
+
+            // 12. Finally, Delete User
+            await tx.user.delete({ where: { id: userId } });
+        }, {
+            maxWait: 5000, // default: 2000
+            timeout: 20000, // default: 5000
         });
+
         revalidatePath("/admin/users");
         return { success: true };
     } catch (error) {
         console.error("Failed to delete user:", error);
-        // Check for foreign key constraints usually
-        return { error: "Failed to delete user. They may have related records (orders, logs) that prevent deletion." };
+        return { error: "Failed to delete user. An internal error occurred." };
     }
 }
 
