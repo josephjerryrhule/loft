@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createHash } from "crypto";
+import { getAppUrl } from "@/lib/utils";
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,7 +10,7 @@ export async function GET(request: NextRequest) {
 
     if (!token) {
       return NextResponse.redirect(
-        new URL("/auth/login?error=Invalid verification link", request.url)
+        new URL("/auth/login?error=Invalid verification link", getAppUrl())
       );
     }
 
@@ -24,21 +25,21 @@ export async function GET(request: NextRequest) {
 
     if (!verificationToken) {
       return NextResponse.redirect(
-        new URL("/auth/login?error=Invalid or expired verification link", request.url)
+        new URL("/auth/login?error=Invalid or expired verification link", getAppUrl())
       );
     }
 
     // Check if token has expired
     if (verificationToken.expiresAt < new Date()) {
       return NextResponse.redirect(
-        new URL("/auth/login?error=Verification link has expired", request.url)
+        new URL("/auth/login?error=Verification link has expired", getAppUrl())
       );
     }
 
     // Check if already verified
     if (verificationToken.verifiedAt) {
       return NextResponse.redirect(
-        new URL("/auth/login?error=Email already verified", request.url)
+        new URL("/auth/login?error=Email already verified", getAppUrl())
       );
     }
 
@@ -65,12 +66,12 @@ export async function GET(request: NextRequest) {
 
     // Redirect to login with success message
     return NextResponse.redirect(
-      new URL("/auth/login?verified=true", request.url)
+      new URL("/auth/login?verified=true", getAppUrl())
     );
   } catch (error) {
     console.error("Email verification error:", error);
     return NextResponse.redirect(
-      new URL("/auth/login?error=An error occurred during verification", request.url)
+      new URL("/auth/login?error=An error occurred during verification", getAppUrl())
     );
   }
 }
