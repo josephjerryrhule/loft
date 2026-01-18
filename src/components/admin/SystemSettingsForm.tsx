@@ -147,11 +147,10 @@ export function SystemSettingsForm({ settings }: SystemSettingsFormProps) {
                                     <div className="w-32 h-32 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/30 relative overflow-hidden">
                                         {logoUrl ? (
                                             <>
-                                                <Image 
+                                                <img 
                                                     src={logoUrl} 
                                                     alt="Logo" 
-                                                    fill
-                                                    className="object-contain p-2"
+                                                    className="object-contain p-2 w-full h-full"
                                                 />
                                                 <button
                                                     type="button"
@@ -205,11 +204,10 @@ export function SystemSettingsForm({ settings }: SystemSettingsFormProps) {
                                     <div className="w-16 h-16 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/30 relative overflow-hidden">
                                         {faviconUrl ? (
                                             <>
-                                                <Image 
+                                                <img 
                                                     src={faviconUrl} 
                                                     alt="Favicon" 
-                                                    fill
-                                                    className="object-contain p-1"
+                                                    className="object-contain p-1 w-full h-full"
                                                 />
                                                 <button
                                                     type="button"

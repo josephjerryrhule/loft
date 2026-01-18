@@ -81,11 +81,10 @@ function NavContent({ userRole, setOpen, logoUrl, platformName }: { userRole?: s
             {logoUrl ? (
               <div className="flex items-center gap-3">
                 <div className="relative w-10 h-10">
-                  <Image 
+                  <img 
                     src={logoUrl} 
                     alt={platformName || "Logo"} 
-                    fill
-                    className="object-contain"
+                    className="object-contain w-full h-full"
                   />
                 </div>
                 <div>

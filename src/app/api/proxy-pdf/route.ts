@@ -8,12 +8,38 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Missing url parameter' }, { status: 400 });
     }
 
-    // Validate it's a Supabase URL
-    if (!url.includes('supabase.co')) {
-      return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
+    // Handle local file uploads
+    if (url.startsWith('/uploads/')) {
+        const fs = require('fs').promises;
+        const path = require('path');
+        const fullPath = path.join(process.cwd(), 'public', url);
+        
+        try {
+            const fileBuffer = await fs.readFile(fullPath);
+            return new NextResponse(fileBuffer, {
+                status: 200,
+                headers: {
+                    'Content-Type': 'application/pdf',
+                    'Content-Length': fileBuffer.length.toString(),
+                    'Cache-Control': 'public, max-age=3600',
+                    'Access-Control-Allow-Origin': '*',
+                },
+            });
+        } catch (error) {
+           console.error('❌ Failed to read local PDF:', error);
+           return NextResponse.json({ error: 'File not found' }, { status: 404 });
+        }
     }
 
-    // Fetch the PDF from Supabase
+    // Validate remote URL (Supabase or other trusted sources if needed)
+    // For now, we loosen the check to allow migration testing, or keep it strict if desired.
+    // But since we are moving away from Supabase, we might want to allow others?
+    // Let's keep it somewhat safe but allow valid URLs.
+    if (!url.startsWith('http')) {
+       return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
+    }
+
+    // Fetch the PDF from remote source
     const response = await fetch(url, {
       cache: 'no-store',
       headers: {

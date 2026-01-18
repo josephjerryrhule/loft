@@ -36,11 +36,10 @@ export default async function AuthLayout({
         {branding.logoUrl ? (
           <div className="flex items-center gap-3">
             <div className="relative w-12 h-12">
-              <Image 
+              <img 
                 src={branding.logoUrl} 
                 alt={branding.platformName || "Logo"} 
-                fill
-                className="object-contain"
+                className="object-contain w-full h-full"
               />
             </div>
             <span className="text-2xl font-bold">{branding.platformName || "Loft"}</span>
