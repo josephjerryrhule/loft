@@ -41,6 +41,7 @@ export function PurchaseProductDialog({
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState("");
   const [customFields, setCustomFields] = useState<Record<string, string>>({});
+  const [uploadedImageUrl, setUploadedImageUrl] = useState("");
 
   useEffect(() => {
     async function loadSettings() {
@@ -52,6 +53,7 @@ export function PurchaseProductDialog({
       setQuantity(1);
       setNotes("");
       setCustomFields({});
+      setUploadedImageUrl("");
     }
   }, [open]);
 
@@ -193,6 +195,55 @@ export function PurchaseProductDialog({
             />
           </div>
 
+          {/* Upload Image for Digital Products */}
+          {product.productType === "DIGITAL" && (
+            <div className="space-y-2">
+              <Label htmlFor="customerUpload">Upload Image (Optional)</Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                Upload a picture if needed for your digital product order
+              </p>
+              <input
+                type="file"
+                id="customerUpload"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+
+                  const formData = new FormData();
+                  formData.append("file", file);
+                  formData.append("folder", "customer-uploads");
+
+                  try {
+                    const response = await fetch("/api/upload", {
+                      method: "POST",
+                      body: formData,
+                    });
+                    const data = await response.json();
+                    setUploadedImageUrl(data.url);
+                  } catch (error) {
+                    console.error("Upload failed:", error);
+                  }
+                }}
+                className="block w-full text-sm text-slate-500
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-md file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-primary file:text-primary-foreground
+                  hover:file:bg-primary/90
+                  cursor-pointer"
+              />
+              {uploadedImageUrl && (
+                <div className="flex items-center gap-2 text-xs text-green-600">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Image uploaded successfully
+                </div>
+              )}
+            </div>
+          )}
+
           <Separator />
 
           {/* Order Summary */}
@@ -226,7 +277,8 @@ export function PurchaseProductDialog({
               productId: product.id,
               userId: userId,
               quantity: quantity,
-              customizationData: JSON.stringify({ notes, ...customFields })
+              customizationData: JSON.stringify({ notes, ...customFields }),
+              customerUploadUrl: uploadedImageUrl || undefined,
             }}
             className="w-full sm:w-auto"
           >

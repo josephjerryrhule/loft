@@ -166,7 +166,8 @@ export async function processProductPayment(
   reference: string,
   productId: string,
   quantity: number | string = 1,
-  customizationData?: string
+  customizationData?: string,
+  customerUploadUrl?: string
 ) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
@@ -225,6 +226,7 @@ export async function processProductPayment(
         unitPrice: product.price,
         totalAmount: totalAmount,
         customizationData: customizationData || null,
+        customerUploadUrl: customerUploadUrl || null,
         status: "PROCESSING",
         paymentStatus: "PAID",
         paymentReference: reference,

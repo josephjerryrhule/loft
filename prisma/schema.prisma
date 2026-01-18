@@ -208,6 +208,7 @@ model Order {
   unitPrice        Decimal     @map("unit_price")
   totalAmount      Decimal     @map("total_amount")
   customizationData String?    @map("customization_data") // JSON string
+  customerUploadUrl String?    @map("customer_upload_url") // Customer uploaded image for digital products
   status           String      @default("PENDING") // Enum: PENDING, PROCESSING, COMPLETED, CANCELLED
   paymentStatus    String      @default("PENDING") @map("payment_status") // Enum
   paymentReference String?     @map("payment_reference")

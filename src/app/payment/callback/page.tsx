@@ -44,6 +44,7 @@ async function verifyAndProcessPayment(reference: string): Promise<PaymentVerifi
     const itemId = metadata.itemId;
     const quantity = metadata.quantity || 1;
     const customizationData = metadata.customizationData;
+    const customerUploadUrl = metadata.customerUploadUrl;
 
     if (type === "subscription") {
       try {
@@ -62,7 +63,7 @@ async function verifyAndProcessPayment(reference: string): Promise<PaymentVerifi
       }
     } else if (type === "product") {
       try {
-        const productResult = await processProductPayment(reference, itemId, quantity, customizationData);
+        const productResult = await processProductPayment(reference, itemId, quantity, customizationData, customerUploadUrl);
         if (productResult.error) {
           return { success: false, type, message: productResult.error };
         }
