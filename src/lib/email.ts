@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 import { prisma } from "./prisma";
-import { getCurrencySymbol } from "./utils";
+import { getCurrencySymbol, getAppUrl } from "./utils";
 import { cache } from "./cache";
 
 interface EmailOptions {
@@ -122,7 +122,7 @@ async function getBranding(): Promise<{
     platformName: config.platformName || "Loft",
     logoUrl: config.logoUrl || "",
     supportEmail: config.supportEmail || "",
-    siteUrl: config.siteUrl || process.env.NEXTAUTH_URL || "http://localhost:3000",
+    siteUrl: config.siteUrl || getAppUrl(),
     currency: getCurrencySymbol(config.currency || "GHS"),
   };
 

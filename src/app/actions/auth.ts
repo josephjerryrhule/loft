@@ -5,6 +5,7 @@ import { hash, compare } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { Role } from "@/lib/types";
+import { getAppUrl } from "@/lib/utils";
 import { processSignupCommission } from "@/lib/commission";
 import { sendPasswordResetEmail, sendWelcomeEmail, sendAffiliateWelcomeEmail, sendAffiliateJoinedManagerEmail, sendEmailVerification } from "@/lib/email";
 import { randomBytes, createHash } from "crypto";
@@ -152,7 +153,7 @@ export async function registerUser(formData: z.infer<typeof registerSchema>) {
     // Create email verification token
     const verificationToken = randomBytes(32).toString("hex");
     const hashedToken = createHash("sha256").update(verificationToken).digest("hex");
-    const verificationUrl = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/verify-email?token=${verificationToken}`;
+    const verificationUrl = `${getAppUrl()}/api/verify-email?token=${verificationToken}`;
 
     await prisma.emailVerificationToken.create({
       data: {
@@ -337,7 +338,7 @@ export async function resendEmailVerification(email: string) {
     });
 
     // Send verification email
-    const verificationUrl = `${process.env.NEXTAUTH_URL}/api/verify-email?token=${token}`;
+    const verificationUrl = `${getAppUrl()}/api/verify-email?token=${token}`;
     await sendEmailVerification({
       userEmail: user.email,
       verificationUrl,

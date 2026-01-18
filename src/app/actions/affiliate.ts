@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getAppUrl } from "@/lib/utils";
 import { Role } from "@/lib/types";
 
 export async function getAffiliateStats() {
@@ -242,7 +243,7 @@ export async function getAffiliateLinks() {
 
     if (!user?.inviteCode) return null;
 
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const baseUrl = getAppUrl();
 
     return {
         referralCode: user.inviteCode,
