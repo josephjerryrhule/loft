@@ -33,6 +33,7 @@ interface EditPlanDialogProps {
     price: number | string;
     durationDays: number;
     features: string | null;
+    affiliateCommissionPercentage?: number | string | null;
     isActive: boolean;
   };
   onSuccess?: () => void;
@@ -119,6 +120,20 @@ export function EditPlanDialog({ plan, onSuccess }: EditPlanDialogProps) {
                 required 
               />
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="affiliateCommissionPercentage">Affiliate Commission (%)</Label>
+            <Input 
+              id="affiliateCommissionPercentage" 
+              name="affiliateCommissionPercentage" 
+              type="number" 
+              step="0.01" 
+              min="0" 
+              max="100" 
+              defaultValue={plan.affiliateCommissionPercentage ? Number(plan.affiliateCommissionPercentage).toFixed(2) : ""}
+              placeholder="Leave empty to use global rate" 
+            />
+            <p className="text-xs text-muted-foreground">Optional: Set a specific commission percentage for this plan</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="features">Features (one per line)</Label>

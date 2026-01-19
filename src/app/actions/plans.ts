@@ -27,6 +27,16 @@ export async function createPlan(formData: FormData) {
     const price = parseFloat(formData.get("price") as string);
     const durationDays = parseInt(formData.get("durationDays") as string);
     const features = formData.get("features") as string;
+    const affiliateCommissionPercentageStr = formData.get("affiliateCommissionPercentage") as string;
+    
+    // Parse affiliate commission percentage (optional field)
+    let affiliateCommissionPercentage = null;
+    if (affiliateCommissionPercentageStr && affiliateCommissionPercentageStr.trim() !== "") {
+        const parsed = parseFloat(affiliateCommissionPercentageStr);
+        if (!isNaN(parsed) && parsed >= 0 && parsed <= 100) {
+            affiliateCommissionPercentage = parsed;
+        }
+    }
 
     try {
         await prisma.subscriptionPlan.create({
@@ -36,6 +46,7 @@ export async function createPlan(formData: FormData) {
                 price,
                 durationDays,
                 features,
+                affiliateCommissionPercentage,
                 isActive: true
             }
         });
@@ -57,6 +68,16 @@ export async function updatePlan(id: string, formData: FormData) {
     const durationDays = parseInt(formData.get("durationDays") as string);
     const features = formData.get("features") as string;
     const isActive = formData.get("isActive") === "true";
+    const affiliateCommissionPercentageStr = formData.get("affiliateCommissionPercentage") as string;
+    
+    // Parse affiliate commission percentage (optional field)
+    let affiliateCommissionPercentage = null;
+    if (affiliateCommissionPercentageStr && affiliateCommissionPercentageStr.trim() !== "") {
+        const parsed = parseFloat(affiliateCommissionPercentageStr);
+        if (!isNaN(parsed) && parsed >= 0 && parsed <= 100) {
+            affiliateCommissionPercentage = parsed;
+        }
+    }
 
     try {
         await prisma.subscriptionPlan.update({
@@ -67,6 +88,7 @@ export async function updatePlan(id: string, formData: FormData) {
                 price,
                 durationDays,
                 features,
+                affiliateCommissionPercentage,
                 isActive
             }
         });

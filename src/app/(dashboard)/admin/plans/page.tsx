@@ -126,6 +126,19 @@ export default function AdminPlansPage() {
                                 </div>
                             </div>
                             <div className="space-y-2">
+                                <Label htmlFor="affiliateCommissionPercentage">Affiliate Commission (%)</Label>
+                                <Input 
+                                    id="affiliateCommissionPercentage" 
+                                    name="affiliateCommissionPercentage" 
+                                    type="number" 
+                                    step="0.01" 
+                                    min="0" 
+                                    max="100" 
+                                    placeholder="Leave empty to use global rate" 
+                                />
+                                <p className="text-xs text-muted-foreground">Optional: Set a specific commission percentage for this plan</p>
+                            </div>
+                            <div className="space-y-2">
                                 <Label htmlFor="features">Features (one per line)</Label>
                                 <Textarea id="features" name="features" placeholder="Unlimited flipbooks&#10;Priority support&#10;Early access" />
                             </div>
@@ -151,6 +164,7 @@ export default function AdminPlansPage() {
                                     <TableHead>Name</TableHead>
                                     <TableHead>Price</TableHead>
                                     <TableHead>Duration</TableHead>
+                                    <TableHead>Affiliate Commission</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
@@ -158,7 +172,7 @@ export default function AdminPlansPage() {
                             <TableBody>
                                 {paginatedPlans.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="text-center h-24">
+                                        <TableCell colSpan={6} className="text-center h-24">
                                             No plans yet. Create one to get started.
                                         </TableCell>
                                     </TableRow>
@@ -168,6 +182,12 @@ export default function AdminPlansPage() {
                                             <TableCell className="font-medium">{plan.name}</TableCell>
                                             <TableCell>GHS {Number(plan.price).toFixed(2)}</TableCell>
                                             <TableCell>{plan.durationDays} days</TableCell>
+                                            <TableCell>
+                                                {plan.affiliateCommissionPercentage 
+                                                    ? `${Number(plan.affiliateCommissionPercentage).toFixed(1)}%` 
+                                                    : <span className="text-muted-foreground">Global Rate</span>
+                                                }
+                                            </TableCell>
                                             <TableCell>
                                                 <Badge variant={plan.isActive ? "default" : "secondary"}>
                                                     {plan.isActive ? "Active" : "Inactive"}

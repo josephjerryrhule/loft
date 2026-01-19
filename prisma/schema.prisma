@@ -125,6 +125,7 @@ model SubscriptionPlan {
   price        Decimal
   durationDays Int      @map("duration_days")
   features     String?  @map("features") // JSON string
+  affiliateCommissionPercentage Decimal? @map("affiliate_commission_percentage")
   isActive     Boolean  @default(true) @map("is_active")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
