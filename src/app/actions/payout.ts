@@ -87,7 +87,7 @@ export async function requestPayout(amount: number, method: any) {
             userEmail: user.email,
             amount,
             bankName: method.bankName || method.type || "Unknown",
-            accountNumber: method.accountNumber || "N/A",
+            accountNumber: method.details || method.accountNumber || "N/A",
             payoutId: userId,
           }).catch(console.error);
         }
