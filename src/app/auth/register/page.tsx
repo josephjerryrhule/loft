@@ -88,6 +88,12 @@ function RegisterForm() {
                     return;
                 }
                 
+                if (Number(plan.price) === 0) {
+                    toast.success("Registration successful! Please check your email to verify your account.");
+                    router.push("/auth/login");
+                    return;
+                }
+
                 const { initializePayment } = await import("@/app/actions/payment");
                 const paymentRes = await initializePayment({
                     type: "subscription",
@@ -107,7 +113,7 @@ function RegisterForm() {
                 }
             } catch (err) {
                 console.error(err);
-                toast.error("Error initializing payment");
+                toast.error("Error initializing registration process");
                 router.push("/auth/login");
             }
         } else {
