@@ -13,7 +13,15 @@ export default async function CustomerPlansPage() {
     const session = await auth();
     const allPlans = await getPlans();
     // Filter out free plan since we have a hardcoded card for it
-    const plans = allPlans.filter(plan => Number(plan.price) > 0);
+    const plans = allPlans
+        .filter(plan => Number(plan.price) > 0)
+        .map(plan => ({
+            ...plan,
+            price: Number(plan.price),
+            affiliateCommissionPercentage: plan.affiliateCommissionPercentage 
+                ? Number(plan.affiliateCommissionPercentage) 
+                : null
+        }));
     const currentSubscription = session?.user?.id 
         ? await getUserSubscription(session.user.id) 
         : null;

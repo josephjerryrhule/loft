@@ -9,13 +9,29 @@ import { z, ZodError } from "zod";
 const flipbookSchema = z.object({
   title: z.string().min(3),
   description: z.string().optional(),
-  pdfUrl: z.string().min(1, "PDF file is required"),
-  coverImageUrl: z.string().optional(),
+  heyzineUrl: z.string().url("Must be a valid URL"),
   category: z.string().optional(),
   isFree: z.boolean().optional(),
   schedulePublish: z.boolean().optional(),
   publishedAt: z.string().optional().nullable(),
 });
+
+async function fetchHeyzineData(url: string) {
+  try {
+    const response = await fetch(`https://heyzine.com/api1/oembed?url=${encodeURIComponent(url)}&format=json`);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch oEmbed data: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return {
+        iframeContent: data.html,
+        thumbnailUrl: data.thumbnail_url,
+    };
+  } catch (error) {
+    console.error("Error fetching Heyzine data:", error);
+    throw new Error("Failed to fetch flipbook data from Heyzine. Please check the URL.");
+  }
+}
 
 export async function createFlipbook(formData: FormData) {
   const session = await auth();
@@ -25,8 +41,7 @@ export async function createFlipbook(formData: FormData) {
 
   const title = formData.get("title") as string;
   const description = formData.get("description") as string;
-  const pdfUrl = formData.get("pdfUrl") as string;
-  const coverImageUrl = formData.get("coverImageUrl") as string;
+  const heyzineUrl = formData.get("heyzineUrl") as string;
   const category = formData.get("category") as string;
   const isFree = formData.get("isFree") === "on";
   const schedulePublish = formData.get("schedulePublish") === "on";
@@ -36,13 +51,15 @@ export async function createFlipbook(formData: FormData) {
     const validatedData = flipbookSchema.parse({ 
       title, 
       description, 
-      pdfUrl, 
-      coverImageUrl, 
+      heyzineUrl,
       category, 
       isFree,
       schedulePublish,
       publishedAt
     });
+
+    // Fetch data from Heyzine
+    const { iframeContent, thumbnailUrl } = await fetchHeyzineData(validatedData.heyzineUrl);
 
     const publishDate = schedulePublish && publishedAt ? new Date(publishedAt) : null;
     const isPublishedNow = !schedulePublish || (publishDate ? publishDate <= new Date() : false);
@@ -51,8 +68,9 @@ export async function createFlipbook(formData: FormData) {
       data: {
         title: validatedData.title,
         description: validatedData.description,
-        pdfUrl: validatedData.pdfUrl,
-        coverImageUrl: validatedData.coverImageUrl,
+        heyzineUrl: validatedData.heyzineUrl,
+        iframeContent,
+        coverImageUrl: thumbnailUrl,
         category: validatedData.category,
         createdById: session.user.id,
         isPublished: isPublishedNow,
@@ -71,7 +89,7 @@ export async function createFlipbook(formData: FormData) {
       console.error("Validation errors:", error.issues);
       return { error: `Validation failed: ${error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')}` };
     }
-    return { error: "Failed to create flipbook" };
+    return { error: error instanceof Error ? error.message : "Failed to create flipbook" };
   }
 }
 
@@ -79,52 +97,39 @@ export async function updateFlipbook(flipbookId: string, data: {
     title: string;
     description?: string;
     category?: string;
-    pdfUrl?: string;
-    coverImageUrl?: string;
+    heyzineUrl?: string; // Changed from pdfUrl
     isPublished?: boolean;
     isFree?: boolean;
 }) {
     try {
-        // Get old file URLs if new ones are provided (for cleanup)
-        let oldFiles: { pdfUrl?: string | null, coverImageUrl?: string | null } = {};
-        if (data.pdfUrl || data.coverImageUrl) {
-            const existing = await prisma.flipbook.findUnique({
-                where: { id: flipbookId },
-                select: { pdfUrl: true, coverImageUrl: true }
-            });
-            oldFiles = existing || {};
+        let updateData: any = {
+            title: data.title,
+            description: data.description,
+            category: data.category,
+            isPublished: data.isPublished,
+            isFree: data.isFree
+        };
+
+        if (data.heyzineUrl) {
+             const { iframeContent, thumbnailUrl } = await fetchHeyzineData(data.heyzineUrl);
+             updateData.heyzineUrl = data.heyzineUrl;
+             updateData.iframeContent = iframeContent;
+             updateData.coverImageUrl = thumbnailUrl;
+             // We don't remove old PDF/cover explicitly here as they might still be useful or managed differently.
+             // If we want to clean up, we could do it, but for now let's focus on the switch.
         }
 
         await prisma.flipbook.update({
             where: { id: flipbookId },
-            data: {
-                title: data.title,
-                description: data.description,
-                category: data.category,
-                pdfUrl: data.pdfUrl,
-                coverImageUrl: data.coverImageUrl,
-                isPublished: data.isPublished,
-                isFree: data.isFree
-            }
+            data: updateData
         });
-
-        // Delete old files from storage if they were replaced
-        const { deleteFromSupabase } = await import("@/lib/upload");
-        
-        if (data.pdfUrl && oldFiles.pdfUrl && oldFiles.pdfUrl !== data.pdfUrl) {
-            await deleteFromSupabase(oldFiles.pdfUrl);
-        }
-        
-        if (data.coverImageUrl && oldFiles.coverImageUrl && oldFiles.coverImageUrl !== data.coverImageUrl) {
-            await deleteFromSupabase(oldFiles.coverImageUrl);
-        }
 
         revalidatePath("/admin/flipbooks");
         revalidatePath("/customer/flipbooks");
         return { success: true };
     } catch (error) {
         console.error("Failed to update flipbook:", error);
-        return { error: "Failed to update flipbook" };
+        return { error: error instanceof Error ? error.message : "Failed to update flipbook" };
     }
 }
 
@@ -259,6 +264,8 @@ export async function getCustomerFlipbooks() {
                 description: fb.description,
                 coverImageUrl: fb.coverImageUrl,
                 pdfUrl: fb.pdfUrl,
+                heyzineUrl: fb.heyzineUrl,
+                iframeContent: fb.iframeContent,
                 totalPages: fb.totalPages,
                 category: fb.category,
                 isPublished: fb.isPublished,

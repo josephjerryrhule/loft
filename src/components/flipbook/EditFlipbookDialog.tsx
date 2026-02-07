@@ -22,6 +22,7 @@ const editFlipbookSchema = z.object({
   title: z.string().min(3),
   description: z.string().optional(),
   category: z.string().optional(),
+  heyzineUrl: z.string().url("Must be a valid URL").optional(),
   isFree: z.boolean().optional(),
 });
 
@@ -32,15 +33,13 @@ interface EditFlipbookDialogProps {
 }
 
 export function EditFlipbookDialog({ flipbook, open, onOpenChange }: EditFlipbookDialogProps) {
-  const [pdfUrl, setPdfUrl] = useState(flipbook.pdfUrl || "");
-  const [coverImageUrl, setCoverImageUrl] = useState(flipbook.coverImageUrl || "");
-  
   const form = useForm<z.infer<typeof editFlipbookSchema>>({
     resolver: zodResolver(editFlipbookSchema),
     defaultValues: {
       title: flipbook.title,
       description: flipbook.description || "",
       category: flipbook.category || "",
+      heyzineUrl: flipbook.heyzineUrl || "",
       isFree: flipbook.isFree || false,
     },
   });
@@ -48,8 +47,7 @@ export function EditFlipbookDialog({ flipbook, open, onOpenChange }: EditFlipboo
   async function onSubmit(values: z.infer<typeof editFlipbookSchema>) {
     const result = await updateFlipbook(flipbook.id, {
       ...values,
-      pdfUrl: pdfUrl || undefined,
-      coverImageUrl: coverImageUrl || undefined,
+      heyzineUrl: values.heyzineUrl || undefined,
     });
     if (result && result.error) {
       toast.error(result.error);
@@ -93,31 +91,16 @@ export function EditFlipbookDialog({ flipbook, open, onOpenChange }: EditFlipboo
                 )} />
 
                 <div className="space-y-4 border-t pt-4">
-                  <FileUpload 
-                    label="PDF File" 
-                    name="pdfUrl" 
-                    accept=".pdf"
-                    defaultValue={pdfUrl}
-                    onUpload={(url) => setPdfUrl(url)}
-                  />
-                  {pdfUrl && (
-                    <p className="text-xs text-muted-foreground">
-                      Current: {pdfUrl.split('/').pop()}
-                    </p>
-                  )}
-
-                  <FileUpload 
-                    label="Cover Image" 
-                    name="coverImageUrl" 
-                    accept="image/*"
-                    defaultValue={coverImageUrl}
-                    onUpload={(url) => setCoverImageUrl(url)}
-                  />
-                  {coverImageUrl && (
-                    <p className="text-xs text-muted-foreground">
-                      Current: {coverImageUrl.split('/').pop()}
-                    </p>
-                  )}
+                  <FormField control={form.control} name="heyzineUrl" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Heyzine Flipbook URL</FormLabel>
+                      <FormControl><Input placeholder="https://heyzine.com/flip-book/..." {...field} /></FormControl>
+                      <FormMessage />
+                      <p className="text-xs text-muted-foreground">
+                        Updating this URL will automatically fetch the new cover image and content.
+                      </p>
+                    </FormItem>
+                  )} />
                 </div>
 
                 <FormField control={form.control} name="isFree" render={({ field }) => (
@@ -130,7 +113,7 @@ export function EditFlipbookDialog({ flipbook, open, onOpenChange }: EditFlipboo
                         className="h-4 w-4" 
                       />
                     </FormControl>
-                    <FormLabel className="!mt-0">Free Access (available to all users)</FormLabel>
+                    <FormLabel className="mt-0!">Free Access (available to all users)</FormLabel>
                     <FormMessage />
                   </FormItem>
                 )} />

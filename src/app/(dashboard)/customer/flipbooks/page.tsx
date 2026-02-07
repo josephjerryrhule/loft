@@ -93,27 +93,13 @@ export default function CustomerFlipbooksPage() {
     setViewerOpen(true);
   }
 
-  async function handlePageChange(page: number) {
-    if (!selectedFlipbook) return;
-    
-    try {
-      await updateFlipbookProgress({
-        flipbookId: selectedFlipbook.id,
-        lastPageRead: page,
-        completed: false
-      });
-    } catch (error) {
-      console.error("Failed to update progress:", error);
-    }
-  }
-
   async function handleComplete() {
     if (!selectedFlipbook) return;
     
     try {
       await updateFlipbookProgress({
         flipbookId: selectedFlipbook.id,
-        lastPageRead: 0, // Reset to start so user can re-read from beginning
+        lastPageRead: 0, 
         completed: true
       });
       
@@ -126,7 +112,7 @@ export default function CustomerFlipbooksPage() {
           return {
             ...f,
             progress: {
-              ...f.progress,
+              ...(f.progress || {}),
               completed: true,
               lastPageRead: 0
             }
@@ -137,14 +123,12 @@ export default function CustomerFlipbooksPage() {
       
       setFlipbooks(updatedFlipbooks);
       
-      // Update selected flipbook but keep the current page intact to prevent re-render
-      // Don't update lastPageRead in the selected flipbook to avoid triggering viewer reload
+      // Update selected flipbook
       setSelectedFlipbook({
         ...selectedFlipbook,
         progress: {
-          ...selectedFlipbook.progress,
+          ...(selectedFlipbook.progress || {}),
           completed: true,
-          // Keep current lastPageRead in viewer, don't reset to 0 yet
         }
       });
       
@@ -285,9 +269,9 @@ export default function CustomerFlipbooksPage() {
                       {book.isFree && (
                         <Badge className="absolute top-2.5 right-2" variant="secondary">Free</Badge>
                       )}
-                      {hasProgress && (
+                      {hasProgress && progress.completed && (
                         <Badge className="absolute bottom-2.5 left-2" variant="default">
-                          {progress.completed ? "Completed" : `Page ${progress.lastPageRead}`}
+                          Completed
                         </Badge>
                       )}
                   </div>
@@ -305,7 +289,7 @@ export default function CustomerFlipbooksPage() {
                         className="w-full" 
                         onClick={() => handleReadNow(book)}
                       >
-                        {hasProgress && !progress.completed ? "Continue Reading" : "Read Now"}
+                        {hasProgress && progress.completed ? "Read Again" : "Read Now"}
                       </Button>
                   </CardFooter>
               </Card>
@@ -329,19 +313,12 @@ export default function CustomerFlipbooksPage() {
       {viewerOpen && selectedFlipbook && (
         <ReliableFlipbookViewer
           pdfUrl={selectedFlipbook.pdfUrl}
+          iframeContent={selectedFlipbook.iframeContent}
           title={selectedFlipbook.title}
-          initialPage={
-            // If completed, start from beginning. Otherwise resume from last page.
-            selectedFlipbook.progress?.completed 
-              ? 0 
-              : (selectedFlipbook.progress?.lastPageRead || 0)
-          }
+          initialPage={0}
           onClose={() => {
             setViewerOpen(false);
             setSelectedFlipbook(null);
-          }}
-          onPageChange={(page) => {
-            handlePageChange(page);
           }}
           onComplete={() => {
             handleComplete();

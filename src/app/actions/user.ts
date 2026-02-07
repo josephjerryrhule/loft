@@ -191,18 +191,6 @@ export async function getCustomerDashboardData() {
             }
         });
 
-        // Get books in progress
-        const inProgress = await prisma.flipbookProgress.findMany({
-            where: { 
-                customerId: session.user.id, 
-                completed: false,
-                lastPageRead: { gt: 0 }
-            },
-            include: { flipbook: true },
-            orderBy: { lastAccessedAt: "desc" },
-            take: 3
-        });
-
         return {
             subscription: subscription ? {
                 ...subscription,
@@ -211,8 +199,7 @@ export async function getCustomerDashboardData() {
                     price: subscription.plan.price.toNumber()
                 }
             } : null,
-            completedBooks,
-            inProgress
+            completedBooks
         };
     } catch (error) {
         console.error("Failed to get customer dashboard data:", error);

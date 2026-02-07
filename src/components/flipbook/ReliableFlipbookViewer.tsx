@@ -14,20 +14,20 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 const HTMLFlipBook = dynamic(() => import('react-pageflip'), { ssr: false });
 
 interface ReliableFlipbookViewerProps {
-    pdfUrl: string;
+    pdfUrl?: string; // Made optional
+    iframeContent?: string; // New prop for oEmbed HTML
     onClose: () => void;
     title?: string;
     initialPage?: number;
-    onPageChange?: (page: number) => void;
     onComplete?: () => void;
 }
 
 export function ReliableFlipbookViewer({ 
     pdfUrl, 
+    iframeContent,
     onClose, 
     title, 
     initialPage = 0, 
-    onPageChange, 
     onComplete 
 }: ReliableFlipbookViewerProps) {
     const [numPages, setNumPages] = useState<number>(0);
@@ -59,6 +59,18 @@ export function ReliableFlipbookViewer({
     }, []);
 
     useEffect(() => {
+        // If we have iframe content, we don't need to load PDF
+        if (iframeContent) {
+            setLoading(false);
+            return;
+        }
+
+        if (!pdfUrl) {
+            setError("No content available");
+            setLoading(false);
+            return;
+        }
+
         // Prevent re-loading if PDF is already loaded
         if (initialLoadRef.current && pageImages.length > 0) {
             return;
@@ -141,7 +153,7 @@ export function ReliableFlipbookViewer({
         return () => {
             isMounted = false;
         };
-    }, [pdfUrl, initialPage]);
+    }, [pdfUrl, initialPage, iframeContent]);
 
     // Responsive sizing
     useEffect(() => {
@@ -169,13 +181,14 @@ export function ReliableFlipbookViewer({
     // Keyboard navigation
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            if (iframeContent) return; // Disable keyboard nav for iframe as it captures focus or has its own
             if (e.key === "ArrowRight") bookRef.current?.pageFlip()?.flipNext();
             if (e.key === "ArrowLeft") bookRef.current?.pageFlip()?.flipPrev();
             if (e.key === "Escape") onClose();
         };
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [onClose]);
+    }, [onClose, iframeContent]);
 
     const handlePageChange = (pageData: any) => {
         // Extract page number from the event object
@@ -190,7 +203,6 @@ export function ReliableFlipbookViewer({
         }
         
         setCurrentPage(page);
-        onPageChange?.(page);
         
         // Play flip sound
         if (audioRef.current) {
@@ -203,9 +215,6 @@ export function ReliableFlipbookViewer({
                 // Ignore audio errors
             }
         }
-        
-        // Do NOT auto-mark as complete on page flip
-        // Only allow manual completion via button click
     };
 
     return (
@@ -227,13 +236,17 @@ export function ReliableFlipbookViewer({
                 <div className="flex flex-col items-center gap-4 max-w-md">
                     <Loader2 className="h-12 w-12 animate-spin text-white" />
                     <p className="text-white text-lg">Loading flipbook...</p>
-                    <div className="w-64 bg-white/20 rounded-full h-2 overflow-hidden">
-                        <div 
-                            className="bg-white h-full transition-all duration-300"
-                            style={{ width: `${loadingProgress}%` }}
-                        />
-                    </div>
-                    <p className="text-white/70 text-sm">{loadingProgress}% - Rendering pages</p>
+                    {pdfUrl && !iframeContent && (
+                        <>
+                            <div className="w-64 bg-white/20 rounded-full h-2 overflow-hidden">
+                                <div 
+                                    className="bg-white h-full transition-all duration-300"
+                                    style={{ width: `${loadingProgress}%` }}
+                                />
+                            </div>
+                            <p className="text-white/70 text-sm">{loadingProgress}% - Rendering pages</p>
+                        </>
+                    )}
                 </div>
             )}
 
@@ -246,8 +259,35 @@ export function ReliableFlipbookViewer({
                 </div>
             )}
 
-            {/* Flipbook */}
-            {!loading && !error && pageImages.length > 0 && (
+            {/* Iframe View (Heyzine) */}
+            {!loading && !error && iframeContent && (
+                <div className="w-full h-full flex flex-col items-center justify-center p-4 md:p-10">
+                    <div 
+                        className="w-full h-full max-w-7xl relative [&>iframe]:w-full! [&>iframe]:h-full! [&>iframe]:border-0"
+                        dangerouslySetInnerHTML={{ __html: iframeContent }}
+                    />
+                    
+                    {/* Manual Complete Button for Iframe */}
+                    {onComplete && !hasMarkedCompleteRef.current && (
+                         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 mt-4">
+                            <Button
+                                onClick={() => {
+                                    if (!hasMarkedCompleteRef.current) {
+                                        hasMarkedCompleteRef.current = true;
+                                        onComplete();
+                                    }
+                                }}
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                                Mark as Completed
+                            </Button>
+                         </div>
+                    )}
+                </div>
+            )}
+
+            {/* PDF Flipbook */}
+            {!loading && !error && !iframeContent && pageImages.length > 0 && (
                 <div className="flex-1 flex flex-col items-center justify-center w-full relative pb-24 md:pb-0">
                     <HTMLFlipBook
                         ref={bookRef}

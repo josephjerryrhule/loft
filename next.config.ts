@@ -46,7 +46,7 @@ const nextConfig: NextConfig = {
       "img-src 'self' data: https: blob:",
       "font-src 'self' data: https://fonts.gstatic.com",
       "connect-src 'self' https://api.paystack.co https://*.supabase.co wss://*.supabase.co https://unpkg.com",
-      "frame-src 'self' https://js.paystack.co https://*.supabase.co",
+      "frame-src 'self' https://js.paystack.co https://*.supabase.co https://*.heyzine.com https://*.aflip.in",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",

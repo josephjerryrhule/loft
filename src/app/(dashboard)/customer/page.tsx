@@ -12,7 +12,6 @@ import { Loader2, BookOpen, RefreshCw } from "lucide-react";
 export default function CustomerDashboardPage() {
   const [subscription, setSubscription] = useState<any>(null);
   const [readingProgress, setReadingProgress] = useState(0);
-  const [inProgress, setInProgress] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -36,7 +35,6 @@ export default function CustomerDashboardPage() {
       const data = await getCustomerDashboardData();
       setSubscription(data.subscription);
       setReadingProgress(data.completedBooks);
-      setInProgress(data.inProgress);
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
     } finally {
@@ -106,17 +104,6 @@ export default function CustomerDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Reading In Progress */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{inProgress.length}</div>
-            <p className="text-xs text-muted-foreground">Books being read</p>
-          </CardContent>
-        </Card>
-
         {/* Browse Flipbooks */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -128,45 +115,6 @@ export default function CustomerDashboardPage() {
             </Link>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Continue Reading Section */}
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">Continue Reading</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {inProgress.length > 0 ? (
-            inProgress.map((progress: any) => (
-              <Link key={progress.id} href="/customer/flipbooks">
-                <Card className="overflow-hidden hover:border-primary transition-colors cursor-pointer">
-                  <div className="h-32 bg-slate-100 flex items-center justify-center relative">
-                    {progress.flipbook.coverImageUrl ? (
-                      <img 
-                        src={progress.flipbook.coverImageUrl} 
-                        alt={progress.flipbook.title}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <BookOpen className="h-12 w-12 text-slate-400" />
-                    )}
-                    <Badge className="absolute bottom-2 left-2" variant="secondary">
-                      Page {progress.lastPageRead}
-                    </Badge>
-                  </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-medium truncate">{progress.flipbook.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {Math.round((progress.lastPageRead / (progress.flipbook.totalPages || 100)) * 100)}% complete
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))
-          ) : (
-            <div className="col-span-3 h-48 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center text-slate-400">
-              No active books. <Link href="/customer/flipbooks" className="ml-1 text-blue-500 underline">Browse flipbooks</Link>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );

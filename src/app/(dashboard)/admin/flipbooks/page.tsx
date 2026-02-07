@@ -136,18 +136,18 @@ export default function AdminFlipbooksPage() {
                   <Textarea name="description" placeholder="Short description..." />
                </div>
                
-               <FileUpload 
-                  label="PDF File" 
-                  name="pdfUrl" 
-                  accept=".pdf" 
-                  required 
-                />
-
-               <FileUpload 
-                  label="Cover Image" 
-                  name="coverImageUrl" 
-                  accept="image/*" 
-                />
+               <div>
+                  <Label>Heyzine Flipbook URL</Label>
+                  <Input 
+                    name="heyzineUrl" 
+                    placeholder="https://heyzine.com/flip-book/..." 
+                    required 
+                    type="url"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Paste the Heyzine flipbook URL here. The cover image and content will be fetched automatically.
+                  </p>
+               </div>
 
                <div className="flex items-center space-x-2">
                   <input type="checkbox" id="isFree" name="isFree" className="h-4 w-4" />
