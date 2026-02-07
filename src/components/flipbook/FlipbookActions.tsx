@@ -82,6 +82,7 @@ export function FlipbookActions({ flipbook }: FlipbookActionsProps) {
             {viewOpen && (
                  <ReliableFlipbookViewer 
                     pdfUrl={flipbook.pdfUrl || ""} 
+                    iframeContent={flipbook.iframeContent}
                     onClose={() => setViewOpen(false)} 
                     title={flipbook.title}
                  />
