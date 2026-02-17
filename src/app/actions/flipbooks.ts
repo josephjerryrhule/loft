@@ -217,15 +217,20 @@ export async function getCustomerFlipbooks() {
     try {
         const now = new Date();
         
-        // Check for active subscription (must be ACTIVE and not expired)
+        // Check for active paid subscription (must be ACTIVE, not expired, and price > 0)
         const activeSubscription = await prisma.subscription.findFirst({
             where: { 
                 customerId: session.user.id,
                 status: "ACTIVE",
-                endDate: { gte: now }
+                endDate: { gte: now },
+                plan: {
+                    price: { gt: 0 }
+                }
             },
             include: { plan: true }
         });
+
+        const hasPaidSubscription = !!activeSubscription;
 
         // Auto-publish scheduled flipbooks that have reached their publish date
         await prisma.flipbook.updateMany({
@@ -244,7 +249,7 @@ export async function getCustomerFlipbooks() {
                     { publishedAt: null },
                     { publishedAt: { lte: now } }
                 ],
-                ...(activeSubscription ? {} : { isFree: true })
+                ...(hasPaidSubscription ? {} : { isFree: true })
             },
             include: {
                 progress: {
@@ -283,7 +288,7 @@ export async function getCustomerFlipbooks() {
 
         return {
             flipbooks: flipbooksWithProgress,
-            hasSubscription: !!activeSubscription
+            hasSubscription: hasPaidSubscription
         };
     } catch (error) {
         console.error("Failed to get customer flipbooks:", error);
