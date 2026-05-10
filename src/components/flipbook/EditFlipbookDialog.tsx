@@ -93,9 +93,9 @@ export function EditFlipbookDialog({ flipbook, open, onOpenChange }: EditFlipboo
                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                        >
                            <option value="">All Ages (Default)</option>
-                           <option value="LITTLE_LOFTERS">Little Lofters (0-5)</option>
-                           <option value="LOFT_365">Loft 365 readers (6-12)</option>
-                           <option value="BIG_READERS">Big readers (13+)</option>
+                           <option value="LITTLE_LOFTERS">Little Lofters (0–3 years)</option>
+                           <option value="LOFT_365">Loft 365 Readers (4–7 years)</option>
+                           <option value="BIG_READERS">Big Readers (8+ years)</option>
                        </select>
                     </FormControl>
                     <FormMessage />

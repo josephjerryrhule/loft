@@ -134,15 +134,15 @@ export default function AdminFlipbooksPage() {
 
                <div>
                   <Label>Age Group</Label>
-                  <select 
-                    name="ageGroup" 
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="">All Ages (Default)</option>
-                    <option value="LITTLE_LOFTERS">Little Lofters (0-5)</option>
-                    <option value="LOFT_365">Loft 365 readers (6-12)</option>
-                    <option value="BIG_READERS">Big readers (13+)</option>
-                  </select>
+                   <select 
+                     name="ageGroup" 
+                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                   >
+                     <option value="">All Ages (Default)</option>
+                     <option value="LITTLE_LOFTERS">Little Lofters (0–3 years)</option>
+                     <option value="LOFT_365">Loft 365 Readers (4–7 years)</option>
+                     <option value="BIG_READERS">Big Readers (8+ years)</option>
+                   </select>
                </div>
                <div>
                   <Label>Description</Label>
@@ -236,12 +236,14 @@ export default function AdminFlipbooksPage() {
                     )}
                 </TableCell>
                 <TableCell>
-                    {book.ageGroup && (
-                        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                            {book.ageGroup === 'LITTLE_LOFTERS' ? 'Little Lofters' : 
-                             book.ageGroup === 'LOFT_365' ? 'Loft 365' : 
-                             book.ageGroup === 'BIG_READERS' ? 'Big Readers' : book.ageGroup}
+                    {book.ageGroup ? (
+                        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            {book.ageGroup === 'LITTLE_LOFTERS' ? 'Little Lofters (0–3 yrs)' : 
+                             book.ageGroup === 'LOFT_365' ? 'Loft 365 Readers (4–7 yrs)' : 
+                             book.ageGroup === 'BIG_READERS' ? 'Big Readers (8+ yrs)' : book.ageGroup}
                         </span>
+                    ) : (
+                        <span className="text-xs text-muted-foreground">All Ages</span>
                     )}
                 </TableCell>
                 <TableCell>{book.createdBy?.email}</TableCell>
