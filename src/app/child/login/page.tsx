@@ -100,7 +100,7 @@ export default function ChildLogin() {
         <CardContent className="pt-6">
           {step === "username" ? (
             <Form {...usernameForm}>
-              <form onSubmit={usernameForm.handleSubmit(onUsernameSubmit)} className="space-y-6">
+              <form key="username-form" onSubmit={usernameForm.handleSubmit(onUsernameSubmit)} className="space-y-6">
                 <FormField
                   control={usernameForm.control}
                   name="username"
@@ -111,6 +111,7 @@ export default function ChildLogin() {
                         <Input 
                           placeholder="e.g. superhero123" 
                           {...field} 
+                          disabled={isLoading}
                           className="h-12 text-lg px-4 border-2 border-purple-100 focus-visible:border-purple-500 focus-visible:ring-purple-500 rounded-xl bg-white/50"
                         />
                       </FormControl>
@@ -135,7 +136,7 @@ export default function ChildLogin() {
             </Form>
           ) : (
             <Form {...otpForm}>
-              <form onSubmit={otpForm.handleSubmit(onOtpSubmit)} className="space-y-6">
+              <form key="otp-form" onSubmit={otpForm.handleSubmit(onOtpSubmit)} className="space-y-6">
                 <FormField
                   control={otpForm.control}
                   name="otp"
@@ -144,8 +145,12 @@ export default function ChildLogin() {
                       <FormLabel className="text-lg font-medium text-zinc-700">Secret Code</FormLabel>
                       <FormControl>
                         <Input 
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           placeholder="123456" 
                           {...field} 
+                          disabled={isLoading}
                           maxLength={6}
                           className="h-16 text-3xl text-center tracking-[0.5em] px-4 border-2 border-purple-100 focus-visible:border-purple-500 focus-visible:ring-purple-500 rounded-xl bg-white/50 font-mono"
                         />
