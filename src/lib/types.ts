@@ -2,7 +2,8 @@ export enum Role {
   ADMIN = "ADMIN",
   MANAGER = "MANAGER",
   AFFILIATE = "AFFILIATE",
-  PARENT = "PARENT"
+  PARENT = "PARENT",
+  FINANCE = "FINANCE",
 }
 
 /** @deprecated Use Role.PARENT instead */

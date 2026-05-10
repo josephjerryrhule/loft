@@ -136,6 +136,9 @@ function LoginForm() {
             case Role.PARENT:
               router.push("/parent");
               break;
+            case Role.FINANCE:
+              router.push("/finance");
+              break;
             default:
               router.push("/");
           }

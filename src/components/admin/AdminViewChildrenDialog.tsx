@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -31,23 +31,32 @@ export function AdminViewChildrenDialog({
   const [children, setChildren] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch children when dialog opens
-  const fetchChildren = async () => {
-    try {
-      setIsLoading(true);
-      const data = await getAdminUserChildren(userId);
-      setChildren(data);
-    } catch (error) {
-      console.error("Failed to fetch children:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  useEffect(() => {
+    let mounted = true;
+    const fetchChildren = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getAdminUserChildren(userId);
+        if (mounted) {
+          setChildren(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch children:", error);
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    };
 
-  // Only fetch when opening
-  if (open && children.length === 0 && !isLoading) {
-    fetchChildren();
-  }
+    if (open) {
+      fetchChildren();
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [open, userId]);
 
   const getInitials = (name: string) => {
     return name

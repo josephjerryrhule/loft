@@ -126,6 +126,7 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
                         <SelectItem value="AFFILIATE">Affiliate</SelectItem>
                         <SelectItem value="MANAGER">Manager</SelectItem>
                         <SelectItem value="ADMIN">Admin</SelectItem>
+                        <SelectItem value="FINANCE">Finance</SelectItem>
                         </SelectContent>
                     </Select>
                     <FormMessage />

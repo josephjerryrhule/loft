@@ -92,6 +92,7 @@ export default function AdminUsersPage() {
                 <option value="MANAGER">Manager</option>
                 <option value="AFFILIATE">Affiliate</option>
                 <option value="PARENT">Parent</option>
+                <option value="FINANCE">Finance</option>
              </select>
          </div>
       </div>

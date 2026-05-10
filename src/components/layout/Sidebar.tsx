@@ -9,14 +9,17 @@ import { Role } from "@/lib/types";
 import {
   LayoutDashboard,
   Users,
-  BookOpen, 
+  BookOpen,
   ShoppingBag,
   CreditCard,
   Settings,
   LogOut,
   FileText,
   UserPlus,
-  Menu
+  Menu,
+  BarChart3,
+  TrendingUp,
+  Wallet,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -42,6 +45,7 @@ function getLinks(userRole?: string) {
     { href: "/admin/orders", label: "Orders", icon: FileText },
     { href: "/admin/plans", label: "Plans", icon: CreditCard },
     { href: "/admin/finance", label: "Finance & Payouts", icon: CreditCard },
+    { href: "/admin/payments", label: "Payment Tracker", icon: Wallet },
   ];
 
   const managerLinks = [
@@ -64,11 +68,19 @@ function getLinks(userRole?: string) {
     { href: "/products", label: "Shop Products", icon: ShoppingBag },
   ];
 
+  const financeLinks = [
+    { href: "/finance", label: "Ambassador Tracking", icon: Users },
+    { href: "/finance/payments", label: "Payment Tracker", icon: Wallet },
+    { href: "/finance/signups", label: "Daily Signups", icon: TrendingUp },
+    { href: "/finance/payouts", label: "Payout Requests", icon: BarChart3 },
+  ];
+
   if (userRole === Role.ADMIN) return [...adminLinks, ...commonLinks];
   if (userRole === Role.MANAGER) return [...managerLinks, ...commonLinks];
   if (userRole === Role.AFFILIATE) return [...affiliateLinks, ...commonLinks];
   if (userRole === Role.PARENT) return [...parentLinks, ...commonLinks];
-  
+  if (userRole === Role.FINANCE) return financeLinks; // No settings — read/export + payout only
+
   return commonLinks;
 }
 
@@ -108,7 +120,7 @@ function NavContent({ userRole, setOpen, logoUrl, platformName }: { userRole?: s
               // We want /admin to match ONLY /admin. 
               // We want /admin/users to match /admin/users AND /admin/users/123.
               
-              const isRootDashboard = ["/admin", "/manager", "/affiliate", "/parent"].includes(link.href);
+              const isRootDashboard = ["/admin", "/manager", "/affiliate", "/parent", "/finance"].includes(link.href);
               const isActive = pathname === link.href || (!isRootDashboard && pathname.startsWith(`${link.href}/`));
 
               return (

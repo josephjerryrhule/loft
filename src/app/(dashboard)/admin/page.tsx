@@ -117,7 +117,7 @@ async function getRecentActivity() {
     if (cached) return cached;
 
     const activities = await prisma.activityLog.findMany({
-        take: 50,
+        take: 1000,
         orderBy: { createdAt: 'desc' },
         include: { 
             user: { 

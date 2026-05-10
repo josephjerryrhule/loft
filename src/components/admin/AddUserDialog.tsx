@@ -146,6 +146,7 @@ export function AddUserDialog() {
                         <SelectItem value={Role.AFFILIATE}>Affiliate</SelectItem>
                         <SelectItem value={Role.MANAGER}>Manager</SelectItem>
                         <SelectItem value={Role.ADMIN}>Admin</SelectItem>
+                        <SelectItem value={Role.FINANCE}>Finance</SelectItem>
                         </SelectContent>
                     </Select>
                     <FormMessage />
