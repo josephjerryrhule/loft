@@ -287,6 +287,31 @@ export async function getAllUsers() {
     }
 }
 
+export async function getAdminUserChildren(userId: string) {
+    const session = await auth();
+    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+        throw new Error("Unauthorized");
+    }
+
+    try {
+        const children = await prisma.childProfile.findMany({
+            where: { parentId: userId },
+            orderBy: { createdAt: "desc" },
+            include: {
+                subscriptions: {
+                    include: {
+                        plan: true
+                    }
+                }
+            }
+        });
+        return children;
+    } catch (error) {
+        console.error("Failed to get user children:", error);
+        throw error;
+    }
+}
+
 export async function getAllOrders() {
     const session = await auth();
     if (!session?.user?.id || (session.user as any).role !== "ADMIN") {

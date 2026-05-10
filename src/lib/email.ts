@@ -816,3 +816,38 @@ export async function sendEmailVerification(data: { userEmail: string; verificat
     html: emailWrapper(content, branding.platformName, branding.logoUrl),
   });
 }
+
+export async function sendChildOtpEmail({
+  email,
+  childName,
+  otp,
+}: {
+  email: string;
+  childName: string;
+  otp: string;
+}) {
+  const branding = await getBranding();
+
+  const content = `
+    <h2>Child Login OTP</h2>
+    <p>Hello,</p>
+    <p>Here is the one-time password (OTP) for <strong>${childName}</strong> to log in to their dashboard:</p>
+    
+    <div style="text-align: center; margin: 30px 0;">
+      <span style="background-color: #f3f4f6; padding: 15px 30px; font-size: 24px; font-weight: bold; letter-spacing: 4px; border-radius: 8px; color: #1f2937;">
+        ${otp}
+      </span>
+    </div>
+    
+    <p>This code will expire in 15 minutes.</p>
+    <p style="font-size: 14px; color: #666; margin-top: 30px;">
+      If you didn't request this code, you can safely ignore this email.
+    </p>
+  `;
+
+  return sendEmail({
+    to: email,
+    subject: `Login code for ${childName} - ${branding.platformName}`,
+    html: emailWrapper(content, branding.platformName, branding.logoUrl),
+  });
+}

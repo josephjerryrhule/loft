@@ -7,6 +7,7 @@ import { z } from "zod";
 
 const childProfileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
+  username: z.string().min(3, "Username must be at least 3 characters").regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
   dateOfBirth: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: "Invalid date of birth",
   }),
@@ -46,13 +47,22 @@ export async function createChildProfile(input: ChildProfileInput) {
     return { error: parsed.error.issues[0]?.message || "Invalid input" };
   }
 
-  const { name, dateOfBirth, ageGroup, avatarColor } = parsed.data;
+  const { name, username, dateOfBirth, ageGroup, avatarColor } = parsed.data;
 
   try {
+    const existingUsername = await prisma.childProfile.findUnique({
+      where: { username }
+    });
+    
+    if (existingUsername) {
+      return { error: "Username is already taken" };
+    }
+
     const child = await prisma.childProfile.create({
       data: {
         parentId: session.user.id,
         name,
+        username,
         dateOfBirth: new Date(dateOfBirth),
         ageGroup,
         avatarColor: avatarColor || "#6366f1",
@@ -86,13 +96,24 @@ export async function updateChildProfile(
     return { error: parsed.error.issues[0]?.message || "Invalid input" };
   }
 
-  const { name, dateOfBirth, ageGroup, avatarColor } = parsed.data;
+  const { name, username, dateOfBirth, ageGroup, avatarColor } = parsed.data;
 
   try {
+    if (username !== existing.username) {
+      const existingUsername = await prisma.childProfile.findUnique({
+        where: { username }
+      });
+      
+      if (existingUsername) {
+        return { error: "Username is already taken" };
+      }
+    }
+
     const child = await prisma.childProfile.update({
       where: { id },
       data: {
         name,
+        username,
         dateOfBirth: new Date(dateOfBirth),
         ageGroup,
         avatarColor: avatarColor || existing.avatarColor,

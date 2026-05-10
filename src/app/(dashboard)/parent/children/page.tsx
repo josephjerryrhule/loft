@@ -65,6 +65,7 @@ const AVATAR_COLORS = [
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
+  username: z.string().min(3, "Username must be at least 3 characters").regex(/^[a-zA-Z0-9_]+$/, "Only letters, numbers, and underscores allowed"),
   dateOfBirth: z.string().min(1, "Date of birth is required"),
   ageGroup: z.enum(["LITTLE_LOFTERS", "LOFT_365", "BIG_READERS"]),
   avatarColor: z.string().optional(),
@@ -105,6 +106,7 @@ function ChildFormDialog({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: child?.name || "",
+      username: child?.username || "",
       dateOfBirth: child?.dateOfBirth
         ? new Date(child.dateOfBirth).toISOString().split("T")[0]
         : "",
@@ -117,6 +119,7 @@ function ChildFormDialog({
     if (open) {
       form.reset({
         name: child?.name || "",
+        username: child?.username || "",
         dateOfBirth: child?.dateOfBirth
           ? new Date(child.dateOfBirth).toISOString().split("T")[0]
           : "",
@@ -170,6 +173,21 @@ function ChildFormDialog({
                   <FormControl>
                     <Input placeholder="e.g. Ama" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Login Username</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. ama_reader" {...field} />
+                  </FormControl>
+                  <p className="text-[0.8rem] text-muted-foreground mt-1">This will be used for the child to log in without an email.</p>
                   <FormMessage />
                 </FormItem>
               )}

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, QrCode } from "lucide-react";
+import { Pencil, Trash2, QrCode, MoreHorizontal, Users } from "lucide-react";
 import { useState } from "react";
 import { EditUserDialog } from "./EditUserDialog";
 import { deleteUser } from "@/app/actions/user";
@@ -17,7 +17,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-// import { DropdownMenu... } from ... if we wanted dropdown, but icons requested
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { AdminViewChildrenDialog } from "./AdminViewChildrenDialog";
 
 interface UserActionsProps {
     user: any;
@@ -28,6 +36,7 @@ export function UserActions({ user }: UserActionsProps) {
     const [editOpen, setEditOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [downloadingQR, setDownloadingQR] = useState(false);
+    const [showChildrenDialog, setShowChildrenDialog] = useState(false);
 
     async function confirmDelete() {
         const result = await deleteUser(user.id);
@@ -87,18 +96,43 @@ export function UserActions({ user }: UserActionsProps) {
                         <QrCode className="h-4 w-4" />
                     </Button>
                 )}
-                <Button variant="ghost" size="sm" onClick={() => setEditOpen(true)}>
-                    <Pencil className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => setDeleteOpen(true)}>
-                    <Trash2 className="h-4 w-4" />
-                </Button>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Edit User
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setShowChildrenDialog(true)}>
+                            <Users className="mr-2 h-4 w-4" />
+                            View Children
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => setDeleteOpen(true)} className="text-destructive">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete User
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
 
             <EditUserDialog 
                 user={user} 
                 open={editOpen} 
                 onOpenChange={setEditOpen} 
+            />
+
+            <AdminViewChildrenDialog
+                userId={user.id}
+                userName={`${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email}
+                open={showChildrenDialog}
+                onOpenChange={setShowChildrenDialog}
             />
 
             <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
