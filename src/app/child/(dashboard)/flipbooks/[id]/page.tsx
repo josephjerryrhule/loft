@@ -26,13 +26,12 @@ export default async function ChildFlipbookPage({ params }: { params: { id: stri
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link
-            href="/child/dashboard"
-            className="flex items-center gap-2 text-sky-600 hover:text-sky-800 font-bold transition-colors bg-sky-50 px-4 py-2 rounded-full"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Back to Bookshelf</span>
-          </Link>
+          <Button variant="ghost" className="text-zinc-600 hover:bg-zinc-100" asChild>
+            <Link href="/child">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Bookshelf
+            </Link>
+          </Button>
           <h1 className="text-xl font-bold text-indigo-900 truncate max-w-md">
             {flipbook.title}
           </h1>

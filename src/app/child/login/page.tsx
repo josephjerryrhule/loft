@@ -64,7 +64,7 @@ export default function ChildLogin() {
         toast.error(result.error);
       } else {
         toast.success("Welcome back!");
-        router.push("/child/dashboard");
+        router.push("/child");
       }
     } catch (error) {
       toast.error("Invalid login code. Please try again.");
