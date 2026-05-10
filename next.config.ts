@@ -37,15 +37,15 @@ const nextConfig: NextConfig = {
   async headers() {
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.paystack.co https://unpkg.com",
-      "script-src-elem 'self' 'unsafe-inline' https://js.paystack.co https://unpkg.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.paystack.co https://unpkg.com https://static.cloudflareinsights.com",
+      "script-src-elem 'self' 'unsafe-inline' https://js.paystack.co https://unpkg.com https://static.cloudflareinsights.com",
       "worker-src 'self' blob:",
       "child-src 'self' blob:",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: https: blob:",
       "font-src 'self' data: https://fonts.gstatic.com",
-      "connect-src 'self' https://api.paystack.co https://*.supabase.co wss://*.supabase.co https://unpkg.com",
+      "connect-src 'self' https://api.paystack.co https://*.supabase.co wss://*.supabase.co https://unpkg.com https://cloudflareinsights.com",
       "frame-src 'self' https://js.paystack.co https://*.supabase.co https://*.heyzine.com https://*.aflip.in",
       "object-src 'none'",
       "base-uri 'self'",

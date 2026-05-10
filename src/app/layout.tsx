@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
+
 import { Toaster } from "@/components/ui/sonner";
 import { prisma } from "@/lib/prisma";
 import { FaviconUpdater } from "@/components/FaviconUpdater";
@@ -92,7 +92,7 @@ export default async function RootLayout({
         <FaviconUpdater faviconUrl={settings.faviconUrl} />
         {children}
         <Toaster />
-        <Analytics />
+
       </body>
     </html>
   );
