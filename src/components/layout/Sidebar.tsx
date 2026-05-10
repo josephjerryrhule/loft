@@ -55,18 +55,19 @@ function getLinks(userRole?: string) {
      { href: "/affiliate/commissions", label: "My Earnings", icon: CreditCard },
   ];
 
-  const customerLinks = [
-    { href: "/customer", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/customer/flipbooks", label: "My Flipbooks", icon: BookOpen },
-    { href: "/customer/plans", label: "Plans", icon: CreditCard },
-    { href: "/customer/orders", label: "My Orders", icon: ShoppingBag },
+  const parentLinks = [
+    { href: "/parent", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/parent/children", label: "My Children", icon: Users },
+    { href: "/parent/flipbooks", label: "Flipbooks", icon: BookOpen },
+    { href: "/parent/plans", label: "Plans", icon: CreditCard },
+    { href: "/parent/orders", label: "My Orders", icon: ShoppingBag },
     { href: "/products", label: "Shop Products", icon: ShoppingBag },
   ];
 
   if (userRole === Role.ADMIN) return [...adminLinks, ...commonLinks];
   if (userRole === Role.MANAGER) return [...managerLinks, ...commonLinks];
   if (userRole === Role.AFFILIATE) return [...affiliateLinks, ...commonLinks];
-  if (userRole === Role.CUSTOMER) return [...customerLinks, ...commonLinks];
+  if (userRole === Role.PARENT) return [...parentLinks, ...commonLinks];
   
   return commonLinks;
 }
@@ -107,7 +108,7 @@ function NavContent({ userRole, setOpen, logoUrl, platformName }: { userRole?: s
               // We want /admin to match ONLY /admin. 
               // We want /admin/users to match /admin/users AND /admin/users/123.
               
-              const isRootDashboard = ["/admin", "/manager", "/affiliate", "/customer"].includes(link.href);
+              const isRootDashboard = ["/admin", "/manager", "/affiliate", "/parent"].includes(link.href);
               const isActive = pathname === link.href || (!isRootDashboard && pathname.startsWith(`${link.href}/`));
 
               return (

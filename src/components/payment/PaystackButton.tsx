@@ -59,6 +59,7 @@ export function PaystackButton({
         customizationData: metadata.customizationData,
         customerUploadUrl: metadata.customerUploadUrl as string | undefined,
         callbackUrl: callbackUrl,
+        childProfileId: metadata.childProfileId as string | undefined,
       });
 
       if (result.error) {

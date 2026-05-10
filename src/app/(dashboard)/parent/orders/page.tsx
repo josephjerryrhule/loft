@@ -1,0 +1,299 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Loader2, Package, ShoppingCart, Eye, Download } from "lucide-react";
+import { getCustomerOrders } from "@/app/actions/user";
+import { getSystemSettings } from "@/app/actions/settings";
+import { getCurrencySymbol } from "@/lib/utils";
+import { ViewOrderDialog } from "@/components/order/ViewOrderDialog";
+import { Pagination } from "@/components/ui/pagination";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+interface Order {
+  id: string;
+  orderNumber: string;
+  quantity: number;
+  unitPrice: number;
+  totalAmount: number;
+  customizationData: string | null;
+  status: string;
+  paymentStatus: string;
+  paymentReference: string | null;
+  completedFileUrl: string | null;
+  createdAt: string;
+  product: {
+    id: string;
+    title: string;
+    description: string | null;
+    productType: string;
+    price: number;
+    featuredImageUrl: string | null;
+  };
+  referredBy: {
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+  } | null;
+}
+
+
+export default function CustomerOrdersPage() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currency, setCurrency] = useState("GHS");
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const pageSize = 10;
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  useEffect(() => {
+    loadOrders(currentPage);
+  }, [currentPage]);
+
+  async function loadSettings() {
+    try {
+      const settings = await getSystemSettings();
+      setCurrency(settings.currency || "GHS");
+    } catch (error) {
+      console.error("Failed to load settings:", error);
+    }
+  }
+
+  async function loadOrders(page: number) {
+    setLoading(true);
+    try {
+      const data = await getCustomerOrders(page, pageSize);
+      setOrders(data.orders);
+      setTotalPages(data.totalPages);
+      setTotal(data.total);
+    } catch (error) {
+      console.error("Failed to load orders:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDownload(url: string, filename: string) {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Failed to download file:", error);
+    }
+  }
+
+  function getStatusColor(status: string) {
+    switch (status.toUpperCase()) {
+      case "COMPLETED":
+        return "default";
+      case "PROCESSING":
+        return "secondary";
+      case "PENDING":
+        return "outline";
+      case "CANCELLED":
+        return "destructive";
+      default:
+        return "outline";
+    }
+  }
+
+  function getPaymentStatusColor(status: string) {
+    switch (status.toUpperCase()) {
+      case "PAID":
+        return "default";
+      case "PENDING":
+        return "outline";
+      case "FAILED":
+        return "destructive";
+      default:
+        return "outline";
+    }
+  }
+
+  if (loading && orders.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <TooltipProvider>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">My Orders</h1>
+          <p className="text-muted-foreground mt-1">
+            View and track your order history
+          </p>
+        </div>
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <ShoppingCart className="h-5 w-5" />
+          <span className="text-sm font-medium">{total} Orders</span>
+        </div>
+      </div>
+
+      {orders.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Package className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No orders yet</h3>
+            <p className="text-muted-foreground text-center">
+              When you make a purchase, your orders will appear here.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Order History</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border bg-white dark:bg-slate-900">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order Number</TableHead>
+                    <TableHead>Product</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead>Total Amount</TableHead>
+                    <TableHead>Payment Status</TableHead>
+                    <TableHead>Order Status</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orders.map((order) => (
+                    <TableRow key={order.id}>
+                      <TableCell className="font-medium">
+                        {order.orderNumber}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          {order.product.featuredImageUrl && (
+                            <img
+                              src={order.product.featuredImageUrl}
+                              alt={order.product.title}
+                              className="h-10 w-10 rounded object-cover"
+                            />
+                          )}
+                          <div>
+                            <div className="font-medium">{order.product.title}</div>
+                            {order.product.description && (
+                              <div className="text-xs text-muted-foreground line-clamp-1">
+                                {order.product.description}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {order.product.productType}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{order.quantity}</TableCell>
+                      <TableCell className="font-medium">
+                        {getCurrencySymbol(currency)}{order.totalAmount.toLocaleString()}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getPaymentStatusColor(order.paymentStatus)}>
+                          {order.paymentStatus}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusColor(order.status)}>
+                          {order.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setSelectedOrder(order);
+                                  setViewDialogOpen(true);
+                                }}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>View order details</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          {order.status === "COMPLETED" && order.completedFileUrl && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleDownload(
+                                    order.completedFileUrl!,
+                                    `${order.orderNumber}-${order.product.title}.${order.completedFileUrl!.split('.').pop()}`
+                                  )}
+                                >
+                                  <Download className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Download completed file</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={total}
+              itemsPerPage={pageSize}
+              onPageChange={setCurrentPage}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      <ViewOrderDialog
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        order={selectedOrder}
+        currency={currency}
+      />
+      </div>
+    </TooltipProvider>
+  );
+}

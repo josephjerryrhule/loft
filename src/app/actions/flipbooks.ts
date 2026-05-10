@@ -11,6 +11,7 @@ const flipbookSchema = z.object({
   description: z.string().optional(),
   heyzineUrl: z.string().url("Must be a valid URL"),
   category: z.string().optional(),
+  ageGroup: z.string().optional(),
   isFree: z.boolean().optional(),
   schedulePublish: z.boolean().optional(),
   publishedAt: z.string().optional().nullable(),
@@ -43,6 +44,7 @@ export async function createFlipbook(formData: FormData) {
   const description = formData.get("description") as string;
   const heyzineUrl = formData.get("heyzineUrl") as string;
   const category = formData.get("category") as string;
+  const ageGroup = formData.get("ageGroup") as string;
   const isFree = formData.get("isFree") === "on";
   const schedulePublish = formData.get("schedulePublish") === "on";
   const publishedAt = formData.get("publishedAt") as string;
@@ -53,6 +55,7 @@ export async function createFlipbook(formData: FormData) {
       description, 
       heyzineUrl,
       category, 
+      ageGroup,
       isFree,
       schedulePublish,
       publishedAt
@@ -72,6 +75,7 @@ export async function createFlipbook(formData: FormData) {
         iframeContent,
         coverImageUrl: thumbnailUrl,
         category: validatedData.category,
+        ageGroup: validatedData.ageGroup,
         createdById: session.user.id,
         isPublished: isPublishedNow,
         isFree: validatedData.isFree || false,
@@ -80,7 +84,7 @@ export async function createFlipbook(formData: FormData) {
     });
 
     revalidatePath("/admin/flipbooks");
-    revalidatePath("/customer/flipbooks");
+    revalidatePath("/parent/flipbooks");
     
     return { success: true };
   } catch (error) {
@@ -97,6 +101,7 @@ export async function updateFlipbook(flipbookId: string, data: {
     title: string;
     description?: string;
     category?: string;
+    ageGroup?: string;
     heyzineUrl?: string; // Changed from pdfUrl
     isPublished?: boolean;
     isFree?: boolean;
@@ -106,6 +111,7 @@ export async function updateFlipbook(flipbookId: string, data: {
             title: data.title,
             description: data.description,
             category: data.category,
+            ageGroup: data.ageGroup,
             isPublished: data.isPublished,
             isFree: data.isFree
         };
@@ -125,7 +131,7 @@ export async function updateFlipbook(flipbookId: string, data: {
         });
 
         revalidatePath("/admin/flipbooks");
-        revalidatePath("/customer/flipbooks");
+        revalidatePath("/parent/flipbooks");
         return { success: true };
     } catch (error) {
         console.error("Failed to update flipbook:", error);
@@ -165,7 +171,7 @@ export async function deleteFlipbook(flipbookId: string) {
         }
         
         revalidatePath("/admin/flipbooks");
-        revalidatePath("/customer/flipbooks");
+        revalidatePath("/parent/flipbooks");
         return { success: true };
     } catch (error) {
         console.error("Failed to delete flipbook:", error);
@@ -208,7 +214,7 @@ export async function getAllFlipbooks() {
     }
 }
 
-export async function getCustomerFlipbooks() {
+export async function getCustomerFlipbooks(childProfileId?: string) {
     const session = await auth();
     if (!session?.user?.id) {
         throw new Error("Unauthorized");
@@ -217,10 +223,27 @@ export async function getCustomerFlipbooks() {
     try {
         const now = new Date();
         
-        // Check for active paid subscription (must be ACTIVE, not expired, and price > 0)
+        let childAgeGroup: string | null = null;
+        if (childProfileId) {
+            const child = await prisma.childProfile.findFirst({
+                where: { id: childProfileId, parentId: session.user.id }
+            });
+            if (!child) {
+                throw new Error("Invalid child profile");
+            }
+            childAgeGroup = child.ageGroup;
+        }
+        
+        // Check for active paid subscription for the specific child (or any if none provided, for backwards compat)
         const activeSubscription = await prisma.subscription.findFirst({
             where: { 
                 customerId: session.user.id,
+                ...(childProfileId ? {
+                    OR: [
+                        { childProfileId: childProfileId },
+                        { childProfileId: null } // Backwards compatibility for parent-level subscriptions
+                    ]
+                } : {}),
                 status: "ACTIVE",
                 endDate: { gte: now },
                 plan: {
@@ -249,11 +272,15 @@ export async function getCustomerFlipbooks() {
                     { publishedAt: null },
                     { publishedAt: { lte: now } }
                 ],
-                ...(hasPaidSubscription ? {} : { isFree: true })
+                ...(hasPaidSubscription ? {} : { isFree: true }),
+                ...(childAgeGroup ? { ageGroup: childAgeGroup } : {})
             },
             include: {
                 progress: {
-                    where: { customerId: session.user.id },
+                    where: { 
+                        customerId: session.user.id,
+                        ...(childProfileId ? { childProfileId } : { childProfileId: null })
+                    },
                     take: 1
                 }
             },
@@ -273,6 +300,7 @@ export async function getCustomerFlipbooks() {
                 iframeContent: fb.iframeContent,
                 totalPages: fb.totalPages,
                 category: fb.category,
+                ageGroup: fb.ageGroup,
                 isPublished: fb.isPublished,
                 isFree: fb.isFree,
                 createdAt: fb.createdAt.toISOString(),
@@ -300,6 +328,7 @@ export async function updateFlipbookProgress(data: {
     flipbookId: string;
     lastPageRead: number;
     completed: boolean;
+    childProfileId?: string;
 }) {
     const session = await auth();
     if (!session?.user?.id) {
@@ -307,29 +336,55 @@ export async function updateFlipbookProgress(data: {
     }
 
     try {
-        await prisma.flipbookProgress.upsert({
+        // Verify childProfileId belongs to the parent if provided
+        if (data.childProfileId) {
+            const child = await prisma.childProfile.findFirst({
+                where: { id: data.childProfileId, parentId: session.user.id }
+            });
+            if (!child) {
+                throw new Error("Invalid child profile");
+            }
+        }
+
+        // To support unique constraints properly if childProfileId is optional, 
+        // we might need to handle the case where it is null. Prisma allows null in unique constraints 
+        // if specified in schema. But wait, schema says:
+        // @@unique([customerId, flipbookId], name: "customerId_flipbookId")
+        // @@unique([childProfileId, flipbookId], name: "childProfileId_flipbookId")
+        
+        // Let's use findFirst then create/update to be safe instead of upsert if schema constraints are tricky
+        const existingProgress = await prisma.flipbookProgress.findFirst({
             where: {
-                customerId_flipbookId: {
-                    customerId: session.user.id,
-                    flipbookId: data.flipbookId
-                }
-            },
-            create: {
                 customerId: session.user.id,
                 flipbookId: data.flipbookId,
-                lastPageRead: data.lastPageRead,
-                completed: data.completed,
-                lastAccessedAt: new Date()
-            },
-            update: {
-                lastPageRead: data.lastPageRead,
-                completed: data.completed,
-                lastAccessedAt: new Date()
+                childProfileId: data.childProfileId || null
             }
         });
 
-        revalidatePath("/customer");
-        revalidatePath("/customer/flipbooks");
+        if (existingProgress) {
+            await prisma.flipbookProgress.update({
+                where: { id: existingProgress.id },
+                data: {
+                    lastPageRead: data.lastPageRead,
+                    completed: data.completed,
+                    lastAccessedAt: new Date()
+                }
+            });
+        } else {
+            await prisma.flipbookProgress.create({
+                data: {
+                    customerId: session.user.id,
+                    flipbookId: data.flipbookId,
+                    childProfileId: data.childProfileId || null,
+                    lastPageRead: data.lastPageRead,
+                    completed: data.completed,
+                    lastAccessedAt: new Date()
+                }
+            });
+        }
+
+        revalidatePath("/parent");
+        revalidatePath("/parent/flipbooks");
         return { success: true };
     } catch (error) {
         console.error("Failed to update flipbook progress:", error);

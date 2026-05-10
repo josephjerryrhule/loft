@@ -19,7 +19,7 @@ export default async function AffiliateDashboardPage() {
   // Role protection - only affiliates can access
   // @ts-ignore - role exists in our custom session type
   if (!session?.user || session.user.role !== "AFFILIATE") {
-    redirect("/customer");
+    redirect("/parent");
   }
   
   const user = await prisma.user.findUnique({

@@ -2,8 +2,11 @@ export enum Role {
   ADMIN = "ADMIN",
   MANAGER = "MANAGER",
   AFFILIATE = "AFFILIATE",
-  CUSTOMER = "CUSTOMER"
+  PARENT = "PARENT"
 }
+
+/** @deprecated Use Role.PARENT instead */
+export const CUSTOMER = Role.PARENT;
 
 export enum UserStatus {
   ACTIVE = "ACTIVE",

@@ -174,7 +174,7 @@ export default async function AdminDashboardPage() {
   const session = await auth();
   // @ts-ignore - role exists in our custom session type
   if (!session?.user || session.user.role !== "ADMIN") {
-    redirect("/customer");
+    redirect("/parent");
   }
 
   // Fetch all data in parallel for maximum performance

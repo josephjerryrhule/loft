@@ -47,7 +47,7 @@ export function AddUserDialog() {
       email: "",
       password: "",
       phone: "",
-      role: Role.CUSTOMER,
+      role: Role.PARENT,
       managerCode: "",
       referralCode: "",
     },
@@ -142,7 +142,7 @@ export function AddUserDialog() {
                         </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                        <SelectItem value={Role.CUSTOMER}>Customer</SelectItem>
+                        <SelectItem value={Role.PARENT}>Parent</SelectItem>
                         <SelectItem value={Role.AFFILIATE}>Affiliate</SelectItem>
                         <SelectItem value={Role.MANAGER}>Manager</SelectItem>
                         <SelectItem value={Role.ADMIN}>Admin</SelectItem>
@@ -162,7 +162,7 @@ export function AddUserDialog() {
                     )} />
                 )}
 
-                {selectedRole === Role.CUSTOMER && (
+                {selectedRole === Role.PARENT && (
                     <FormField control={form.control} name="referralCode" render={({ field }) => (
                     <FormItem>
                         <FormLabel>Referral Code (Optional)</FormLabel>

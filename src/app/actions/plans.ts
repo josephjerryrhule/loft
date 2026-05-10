@@ -116,14 +116,29 @@ export async function deletePlan(id: string) {
     }
 }
 
-export async function getUserSubscription(userId: string) {
+export async function getUserSubscription(userId: string, childId?: string) {
     return await prisma.subscription.findFirst({
+        where: { 
+            customerId: userId,
+            childProfileId: childId || null,
+            status: "ACTIVE",
+            endDate: { gte: new Date() }
+        },
+        include: { plan: true }
+    });
+}
+
+export async function getUserSubscriptions(userId: string) {
+    return await prisma.subscription.findMany({
         where: { 
             customerId: userId,
             status: "ACTIVE",
             endDate: { gte: new Date() }
         },
-        include: { plan: true }
+        include: { 
+            plan: true,
+            childProfile: true
+        }
     });
 }
 
@@ -143,10 +158,11 @@ export async function subscribeToPlan(planId: string) {
     endDate.setDate(endDate.getDate() + plan.durationDays);
 
     try {
-        // Cancel any existing active subscriptions
+        // Cancel any existing active subscriptions for the same profile
         await prisma.subscription.updateMany({
             where: { 
                 customerId: session.user.id,
+                childProfileId: null, // Defaulting to parent if no childId provided in this action
                 status: "ACTIVE"
             },
             data: { status: "CANCELLED" }
@@ -179,8 +195,8 @@ export async function subscribeToPlan(planId: string) {
             }
         });
         
-        revalidatePath("/customer");
-        revalidatePath("/customer/plans");
+        revalidatePath("/parent");
+        revalidatePath("/parent/plans");
         return { success: true };
     } catch (e) {
         console.error(e);

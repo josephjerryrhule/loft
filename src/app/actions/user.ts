@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_noStore as noStore } from "next/cache";
 import { auth } from "@/auth";
 import { sendAccountStatusChangeEmail } from "@/lib/email";
 
@@ -166,30 +166,63 @@ export async function updateProfile(formData: FormData) {
     }
 }
 
-export async function getCustomerDashboardData() {
+export async function getParentDashboardData() {
+    noStore();
     const session = await auth();
     if (!session?.user?.id) {
         throw new Error("Unauthorized");
     }
 
     try {
-        // Get active subscription
+        // Get active subscription for the parent (MUST have childProfileId as null)
         const subscription = await prisma.subscription.findFirst({
             where: {
                 customerId: session.user.id,
+                childProfileId: null,
                 status: "ACTIVE",
                 endDate: { gte: new Date() }
             },
-            include: { plan: true }
+            include: { plan: true },
+            orderBy: { createdAt: "desc" }
         });
 
-        // Get completed books count
+        // Get completed books count for the parent (legacy)
         const completedBooks = await prisma.flipbookProgress.count({
             where: { 
                 customerId: session.user.id, 
                 completed: true 
             }
         });
+
+        // Get child profiles with their subscriptions and reading progress
+        const childProfiles = await prisma.childProfile.findMany({
+            where: { parentId: session.user.id },
+            include: {
+                subscriptions: {
+                    where: {
+                        status: "ACTIVE",
+                        endDate: { gte: new Date() }
+                    },
+                    include: { plan: true },
+                    orderBy: { createdAt: "desc" }
+                },
+                flipbookProgress: {
+                    where: { completed: true }
+                }
+            }
+        });
+
+        const formattedChildProfiles = childProfiles.map(child => ({
+            ...child,
+            activeSubscription: child.subscriptions[0] ? {
+                ...child.subscriptions[0],
+                plan: {
+                    ...child.subscriptions[0].plan,
+                    price: child.subscriptions[0].plan.price.toNumber()
+                }
+            } : null,
+            completedBooks: child.flipbookProgress.length
+        }));
 
         return {
             subscription: subscription ? {
@@ -199,10 +232,11 @@ export async function getCustomerDashboardData() {
                     price: subscription.plan.price.toNumber()
                 }
             } : null,
-            completedBooks
+            completedBooks,
+            childProfiles: formattedChildProfiles
         };
     } catch (error) {
-        console.error("Failed to get customer dashboard data:", error);
+        console.error("Failed to get parent dashboard data:", error);
         throw error;
     }
 }

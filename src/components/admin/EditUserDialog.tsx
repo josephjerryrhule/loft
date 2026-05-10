@@ -122,7 +122,7 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
                         </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                        <SelectItem value="CUSTOMER">Customer</SelectItem>
+                        <SelectItem value="PARENT">Parent</SelectItem>
                         <SelectItem value="AFFILIATE">Affiliate</SelectItem>
                         <SelectItem value="MANAGER">Manager</SelectItem>
                         <SelectItem value="ADMIN">Admin</SelectItem>

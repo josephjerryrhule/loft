@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { processSubscriptionCommission } from "@/lib/commission";
 import { getPaystackSecretKey } from "@/lib/paystack";
+import { revalidatePath } from "next/cache";
 import { 
   sendSubscriptionConfirmationEmail, 
   sendSubscriptionReceiptEmail,
@@ -67,12 +68,18 @@ export async function processSubscriptionPayment(reference: string, planId: stri
       console.error("Verification error pre-check", e);
   }
 
-  // 2. Determine Customer ID
+  // 2. Determine Customer ID and Child Profile ID
   let customerId = userId;
+  let childProfileId = undefined;
   
   // If not passed, check metadata
-  if (!customerId && verificationData?.metadata?.userId) {
-      customerId = verificationData.metadata.userId;
+  if (verificationData?.metadata) {
+    if (!customerId && verificationData.metadata.userId) {
+        customerId = verificationData.metadata.userId;
+    }
+    if (verificationData.metadata.childProfileId) {
+        childProfileId = verificationData.metadata.childProfileId;
+    }
   }
 
   // If still not found, check session
@@ -91,6 +98,9 @@ export async function processSubscriptionPayment(reference: string, planId: stri
            return { error: verification.error || "Payment verification failed" };
         }
         verificationData = verification.data;
+        if (verificationData.metadata?.childProfileId && !childProfileId) {
+            childProfileId = verificationData.metadata.childProfileId;
+        }
     }
 
     const plan = await prisma.subscriptionPlan.findUnique({
@@ -110,10 +120,11 @@ export async function processSubscriptionPayment(reference: string, planId: stri
     const endDate = new Date(startDate.getTime());
     endDate.setDate(endDate.getDate() + plan.durationDays);
 
-    // Cancel any existing active subscriptions
+    // Cancel any existing active subscriptions for this specific child (or the parent if no child specified, for backwards compatibility)
     await prisma.subscription.updateMany({
       where: {
         customerId: customerId,
+        childProfileId: childProfileId || null,
         status: "ACTIVE",
       },
       data: { status: "CANCELLED" },
@@ -123,6 +134,7 @@ export async function processSubscriptionPayment(reference: string, planId: stri
     const subscription = await prisma.subscription.create({
       data: {
         customerId: customerId,
+        childProfileId: childProfileId,
         planId,
         status: "ACTIVE",
         paymentStatus: "COMPLETED", // Payment verified via Paystack
@@ -189,8 +201,12 @@ export async function processSubscriptionPayment(reference: string, planId: stri
       }).catch(console.error);
     }
 
-    // Note: revalidatePath is handled by the calling page, not here
-    // to avoid errors when called during render
+    // Invalidate caches
+    revalidatePath("/parent");
+    revalidatePath("/parent/plans");
+    revalidatePath("/parent/children");
+    revalidatePath("/customer/plans");
+    revalidatePath("/");
 
     return { success: true, subscription };
   } catch (error) {
@@ -328,8 +344,9 @@ export async function processProductPayment(
       }).catch(console.error);
     }
 
-    // Note: revalidatePath is handled by the calling page, not here
-    // to avoid errors when called during render
+    // Invalidate caches
+    revalidatePath("/parent/orders");
+    revalidatePath("/customer/orders");
 
     return { success: true, order };
   } catch (error) {
@@ -350,6 +367,7 @@ export async function initializePayment(data: {
   customerUploadUrl?: string;
   callbackUrl: string;
   userId?: string; // Optional userId for direct initialization (e.g. from registration)
+  childProfileId?: string; // Optional childProfileId for child subscriptions
 }) {
   let userId = data.userId;
   
@@ -372,6 +390,7 @@ export async function initializePayment(data: {
         type: data.type,
         userId: userId,
         itemId: data.itemId,
+        childProfileId: data.childProfileId,
         quantity: data.quantity || 1,
         customizationData: data.customizationData,
         customerUploadUrl: data.customerUploadUrl,

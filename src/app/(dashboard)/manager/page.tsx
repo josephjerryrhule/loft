@@ -16,7 +16,7 @@ export default async function ManagerDashboardPage() {
   const session = await auth();
   // @ts-ignore - role exists in our custom session type
   if (!session?.user || session.user.role !== "MANAGER") {
-    redirect("/customer");
+    redirect("/parent");
   }
 
   const stats = await getManagerStats();

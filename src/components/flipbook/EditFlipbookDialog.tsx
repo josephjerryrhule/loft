@@ -22,6 +22,7 @@ const editFlipbookSchema = z.object({
   title: z.string().min(3),
   description: z.string().optional(),
   category: z.string().optional(),
+  ageGroup: z.string().optional(),
   heyzineUrl: z.string().url("Must be a valid URL").optional(),
   isFree: z.boolean().optional(),
 });
@@ -39,6 +40,7 @@ export function EditFlipbookDialog({ flipbook, open, onOpenChange }: EditFlipboo
       title: flipbook.title,
       description: flipbook.description || "",
       category: flipbook.category || "",
+      ageGroup: flipbook.ageGroup || "",
       heyzineUrl: flipbook.heyzineUrl || "",
       isFree: flipbook.isFree || false,
     },
@@ -78,6 +80,24 @@ export function EditFlipbookDialog({ flipbook, open, onOpenChange }: EditFlipboo
                   <FormItem>
                     <FormLabel>Category</FormLabel>
                     <FormControl><Input placeholder="e.g. Fiction, Annual Report" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="ageGroup" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Age Group</FormLabel>
+                    <FormControl>
+                       <select 
+                           {...field}
+                           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                       >
+                           <option value="">All Ages (Default)</option>
+                           <option value="LITTLE_LOFTERS">Little Lofters (0-5)</option>
+                           <option value="LOFT_365">Loft 365 readers (6-12)</option>
+                           <option value="BIG_READERS">Big readers (13+)</option>
+                       </select>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />

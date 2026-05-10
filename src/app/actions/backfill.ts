@@ -17,7 +17,7 @@ export async function backfillSignupCommissions() {
     // Find all customers who have a referrer
     const customersWithReferrers = await prisma.user.findMany({
         where: {
-            role: Role.CUSTOMER,
+            role: Role.PARENT,
             referredById: { not: null }
         },
         select: {

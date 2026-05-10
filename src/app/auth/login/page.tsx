@@ -133,8 +133,8 @@ function LoginForm() {
             case Role.AFFILIATE:
               router.push("/affiliate");
               break;
-            case Role.CUSTOMER:
-              router.push("/customer");
+            case Role.PARENT:
+              router.push("/parent");
               break;
             default:
               router.push("/");

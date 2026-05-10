@@ -13,12 +13,12 @@ export function PaymentSuccessActions({ reference }: { reference: string }) {
         try {
             await signIn("credentials", { 
                 paymentReference: reference, 
-                callbackUrl: "/customer",
+                callbackUrl: "/parent",
                 redirect: true
             });
         } catch (error) {
             console.error("Auto-login failed:", error);
-            window.location.href = "/customer";
+            window.location.href = "/parent";
         }
     };
 

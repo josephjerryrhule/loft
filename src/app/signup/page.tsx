@@ -48,7 +48,7 @@ function SignupForm() {
         email: "",
         password: "",
         phone: "",
-        role: Role.CUSTOMER,
+        role: Role.PARENT,
         managerCode: "",
         referralCode: referralCode,
         address: "",
@@ -202,7 +202,7 @@ function SignupForm() {
                         )} />
                     </div>
 
-                    <input type="hidden" {...form.register("role")} value={Role.CUSTOMER} />
+                    <input type="hidden" {...form.register("role")} value={Role.PARENT} />
                     {referralCode && <input type="hidden" {...form.register("referralCode")} value={referralCode} />}
 
                     <div className="flex gap-2">

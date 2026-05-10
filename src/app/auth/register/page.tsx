@@ -24,7 +24,7 @@ function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const ref = searchParams.get("ref") || "";
-  const roleFromQuery = searchParams.get("role") as Role || Role.CUSTOMER;
+  const roleFromQuery = searchParams.get("role") as Role || Role.PARENT;
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof registrationSchema>>({
@@ -37,7 +37,7 @@ function RegisterForm() {
       phone: "",
       role: roleFromQuery,
       managerCode: roleFromQuery === Role.AFFILIATE ? ref : "",
-      referralCode: (roleFromQuery === Role.CUSTOMER || !roleFromQuery) ? ref : "",
+      referralCode: (roleFromQuery === Role.PARENT || !roleFromQuery) ? ref : "",
       address: "",
       city: "",
       state: "",
@@ -127,12 +127,12 @@ function RegisterForm() {
               {/* Address fields - show for all roles but mark as optional for non-customers */}
               <div className="space-y-4 border-t pt-4 mt-4">
                 <h3 className="text-sm font-medium">
-                  {selectedRole === Role.CUSTOMER ? "Address" : "Address (Optional)"}
+                  {selectedRole === Role.PARENT ? "Address" : "Address (Optional)"}
                 </h3>
                 
                 <FormField control={form.control} name="address" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Street Address {selectedRole === Role.CUSTOMER && "*"}</FormLabel>
+                    <FormLabel>Street Address {selectedRole === Role.PARENT && "*"}</FormLabel>
                     <FormControl><Input placeholder="123 Main St" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
@@ -141,7 +141,7 @@ function RegisterForm() {
                 <div className="grid grid-cols-2 gap-4">
                   <FormField control={form.control} name="city" render={({ field }) => (
                     <FormItem>
-                      <FormLabel>City {selectedRole === Role.CUSTOMER && "*"}</FormLabel>
+                      <FormLabel>City {selectedRole === Role.PARENT && "*"}</FormLabel>
                       <FormControl><Input placeholder="Accra" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
@@ -149,7 +149,7 @@ function RegisterForm() {
                   
                   <FormField control={form.control} name="state" render={({ field }) => (
                     <FormItem>
-                      <FormLabel>State/Region {selectedRole === Role.CUSTOMER && "*"}</FormLabel>
+                      <FormLabel>State/Region {selectedRole === Role.PARENT && "*"}</FormLabel>
                       <FormControl><Input placeholder="Greater Accra" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
@@ -176,12 +176,12 @@ function RegisterForm() {
               </div>
 
               {/* Only show role selector if coming from affiliate or manager link */}
-              {ref && roleFromQuery !== Role.CUSTOMER && (
+              {ref && roleFromQuery !== Role.PARENT && (
                 <input type="hidden" {...form.register("role")} value={roleFromQuery} />
               )}
 
               {!ref && (
-                <input type="hidden" {...form.register("role")} value={Role.CUSTOMER} />
+                <input type="hidden" {...form.register("role")} value={Role.PARENT} />
               )}
 
               {selectedRole === Role.AFFILIATE && (
@@ -200,7 +200,7 @@ function RegisterForm() {
                 )} />
               )}
 
-              {selectedRole === Role.CUSTOMER && (
+              {selectedRole === Role.PARENT && (
                 <FormField control={form.control} name="referralCode" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Referral Code {ref ? "" : "(Optional)"}</FormLabel>
@@ -208,7 +208,7 @@ function RegisterForm() {
                       <Input 
                         placeholder="Enter code" 
                         {...field} 
-                        disabled={!!ref && roleFromQuery === Role.CUSTOMER}
+                        disabled={!!ref && roleFromQuery === Role.PARENT}
                       />
                     </FormControl>
                     <FormMessage />

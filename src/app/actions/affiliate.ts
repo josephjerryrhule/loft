@@ -97,7 +97,7 @@ export async function getRecentAffiliateActivities() {
 
     // Get customers referred by this affiliate
     const referredCustomers = await prisma.user.findMany({
-        where: { referredById: userId, role: "CUSTOMER" },
+        where: { referredById: userId, role: "PARENT" },
         select: { id: true, firstName: true, lastName: true, createdAt: true },
         orderBy: { createdAt: "desc" },
         take: 25
@@ -128,7 +128,7 @@ export async function getRecentAffiliateActivities() {
     subscriptions.forEach((sub: any) => {
         activities.push({
             id: `sub-${sub.id}`,
-            action: "Customer Subscription",
+            action: "Parent Subscription",
             description: `${sub.customer.firstName || ""} ${sub.customer.lastName || ""} subscribed to ${sub.plan.name} (GHS ${Number(sub.plan.price).toFixed(2)})`,
             timestamp: sub.createdAt,
             status: sub.status
@@ -149,7 +149,7 @@ export async function getRecentAffiliateActivities() {
     orders.forEach((order: any) => {
         activities.push({
             id: `order-${order.id}`,
-            action: "Customer Purchase",
+            action: "Parent Purchase",
             description: `${order.customer.firstName || ""} ${order.customer.lastName || ""} purchased ${order.product.title} (GHS ${Number(order.totalAmount).toFixed(2)})`,
             timestamp: order.createdAt,
             status: order.status
@@ -247,7 +247,7 @@ export async function getAffiliateLinks() {
 
     return {
         referralCode: user.inviteCode,
-        customerLink: `${baseUrl}/join/customer/${user.inviteCode}`,
+        customerLink: `${baseUrl}/join/parent/${user.inviteCode}`,
         affiliateLink: `${baseUrl}/join/affiliate/${user.inviteCode}`
     };
 }

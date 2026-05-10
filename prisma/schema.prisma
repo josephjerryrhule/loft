@@ -17,7 +17,7 @@ model User {
   id              String     @id @default(uuid())
   email           String     @unique
   passwordHash    String     @map("password_hash")
-  role            String     // Enum: ADMIN, MANAGER, AFFILIATE, CUSTOMER
+  role            String     // Enum: ADMIN, MANAGER, AFFILIATE, PARENT
   firstName       String?    @map("first_name")
   lastName        String?    @map("last_name")
   phoneNumber     String?    @map("phone_number")
@@ -56,9 +56,9 @@ model User {
   createdAt       DateTime   @default(now()) @map("created_at")
   updatedAt       DateTime   @updatedAt @map("updated_at")
 
-  // Relations
   invitationsSent Invitation[] @relation("Inviter")
   subscriptions   Subscription[]
+  childProfiles   ChildProfile[]
   createdFlipbooks Flipbook[]
   flipbookProgress FlipbookProgress[]
   orders          Order[] @relation("CustomerOrders")
@@ -84,7 +84,7 @@ model Invitation {
   inviterId    String     @map("inviter_id")
   inviter      User       @relation("Inviter", fields: [inviterId], references: [id])
   inviteeEmail String     @map("invitee_email")
-  inviteType   String     @map("invite_type") // Enum: AFFILIATE, CUSTOMER
+  inviteType   String     @map("invite_type") // Enum: AFFILIATE, PARENT
   token        String     @unique
   expiresAt    DateTime   @map("expires_at")
   usedAt       DateTime?  @map("used_at")
@@ -95,12 +95,14 @@ model Invitation {
 
 model Subscription {
   id          String             @id @default(uuid())
-  customerId  String             @map("customer_id")
-  customer    User               @relation(fields: [customerId], references: [id])
-  planId      String             @map("plan_id")
-  plan        SubscriptionPlan   @relation(fields: [planId], references: [id])
-  status      String             // Enum: ACTIVE, EXPIRED, CANCELLED
-  paymentStatus String           @default("PENDING") @map("payment_status") // Enum: PENDING, PROCESSING, COMPLETED, CANCELLED
+  customerId     String             @map("customer_id")
+  customer       User               @relation(fields: [customerId], references: [id])
+  childProfileId String?            @map("child_profile_id")
+  childProfile   ChildProfile?      @relation(fields: [childProfileId], references: [id])
+  planId         String             @map("plan_id")
+  plan           SubscriptionPlan   @relation(fields: [planId], references: [id])
+  status         String             // Enum: ACTIVE, EXPIRED, CANCELLED
+  paymentStatus  String           @default("PENDING") @map("payment_status") // Enum: PENDING, PROCESSING, COMPLETED, CANCELLED
   paymentReference String?        @map("payment_reference")
   startDate   DateTime           @map("start_date")
   endDate     DateTime           @map("end_date")
@@ -109,6 +111,7 @@ model Subscription {
   updatedAt   DateTime   @updatedAt @map("updated_at")
 
   @@index([customerId])
+  @@index([childProfileId])
   @@index([planId])
   @@index([status])
   @@index([paymentStatus])
@@ -145,6 +148,7 @@ model Flipbook {
   iframeContent String?  @map("iframe_content") // Stores the oEmbed HTML
   totalPages    Int?     @map("total_pages")
   category      String?    
+  ageGroup      String?  @map("age_group")
   isPublished   Boolean  @default(false) @map("is_published")
   isFree        Boolean  @default(false) @map("is_free")
   publishedAt   DateTime? @map("published_at")
@@ -168,6 +172,8 @@ model FlipbookProgress {
   id             String   @id @default(uuid())
   customerId     String   @map("customer_id")
   customer       User     @relation(fields: [customerId], references: [id])
+  childProfileId String?  @map("child_profile_id")
+  childProfile   ChildProfile? @relation(fields: [childProfileId], references: [id])
   flipbookId     String   @map("flipbook_id")
   flipbook       Flipbook @relation(fields: [flipbookId], references: [id])
   lastPageRead   Int      @map("last_page_read")
@@ -176,6 +182,7 @@ model FlipbookProgress {
   createdAt      DateTime @default(now()) @map("created_at")
 
   @@unique([customerId, flipbookId], name: "customerId_flipbookId")
+  @@unique([childProfileId, flipbookId], name: "childProfileId_flipbookId")
   @@map("flipbook_progress")
 }
 
@@ -318,4 +325,23 @@ model EmailVerificationToken {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("email_verification_tokens")
+}
+
+model ChildProfile {
+  id           String   @id @default(uuid())
+  parentId     String   @map("parent_id")
+  parent       User     @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  name         String
+  dateOfBirth  DateTime? @map("date_of_birth")
+  ageGroup     String   @map("age_group") // Enum: TODDLER, EARLY_READER, INTERMEDIATE, ADVANCED
+  avatarColor  String   @default("#6366f1") @map("avatar_color")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  subscriptions    Subscription[]
+  flipbookProgress FlipbookProgress[]
+
+  @@index([parentId])
+  @@index([ageGroup])
+  @@map("child_profiles")
 }

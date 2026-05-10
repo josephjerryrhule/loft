@@ -165,7 +165,7 @@ export async function processSignupCommission(newUserId: string, referrerCode: s
     
     // We only pay if it's a Customer signup
     const newUser = await prisma.user.findUnique({ where: { id: newUserId }});
-    if (newUser?.role !== Role.CUSTOMER) return;
+    if (newUser?.role !== Role.PARENT) return;
 
     const signupBonus = await getSignupCommission();
 

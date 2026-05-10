@@ -23,8 +23,8 @@ export default async function Home() {
       redirect("/manager");
     case Role.AFFILIATE:
       redirect("/affiliate");
-    case Role.CUSTOMER:
-      redirect("/customer");
+    case Role.PARENT:
+      redirect("/parent");
     default:
       redirect("/auth/login"); // Fallback
   }
