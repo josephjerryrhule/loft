@@ -17,7 +17,7 @@ export const revalidate = 0;
 async function getStats() {
     // Check cache first (5 minute TTL)
     const cacheKey = 'admin:stats';
-    const cached = cache.get<{ totalUsers: number; totalOrders: number; totalFlipbooks: number; totalRevenue: number; totalSubscriptions: number; pendingPayout: number }>(cacheKey);
+    const cached = cache.get<{ totalUsers: number; totalOrders: number; totalFlipbooks: number; totalRevenue: number; totalSubscriptions: number; paidSubscriptions: number; freeSubscriptions: number; pendingPayout: number }>(cacheKey);
     if (cached) return cached;
 
     // Run all queries in parallel for better performance
@@ -52,7 +52,10 @@ async function getStats() {
     const totalRevenue = (orderRevenue._sum.totalAmount?.toNumber() || 0) + subscriptionRevenue;
     const pendingPayout = pendingCommissions._sum.amount?.toNumber() || 0;
 
-    const stats = { totalUsers, totalOrders, totalFlipbooks, totalRevenue, totalSubscriptions, pendingPayout };
+    const paidSubscriptions = subscriptions.filter((sub: any) => Number(sub.plan.price) > 0).length;
+    const freeSubscriptions = subscriptions.length - paidSubscriptions;
+
+    const stats = { totalUsers, totalOrders, totalFlipbooks, totalRevenue, totalSubscriptions, paidSubscriptions, freeSubscriptions, pendingPayout };
     
     // Cache for 5 minutes
     cache.set(cacheKey, stats, 300000);
@@ -217,7 +220,7 @@ export default async function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalSubscriptions}</div>
-            <p className="text-xs text-muted-foreground">Paying customers</p>
+            <p className="text-xs text-muted-foreground">{stats.paidSubscriptions} Paid | {stats.freeSubscriptions} Free</p>
           </CardContent>
         </Card>
         <Card className="border-l-4 border-l-amber-500">
