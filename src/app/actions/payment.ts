@@ -201,12 +201,10 @@ export async function processSubscriptionPayment(reference: string, planId: stri
       }).catch(console.error);
     }
 
-    // Invalidate caches
-    revalidatePath("/parent");
-    revalidatePath("/parent/plans");
-    revalidatePath("/parent/children");
-    revalidatePath("/customer/plans");
-    revalidatePath("/");
+    // NOTE: revalidatePath is intentionally NOT called here.
+    // This function runs inside the /payment/callback render, and calling
+    // revalidatePath during rendering throws a Next.js error.
+    // The parent dashboard uses noStore() + router.refresh() to get fresh data.
 
     return { success: true, subscription };
   } catch (error) {
