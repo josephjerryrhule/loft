@@ -24,6 +24,27 @@ export default async function ChildFlipbookPage(props: { params: Promise<{ id: s
     notFound();
   }
 
+  // Verify access for premium books
+  if (!flipbook.isFree) {
+    const child = await prisma.childProfile.findUnique({
+      where: { id: session.childId },
+      include: {
+        subscriptions: {
+          where: {
+            endDate: { gte: new Date() },
+            status: "ACTIVE",
+          },
+        },
+      },
+    });
+
+    const hasActiveSubscription = child && child.subscriptions.length > 0;
+    
+    if (!hasActiveSubscription) {
+      redirect("/child");
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#FFFAF5] font-quicksand flex flex-col selection:bg-[#E87154]/20">
       {/* Header */}

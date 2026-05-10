@@ -46,6 +46,7 @@ export async function getChildFlipbooks() {
     const flipbooks = await prisma.flipbook.findMany({
       where: {
         isPublished: true,
+        ...(hasActiveSubscription ? {} : { isFree: true }),
         OR: [
           { ageGroup: child.ageGroup },
           { ageGroup: { equals: "all", mode: "insensitive" } },
@@ -113,21 +114,26 @@ export async function getChildLibraryFlipbooks(search?: string, category?: strin
     const flipbooks = await prisma.flipbook.findMany({
       where: {
         isPublished: true,
-        OR: [
-          { ageGroup: child.ageGroup },
-          { ageGroup: { equals: "all", mode: "insensitive" } },
-          { ageGroup: { equals: "ALL", mode: "insensitive" } },
-          { ageGroup: "" },
-          { ageGroup: null },
-          { ageGroup: { equals: "all age groups", mode: "insensitive" } }
-        ],
-        ...(search ? {
-          OR: [
-            { title: { contains: search, mode: "insensitive" } },
-            { description: { contains: search, mode: "insensitive" } },
-          ]
-        } : {}),
+        ...(hasActiveSubscription ? {} : { isFree: true }),
         ...(category && category !== "all" ? { category } : {}),
+        AND: [
+          {
+            OR: [
+              { ageGroup: child.ageGroup },
+              { ageGroup: { equals: "all", mode: "insensitive" } },
+              { ageGroup: { equals: "ALL", mode: "insensitive" } },
+              { ageGroup: "" },
+              { ageGroup: null },
+              { ageGroup: { equals: "all age groups", mode: "insensitive" } }
+            ]
+          },
+          ...(search ? [{
+            OR: [
+              { title: { contains: search, mode: "insensitive" as const } },
+              { description: { contains: search, mode: "insensitive" as const } },
+            ]
+          }] : [])
+        ]
       },
       orderBy: { createdAt: "desc" },
     });
@@ -136,6 +142,7 @@ export async function getChildLibraryFlipbooks(search?: string, category?: strin
     const allFlipbooks = await prisma.flipbook.findMany({
       where: {
         isPublished: true,
+        ...(hasActiveSubscription ? {} : { isFree: true }),
         OR: [
           { ageGroup: child.ageGroup },
           { ageGroup: { equals: "all", mode: "insensitive" } },
