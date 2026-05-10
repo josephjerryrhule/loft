@@ -268,12 +268,24 @@ export async function getCustomerFlipbooks(childProfileId?: string) {
         const flipbooks = await prisma.flipbook.findMany({
             where: { 
                 isPublished: true,
-                OR: [
-                    { publishedAt: null },
-                    { publishedAt: { lte: now } }
-                ],
-                ...(hasPaidSubscription ? {} : { isFree: true }),
-                ...(childAgeGroup ? { ageGroup: childAgeGroup } : {})
+                AND: [
+                    {
+                        OR: [
+                            { publishedAt: null },
+                            { publishedAt: { lte: now } }
+                        ]
+                    },
+                    ...(childAgeGroup ? [{
+                        OR: [
+                            { ageGroup: childAgeGroup },
+                            { ageGroup: "all" },
+                            { ageGroup: "ALL" },
+                            { ageGroup: "" },
+                            { ageGroup: null }
+                        ]
+                    }] : []),
+                    ...(hasPaidSubscription ? [] : [{ isFree: true }])
+                ]
             },
             include: {
                 progress: {

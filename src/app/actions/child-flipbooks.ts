@@ -25,12 +25,14 @@ export async function getChildFlipbooks() {
 
     const hasActiveSubscription = child.subscriptions.length > 0;
 
+    // Stats: Count unique books started
     const totalBooksRead = await prisma.flipbookProgress.count({
       where: {
         childProfileId: child.id,
       },
     });
 
+    // Last read progress for "Continue Reading" card
     const lastProgress = await prisma.flipbookProgress.findFirst({
       where: {
         childProfileId: child.id,
@@ -39,22 +41,28 @@ export async function getChildFlipbooks() {
       include: { flipbook: true },
     });
 
-    // Fetch flipbooks matching the child's age group
+    // Fetch flipbooks matching the child's age group or 'all' variants
     const flipbooks = await prisma.flipbook.findMany({
       where: {
-        ageGroup: child.ageGroup,
         isPublished: true,
+        OR: [
+          { ageGroup: child.ageGroup },
+          { ageGroup: { equals: "all", mode: "insensitive" } },
+          { ageGroup: { equals: "ALL", mode: "insensitive" } },
+          { ageGroup: "" },
+          { ageGroup: null },
+          { ageGroup: { equals: "all age groups", mode: "insensitive" } }
+        ],
       },
       orderBy: { createdAt: "desc" },
     });
 
-    // Generate virtual badges based on stats if none exist
+    // Generate virtual badges based on stats
     let currentBadges = Array.isArray(child.badges) ? (child.badges as any[]) : [];
     if (currentBadges.length === 0) {
       if (totalBooksRead >= 1) currentBadges.push({ id: "first-book", title: "First Step", icon: "🌱", description: "Read your first book!" });
       if (totalBooksRead >= 5) currentBadges.push({ id: "bookworm", title: "Bookworm", icon: "🐛", description: "Read 5 books!" });
       if (child.readingStreak >= 3) currentBadges.push({ id: "streak-3", title: "Early Bird", icon: "🌅", description: "3 day streak!" });
-      if (child.readingStreak >= 7) currentBadges.push({ id: "streak-7", title: "Reliable Reader", icon: "📅", description: "7 day streak!" });
     }
 
     return { 
@@ -70,11 +78,83 @@ export async function getChildFlipbooks() {
         id: lastProgress.flipbook.id,
         title: lastProgress.flipbook.title,
         coverImageUrl: lastProgress.flipbook.coverImageUrl,
-        progress: Math.round((lastProgress.lastPageRead / (lastProgress.flipbook.totalPages || 1)) * 100),
+        progress: lastProgress.flipbook.totalPages ? Math.round((lastProgress.lastPageRead / lastProgress.flipbook.totalPages) * 100) : 0,
+        isHeyzine: !!lastProgress.flipbook.heyzineUrl
       } : null
     };
   } catch (error) {
     console.error("Failed to fetch child flipbooks:", error);
+    return { error: "Failed to fetch flipbooks" };
+  }
+}
+
+export async function getChildLibraryFlipbooks(search?: string, category?: string) {
+  const session = await getChildSession();
+  if (!session) return { error: "Unauthorized" };
+
+  try {
+    const child = await prisma.childProfile.findUnique({
+      where: { id: session.childId },
+      include: {
+        subscriptions: {
+          where: {
+            endDate: { gte: new Date() },
+            status: "ACTIVE",
+          },
+        },
+      },
+    });
+
+    if (!child) return { error: "Child not found" };
+
+    const hasActiveSubscription = child.subscriptions.length > 0;
+
+    const flipbooks = await prisma.flipbook.findMany({
+      where: {
+        isPublished: true,
+        OR: [
+          { ageGroup: child.ageGroup },
+          { ageGroup: { equals: "all", mode: "insensitive" } },
+          { ageGroup: { equals: "ALL", mode: "insensitive" } },
+          { ageGroup: "" },
+          { ageGroup: null },
+          { ageGroup: { equals: "all age groups", mode: "insensitive" } }
+        ],
+        ...(search ? {
+          OR: [
+            { title: { contains: search, mode: "insensitive" } },
+            { description: { contains: search, mode: "insensitive" } },
+          ]
+        } : {}),
+        ...(category && category !== "all" ? { category } : {}),
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Get unique categories for filters
+    const allFlipbooks = await prisma.flipbook.findMany({
+      where: {
+        isPublished: true,
+        OR: [
+          { ageGroup: child.ageGroup },
+          { ageGroup: { equals: "all", mode: "insensitive" } },
+          { ageGroup: { equals: "ALL", mode: "insensitive" } },
+          { ageGroup: "" },
+          { ageGroup: null },
+          { ageGroup: { equals: "all age groups", mode: "insensitive" } }
+        ],
+      },
+      select: { category: true },
+    });
+    const categories = Array.from(new Set(allFlipbooks.map(f => f.category).filter(Boolean))) as string[];
+
+    return { 
+      flipbooks, 
+      categories,
+      hasAccess: hasActiveSubscription 
+    };
+  } catch (error) {
+    console.error("Failed to fetch child library flipbooks:", error);
     return { error: "Failed to fetch flipbooks" };
   }
 }
@@ -108,39 +188,42 @@ export async function trackReadingProgress(flipbookId: string) {
       } else if (diffDays > 1) {
         newStreak = 1;
       }
-      // If diffDays === 0, streak stays the same
     }
 
-    // Update child stats
-    await prisma.childProfile.update({
-      where: { id: child.id },
-      data: {
-        readingStreak: newStreak,
-        lastReadingDate: now,
-      },
-    });
-
-    // Update or create flipbook progress
-    await prisma.flipbookProgress.upsert({
-      where: {
-        childProfileId_flipbookId: {
+    // Update child stats and reading history
+    await prisma.$transaction([
+      prisma.childProfile.update({
+        where: { id: child.id },
+        data: {
+          readingStreak: newStreak,
+          lastReadingDate: now,
+        },
+      }),
+      prisma.flipbookProgress.upsert({
+        where: {
+          childProfileId_flipbookId: {
+            childProfileId: child.id,
+            flipbookId: flipbookId,
+          },
+        },
+        update: {
+          lastAccessedAt: now,
+        },
+        create: {
           childProfileId: child.id,
           flipbookId: flipbookId,
+          customerId: child.parentId,
+          lastPageRead: 1,
+          completed: false,
         },
-      },
-      update: {
-        lastAccessedAt: now,
-      },
-      create: {
-        childProfileId: child.id,
-        flipbookId: flipbookId,
-        customerId: child.parentId, // Use parent's ID as customerId
-        lastPageRead: 1,
-        completed: false,
-      },
-    });
+      })
+    ]);
 
-    revalidatePath("/child");
+    // Thorough revalidation
+    revalidatePath("/child", "layout");
+    revalidatePath("/child", "page");
+    revalidatePath("/child/library", "page");
+    
     return { success: true };
   } catch (error) {
     console.error("Failed to track progress:", error);

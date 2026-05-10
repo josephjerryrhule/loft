@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Loader2, Sparkles, BookOpen, Rocket, ArrowLeft } from "lucide-react";
 import Image from "next/image";
+import { DashboardAnimations } from "@/components/child/DashboardAnimations";
 
 const usernameSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters").regex(/^[a-zA-Z0-9_]+$/, "Only letters, numbers, and underscores allowed"),
@@ -97,9 +98,8 @@ export default function LoginForm({ logoUrl, platformName }: LoginFormProps) {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#FFFAF5] p-4 font-quicksand relative overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#E87154]/5 rounded-full blur-[120px] animate-pulse"></div>
-      <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#E87154]/5 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
+      {/* Background Animations */}
+      <DashboardAnimations />
 
       <div className="w-full max-w-md relative z-10">
         {/* Logo and Greeting */}
