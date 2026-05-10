@@ -42,14 +42,14 @@ async function verifyAndProcessPayment(reference: string): Promise<PaymentVerifi
 
     const metadata = result.data.metadata || {};
     const type = metadata.type as "subscription" | "product";
-    const itemId = metadata.itemId;
+    const itemId = metadata.itemId || metadata.planId || metadata.productId;
     const quantity = metadata.quantity || 1;
     const customizationData = metadata.customizationData;
     const customerUploadUrl = metadata.customerUploadUrl;
 
     if (type === "subscription") {
       try {
-        const subscriptionResult = await processSubscriptionPayment(reference, itemId);
+        const subscriptionResult = await processSubscriptionPayment(reference, itemId, metadata.userId);
         if (subscriptionResult.error) {
           return { success: false, type, message: subscriptionResult.error };
         }

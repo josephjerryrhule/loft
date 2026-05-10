@@ -415,6 +415,112 @@ export async function getFinanceData() {
     }
 }
 
+export async function adminAssignPlan(data: {
+    userId: string;
+    planId: string;
+    childProfileId?: string | null;
+    durationDays?: number;
+    reason?: string;
+}) {
+    const session = await auth();
+    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+        return { error: "Unauthorized" };
+    }
+
+    try {
+        const [user, plan] = await Promise.all([
+            prisma.user.findUnique({ where: { id: data.userId }, select: { id: true, email: true, firstName: true, lastName: true } }),
+            prisma.subscriptionPlan.findUnique({ where: { id: data.planId } }),
+        ]);
+
+        if (!user) return { error: "User not found" };
+        if (!plan) return { error: "Plan not found" };
+
+        // If a childProfileId is provided, verify it belongs to the user
+        if (data.childProfileId) {
+            const child = await prisma.childProfile.findFirst({
+                where: { id: data.childProfileId, parentId: data.userId },
+            });
+            if (!child) return { error: "Child profile not found or does not belong to this user" };
+        }
+
+        const duration = data.durationDays || plan.durationDays;
+        const startDate = new Date();
+        const endDate = new Date(startDate.getTime());
+        endDate.setDate(endDate.getDate() + duration);
+
+        await prisma.$transaction(async (tx) => {
+            // Cancel any existing active subscription for the same profile
+            await tx.subscription.updateMany({
+                where: {
+                    customerId: data.userId,
+                    childProfileId: data.childProfileId || null,
+                    status: "ACTIVE",
+                },
+                data: { status: "CANCELLED" },
+            });
+
+            // Create new subscription
+            await tx.subscription.create({
+                data: {
+                    customerId: data.userId,
+                    planId: data.planId,
+                    childProfileId: data.childProfileId || null,
+                    status: "ACTIVE",
+                    startDate,
+                    endDate,
+                    autoRenew: false,
+                    paymentReference: `ADMIN-ASSIGN-${session.user!.id}-${Date.now()}`,
+                },
+            });
+
+            // Log admin activity
+            await tx.activityLog.create({
+                data: {
+                    userId: session.user!.id,
+                    actionType: "ADMIN_ASSIGN_PLAN",
+                    actionDetails: JSON.stringify({
+                        targetUserId: data.userId,
+                        targetUserEmail: user.email,
+                        planId: data.planId,
+                        planName: plan.name,
+                        childProfileId: data.childProfileId || null,
+                        durationDays: duration,
+                        reason: data.reason || "Manual admin assignment",
+                    }),
+                },
+            });
+        });
+
+        revalidatePath("/admin/users");
+        revalidatePath("/admin");
+        revalidatePath("/parent/plans");
+        return { success: true };
+    } catch (e) {
+        console.error("Failed to assign plan:", e);
+        return { error: "Failed to assign plan" };
+    }
+}
+
+export async function getAdminUserSubscriptions(userId: string) {
+    const session = await auth();
+    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+        throw new Error("Unauthorized");
+    }
+
+    return prisma.subscription.findMany({
+        where: {
+            customerId: userId,
+            status: "ACTIVE",
+            endDate: { gte: new Date() },
+        },
+        include: {
+            plan: true,
+            childProfile: true,
+        },
+    });
+}
+
 export async function updateOrderStatus(orderId: string, status: string, completedFileUrl?: string) {
     const session = await auth();
     if (!session?.user?.id || (session.user as any).role !== "ADMIN") {

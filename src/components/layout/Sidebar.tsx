@@ -29,10 +29,11 @@ interface SidebarProps {
   userRole?: string;
   logoUrl?: string;
   platformName?: string;
+  hasChildren?: boolean;
 }
 
 // Shared Navigation Logic
-function getLinks(userRole?: string) {
+function getLinks(userRole?: string, hasChildren?: boolean) {
   const commonLinks = [
     { href: "/settings", label: "Settings", icon: Settings },
   ];
@@ -62,11 +63,17 @@ function getLinks(userRole?: string) {
   const parentLinks = [
     { href: "/parent", label: "Dashboard", icon: LayoutDashboard },
     { href: "/parent/children", label: "My Children", icon: Users },
-    { href: "/parent/flipbooks", label: "Flipbooks", icon: BookOpen },
+  ];
+
+  if (!hasChildren) {
+    parentLinks.push({ href: "/parent/flipbooks", label: "Flipbooks", icon: BookOpen });
+  }
+
+  parentLinks.push(
     { href: "/parent/plans", label: "Plans", icon: CreditCard },
     { href: "/parent/orders", label: "My Orders", icon: ShoppingBag },
-    { href: "/products", label: "Shop Products", icon: ShoppingBag },
-  ];
+    { href: "/products", label: "Shop Products", icon: ShoppingBag }
+  );
 
   const financeLinks = [
     { href: "/finance", label: "Ambassador Tracking", icon: Users },
@@ -84,9 +91,9 @@ function getLinks(userRole?: string) {
   return commonLinks;
 }
 
-function NavContent({ userRole, setOpen, logoUrl, platformName }: { userRole?: string, setOpen?: (open: boolean) => void, logoUrl?: string, platformName?: string }) {
+function NavContent({ userRole, setOpen, logoUrl, platformName, hasChildren }: { userRole?: string, setOpen?: (open: boolean) => void, logoUrl?: string, platformName?: string, hasChildren?: boolean }) {
     const pathname = usePathname();
-    const links = getLinks(userRole);
+    const links = getLinks(userRole, hasChildren);
 
     return (
         <div className="flex flex-col h-full bg-slate-900 text-white w-full p-4">
@@ -154,15 +161,15 @@ function NavContent({ userRole, setOpen, logoUrl, platformName }: { userRole?: s
     );
 }
 
-export function Sidebar({ userRole, logoUrl, platformName }: SidebarProps) {
+export function Sidebar({ userRole, logoUrl, platformName, hasChildren }: SidebarProps) {
   return (
     <div className="hidden md:flex flex-col h-full bg-slate-900 text-white w-64 border-r border-slate-800">
-         <NavContent userRole={userRole} logoUrl={logoUrl} platformName={platformName} />
+         <NavContent userRole={userRole} logoUrl={logoUrl} platformName={platformName} hasChildren={hasChildren} />
     </div>
   );
 }
 
-export function MobileNav({ userRole, logoUrl, platformName }: SidebarProps) {
+export function MobileNav({ userRole, logoUrl, platformName, hasChildren }: SidebarProps) {
     const [open, setOpen] = useState(false);
     
     return (
@@ -174,7 +181,7 @@ export function MobileNav({ userRole, logoUrl, platformName }: SidebarProps) {
             </SheetTrigger>
             <SheetContent side="left" className="p-0 border-r-0 bg-slate-900 w-72 text-white">
                  <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-                 <NavContent userRole={userRole} setOpen={setOpen} logoUrl={logoUrl} platformName={platformName} />
+                 <NavContent userRole={userRole} setOpen={setOpen} logoUrl={logoUrl} platformName={platformName} hasChildren={hasChildren} />
             </SheetContent>
         </Sheet>
     )

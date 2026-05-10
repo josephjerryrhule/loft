@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
             reference,
             amount: amount / 100, // Convert from pesewas
             type: metadata?.type,
-            itemId: metadata?.itemId,
+            itemId: metadata?.itemId || metadata?.planId || metadata?.productId,
           }),
         },
       });
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       // Process fulfillment based on type
       if (metadata?.type === "subscription") {
           const { processSubscriptionPayment } = await import("@/app/actions/payment");
-          await processSubscriptionPayment(reference, metadata.itemId, metadata.userId);
+          await processSubscriptionPayment(reference, metadata?.itemId || metadata?.planId, metadata?.userId);
       } else if (metadata?.type === "product") {
           const { processProductPayment } = await import("@/app/actions/payment");
           // Assuming product payment action is also updated to handle background processing if needed

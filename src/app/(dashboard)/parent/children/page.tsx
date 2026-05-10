@@ -8,7 +8,9 @@ import {
   deleteChildProfile,
   type ChildProfileInput,
 } from "@/app/actions/children";
+import { parentLoginAsChild } from "@/app/actions/child-auth";
 import { getAgeGroupLabel } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -272,6 +274,8 @@ export default function ChildrenPage() {
   const [editChild, setEditChild] = useState<any>(null);
   const [deleteChild, setDeleteChildState] = useState<any>(null);
   const [deleting, setDeleting] = useState(false);
+  const [loggingInAs, setLoggingInAs] = useState<string | null>(null);
+  const router = useRouter();
 
   async function loadChildren() {
     setLoading(true);
@@ -301,6 +305,23 @@ export default function ChildrenPage() {
       }
     } finally {
       setDeleting(false);
+    }
+  }
+
+  async function handleLoginAsChild(childId: string) {
+    setLoggingInAs(childId);
+    try {
+      const result = await parentLoginAsChild(childId);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Logging you in to child's dashboard...");
+        router.push("/child");
+      }
+    } catch (error) {
+      toast.error("Failed to login as child");
+    } finally {
+      setLoggingInAs(null);
     }
   }
 
@@ -400,12 +421,20 @@ export default function ChildrenPage() {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Link href={`/parent/flipbooks?childId=${child.id}`} className="w-full">
-                    <Button variant="outline" className="w-full h-9 text-sm" size="sm">
+                  <Button 
+                    variant="outline" 
+                    className="w-full h-9 text-sm" 
+                    size="sm"
+                    onClick={() => handleLoginAsChild(child.id)}
+                    disabled={loggingInAs === child.id}
+                  >
+                    {loggingInAs === child.id ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
                       <BookOpenCheck className="mr-2 h-4 w-4" />
-                      Start Reading
-                    </Button>
-                  </Link>
+                    )}
+                    Start Reading
+                  </Button>
                   
                   {!child.subscriptions?.length && (
                     <Link href={`/parent/plans?childId=${child.id}`} className="w-full">

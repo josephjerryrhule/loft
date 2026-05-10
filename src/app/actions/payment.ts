@@ -103,8 +103,14 @@ export async function processSubscriptionPayment(reference: string, planId: stri
         }
     }
 
+    // Resolve planId — fall back to metadata if not explicitly provided
+    let resolvedPlanId = planId;
+    if (!resolvedPlanId && verificationData?.metadata) {
+        resolvedPlanId = verificationData.metadata.planId || verificationData.metadata.itemId;
+    }
+
     const plan = await prisma.subscriptionPlan.findUnique({
-      where: { id: planId },
+      where: { id: resolvedPlanId },
     });
 
     if (!plan) return { error: "Plan not found" };

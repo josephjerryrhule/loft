@@ -104,3 +104,33 @@ export async function logoutChild() {
   await clearChildSession();
   return { success: true };
 }
+
+export async function parentLoginAsChild(childId: string) {
+  try {
+    const { auth } = await import("@/auth");
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { error: "Not authenticated" };
+    }
+
+    const child = await prisma.childProfile.findUnique({
+      where: { id: childId },
+    });
+
+    if (!child) {
+      return { error: "Child profile not found." };
+    }
+
+    if (child.parentId !== session.user.id) {
+      return { error: "Unauthorized. You are not the parent of this child." };
+    }
+
+    // Set child session
+    await setChildSession(child.id, child.username!, child.parentId);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to login as child:", error);
+    return { error: "An error occurred while logging in." };
+  }
+}

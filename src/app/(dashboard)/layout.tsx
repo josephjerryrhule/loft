@@ -45,15 +45,23 @@ export default async function DashboardLayout({
   const userRole = session.user.role;
   const branding = await getBrandingSettings();
 
+  let hasChildren = false;
+  if (userRole === "PARENT") {
+    const childCount = await prisma.childProfile.count({
+      where: { parentId: session.user.id }
+    });
+    hasChildren = childCount > 0;
+  }
+
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-black overflow-hidden">
       {/* Desktop Sidebar */}
-      <Sidebar userRole={userRole} logoUrl={branding.logoUrl} platformName={branding.platformName} />
+      <Sidebar userRole={userRole} logoUrl={branding.logoUrl} platformName={branding.platformName} hasChildren={hasChildren} />
 
       <main className="flex-1 flex flex-col h-full w-full overflow-hidden">
          {/* Mobile Header */}
          <div className="md:hidden flex items-center p-4 border-b bg-white dark:bg-slate-900">
-             <MobileNav userRole={userRole} logoUrl={branding.logoUrl} platformName={branding.platformName} />
+             <MobileNav userRole={userRole} logoUrl={branding.logoUrl} platformName={branding.platformName} hasChildren={hasChildren} />
              <div className="flex items-center gap-2 ml-2">
                {branding.logoUrl && (
                  <div className="relative w-6 h-6">

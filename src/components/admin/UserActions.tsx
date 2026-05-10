@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, QrCode, MoreHorizontal, Users } from "lucide-react";
+import { Pencil, Trash2, QrCode, MoreHorizontal, Users, Crown } from "lucide-react";
 import { useState } from "react";
 import { EditUserDialog } from "./EditUserDialog";
 import { deleteUser } from "@/app/actions/user";
@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AdminViewChildrenDialog } from "./AdminViewChildrenDialog";
+import { AssignPlanDialog } from "./AssignPlanDialog";
 
 interface UserActionsProps {
     user: any;
@@ -37,6 +38,7 @@ export function UserActions({ user }: UserActionsProps) {
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [downloadingQR, setDownloadingQR] = useState(false);
     const [showChildrenDialog, setShowChildrenDialog] = useState(false);
+    const [assignPlanOpen, setAssignPlanOpen] = useState(false);
 
     async function confirmDelete() {
         const result = await deleteUser(user.id);
@@ -113,6 +115,10 @@ export function UserActions({ user }: UserActionsProps) {
                             <Users className="mr-2 h-4 w-4" />
                             View Children
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setAssignPlanOpen(true)}>
+                            <Crown className="mr-2 h-4 w-4" />
+                            Assign Plan
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => setDeleteOpen(true)} className="text-destructive">
                             <Trash2 className="mr-2 h-4 w-4" />
@@ -133,6 +139,12 @@ export function UserActions({ user }: UserActionsProps) {
                 userName={`${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email}
                 open={showChildrenDialog}
                 onOpenChange={setShowChildrenDialog}
+            />
+
+            <AssignPlanDialog
+                user={user}
+                open={assignPlanOpen}
+                onOpenChange={setAssignPlanOpen}
             />
 
             <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
