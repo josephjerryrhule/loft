@@ -1,5 +1,8 @@
 import { redirect } from "next/navigation";
 import { getChildSession } from "@/lib/child-auth";
+
+// Always fetch fresh data — stats and "Continue Reading" must reflect the latest reading activity
+export const dynamic = "force-dynamic";
 import { getChildFlipbooks } from "@/app/actions/child-flipbooks";
 import { Bookshelf } from "@/components/child/Bookshelf";
 import { BookOpen, Trophy, Star, ChevronRight, Sparkles } from "lucide-react";

@@ -2,9 +2,10 @@
 
 import { prisma } from "@/lib/prisma";
 import { getChildSession } from "@/lib/child-auth";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_noStore as noStore } from "next/cache";
 
 export async function getChildFlipbooks() {
+  noStore(); // Always read fresh from DB — never use cached data for stats
   const session = await getChildSession();
   if (!session) return { error: "Unauthorized" };
 
