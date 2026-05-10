@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getChildSession } from "@/lib/child-auth";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default async function ChildFlipbookPage({ params }: { params: { id: string } }) {
   const session = await getChildSession();
