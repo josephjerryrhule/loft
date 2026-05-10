@@ -140,16 +140,28 @@ export default function ParentDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Quick link */}
+        {/* Quick link — context-aware */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Browse</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {childProfiles.length > 0 ? "Reading" : "Browse"}
+            </CardTitle>
+            {childProfiles.length > 0 ? (
+              <Baby className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            )}
           </CardHeader>
           <CardContent>
-            <Link href="/parent/flipbooks">
-              <Button variant="outline" size="sm" className="w-full">View Flipbooks</Button>
-            </Link>
+            {childProfiles.length > 0 ? (
+              <Link href="/parent/children">
+                <Button variant="outline" size="sm" className="w-full">Start Reading</Button>
+              </Link>
+            ) : (
+              <Link href="/parent/flipbooks">
+                <Button variant="outline" size="sm" className="w-full">View Flipbooks</Button>
+              </Link>
+            )}
           </CardContent>
         </Card>
 
