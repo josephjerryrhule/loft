@@ -6,6 +6,7 @@ import { logoutChild } from "@/app/actions/child-auth";
 import { Button } from "@/components/ui/button";
 import { getSystemSettings } from "@/app/actions/settings";
 import Image from "next/image";
+import { prisma } from "@/lib/prisma";
 
 export default async function ChildDashboardLayout({ children }: { children: ReactNode }) {
   const session = await getChildSession();
@@ -17,6 +18,12 @@ export default async function ChildDashboardLayout({ children }: { children: Rea
   const settings = await getSystemSettings();
   const logoUrl = settings.logoUrl || "/logo.png";
   const platformName = settings.platformName || "LOFT";
+
+  const child = await prisma.childProfile.findUnique({
+    where: { id: session.childId },
+    select: { readingStreak: true }
+  });
+  const streak = child?.readingStreak || 0;
 
   return (
     <div className="min-h-screen bg-[#FFFAF5] font-quicksand selection:bg-[#E87154]/20">
@@ -36,7 +43,7 @@ export default async function ChildDashboardLayout({ children }: { children: Rea
             {/* Streak Counter - Branded */}
             <div className="hidden sm:flex items-center gap-2 bg-[#E87154]/10 px-4 py-2 rounded-full border border-[#E87154]/20">
               <Flame className="h-5 w-5 text-[#E87154]" fill="currentColor" />
-              <span className="font-bold text-[#E87154]">Streak: 5</span>
+              <span className="font-bold text-[#E87154]">Streak: {streak}</span>
             </div>
 
             <div className="flex items-center gap-3 border-l border-[#E87154]/10 pl-4 sm:pl-6">

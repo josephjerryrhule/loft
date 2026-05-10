@@ -7,6 +7,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
+import { DynamicGreeting } from "@/components/child/DynamicGreeting";
+
 export default async function ChildDashboardPage() {
   const session = await getChildSession();
 
@@ -32,9 +34,7 @@ export default async function ChildDashboardPage() {
     <div className="space-y-12 pb-20">
       {/* Welcome Section */}
       <div className="space-y-2">
-        <h2 className="text-lg font-black text-[#E87154] uppercase tracking-[0.25em] font-quicksand">
-          Good Morning!
-        </h2>
+        <DynamicGreeting />
         <h1 className="text-4xl sm:text-5xl font-black text-[#2D2D2D] font-quicksand tracking-tight">
           Welcome back, <span className="text-[#E87154]">{childName || session.username}</span>!
         </h1>
@@ -102,22 +102,48 @@ export default async function ChildDashboardPage() {
           </div>
         )}
 
-        {/* Stats Column */}
+        {/* Stats and Achievements Column */}
         <div className="md:col-span-4 flex flex-col gap-6">
-          <div className="flex-1 bg-white rounded-[40px] p-8 border border-[#E87154]/10 shadow-[0_10px_40px_rgba(232,113,84,0.05)] flex flex-col justify-center items-center text-center group hover:-translate-y-1 transition-all duration-300">
-            <div className="w-16 h-16 bg-[#E87154]/10 rounded-2xl flex items-center justify-center text-[#E87154] mb-4 group-hover:scale-110 transition-transform">
-              <Star className="w-8 h-8" fill="currentColor" />
+          <div className="flex gap-6">
+            <div className="flex-1 bg-white rounded-[40px] p-6 border border-[#E87154]/10 shadow-[0_10px_40px_rgba(232,113,84,0.05)] flex flex-col justify-center items-center text-center group hover:-translate-y-1 transition-all duration-300">
+              <div className="w-12 h-12 bg-[#E87154]/10 rounded-2xl flex items-center justify-center text-[#E87154] mb-3 group-hover:scale-110 transition-transform">
+                <Star className="w-6 h-6" fill="currentColor" />
+              </div>
+              <span className="text-3xl font-black text-[#2D2D2D] font-quicksand leading-none mb-1">{stats?.totalBooksRead || 0}</span>
+              <span className="text-[10px] font-bold text-[#BBBBBB] uppercase tracking-[0.2em]">Books</span>
             </div>
-            <span className="text-4xl font-black text-[#2D2D2D] font-quicksand leading-none mb-2">{stats?.totalBooksRead || 0}</span>
-            <span className="text-sm font-bold text-[#BBBBBB] uppercase tracking-[0.2em]">Total Books Read</span>
+
+            <div className="flex-1 bg-[#E87154] rounded-[40px] p-6 shadow-[0_15px_40px_rgba(232,113,84,0.3)] flex flex-col justify-center items-center text-center text-white group hover:-translate-y-1 transition-all duration-300">
+              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <Trophy className="w-6 h-6" />
+              </div>
+              <span className="text-3xl font-black font-quicksand leading-none mb-1">{stats?.readingStreak || 0}</span>
+              <span className="text-[10px] font-bold text-white/70 uppercase tracking-[0.2em]">Streak</span>
+            </div>
           </div>
 
-          <div className="flex-1 bg-[#E87154] rounded-[40px] p-8 shadow-[0_15px_40px_rgba(232,113,84,0.3)] flex flex-col justify-center items-center text-center text-white group hover:-translate-y-1 transition-all duration-300">
-            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-              <Trophy className="w-8 h-8" />
+          {/* Achievements Card */}
+          <div className="flex-1 bg-white rounded-[40px] p-8 border border-[#E87154]/10 shadow-[0_10px_40px_rgba(232,113,84,0.05)] relative overflow-hidden group">
+            <div className="relative z-10 space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-black text-[#2D2D2D] font-quicksand">Achievements</h3>
+                <span className="text-[10px] font-black text-[#E87154] bg-[#E87154]/10 px-3 py-1 rounded-full uppercase tracking-widest">{stats?.badges?.length || 0} Total</span>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-3">
+                {stats?.badges?.slice(0, 6).map((badge: any) => (
+                  <div key={badge.id} className="aspect-square bg-[#F9F9F9] rounded-2xl flex flex-col items-center justify-center p-2 border border-[#F0F0F0] hover:border-[#E87154]/30 hover:bg-white transition-all group/badge" title={badge.description}>
+                    <span className="text-2xl mb-1 transform group-hover/badge:scale-125 transition-transform">{badge.icon}</span>
+                    <span className="text-[8px] font-black text-[#BBBBBB] uppercase text-center line-clamp-1">{badge.title}</span>
+                  </div>
+                ))}
+                {(!stats?.badges || stats.badges.length === 0) && (
+                  <div className="col-span-3 py-4 text-center">
+                    <p className="text-[#BBBBBB] text-xs font-bold italic">Keep reading to earn badges! ✨</p>
+                  </div>
+                )}
+              </div>
             </div>
-            <span className="text-4xl font-black font-quicksand leading-none mb-2">{stats?.readingStreak || 0}</span>
-            <span className="text-sm font-bold text-white/70 uppercase tracking-[0.2em]">Day Reading Streak</span>
           </div>
         </div>
       </div>

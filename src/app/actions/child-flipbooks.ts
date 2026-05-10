@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getChildSession } from "@/lib/child-auth";
+import { revalidatePath } from "next/cache";
 
 export async function getChildFlipbooks() {
   const session = await getChildSession();
@@ -27,7 +28,6 @@ export async function getChildFlipbooks() {
     const totalBooksRead = await prisma.flipbookProgress.count({
       where: {
         childProfileId: child.id,
-        completed: true,
       },
     });
 
@@ -48,13 +48,22 @@ export async function getChildFlipbooks() {
       orderBy: { createdAt: "desc" },
     });
 
+    // Generate virtual badges based on stats if none exist
+    let currentBadges = Array.isArray(child.badges) ? (child.badges as any[]) : [];
+    if (currentBadges.length === 0) {
+      if (totalBooksRead >= 1) currentBadges.push({ id: "first-book", title: "First Step", icon: "🌱", description: "Read your first book!" });
+      if (totalBooksRead >= 5) currentBadges.push({ id: "bookworm", title: "Bookworm", icon: "🐛", description: "Read 5 books!" });
+      if (child.readingStreak >= 3) currentBadges.push({ id: "streak-3", title: "Early Bird", icon: "🌅", description: "3 day streak!" });
+      if (child.readingStreak >= 7) currentBadges.push({ id: "streak-7", title: "Reliable Reader", icon: "📅", description: "7 day streak!" });
+    }
+
     return { 
       flipbooks, 
       hasAccess: hasActiveSubscription,
       childName: child.name,
       stats: {
         readingStreak: child.readingStreak,
-        badges: Array.isArray(child.badges) ? child.badges : [],
+        badges: currentBadges,
         totalBooksRead,
       },
       lastReadProgress: lastProgress ? {
@@ -131,6 +140,7 @@ export async function trackReadingProgress(flipbookId: string) {
       },
     });
 
+    revalidatePath("/child");
     return { success: true };
   } catch (error) {
     console.error("Failed to track progress:", error);

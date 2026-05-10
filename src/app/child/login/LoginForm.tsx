@@ -185,7 +185,7 @@ export default function LoginForm({ logoUrl, platformName }: LoginFormProps) {
                 {otp.map((digit, index) => (
                   <input
                     key={index}
-                    ref={(el) => (otpRefs.current[index] = el)}
+                    ref={(el) => { otpRefs.current[index] = el; }}
                     type="text"
                     inputMode="numeric"
                     maxLength={1}
