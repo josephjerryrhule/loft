@@ -39,14 +39,14 @@ export function getAgeGroupLabel(ageGroup: string) {
   
   const normalized = ageGroup.toUpperCase().replace(/\s+/g, '_');
   const labels: Record<string, string> = {
-    LITTLE_LOFTERS: "Little Lofters (0-3 years)",
-    LOFT_365: "Loft 365 Readers (4-7 years)",
-    BIG_READERS: "Big Readers (8+ years)",
+    LITTLE_LOFTERS: "Little lofters - 0-3 years",
+    LOFT_365: "Loft 365 readers - ages 4-7",
+    BIG_READERS: "Big readers - ages 8+",
     // Support legacy or alternative names
-    TODDLER: "Little Lofters (0-3 years)",
-    EARLY_READER: "Loft 365 Readers (4-7 years)",
-    INTERMEDIATE: "Big Readers (8+ years)",
-    ADVANCED: "Advanced Readers (12+ years)",
+    TODDLER: "Little lofters - 0-3 years",
+    EARLY_READER: "Loft 365 readers - ages 4-7",
+    INTERMEDIATE: "Big readers - ages 8+",
+    ADVANCED: "Advanced readers - 12+ years",
   };
   return labels[normalized] || ageGroup.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
 }

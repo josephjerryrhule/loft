@@ -2,9 +2,10 @@ import { redirect } from "next/navigation";
 import { getChildSession } from "@/lib/child-auth";
 import { getChildFlipbooks } from "@/app/actions/child-flipbooks";
 import { Bookshelf } from "@/components/child/Bookshelf";
-import { ChildLogoutButton } from "@/components/child/ChildLogoutButton";
-import { LogOut } from "lucide-react";
+import { LogOut, BookOpen, Trophy, Star, ChevronRight } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default async function ChildDashboardPage() {
   const session = await getChildSession();
@@ -13,82 +14,134 @@ export default async function ChildDashboardPage() {
     redirect("/child/login");
   }
 
-  const { flipbooks, hasAccess, childName, error } = await getChildFlipbooks();
+  const { flipbooks, hasAccess, childName, stats, lastReadProgress, error } = await getChildFlipbooks();
 
   if (error || !flipbooks) {
     return (
-      <div className="min-h-screen bg-sky-100 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-3xl shadow-xl text-center">
-          <h1 className="text-2xl font-bold text-red-500 mb-4">Oops!</h1>
-          <p className="text-slate-600">Something went wrong while getting your books.</p>
+      <div className="min-h-screen bg-[#FFFAF5] flex items-center justify-center">
+        <div className="bg-white p-12 rounded-[40px] shadow-[0_20px_60px_rgba(232,113,84,0.1)] text-center max-w-md border border-[#E87154]/10">
+          <div className="w-20 h-20 bg-[#E87154]/10 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">📚</div>
+          <h1 className="text-3xl font-black text-[#2D2D2D] mb-4 font-quicksand">Oops!</h1>
+          <p className="text-[#6D6D6D] font-medium leading-relaxed">Something went wrong while getting your books. Let's try again!</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F0F9FF] font-sans overflow-x-hidden">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-sky-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-amber-200 rounded-full flex items-center justify-center shadow-inner overflow-hidden border-2 border-amber-300">
-               <Image src="/images/avatar-placeholder.png" alt="Avatar" width={48} height={48} className="object-cover opacity-60" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-black text-indigo-900 tracking-tight">
-                Hi, {childName}! 👋
-              </h1>
-              <p className="text-sm font-medium text-sky-600">
-                Welcome to your magical library
-              </p>
-            </div>
-          </div>
+    <div className="space-y-12 pb-20">
+      {/* Welcome Section */}
+      <div className="space-y-2">
+        <h2 className="text-lg font-black text-[#E87154] uppercase tracking-[0.25em] font-quicksand">
+          Good Morning!
+        </h2>
+        <h1 className="text-4xl sm:text-5xl font-black text-[#2D2D2D] font-quicksand tracking-tight">
+          Welcome back, <span className="text-[#E87154]">{childName || session.username}</span>!
+        </h1>
+      </div>
 
-          <div className="flex items-center gap-4">
-            {!hasAccess && (
-              <div className="px-4 py-2 bg-rose-100 text-rose-700 rounded-full text-sm font-bold shadow-sm border border-rose-200">
-                Preview Mode
-              </div>
-            )}
-            <ChildLogoutButton />
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="pb-24 pt-8">
-        {!hasAccess && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
-            <div className="bg-gradient-to-r from-amber-100 to-orange-100 border-l-4 border-orange-500 p-4 rounded-r-xl shadow-sm">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <span className="text-orange-500 text-xl">⚠️</span>
+      {/* Bento Grid Hero Section */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        {/* Continue Reading Card */}
+        {lastReadProgress ? (
+          <div className="md:col-span-8 bg-white rounded-[40px] p-8 border border-[#E87154]/10 shadow-[0_10px_40px_rgba(232,113,84,0.05)] relative overflow-hidden group hover:shadow-[0_20px_60px_rgba(232,113,84,0.1)] transition-all duration-500">
+             {/* Decorative Background */}
+             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#E87154]/5 to-transparent rounded-full -mr-20 -mt-20 blur-3xl"></div>
+             
+             <div className="relative flex flex-col sm:flex-row gap-8 items-center h-full">
+                <div className="w-40 sm:w-48 aspect-[3/4] relative rounded-2xl overflow-hidden shadow-2xl transform group-hover:rotate-2 transition-transform duration-500">
+                  <Image 
+                    src={lastReadProgress.coverImageUrl || "/images/book-placeholder.png"} 
+                    alt={lastReadProgress.title} 
+                    fill 
+                    className="object-cover"
+                  />
+                  <div className="absolute left-0 top-0 bottom-0 w-3 bg-gradient-to-r from-white/20 to-transparent"></div>
                 </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-bold text-orange-800">
-                    Ask your parents to subscribe!
-                  </h3>
-                  <div className="mt-2 text-sm text-orange-700">
-                    <p>
-                      You are currently in preview mode. Ask your parents to unlock all your amazing books!
-                    </p>
+
+                <div className="flex-1 space-y-6 text-center sm:text-left">
+                  <div className="space-y-2">
+                    <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#E87154]/10 text-[#E87154] text-xs font-black uppercase tracking-widest">
+                      <BookOpen className="w-3.5 h-3.5" /> Continue Reading
+                    </span>
+                    <h3 className="text-3xl font-black text-[#2D2D2D] font-quicksand leading-tight">
+                      {lastReadProgress.title}
+                    </h3>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-end">
+                        <span className="text-sm font-black text-[#BBBBBB] uppercase tracking-wider">Progress</span>
+                        <span className="text-sm font-black text-[#E87154]">{lastReadProgress.progress}%</span>
+                      </div>
+                      <div className="h-3 w-full bg-[#F5F5F5] rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-[#E87154] rounded-full shadow-[0_0_10px_rgba(232,113,84,0.3)] transition-all duration-1000" 
+                          style={{ width: `${lastReadProgress.progress}%` }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    <Link href={`/child/flipbooks/${lastReadProgress.id}`}>
+                      <Button className="w-full sm:w-auto h-14 px-8 bg-[#E87154] hover:bg-[#D65D41] text-white rounded-2xl font-black text-lg shadow-[0_10px_25px_rgba(232,113,84,0.25)] hover:shadow-[0_15px_35px_rgba(232,113,84,0.35)] transition-all flex items-center justify-center gap-3">
+                        Jump In! <ChevronRight className="w-6 h-6" />
+                      </Button>
+                    </Link>
                   </div>
                 </div>
-              </div>
-            </div>
+             </div>
+          </div>
+        ) : (
+          <div className="md:col-span-8 bg-white rounded-[40px] p-12 border border-[#E87154]/10 shadow-[0_10px_40px_rgba(232,113,84,0.05)] relative overflow-hidden flex flex-col items-center justify-center text-center space-y-6">
+             <div className="w-24 h-24 bg-[#E87154]/10 rounded-full flex items-center justify-center text-5xl">✨</div>
+             <div className="space-y-2">
+               <h3 className="text-3xl font-black text-[#2D2D2D] font-quicksand">Ready for an Adventure?</h3>
+               <p className="text-[#6D6D6D] font-medium text-lg max-w-sm">Pick your first book from the shelf below to start your magical journey!</p>
+             </div>
           </div>
         )}
 
-        <Bookshelf flipbooks={flipbooks} />
-      </main>
+        {/* Stats Column */}
+        <div className="md:col-span-4 flex flex-col gap-6">
+          <div className="flex-1 bg-white rounded-[40px] p-8 border border-[#E87154]/10 shadow-[0_10px_40px_rgba(232,113,84,0.05)] flex flex-col justify-center items-center text-center group hover:-translate-y-1 transition-all duration-300">
+            <div className="w-16 h-16 bg-[#E87154]/10 rounded-2xl flex items-center justify-center text-[#E87154] mb-4 group-hover:scale-110 transition-transform">
+              <Star className="w-8 h-8" fill="currentColor" />
+            </div>
+            <span className="text-4xl font-black text-[#2D2D2D] font-quicksand leading-none mb-2">{stats?.totalBooksRead || 0}</span>
+            <span className="text-sm font-bold text-[#BBBBBB] uppercase tracking-[0.2em]">Total Books Read</span>
+          </div>
 
-      {/* Background decoration */}
-      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
-        <div className="absolute top-20 left-10 w-64 h-64 bg-yellow-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute top-40 right-10 w-72 h-72 bg-sky-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+          <div className="flex-1 bg-[#E87154] rounded-[40px] p-8 shadow-[0_15px_40px_rgba(232,113,84,0.3)] flex flex-col justify-center items-center text-center text-white group hover:-translate-y-1 transition-all duration-300">
+            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <Trophy className="w-8 h-8" />
+            </div>
+            <span className="text-4xl font-black font-quicksand leading-none mb-2">{stats?.readingStreak || 0}</span>
+            <span className="text-sm font-bold text-white/70 uppercase tracking-[0.2em]">Day Reading Streak</span>
+          </div>
+        </div>
       </div>
+
+      {!hasAccess && (
+        <div className="group">
+          <div className="bg-white border-2 border-[#E87154]/10 p-8 rounded-[40px] shadow-[0_10px_40px_rgba(232,113,84,0.04)] relative overflow-hidden transition-all hover:shadow-[0_15px_50px_rgba(232,113,84,0.08)]">
+            <div className="absolute top-0 left-0 w-2 h-full bg-[#E87154]"></div>
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <div className="w-16 h-16 bg-[#E87154]/10 rounded-full flex items-center justify-center text-3xl">✨</div>
+              <div className="space-y-1 text-center sm:text-left flex-1">
+                <h3 className="text-2xl font-black text-[#2D2D2D] font-quicksand">
+                  Ask your parents to unlock more!
+                </h3>
+                <p className="text-[#6D6D6D] font-medium text-lg">
+                  You are in preview mode. Ask them to subscribe to see all your magical books!
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Bookshelf flipbooks={flipbooks} />
     </div>
   );
 }

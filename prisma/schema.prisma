@@ -336,6 +336,12 @@ model ChildProfile {
   dateOfBirth  DateTime? @map("date_of_birth")
   ageGroup     String   @map("age_group") // Enum: TODDLER, EARLY_READER, INTERMEDIATE, ADVANCED
   avatarColor  String   @default("#6366f1") @map("avatar_color")
+  
+  // Stats
+  readingStreak Int     @default(0) @map("reading_streak")
+  lastReadingDate DateTime? @map("last_reading_date")
+  badges       Json?    @default("[]")
+  
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 

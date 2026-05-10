@@ -220,9 +220,9 @@ function ChildFormDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="LITTLE_LOFTERS">Little Lofters (0-3 years)</SelectItem>
-                      <SelectItem value="LOFT_365">Loft 365 Readers (4-7 years)</SelectItem>
-                      <SelectItem value="BIG_READERS">Big Readers (8+ years)</SelectItem>
+                      <SelectItem value="LITTLE_LOFTERS">{getAgeGroupLabel("LITTLE_LOFTERS")}</SelectItem>
+                      <SelectItem value="LOFT_365">{getAgeGroupLabel("LOFT_365")}</SelectItem>
+                      <SelectItem value="BIG_READERS">{getAgeGroupLabel("BIG_READERS")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

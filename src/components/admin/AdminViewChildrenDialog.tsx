@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { getAdminUserChildren } from "@/app/actions/admin";
 import { formatDistanceToNow } from "date-fns";
+import { getAgeGroupLabel } from "@/lib/utils";
 
 interface AdminViewChildrenDialogProps {
   userId: string;
@@ -94,7 +95,7 @@ export function AdminViewChildrenDialog({
                         {child.name}
                       </h4>
                       <Badge variant="outline" className="bg-white">
-                        {child.ageGroup}
+                        {getAgeGroupLabel(child.ageGroup)}
                       </Badge>
                     </div>
                     <div className="mt-1 text-sm text-zinc-500 space-y-1">

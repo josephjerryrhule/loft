@@ -16,6 +16,18 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+import { Quicksand, Nunito_Sans } from "next/font/google";
+
+const quicksand = Quicksand({
+  variable: "--font-quicksand",
+  subsets: ["latin"],
+});
+
+const nunitoSans = Nunito_Sans({
+  variable: "--font-nunito-sans",
+  subsets: ["latin"],
+});
+
 async function getSettings() {
   try {
     const settings = await prisma.systemSettings.findMany({
@@ -75,7 +87,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${quicksand.variable} ${nunitoSans.variable} antialiased`}
       >
         <FaviconUpdater faviconUrl={settings.faviconUrl} />
         {children}
