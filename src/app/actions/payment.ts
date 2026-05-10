@@ -109,6 +109,14 @@ export async function processSubscriptionPayment(reference: string, planId: stri
 
     if (!plan) return { error: "Plan not found" };
 
+    // Prevent duplicate processing
+    const existingSubscription = await prisma.subscription.findFirst({
+      where: { paymentReference: reference }
+    });
+    if (existingSubscription) {
+      return { success: true, subscription: existingSubscription };
+    }
+
     // Verify amount matches
     const amountPaid = verificationData.amount / 100; // Convert from pesewas to GHS
     if (amountPaid < Number(plan.price)) {
@@ -242,6 +250,14 @@ export async function processProductPayment(
     });
 
     if (!product) return { error: "Product not found" };
+
+    // Prevent duplicate processing
+    const existingOrder = await prisma.order.findFirst({
+      where: { paymentReference: reference }
+    });
+    if (existingOrder) {
+      return { success: true, order: existingOrder };
+    }
 
     const totalAmount = Number(product.price) * quantityInt;
     const amountPaid = verification.data.amount / 100; // Convert from pesewas to GHS
