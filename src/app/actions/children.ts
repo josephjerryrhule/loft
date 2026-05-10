@@ -43,7 +43,7 @@ export async function createChildProfile(input: ChildProfileInput) {
 
   const parsed = childProfileSchema.safeParse(input);
   if (!parsed.success) {
-    return { error: parsed.error.errors[0]?.message || "Invalid input" };
+    return { error: parsed.error.issues[0]?.message || "Invalid input" };
   }
 
   const { name, dateOfBirth, ageGroup, avatarColor } = parsed.data;
@@ -83,7 +83,7 @@ export async function updateChildProfile(
 
   const parsed = childProfileSchema.safeParse(input);
   if (!parsed.success) {
-    return { error: parsed.error.errors[0]?.message || "Invalid input" };
+    return { error: parsed.error.issues[0]?.message || "Invalid input" };
   }
 
   const { name, dateOfBirth, ageGroup, avatarColor } = parsed.data;

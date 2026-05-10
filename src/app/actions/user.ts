@@ -166,6 +166,48 @@ export async function updateProfile(formData: FormData) {
     }
 }
 
+export async function getCustomerDashboardData() {
+    noStore();
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("Unauthorized");
+    }
+
+    try {
+        const subscription = await prisma.subscription.findFirst({
+            where: {
+                customerId: session.user.id,
+                childProfileId: null,
+                status: "ACTIVE",
+                endDate: { gte: new Date() }
+            },
+            include: { plan: true },
+            orderBy: { createdAt: "desc" }
+        });
+
+        const completedBooks = await prisma.flipbookProgress.count({
+            where: { 
+                customerId: session.user.id, 
+                completed: true 
+            }
+        });
+
+        return {
+            subscription: subscription ? {
+                ...subscription,
+                plan: {
+                    ...subscription.plan,
+                    price: subscription.plan.price.toNumber()
+                }
+            } : null,
+            completedBooks
+        };
+    } catch (error) {
+        console.error("Failed to get customer dashboard data:", error);
+        throw error;
+    }
+}
+
 export async function getParentDashboardData() {
     noStore();
     const session = await auth();

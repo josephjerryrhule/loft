@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { PaymentSuccessActions } from "@/components/payment/PaymentSuccessActions";
+
 
 interface PaymentVerificationResult {
   success: boolean;
@@ -89,9 +89,7 @@ async function verifyAndProcessPayment(reference: string): Promise<PaymentVerifi
 async function PaymentResult({ reference }: { reference: string }) {
   const result = await verifyAndProcessPayment(reference);
 
-  const redirectPath = result.type === "subscription" 
-    ? "/customer/plans" 
-    : "/customer/orders";
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
@@ -104,7 +102,14 @@ async function PaymentResult({ reference }: { reference: string }) {
               <p className="text-muted-foreground">{result.message}</p>
               
               {result.type === "subscription" ? (
-                  <PaymentSuccessActions reference={reference} />
+                  <div className="pt-4 space-y-2">
+                    <Link href="/parent">
+                      <Button className="w-full">Go to Dashboard</Button>
+                    </Link>
+                    <Link href="/parent/plans">
+                      <Button variant="outline" className="w-full">View Plans</Button>
+                    </Link>
+                  </div>
               ) : (
                   <div className="pt-4 space-y-2">
                     <Link href="/customer/orders">

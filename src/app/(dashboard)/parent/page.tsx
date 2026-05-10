@@ -1,36 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getUserSubscription } from "@/app/actions/plans";
 import { getParentDashboardData } from "@/app/actions/user";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, BookOpen, RefreshCw, Users, Baby } from "lucide-react";
+import { Loader2, BookOpen, RefreshCw, Baby, Crown, Calendar, TrendingUp } from "lucide-react";
 
 export default function ParentDashboardPage() {
+  const router = useRouter();
   const [subscription, setSubscription] = useState<any>(null);
   const [readingProgress, setReadingProgress] = useState(0);
   const [childProfiles, setChildProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadDashboardData();
-
-    const handleFocus = () => {
-      loadDashboardData();
-    };
-
-    window.addEventListener("focus", handleFocus);
-    return () => window.removeEventListener("focus", handleFocus);
-  }, []);
-
-  async function loadDashboardData() {
+  const loadDashboardData = useCallback(async (silent = false) => {
     try {
-      if (!loading) setRefreshing(true);
-      else setLoading(true);
+      if (!silent) {
+        if (!loading) setRefreshing(true);
+        else setLoading(true);
+      } else {
+        setRefreshing(true);
+      }
 
       const data = await getParentDashboardData();
       setSubscription(data.subscription);
@@ -42,7 +36,28 @@ export default function ParentDashboardPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    loadDashboardData();
+
+    // Re-fetch when window regains focus (e.g. returning from payment callback)
+    const handleFocus = () => loadDashboardData(true);
+    window.addEventListener("focus", handleFocus);
+
+    // Also check for payment return via URL hash or query
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("payment") || document.referrer.includes("/payment/callback")) {
+      loadDashboardData(true);
+    }
+
+    return () => window.removeEventListener("focus", handleFocus);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleRefresh = async () => {
+    router.refresh(); // Invalidate Next.js server cache
+    await loadDashboardData(true);
+  };
 
   if (loading) {
     return (
@@ -59,7 +74,7 @@ export default function ParentDashboardPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={loadDashboardData}
+          onClick={handleRefresh}
           disabled={refreshing}
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
@@ -68,27 +83,32 @@ export default function ParentDashboardPage() {
       </div>
 
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {/* Subscription Card */}
-        <Card className={subscription ? "border-green-500" : "border-amber-500"}>
+        {/* My Subscription Card */}
+        <Card className={subscription ? "border-green-500/50 bg-green-500/5" : "border-amber-500/50 bg-amber-500/5"}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {subscription ? subscription.plan.name : "Free Plan"}
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              My Subscription
             </CardTitle>
-            <Badge variant={subscription ? "default" : "secondary"}>
-              {subscription ? "Active" : "Free"}
-            </Badge>
+            <Crown className={`h-4 w-4 ${subscription ? "text-green-500" : "text-amber-500"}`} />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${subscription ? "text-green-600" : "text-amber-600"}`}>
-              {subscription ? `GHS ${Number(subscription.plan.price).toFixed(2)}` : "GHS 0.00"}
+            <div className={`text-xl font-bold ${subscription ? "text-green-700 dark:text-green-400" : "text-amber-700 dark:text-amber-400"}`}>
+              {subscription ? subscription.plan.name : "Free Plan"}
             </div>
+            <Badge
+              variant={subscription ? "default" : "secondary"}
+              className={`mt-1 text-[10px] ${subscription ? "bg-green-500 hover:bg-green-500" : ""}`}
+            >
+              {subscription ? "Active" : "Free Tier"}
+            </Badge>
             {subscription ? (
-              <p className="text-xs text-muted-foreground">
-                Expires on {new Date(subscription.endDate).toLocaleDateString()}
+              <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                Expires {new Date(subscription.endDate).toLocaleDateString()}
               </p>
             ) : (
               <Link href="/parent/plans">
-                <Button size="sm" className="mt-2">Upgrade Plan</Button>
+                <Button size="sm" className="mt-3 w-full">Upgrade Plan</Button>
               </Link>
             )}
           </CardContent>
@@ -97,7 +117,7 @@ export default function ParentDashboardPage() {
         {/* Books Read */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Books Read</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Books Read</CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -106,13 +126,40 @@ export default function ParentDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* My Children */}
-        <Card className="md:col-span-2 lg:col-span-3 xl:col-span-4 mt-2">
+        {/* Children overview */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Children</CardTitle>
+            <Baby className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{childProfiles.length}</div>
+            <p className="text-xs text-muted-foreground">
+              {childProfiles.filter((c) => c.activeSubscription).length} with active plan
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Quick link */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Browse</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <Link href="/parent/flipbooks">
+              <Button variant="outline" size="sm" className="w-full">View Flipbooks</Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        {/* My Children Full Card */}
+        <Card className="md:col-span-2 lg:col-span-3 xl:col-span-4">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="text-xl">My Children</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Overview of reading progress and subscriptions
+                Reading progress and subscription status
               </p>
             </div>
             <Link href="/parent/children">
@@ -124,8 +171,9 @@ export default function ParentDashboardPage() {
           </CardHeader>
           <CardContent>
             {childProfiles.length === 0 ? (
-              <div className="text-center py-6">
-                <p className="text-muted-foreground mb-4">No child profiles found.</p>
+              <div className="text-center py-8 space-y-3">
+                <Baby className="h-10 w-10 text-muted-foreground mx-auto" />
+                <p className="text-muted-foreground">No child profiles yet.</p>
                 <Link href="/parent/children">
                   <Button size="sm">Add Your First Child</Button>
                 </Link>
@@ -133,48 +181,50 @@ export default function ParentDashboardPage() {
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {childProfiles.map((child) => (
-                  <div key={child.id} className="flex items-start gap-4 p-4 rounded-lg border bg-card">
+                  <div
+                    key={child.id}
+                    className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent/30 transition-colors"
+                  >
                     <div
-                      className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0 mt-0.5"
+                      className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
                       style={{ backgroundColor: child.avatarColor || "#6366f1" }}
                     >
                       {child.name.substring(0, 2).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold truncate">{child.name}</h4>
-                      <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+                      <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                         <BookOpen className="h-3 w-3" />
                         {child.completedBooks} books read
                       </div>
                       <div className="mt-2">
                         {child.activeSubscription ? (
-                          <Badge variant="default" className="text-[10px] uppercase tracking-wider">
-                            Active: {child.activeSubscription.plan.name}
+                          <Badge
+                            className="text-[10px] bg-green-500/10 text-green-600 border border-green-500/20 hover:bg-green-500/20"
+                          >
+                            ✓ {child.activeSubscription.plan.name}
                           </Badge>
                         ) : (
-                          <Badge variant="secondary" className="text-[10px] uppercase tracking-wider text-amber-600 bg-amber-100 hover:bg-amber-100">
-                            No Active Subscription
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] text-amber-600 border-amber-500/30 bg-amber-50 dark:bg-amber-950"
+                          >
+                            No Active Plan
                           </Badge>
                         )}
                       </div>
+                      {!child.activeSubscription && (
+                        <Link href="/parent/plans" className="mt-2 block">
+                          <Button size="sm" variant="outline" className="w-full h-7 text-xs">
+                            Get a Plan
+                          </Button>
+                        </Link>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
-
-        {/* Browse Flipbooks */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Browse</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <Link href="/parent/flipbooks">
-              <Button variant="outline" size="sm">View All Flipbooks</Button>
-            </Link>
           </CardContent>
         </Card>
       </div>

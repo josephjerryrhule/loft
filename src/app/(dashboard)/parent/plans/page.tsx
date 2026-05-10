@@ -145,12 +145,11 @@ export default async function CustomerPlansPage({
                                                 <TableRow key={child.id} className="group transition-colors">
                                                     <TableCell className="font-semibold">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 font-bold overflow-hidden">
-                                                                {child.avatarUrl ? (
-                                                                    <img src={child.avatarUrl} alt={child.name} className="h-full w-full object-cover" />
-                                                                ) : (
-                                                                    child.name.charAt(0)
-                                                                )}
+                                                            <div 
+                                                                className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold"
+                                                                style={{ backgroundColor: child.avatarColor || "#6366f1" }}
+                                                            >
+                                                                {child.name.charAt(0).toUpperCase()}
                                                             </div>
                                                             <span>{child.name}</span>
                                                         </div>
@@ -267,9 +266,9 @@ export default async function CustomerPlansPage({
                                                                 {feature}
                                                             </Badge>
                                                         ))}
-                                                        {plan.features?.split("\n").length > 2 && (
+                                                        {(plan.features?.split("\n")?.length ?? 0) > 2 && (
                                                             <Badge variant="secondary" className="bg-muted text-muted-foreground font-normal">
-                                                                +{plan.features.split("\n").length - 2} more
+                                                                +{(plan.features?.split("\n")?.length ?? 0) - 2} more
                                                             </Badge>
                                                         )}
                                                     </div>
