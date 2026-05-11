@@ -202,34 +202,69 @@ export async function trackReadingProgress(flipbookId: string) {
       }
     }
 
-    // Update child stats and reading history
-    await prisma.$transaction([
-      prisma.childProfile.update({
+    // Update child stats and reading history with robust progress handling to avoid unique-constraint races
+    await prisma.$transaction(async (tx) => {
+      await tx.childProfile.update({
         where: { id: child.id },
         data: {
           readingStreak: newStreak,
           lastReadingDate: now,
         },
-      }),
-      prisma.flipbookProgress.upsert({
+      });
+
+      // First try to update any existing progress row for this customer/child and flipbook
+      const updateResult = await tx.flipbookProgress.updateMany({
         where: {
-          childProfileId_flipbookId: {
-            childProfileId: child.id,
-            flipbookId: flipbookId,
-          },
+          OR: [
+            { customerId: child.parentId, flipbookId },
+            { childProfileId: child.id, flipbookId }
+          ]
         },
-        update: {
-          lastAccessedAt: now,
-        },
-        create: {
-          childProfileId: child.id,
-          flipbookId: flipbookId,
-          customerId: child.parentId,
-          lastPageRead: 1,
-          completed: false,
-        },
-      })
-    ]);
+        data: {
+          lastAccessedAt: now
+        }
+      });
+
+      if (updateResult.count === 0) {
+        // No existing row updated — attempt to create. If a concurrent insert happened,
+        // handle the unique constraint error by finding and updating the existing row.
+        try {
+          await tx.flipbookProgress.create({
+            data: {
+              childProfileId: child.id,
+              flipbookId: flipbookId,
+              customerId: child.parentId,
+              lastPageRead: 1,
+              completed: false,
+              lastAccessedAt: now
+            }
+          });
+        } catch (err: any) {
+          // Prisma P2002 indicates a unique constraint violation from a concurrent insert
+          if (err?.code === 'P2002') {
+            const existing = await tx.flipbookProgress.findFirst({
+              where: {
+                OR: [
+                  { customerId: child.parentId, flipbookId },
+                  { childProfileId: child.id, flipbookId }
+                ]
+              }
+            });
+            if (existing) {
+              await tx.flipbookProgress.update({
+                where: { id: existing.id },
+                data: { lastAccessedAt: now }
+              });
+            } else {
+              // Unexpected: rethrow to be handled by outer catch
+              throw err;
+            }
+          } else {
+            throw err;
+          }
+        }
+      }
+    });
 
     // Thorough revalidation
     revalidatePath("/child", "layout");
