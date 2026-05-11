@@ -18,11 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function CustomerPlansPage({ 
-    searchParams 
-}: { 
-    searchParams: { [key: string]: string | string[] | undefined } 
-}) {
+export default async function CustomerPlansPage() {
     const session = await auth();
     const userId = session?.user?.id;
     const userEmail = session?.user?.email;
@@ -35,8 +31,6 @@ export default async function CustomerPlansPage({
         getChildProfiles()
     ]);
     
-    const childId = typeof searchParams.childId === 'string' ? searchParams.childId : undefined;
-
     // Format plans
     const plans = allPlans.map(plan => ({
         ...plan,
@@ -55,7 +49,7 @@ export default async function CustomerPlansPage({
                     Subscription Management
                 </h1>
                 <p className="text-muted-foreground text-lg">
-                    Manage access and plans for yourself and your children.
+                    Manage access and plans for your children.
                 </p>
             </div>
 
@@ -95,49 +89,6 @@ export default async function CustomerPlansPage({
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {/* Parent Profile */}
-                                        <TableRow className="group transition-colors">
-                                            <TableCell className="font-semibold">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                                                        P
-                                                    </div>
-                                                    <span>You (Parent)</span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                {getChildSubscription(null)?.plan.name || (
-                                                    <span className="text-muted-foreground italic">No Premium Plan</span>
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                {getChildSubscription(null) ? (
-                                                    <Badge className="bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20 transition-all">
-                                                        Active
-                                                    </Badge>
-                                                ) : (
-                                                    <Badge variant="outline" className="text-muted-foreground">Free</Badge>
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="text-muted-foreground">
-                                                {getChildSubscription(null) ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <Calendar className="h-3 w-3" />
-                                                        {new Date(getChildSubscription(null)!.endDate).toLocaleDateString()}
-                                                    </div>
-                                                ) : "-"}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <SubscribePlanButton 
-                                                    allPlans={plans}
-                                                    userEmail={userEmail}
-                                                    userId={userId}
-                                                    childProfiles={childProfiles}
-                                                    label={getChildSubscription(null) ? "Change Plan" : "Get Premium"}
-                                                />
-                                            </TableCell>
-                                        </TableRow>
-
                                         {/* Child Profiles */}
                                         {childProfiles.map((child) => {
                                             const sub = getChildSubscription(child.id);
@@ -279,6 +230,7 @@ export default async function CustomerPlansPage({
                                                         userEmail={userEmail}
                                                         userId={userId}
                                                         childProfiles={childProfiles}
+                                                        allowSelfProfile={false}
                                                     />
                                                 </TableCell>
                                             </TableRow>
@@ -292,7 +244,7 @@ export default async function CustomerPlansPage({
                     <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground py-4">
                         <div className="flex items-center gap-1">
                             <Info className="h-4 w-4" />
-                            <span>Plans apply per profile (Child or Parent).</span>
+                            <span>Plans apply per child profile.</span>
                         </div>
                         <div className="h-4 w-px bg-border" />
                         <div className="flex items-center gap-1">

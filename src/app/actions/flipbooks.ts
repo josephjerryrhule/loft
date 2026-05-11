@@ -3,8 +3,8 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z, ZodError } from "zod";
+import { canUseCustomerLibrary, canUseParentLibraryForChild } from "@/lib/access-control.mjs";
 
 const flipbookSchema = z.object({
   title: z.string().min(3),
@@ -107,7 +107,17 @@ export async function updateFlipbook(flipbookId: string, data: {
     isFree?: boolean;
 }) {
     try {
-        let updateData: any = {
+        const updateData: {
+            title: string;
+            description?: string;
+            category?: string;
+            ageGroup?: string;
+            isPublished?: boolean;
+            isFree?: boolean;
+            heyzineUrl?: string;
+            iframeContent?: string;
+            coverImageUrl?: string;
+        } = {
             title: data.title,
             description: data.description,
             category: data.category,
@@ -219,6 +229,15 @@ export async function getCustomerFlipbooks(childProfileId?: string) {
     if (!session?.user?.id) {
         throw new Error("Unauthorized");
     }
+    const role = (session.user as { role?: string }).role;
+
+    if (childProfileId) {
+        if (!canUseParentLibraryForChild(role, childProfileId)) {
+            throw new Error("Unauthorized");
+        }
+    } else if (!canUseCustomerLibrary(role)) {
+        throw new Error("Parents must select a child profile to view flipbooks");
+    }
 
     try {
         const now = new Date();
@@ -234,16 +253,11 @@ export async function getCustomerFlipbooks(childProfileId?: string) {
             childAgeGroup = child.ageGroup;
         }
         
-        // Check for active paid subscription for the specific child (or any if none provided, for backwards compat)
+        // Check for active paid subscription for the specific profile.
         const activeSubscription = await prisma.subscription.findFirst({
             where: { 
                 customerId: session.user.id,
-                ...(childProfileId ? {
-                    OR: [
-                        { childProfileId: childProfileId },
-                        { childProfileId: null } // Backwards compatibility for parent-level subscriptions
-                    ]
-                } : {}),
+                childProfileId: childProfileId || null,
                 status: "ACTIVE",
                 endDate: { gte: now },
                 plan: {
@@ -345,6 +359,15 @@ export async function updateFlipbookProgress(data: {
     const session = await auth();
     if (!session?.user?.id) {
         throw new Error("Unauthorized");
+    }
+    const role = (session.user as { role?: string }).role;
+
+    if (data.childProfileId) {
+        if (!canUseParentLibraryForChild(role, data.childProfileId)) {
+            throw new Error("Unauthorized");
+        }
+    } else if (!canUseCustomerLibrary(role)) {
+        throw new Error("Parents must select a child profile to track progress");
     }
 
     try {

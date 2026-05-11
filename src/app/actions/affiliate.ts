@@ -97,7 +97,7 @@ export async function getRecentAffiliateActivities() {
 
     // Get customers referred by this affiliate
     const referredCustomers = await prisma.user.findMany({
-        where: { referredById: userId, role: "PARENT" },
+        where: { referredById: userId, role: { in: ["PARENT", "CUSTOMER"] } },
         select: { id: true, firstName: true, lastName: true, createdAt: true },
         orderBy: { createdAt: "desc" },
         take: 25

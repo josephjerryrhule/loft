@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath, unstable_noStore as noStore } from "next/cache";
 import { auth } from "@/auth";
 import { sendAccountStatusChangeEmail } from "@/lib/email";
+import { canUseCustomerLibrary } from "@/lib/access-control.mjs";
 
 export async function updateUser(userId: string, data: {
     firstName: string;
@@ -172,6 +173,9 @@ export async function getCustomerDashboardData() {
     if (!session?.user?.id) {
         throw new Error("Unauthorized");
     }
+    if (!canUseCustomerLibrary((session.user as { role?: string }).role)) {
+        throw new Error("Unauthorized");
+    }
 
     try {
         const subscription = await prisma.subscription.findFirst({
@@ -216,26 +220,6 @@ export async function getParentDashboardData() {
     }
 
     try {
-        // Get active subscription for the parent (MUST have childProfileId as null)
-        const subscription = await prisma.subscription.findFirst({
-            where: {
-                customerId: session.user.id,
-                childProfileId: null,
-                status: "ACTIVE",
-                endDate: { gte: new Date() }
-            },
-            include: { plan: true },
-            orderBy: { createdAt: "desc" }
-        });
-
-        // Get completed books count for the parent (legacy)
-        const completedBooks = await prisma.flipbookProgress.count({
-            where: { 
-                customerId: session.user.id, 
-                completed: true 
-            }
-        });
-
         // Get child profiles with their subscriptions and reading progress
         const childProfiles = await prisma.childProfile.findMany({
             where: { parentId: session.user.id },
@@ -267,14 +251,6 @@ export async function getParentDashboardData() {
         }));
 
         return {
-            subscription: subscription ? {
-                ...subscription,
-                plan: {
-                    ...subscription.plan,
-                    price: subscription.plan.price.toNumber()
-                }
-            } : null,
-            completedBooks,
             childProfiles: formattedChildProfiles
         };
     } catch (error) {
@@ -351,4 +327,3 @@ export async function getCustomerOrders(page = 1, pageSize = 10) {
         throw error;
     }
 }
-

@@ -25,6 +25,8 @@ export default async function Home() {
       redirect("/affiliate");
     case Role.PARENT:
       redirect("/parent");
+    case Role.CUSTOMER:
+      redirect("/customer");
     case Role.FINANCE:
       redirect("/finance");
     default:

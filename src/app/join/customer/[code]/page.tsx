@@ -9,5 +9,5 @@ export default async function CustomerJoinPage({ params }: PageProps) {
     const code = resolvedParams.code;
     
     // Redirect to registration page with referral code
-    redirect(`/auth/register?ref=${code}&role=PARENT`);
+    redirect(`/auth/register?ref=${code}&role=CUSTOMER`);
 }

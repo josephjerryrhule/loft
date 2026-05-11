@@ -5,6 +5,7 @@ import { trackReadingProgress } from "@/app/actions/child-flipbooks";
 import Link from "next/link";
 import { ArrowLeft, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { isFlipbookReadableForChild } from "@/lib/access-control.mjs";
 
 export default async function ChildFlipbookPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -12,9 +13,6 @@ export default async function ChildFlipbookPage(props: { params: Promise<{ id: s
   if (!session) {
     redirect("/child/login");
   }
-
-  // Track progress when the page is loaded
-  await trackReadingProgress(params.id);
 
   const flipbook = await prisma.flipbook.findUnique({
     where: { id: params.id },
@@ -24,26 +22,28 @@ export default async function ChildFlipbookPage(props: { params: Promise<{ id: s
     notFound();
   }
 
-  // Verify access for premium books
-  if (!flipbook.isFree) {
-    const child = await prisma.childProfile.findUnique({
-      where: { id: session.childId },
-      include: {
-        subscriptions: {
-          where: {
-            endDate: { gte: new Date() },
-            status: "ACTIVE",
-          },
+  const child = await prisma.childProfile.findUnique({
+    where: { id: session.childId },
+    include: {
+      subscriptions: {
+        where: {
+          endDate: { gte: new Date() },
+          status: "ACTIVE",
         },
       },
-    });
+    },
+  });
 
-    const hasActiveSubscription = child && child.subscriptions.length > 0;
-    
-    if (!hasActiveSubscription) {
-      redirect("/child");
-    }
+  if (!child || !isFlipbookReadableForChild({
+    isFree: flipbook.isFree,
+    childHasSubscription: child.subscriptions.length > 0,
+    flipbookAgeGroup: flipbook.ageGroup,
+    childAgeGroup: child.ageGroup,
+  })) {
+    redirect("/child");
   }
+
+  await trackReadingProgress(params.id);
 
   return (
     <div className="min-h-screen bg-[#FFFAF5] font-quicksand flex flex-col selection:bg-[#E87154]/20">

@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getChildSession } from "@/lib/child-auth";
 import { revalidatePath, unstable_noStore as noStore } from "next/cache";
+import { isFlipbookReadableForChild } from "@/lib/access-control.mjs";
 
 export async function getChildFlipbooks() {
   noStore(); // Always read fresh from DB — never use cached data for stats
@@ -25,6 +26,18 @@ export async function getChildFlipbooks() {
     if (!child) return { error: "Child not found" };
 
     const hasActiveSubscription = child.subscriptions.length > 0;
+    const readableFlipbookWhere = {
+      isPublished: true,
+      ...(hasActiveSubscription ? {} : { isFree: true }),
+      OR: [
+        { ageGroup: child.ageGroup },
+        { ageGroup: { equals: "all", mode: "insensitive" as const } },
+        { ageGroup: { equals: "ALL", mode: "insensitive" as const } },
+        { ageGroup: "" },
+        { ageGroup: null },
+        { ageGroup: { equals: "all age groups", mode: "insensitive" as const } }
+      ],
+    };
 
     // Stats: Count unique books started
     const totalBooksRead = await prisma.flipbookProgress.count({
@@ -37,6 +50,7 @@ export async function getChildFlipbooks() {
     const lastProgress = await prisma.flipbookProgress.findFirst({
       where: {
         childProfileId: child.id,
+        flipbook: readableFlipbookWhere,
       },
       orderBy: { lastAccessedAt: "desc" },
       include: { flipbook: true },
@@ -44,23 +58,14 @@ export async function getChildFlipbooks() {
 
     // Fetch flipbooks matching the child's age group or 'all' variants
     const flipbooks = await prisma.flipbook.findMany({
-      where: {
-        isPublished: true,
-        ...(hasActiveSubscription ? {} : { isFree: true }),
-        OR: [
-          { ageGroup: child.ageGroup },
-          { ageGroup: { equals: "all", mode: "insensitive" } },
-          { ageGroup: { equals: "ALL", mode: "insensitive" } },
-          { ageGroup: "" },
-          { ageGroup: null },
-          { ageGroup: { equals: "all age groups", mode: "insensitive" } }
-        ],
-      },
+      where: readableFlipbookWhere,
       orderBy: { createdAt: "desc" },
     });
 
     // Generate virtual badges based on stats
-    let currentBadges = Array.isArray(child.badges) ? (child.badges as any[]) : [];
+    const currentBadges = Array.isArray(child.badges)
+      ? (child.badges as Array<{ id: string; title: string; icon: string; description: string }>)
+      : [];
     if (currentBadges.length === 0) {
       if (totalBooksRead >= 1) currentBadges.push({ id: "first-book", title: "First Step", icon: "🌱", description: "Read your first book!" });
       if (totalBooksRead >= 5) currentBadges.push({ id: "bookworm", title: "Bookworm", icon: "🐛", description: "Read 5 books!" });
@@ -177,9 +182,32 @@ export async function trackReadingProgress(flipbookId: string) {
 
     const child = await prisma.childProfile.findUnique({
       where: { id: session.childId },
+      include: {
+        subscriptions: {
+          where: {
+            endDate: { gte: now },
+            status: "ACTIVE",
+          },
+        },
+      },
     });
 
     if (!child) return { error: "Child not found" };
+
+    const flipbook = await prisma.flipbook.findUnique({
+      where: { id: flipbookId },
+      select: { isFree: true, ageGroup: true, isPublished: true },
+    });
+
+    if (!flipbook || !flipbook.isPublished) return { error: "Flipbook not found" };
+    if (!isFlipbookReadableForChild({
+      isFree: flipbook.isFree,
+      childHasSubscription: child.subscriptions.length > 0,
+      flipbookAgeGroup: flipbook.ageGroup,
+      childAgeGroup: child.ageGroup,
+    })) {
+      return { error: "Unauthorized" };
+    }
 
     let newStreak = child.readingStreak;
     const lastRead = child.lastReadingDate ? new Date(child.lastReadingDate) : null;

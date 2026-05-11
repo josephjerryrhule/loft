@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { sendPayoutApprovalEmail, sendAccountStatusChangeEmail, sendOrderStatusChangeEmail } from "@/lib/email";
+import { canCreateSubscriptionForProfile } from "@/lib/access-control.mjs";
 
 export async function approveCommission(commissionId: string) {
     const session = await auth();
@@ -429,12 +430,15 @@ export async function adminAssignPlan(data: {
 
     try {
         const [user, plan] = await Promise.all([
-            prisma.user.findUnique({ where: { id: data.userId }, select: { id: true, email: true, firstName: true, lastName: true } }),
+            prisma.user.findUnique({ where: { id: data.userId }, select: { id: true, email: true, firstName: true, lastName: true, role: true } }),
             prisma.subscriptionPlan.findUnique({ where: { id: data.planId } }),
         ]);
 
         if (!user) return { error: "User not found" };
         if (!plan) return { error: "Plan not found" };
+        if (!canCreateSubscriptionForProfile(user.role, data.childProfileId)) {
+            return { error: "This user cannot receive a subscription for that profile" };
+        }
 
         // If a childProfileId is provided, verify it belongs to the user
         if (data.childProfileId) {

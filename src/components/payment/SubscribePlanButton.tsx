@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { AlertCircle, User, Baby } from "lucide-react";
+import { AlertCircle, User } from "lucide-react";
 import { getAgeGroupLabel } from "@/lib/utils";
 import Link from "next/link";
 
@@ -38,6 +38,7 @@ interface SubscribePlanButtonProps {
   userId: string;
   childProfiles?: ChildProfile[];
   initialChildId?: string; // Pre-select a specific child (lock to that child)
+  allowSelfProfile?: boolean;
   label?: string;
 }
 
@@ -48,13 +49,15 @@ export function SubscribePlanButton({
   userId,
   childProfiles = [],
   initialChildId,
+  allowSelfProfile = true,
   label,
 }: SubscribePlanButtonProps) {
   const [open, setOpen] = useState(false);
   const [reference, setReference] = useState(() => `SUB-${userId}-${Date.now()}`);
 
   // Profile selection — locked if initialChildId is provided
-  const [selectedChildId, setSelectedChildId] = useState<string>(initialChildId ?? "");
+  const defaultChildId = initialChildId ?? (allowSelfProfile ? "" : childProfiles[0]?.id ?? "");
+  const [selectedChildId, setSelectedChildId] = useState<string>(defaultChildId);
 
   // Plan selection — locked if a specific plan is passed
   const [selectedPlanId, setSelectedPlanId] = useState<string>(
@@ -72,7 +75,7 @@ export function SubscribePlanButton({
     if (isOpen) {
       // Regenerate reference on each open so duplicate payments don't fail
       setReference(`SUB-${userId}-${Date.now()}`);
-      setSelectedChildId(initialChildId ?? "");
+      setSelectedChildId(initialChildId ?? (allowSelfProfile ? "" : childProfiles[0]?.id ?? ""));
       setSelectedPlanId(plan?.id || allPlans?.[0]?.id || "");
     }
   };
@@ -107,24 +110,25 @@ export function SubscribePlanButton({
           {!isChildLocked && (
             <RadioGroup value={selectedChildId} onValueChange={setSelectedChildId}>
               <div className="space-y-2">
-                {/* Parent Option */}
-                <div
-                  className={`flex items-center gap-3 rounded-xl border p-4 cursor-pointer transition-all hover:bg-accent ${
-                    selectedChildId === "" ? "border-primary bg-primary/5" : ""
-                  }`}
-                  onClick={() => setSelectedChildId("")}
-                >
-                  <RadioGroupItem value="" id="profile-parent" />
-                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <User className="h-4 w-4 text-primary" />
+                {allowSelfProfile && (
+                  <div
+                    className={`flex items-center gap-3 rounded-xl border p-4 cursor-pointer transition-all hover:bg-accent ${
+                      selectedChildId === "" ? "border-primary bg-primary/5" : ""
+                    }`}
+                    onClick={() => setSelectedChildId("")}
+                  >
+                    <RadioGroupItem value="" id="profile-self" />
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <Label htmlFor="profile-self" className="font-semibold block cursor-pointer">
+                        My Profile
+                      </Label>
+                      <span className="text-xs text-muted-foreground">Full access for your account</span>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <Label htmlFor="profile-parent" className="font-semibold block cursor-pointer">
-                      Parent Profile (Me)
-                    </Label>
-                    <span className="text-xs text-muted-foreground">Full access for your account</span>
-                  </div>
-                </div>
+                )}
 
                 {/* Child Options */}
                 {childProfiles.length > 0 && (
@@ -178,7 +182,7 @@ export function SubscribePlanButton({
                     <div className="text-sm">
                       <p className="font-medium text-amber-600">No child profiles yet</p>
                       <p className="text-amber-600/80">
-                        You can subscribe for yourself, or{" "}
+                        {allowSelfProfile ? "You can subscribe for yourself, or " : "Add a child profile to subscribe. "}
                         <Link
                           href="/parent/children"
                           className="underline font-bold"
@@ -186,7 +190,7 @@ export function SubscribePlanButton({
                         >
                           add a child profile
                         </Link>{" "}
-                        first.
+                        {allowSelfProfile ? "first." : ""}
                       </p>
                     </div>
                   </div>
@@ -254,10 +258,12 @@ export function SubscribePlanButton({
                 userId: userId,
                 childProfileId: selectedChildId || null,
               }}
-              disabled={!selectedPlan || amount <= 0}
+              disabled={!selectedPlan || amount <= 0 || (!allowSelfProfile && !selectedChildId)}
             >
               {!selectedPlan || amount <= 0
                 ? "Select a Plan"
+                : !allowSelfProfile && !selectedChildId
+                ? "Select a Child"
                 : `Pay GHS ${amount.toFixed(2)}`}
             </PaystackButton>
           </div>

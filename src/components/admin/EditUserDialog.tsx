@@ -122,11 +122,12 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
                         </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                        <SelectItem value="PARENT">Parent</SelectItem>
-                        <SelectItem value="AFFILIATE">Affiliate</SelectItem>
-                        <SelectItem value="MANAGER">Manager</SelectItem>
-                        <SelectItem value="ADMIN">Admin</SelectItem>
-                        <SelectItem value="FINANCE">Finance</SelectItem>
+                        <SelectItem value={Role.CUSTOMER}>Customer</SelectItem>
+                        <SelectItem value={Role.PARENT}>Parent</SelectItem>
+                        <SelectItem value={Role.AFFILIATE}>Affiliate</SelectItem>
+                        <SelectItem value={Role.MANAGER}>Manager</SelectItem>
+                        <SelectItem value={Role.ADMIN}>Admin</SelectItem>
+                        <SelectItem value={Role.FINANCE}>Finance</SelectItem>
                         </SelectContent>
                     </Select>
                     <FormMessage />

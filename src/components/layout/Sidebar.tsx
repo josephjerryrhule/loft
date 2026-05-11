@@ -63,17 +63,22 @@ function getLinks(userRole?: string, hasChildren?: boolean) {
   const parentLinks = [
     { href: "/parent", label: "Dashboard", icon: LayoutDashboard },
     { href: "/parent/children", label: "My Children", icon: Users },
+    { href: "/parent/plans", label: "Child Plans", icon: CreditCard },
+    { href: "/parent/orders", label: "My Orders", icon: ShoppingBag },
+    { href: "/products", label: "Shop Products", icon: ShoppingBag },
   ];
 
   if (!hasChildren) {
     parentLinks.push({ href: "/parent/flipbooks", label: "Flipbooks", icon: BookOpen });
   }
 
-  parentLinks.push(
-    { href: "/parent/plans", label: "Plans", icon: CreditCard },
-    { href: "/parent/orders", label: "My Orders", icon: ShoppingBag },
-    { href: "/products", label: "Shop Products", icon: ShoppingBag }
-  );
+  const customerLinks = [
+    { href: "/customer", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/customer/flipbooks", label: "Flipbooks", icon: BookOpen },
+    { href: "/customer/plans", label: "Plans", icon: CreditCard },
+    { href: "/customer/orders", label: "My Orders", icon: ShoppingBag },
+    { href: "/products", label: "Shop Products", icon: ShoppingBag },
+  ];
 
   const financeLinks = [
     { href: "/finance", label: "Ambassador Tracking", icon: Users },
@@ -86,6 +91,7 @@ function getLinks(userRole?: string, hasChildren?: boolean) {
   if (userRole === Role.MANAGER) return [...managerLinks, ...commonLinks];
   if (userRole === Role.AFFILIATE) return [...affiliateLinks, ...commonLinks];
   if (userRole === Role.PARENT) return [...parentLinks, ...commonLinks];
+  if (userRole === Role.CUSTOMER) return [...customerLinks, ...commonLinks];
   if (userRole === Role.FINANCE) return financeLinks; // No settings — read/export + payout only
 
   return commonLinks;

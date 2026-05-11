@@ -11,6 +11,7 @@ import {
   sendOrderReceiptEmail,
   sendOrderNotificationToSupport
 } from "@/lib/email";
+import { canCreateSubscriptionForProfile } from "@/lib/access-control.mjs";
 
 // Verify payment with Paystack
 interface PaystackVerificationData {
@@ -21,7 +22,7 @@ interface PaystackVerificationData {
       userId?: string;
       type?: string;
       itemId?: string;
-      [key: string]: any;
+      [key: string]: unknown;
   };
 }
 
@@ -70,14 +71,14 @@ export async function processSubscriptionPayment(reference: string, planId: stri
 
   // 2. Determine Customer ID and Child Profile ID
   let customerId = userId;
-  let childProfileId = undefined;
+  let childProfileId: string | undefined = undefined;
   
   // If not passed, check metadata
   if (verificationData?.metadata) {
     if (!customerId && verificationData.metadata.userId) {
         customerId = verificationData.metadata.userId;
     }
-    if (verificationData.metadata.childProfileId) {
+    if (typeof verificationData.metadata.childProfileId === "string") {
         childProfileId = verificationData.metadata.childProfileId;
     }
   }
@@ -98,7 +99,7 @@ export async function processSubscriptionPayment(reference: string, planId: stri
            return { error: verification.error || "Payment verification failed" };
         }
         verificationData = verification.data;
-        if (verificationData.metadata?.childProfileId && !childProfileId) {
+        if (typeof verificationData.metadata?.childProfileId === "string" && !childProfileId) {
             childProfileId = verificationData.metadata.childProfileId;
         }
     }
@@ -106,7 +107,12 @@ export async function processSubscriptionPayment(reference: string, planId: stri
     // Resolve planId — fall back to metadata if not explicitly provided
     let resolvedPlanId = planId;
     if (!resolvedPlanId && verificationData?.metadata) {
-        resolvedPlanId = verificationData.metadata.planId || verificationData.metadata.itemId;
+        resolvedPlanId =
+          typeof verificationData.metadata.planId === "string"
+            ? verificationData.metadata.planId
+            : typeof verificationData.metadata.itemId === "string"
+            ? verificationData.metadata.itemId
+            : "";
     }
 
     const plan = await prisma.subscriptionPlan.findUnique({
@@ -115,9 +121,28 @@ export async function processSubscriptionPayment(reference: string, planId: stri
 
     if (!plan) return { error: "Plan not found" };
 
+    const customer = await prisma.user.findUnique({
+      where: { id: customerId },
+      select: { id: true, role: true },
+    });
+
+    if (!customer) return { error: "Customer not found" };
+    if (!canCreateSubscriptionForProfile(customer.role, childProfileId)) {
+      return { error: "This account cannot subscribe to that profile" };
+    }
+
+    if (childProfileId) {
+      const child = await prisma.childProfile.findFirst({
+        where: { id: childProfileId, parentId: customerId },
+        select: { id: true },
+      });
+      if (!child) return { error: "Invalid child profile" };
+    }
+
     // Prevent duplicate processing
     const existingSubscription = await prisma.subscription.findFirst({
-      where: { paymentReference: reference }
+      where: { paymentReference: reference },
+      include: { customer: true }
     });
     if (existingSubscription) {
       return { success: true, subscription: existingSubscription };
@@ -149,7 +174,7 @@ export async function processSubscriptionPayment(reference: string, planId: stri
       data: {
         customerId: customerId,
         childProfileId: childProfileId,
-        planId,
+        planId: resolvedPlanId,
         status: "ACTIVE",
         paymentStatus: "COMPLETED", // Payment verified via Paystack
         paymentReference: reference,
@@ -399,6 +424,26 @@ export async function initializePayment(data: {
   if (!userId) return { error: "Unauthorized" };
 
   try {
+    if (data.type === "subscription") {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true },
+      });
+
+      if (!user) return { error: "User not found" };
+      if (!canCreateSubscriptionForProfile(user.role, data.childProfileId)) {
+        return { error: "This account cannot subscribe to that profile" };
+      }
+
+      if (data.childProfileId) {
+        const child = await prisma.childProfile.findFirst({
+          where: { id: data.childProfileId, parentId: userId },
+          select: { id: true },
+        });
+        if (!child) return { error: "Invalid child profile" };
+      }
+    }
+
     const { initializePaystackTransaction } = await import("@/lib/paystack");
     
     const result = await initializePaystackTransaction({

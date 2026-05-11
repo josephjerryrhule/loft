@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardContent, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Role } from "@/lib/types";
@@ -48,7 +49,7 @@ function SignupForm() {
         email: "",
         password: "",
         phone: "",
-        role: Role.PARENT,
+        role: Role.CUSTOMER,
         managerCode: "",
         referralCode: referralCode,
         address: "",
@@ -76,7 +77,7 @@ function SignupForm() {
 
     async function handleNext() {
         const fieldsToValidate = step === 1 
-            ? ["firstName", "lastName", "email", "password", "phone"] as const
+            ? ["firstName", "lastName", "email", "password", "phone", "role"] as const
             : [];
         
         const isValid = await form.trigger(fieldsToValidate);
@@ -90,7 +91,7 @@ function SignupForm() {
             <CardHeader>
             <CardTitle>Sign Up</CardTitle>
             <CardDescription>
-                {step === 1 ? "Create your customer account" : "Tell us where you're located"}
+                {step === 1 ? "Create your LOFT account" : "Tell us where you're located"}
             </CardDescription>
             </CardHeader>
             <CardContent>
@@ -150,6 +151,24 @@ function SignupForm() {
                         </FormItem>
                     )} />
 
+                    <FormField control={form.control} name="role" render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Account Type</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Choose account type" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                            <SelectItem value={Role.CUSTOMER}>Customer - I am reading for myself</SelectItem>
+                            <SelectItem value={Role.PARENT}>Parent - I am subscribing for my child</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                        </FormItem>
+                    )} />
+
                     <Button type="button" onClick={handleNext} className="w-full">
                         Continue to Address
                     </Button>
@@ -202,7 +221,6 @@ function SignupForm() {
                         )} />
                     </div>
 
-                    <input type="hidden" {...form.register("role")} value={Role.PARENT} />
                     {referralCode && <input type="hidden" {...form.register("referralCode")} value={referralCode} />}
 
                     <div className="flex gap-2">

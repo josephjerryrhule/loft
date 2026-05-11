@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { processSubscriptionCommission } from "@/lib/commission";
+import { canCreateSubscriptionForProfile } from "@/lib/access-control.mjs";
 
 export async function getPlans() {
     return await prisma.subscriptionPlan.findMany({
@@ -145,6 +146,11 @@ export async function getUserSubscriptions(userId: string) {
 export async function subscribeToPlan(planId: string) {
     const session = await auth();
     if (!session?.user?.id) return { error: "Unauthorized" };
+    // This legacy action only creates self subscriptions.
+    // Parents must subscribe through child-profile checkout instead.
+    if (!canCreateSubscriptionForProfile((session.user as any).role, null)) {
+        return { error: "Parents can only subscribe for a child profile" };
+    }
 
     const plan = await prisma.subscriptionPlan.findUnique({
         where: { id: planId }
@@ -203,4 +209,3 @@ export async function subscribeToPlan(planId: string) {
         return { error: "Failed to subscribe" };
     }
 }
-

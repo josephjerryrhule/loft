@@ -3,7 +3,6 @@
 import { z } from "zod";
 import { hash, compare } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
 import { Role } from "@/lib/types";
 import { getAppUrl } from "@/lib/utils";
 import { processSignupCommission } from "@/lib/commission";
@@ -27,6 +26,8 @@ const registerSchema = z.object({
   postalCode: z.string().optional(),
   country: z.string().optional(),
 });
+
+void registerSchema;
 
 export async function registerUser(formData: z.infer<typeof registerSchema>) {
   const { firstName, lastName, password, phone, role, managerCode, referralCode, isAdminCreated, address, city, state, postalCode, country } = formData;
@@ -53,7 +54,7 @@ export async function registerUser(formData: z.infer<typeof registerSchema>) {
     managerId = manager.id;
   }
 
-  if (role === Role.PARENT && referralCode) {
+  if ((role === Role.PARENT || role === Role.CUSTOMER) && referralCode) {
     // Referral code could be invite code of manager or affiliate
     const referrer = await prisma.user.findUnique({
         where: { inviteCode: referralCode }
@@ -89,8 +90,8 @@ export async function registerUser(formData: z.infer<typeof registerSchema>) {
       },
     });
 
-    // Assign free plan to new customers
-    if (role === Role.PARENT) {
+    // Assign free self-access only to standalone customers.
+    if (role === Role.CUSTOMER) {
       // Use the seeded free plan (created by prisma/seed.ts)
       const freePlan = await prisma.subscriptionPlan.findUnique({
         where: { id: "free-plan-default" }
@@ -119,7 +120,7 @@ export async function registerUser(formData: z.infer<typeof registerSchema>) {
     }
 
     // Process signup commission if customer was referred
-    if (role === Role.PARENT && referralCode) {
+    if ((role === Role.PARENT || role === Role.CUSTOMER) && referralCode) {
       await processSignupCommission(newUser.id, referralCode);
     }
 

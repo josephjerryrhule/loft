@@ -214,7 +214,7 @@ export async function getDailySignupData(filters?: {
   noStore();
   await assertFinanceRole();
 
-  const where: any = { role: Role.PARENT };
+  const where: any = { role: { in: [Role.PARENT, Role.CUSTOMER] } };
 
   if (filters?.dateFrom || filters?.dateTo) {
     where.createdAt = {};
@@ -258,7 +258,7 @@ export async function getDailySignupData(filters?: {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
   const allParents = await prisma.user.findMany({
-    where: { role: Role.PARENT },
+    where: { role: { in: [Role.PARENT, Role.CUSTOMER] } },
     select: { createdAt: true, referredById: true },
   });
 

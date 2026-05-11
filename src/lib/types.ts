@@ -3,11 +3,9 @@ export enum Role {
   MANAGER = "MANAGER",
   AFFILIATE = "AFFILIATE",
   PARENT = "PARENT",
+  CUSTOMER = "CUSTOMER",
   FINANCE = "FINANCE",
 }
-
-/** @deprecated Use Role.PARENT instead */
-export const CUSTOMER = Role.PARENT;
 
 export enum UserStatus {
   ACTIVE = "ACTIVE",
@@ -21,4 +19,3 @@ export enum PaymentStatus {
   FAILED = "FAILED",
   CANCELLED = "CANCELLED"
 }
-

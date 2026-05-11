@@ -17,7 +17,7 @@ model User {
   id              String     @id @default(uuid())
   email           String     @unique
   passwordHash    String     @map("password_hash")
-  role            String     // Enum: ADMIN, MANAGER, AFFILIATE, PARENT
+  role            String     // Enum: ADMIN, MANAGER, AFFILIATE, PARENT, CUSTOMER, FINANCE
   firstName       String?    @map("first_name")
   lastName        String?    @map("last_name")
   phoneNumber     String?    @map("phone_number")
