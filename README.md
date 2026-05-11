@@ -825,3 +825,11 @@ Built with:
 
 **Last Updated:** January 11, 2026  
 **Version:** 1.0.0
+
+## Recent updates
+
+- 2026-05-11: Normalize flipbook age-group handling: variants like "All Ages", "all age groups", and empty values are treated as "all". Queries now match case-insensitively so published flipbooks for "All Ages" show up on child dashboards.
+- 2026-05-11: Removed `category` from product/flipbook validation — categories are no longer used for grouping/shelves.
+- 2026-05-11: Fixed Bookshelf JSX parse/layout bug so child dashboard renders correctly.
+- 2026-05-11: Added docs/changes/2026-05-11-flipbook-agegroup.md with more details and testing notes.
+
