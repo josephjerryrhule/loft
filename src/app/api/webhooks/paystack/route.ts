@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
+import { getPaystackSecretKey } from "@/lib/paystack";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text();
+    // Get secret key from system settings or env (matches other paystack usage)
+    const secret = await getPaystackSecretKey();
     const hash = crypto
-      .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY || "")
+      .createHmac("sha512", secret || "")
       .update(body)
       .digest("hex");
 
