@@ -22,7 +22,6 @@ import { getAgeGroupLabel } from "@/lib/utils";
 const editFlipbookSchema = z.object({
   title: z.string().min(3),
   description: z.string().optional(),
-  category: z.string().optional(),
   ageGroup: z.string().optional(),
   heyzineUrl: z.string().url("Must be a valid URL").optional(),
   isFree: z.boolean().optional(),
@@ -40,7 +39,6 @@ export function EditFlipbookDialog({ flipbook, open, onOpenChange }: EditFlipboo
     defaultValues: {
       title: flipbook.title,
       description: flipbook.description || "",
-      category: flipbook.category || "",
       ageGroup: flipbook.ageGroup || "",
       heyzineUrl: flipbook.heyzineUrl || "",
       isFree: flipbook.isFree || false,
@@ -73,14 +71,6 @@ export function EditFlipbookDialog({ flipbook, open, onOpenChange }: EditFlipboo
                   <FormItem>
                     <FormLabel>Title</FormLabel>
                     <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="category" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <FormControl><Input placeholder="e.g. Fiction, Annual Report" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />

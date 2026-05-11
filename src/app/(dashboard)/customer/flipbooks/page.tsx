@@ -22,10 +22,8 @@ const PAGE_SIZE = 8;
 export default function CustomerFlipbooksPage() {
   const [flipbooks, setFlipbooks] = useState<any[]>([]);
   const [filteredFlipbooks, setFilteredFlipbooks] = useState<any[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
   const [hasSubscription, setHasSubscription] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [categoryFilter, setCategoryFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
   const [dateType, setDateType] = useState<"day" | "month" | "year">("month");
   const [selectedFlipbook, setSelectedFlipbook] = useState<any>(null);
@@ -39,7 +37,7 @@ export default function CustomerFlipbooksPage() {
   useEffect(() => {
     applyFilters();
     setCurrentPage(1); // Reset to page 1 when filters change
-  }, [flipbooks, categoryFilter, dateFilter, dateType]);
+  }, [flipbooks, dateFilter, dateType]);
 
   async function loadFlipbooks() {
     try {
@@ -47,12 +45,6 @@ export default function CustomerFlipbooksPage() {
       const data = await getCustomerFlipbooks();
       setFlipbooks(data.flipbooks);
       setHasSubscription(data.hasSubscription);
-      
-      // Extract unique categories
-      const uniqueCategories = Array.from(
-        new Set(data.flipbooks.map((f: any) => f.category).filter(Boolean))
-      ) as string[];
-      setCategories(uniqueCategories);
     } catch (error) {
       console.error("Failed to load flipbooks:", error);
     } finally {
@@ -62,11 +54,6 @@ export default function CustomerFlipbooksPage() {
 
   function applyFilters() {
     let filtered = [...flipbooks];
-
-    // Category filter
-    if (categoryFilter !== "all") {
-      filtered = filtered.filter(f => f.category === categoryFilter);
-    }
 
     // Date filter
     if (dateFilter) {
@@ -164,21 +151,6 @@ export default function CustomerFlipbooksPage() {
           <span className="text-sm font-medium">Filters:</span>
         </div>
         <div className="flex-1 flex flex-col sm:flex-row gap-4">
-          {/* Category Filter */}
-          <div className="flex-1">
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map(cat => (
-                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           {/* Date Type Filter */}
           <div className="sm:w-30">
             <Select value={dateType} onValueChange={(v: any) => setDateType(v)}>
@@ -226,11 +198,10 @@ export default function CustomerFlipbooksPage() {
           </div>
 
           {/* Clear Filters */}
-          {(categoryFilter !== "all" || dateFilter) && (
+          {dateFilter && (
             <Button 
               variant="outline" 
               onClick={() => {
-                setCategoryFilter("all");
                 setDateFilter(undefined);
               }}
             >
@@ -277,9 +248,6 @@ export default function CustomerFlipbooksPage() {
                   </div>
                   <CardHeader>
                       <CardTitle className="text-lg line-clamp-1">{book.title}</CardTitle>
-                      {book.category && (
-                        <Badge variant="outline" className="w-fit">{book.category}</Badge>
-                      )}
                   </CardHeader>
                   <CardContent className="flex-1">
                       <p className="text-sm text-muted-foreground line-clamp-3">{book.description}</p>

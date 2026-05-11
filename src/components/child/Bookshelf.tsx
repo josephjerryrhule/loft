@@ -4,7 +4,6 @@ import React, { useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Flipbook } from "@prisma/client";
-import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface BookshelfProps {
@@ -12,18 +11,10 @@ interface BookshelfProps {
 }
 
 export function Bookshelf({ flipbooks }: BookshelfProps) {
-  // Group flipbooks by category
-  const groupedFlipbooks = useMemo(() => {
-    const groups: Record<string, Flipbook[]> = {};
-    flipbooks.forEach((book) => {
-      const category = book.category || "Uncategorized";
-      if (!groups[category]) {
-        groups[category] = [];
-      }
-      groups[category].push(book);
-    });
-    return groups;
-  }, [flipbooks]);
+  const sortedFlipbooks = useMemo(
+    () => [...flipbooks].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [flipbooks]
+  );
 
   // Helper to chunk books into rows (we'll assume a max of 5 for the bars)
   const getRows = (books: Flipbook[], itemsPerRow: number) => {
@@ -50,29 +41,10 @@ export function Bookshelf({ flipbooks }: BookshelfProps) {
 
   return (
     <div className="space-y-48 pb-20">
-      {Object.entries(groupedFlipbooks).map(([category, books]) => (
-        <div key={category} className="space-y-16">
-          {/* Category Header */}
-          <div className="flex items-end justify-between px-2">
-            <div className="space-y-1">
-              <span className="text-xs font-black text-[#E87154] uppercase tracking-[0.3em] font-quicksand">Collection</span>
-              <h2 className="text-4xl font-black text-[#2D2D2D] font-quicksand tracking-tight">
-                {category}
-              </h2>
-            </div>
-            <Link 
-              href={`/child/library?category=${encodeURIComponent(category)}`}
-              className="flex items-center gap-2 text-[#BBBBBB] font-black text-sm uppercase tracking-widest hover:text-[#E87154] transition-all cursor-pointer group px-4 py-2 bg-white rounded-xl border border-transparent hover:border-[#E87154]/10 hover:shadow-sm"
-            >
-              View All <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-
-          {/* Unified Shelf Row Rendering */}
-          <div className="space-y-32">
+      <div className="space-y-32">
             {/* Desktop View (5 items per row) */}
             <div className="hidden xl:block space-y-48">
-              {getRows(books, 5).map((row, idx) => (
+              {getRows(sortedFlipbooks, 5).map((row, idx) => (
                 <div key={idx} className="grid grid-cols-5 gap-12 relative px-4 pb-10">
                   {row.map((book) => (
                     <BookItem key={book.id} book={book} />
@@ -85,7 +57,7 @@ export function Bookshelf({ flipbooks }: BookshelfProps) {
 
             {/* Laptop View (4 items per row) */}
             <div className="hidden lg:block xl:hidden space-y-48">
-              {getRows(books, 4).map((row, idx) => (
+              {getRows(sortedFlipbooks, 4).map((row, idx) => (
                 <div key={idx} className="grid grid-cols-4 gap-10 relative px-4 pb-10">
                   {row.map((book) => (
                     <BookItem key={book.id} book={book} />
@@ -97,7 +69,7 @@ export function Bookshelf({ flipbooks }: BookshelfProps) {
 
             {/* Tablet View (3 items per row) */}
             <div className="hidden md:block lg:hidden space-y-48">
-              {getRows(books, 3).map((row, idx) => (
+              {getRows(sortedFlipbooks, 3).map((row, idx) => (
                 <div key={idx} className="grid grid-cols-3 gap-8 relative px-4 pb-10">
                   {row.map((book) => (
                     <BookItem key={book.id} book={book} />
@@ -109,7 +81,7 @@ export function Bookshelf({ flipbooks }: BookshelfProps) {
 
             {/* Mobile View (2 items per row) */}
             <div className="block md:hidden space-y-48">
-              {getRows(books, 2).map((row, idx) => (
+              {getRows(sortedFlipbooks, 2).map((row, idx) => (
                 <div key={idx} className="grid grid-cols-2 gap-6 relative px-4 pb-10">
                   {row.map((book) => (
                     <BookItem key={book.id} book={book} />
@@ -118,11 +90,9 @@ export function Bookshelf({ flipbooks }: BookshelfProps) {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      ))}
+      </div>
 
-      <style jsx global>{`
+      <style jsx global={true}>{`
         .perspective-1000 {
           perspective: 1000px;
         }

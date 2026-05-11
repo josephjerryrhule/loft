@@ -471,6 +471,7 @@ export async function adminAssignPlan(data: {
                     planId: data.planId,
                     childProfileId: data.childProfileId || null,
                     status: "ACTIVE",
+                    paymentStatus: "COMPLETED",
                     startDate,
                     endDate,
                     autoRenew: false,

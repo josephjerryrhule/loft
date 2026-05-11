@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 
 export default async function ChildLibraryPage(props: {
-  searchParams: Promise<{ search?: string; category?: string }>;
+  searchParams: Promise<{ search?: string }>;
 }) {
   const searchParams = await props.searchParams;
   const session = await getChildSession();
@@ -16,10 +16,7 @@ export default async function ChildLibraryPage(props: {
     redirect("/child/login");
   }
 
-  const { flipbooks, categories, error } = await getChildLibraryFlipbooks(
-    searchParams.search,
-    searchParams.category
-  );
+  const { flipbooks, error } = await getChildLibraryFlipbooks(searchParams.search);
 
   if (error || !flipbooks) {
     return (
@@ -59,40 +56,8 @@ export default async function ChildLibraryPage(props: {
                 defaultValue={searchParams.search}
                 className="h-16 pl-14 pr-6 rounded-3xl border-2 border-[#E87154]/10 focus:border-[#E87154] bg-white shadow-sm font-bold text-lg placeholder:text-[#BBBBBB] focus:ring-0 transition-all"
               />
-              {searchParams.category && (
-                <input type="hidden" name="category" value={searchParams.category} />
-              )}
             </form>
           </div>
-        </div>
-
-        {/* Categories Bar */}
-        <div className="flex items-center gap-3 overflow-x-auto pb-4 no-scrollbar">
-          <Link
-            href="/child/library"
-            className={`px-6 py-3 rounded-2xl font-black text-sm uppercase tracking-widest whitespace-nowrap transition-all ${
-              !searchParams.category || searchParams.category === "all"
-                ? "bg-[#E87154] text-white shadow-[0_10px_25px_rgba(232,113,84,0.3)]"
-                : "bg-white text-[#BBBBBB] border border-[#E87154]/10 hover:border-[#E87154]/30"
-            }`}
-          >
-            All Books
-          </Link>
-          {categories.map((cat) => (
-            <Link
-              key={cat}
-              href={`/child/library?category=${encodeURIComponent(cat)}${
-                searchParams.search ? `&search=${searchParams.search}` : ""
-              }`}
-              className={`px-6 py-3 rounded-2xl font-black text-sm uppercase tracking-widest whitespace-nowrap transition-all ${
-                searchParams.category === cat
-                  ? "bg-[#E87154] text-white shadow-[0_10px_25px_rgba(232,113,84,0.3)]"
-                  : "bg-white text-[#BBBBBB] border border-[#E87154]/10 hover:border-[#E87154]/30"
-              }`}
-            >
-              {cat}
-            </Link>
-          ))}
         </div>
       </div>
 

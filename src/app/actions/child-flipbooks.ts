@@ -31,11 +31,9 @@ export async function getChildFlipbooks() {
       ...(hasActiveSubscription ? {} : { isFree: true }),
       OR: [
         { ageGroup: child.ageGroup },
-        { ageGroup: { equals: "all", mode: "insensitive" as const } },
-        { ageGroup: { equals: "ALL", mode: "insensitive" as const } },
+        { ageGroup: { contains: "all", mode: "insensitive" as const } },
         { ageGroup: "" },
-        { ageGroup: null },
-        { ageGroup: { equals: "all age groups", mode: "insensitive" as const } }
+        { ageGroup: null }
       ],
     };
 
@@ -95,7 +93,7 @@ export async function getChildFlipbooks() {
   }
 }
 
-export async function getChildLibraryFlipbooks(search?: string, category?: string) {
+export async function getChildLibraryFlipbooks(search?: string) {
   const session = await getChildSession();
   if (!session) return { error: "Unauthorized" };
 
@@ -120,16 +118,13 @@ export async function getChildLibraryFlipbooks(search?: string, category?: strin
       where: {
         isPublished: true,
         ...(hasActiveSubscription ? {} : { isFree: true }),
-        ...(category && category !== "all" ? { category } : {}),
         AND: [
           {
             OR: [
               { ageGroup: child.ageGroup },
-              { ageGroup: { equals: "all", mode: "insensitive" } },
-              { ageGroup: { equals: "ALL", mode: "insensitive" } },
+              { ageGroup: { contains: "all", mode: "insensitive" } },
               { ageGroup: "" },
-              { ageGroup: null },
-              { ageGroup: { equals: "all age groups", mode: "insensitive" } }
+              { ageGroup: null }
             ]
           },
           ...(search ? [{
@@ -143,27 +138,8 @@ export async function getChildLibraryFlipbooks(search?: string, category?: strin
       orderBy: { createdAt: "desc" },
     });
 
-    // Get unique categories for filters
-    const allFlipbooks = await prisma.flipbook.findMany({
-      where: {
-        isPublished: true,
-        ...(hasActiveSubscription ? {} : { isFree: true }),
-        OR: [
-          { ageGroup: child.ageGroup },
-          { ageGroup: { equals: "all", mode: "insensitive" } },
-          { ageGroup: { equals: "ALL", mode: "insensitive" } },
-          { ageGroup: "" },
-          { ageGroup: null },
-          { ageGroup: { equals: "all age groups", mode: "insensitive" } }
-        ],
-      },
-      select: { category: true },
-    });
-    const categories = Array.from(new Set(allFlipbooks.map(f => f.category).filter(Boolean))) as string[];
-
     return { 
       flipbooks, 
-      categories,
       hasAccess: hasActiveSubscription 
     };
   } catch (error) {

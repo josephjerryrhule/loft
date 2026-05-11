@@ -175,7 +175,6 @@ export const productSchema = z.object({
   price: currencySchema,
   fileUrl: urlSchema,
   thumbnailUrl: urlSchema.optional().or(z.literal("")),
-  category: z.string().optional(),
 });
 
 // Commission rate validation

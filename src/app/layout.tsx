@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 
 import { Toaster } from "@/components/ui/sonner";
 import { prisma } from "@/lib/prisma";
@@ -83,6 +84,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const settings = await getSettings();
+  const cloudflareWebAnalyticsToken = process.env.NEXT_PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN;
   
   return (
     <html lang="en">
@@ -90,6 +92,14 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${quicksand.variable} ${nunitoSans.variable} antialiased`}
       >
         <FaviconUpdater faviconUrl={settings.faviconUrl} />
+        {cloudflareWebAnalyticsToken ? (
+          <Script
+            defer
+            src="https://static.cloudflareinsights.com/beacon.min.js"
+            data-cf-beacon={JSON.stringify({ token: cloudflareWebAnalyticsToken })}
+            strategy="afterInteractive"
+          />
+        ) : null}
         {children}
         <Toaster />
 

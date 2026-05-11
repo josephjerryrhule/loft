@@ -10,8 +10,7 @@ const flipbookSchema = z.object({
   title: z.string().min(3),
   description: z.string().optional(),
   heyzineUrl: z.string().url("Must be a valid URL"),
-  category: z.string().optional(),
-  ageGroup: z.string().optional(),
+  ageGroup: z.string().optional().nullable(),
   isFree: z.boolean().optional(),
   schedulePublish: z.boolean().optional(),
   publishedAt: z.string().optional().nullable(),
@@ -43,8 +42,10 @@ export async function createFlipbook(formData: FormData) {
   const title = formData.get("title") as string;
   const description = formData.get("description") as string;
   const heyzineUrl = formData.get("heyzineUrl") as string;
-  const category = formData.get("category") as string;
-  const ageGroup = formData.get("ageGroup") as string;
+  const rawAgeGroup = formData.get("ageGroup") as string | null;
+  // Normalize age group: empty -> null, any variant containing "all" -> "all"
+  const ageGroup = rawAgeGroup && rawAgeGroup.trim() !== "" ? rawAgeGroup.trim() : null;
+  const normalizedAgeGroup = ageGroup && /all/i.test(ageGroup) ? "all" : ageGroup;
   const isFree = formData.get("isFree") === "on";
   const schedulePublish = formData.get("schedulePublish") === "on";
   const publishedAt = formData.get("publishedAt") as string;
@@ -54,8 +55,7 @@ export async function createFlipbook(formData: FormData) {
       title, 
       description, 
       heyzineUrl,
-      category, 
-      ageGroup,
+      ageGroup: normalizedAgeGroup,
       isFree,
       schedulePublish,
       publishedAt
@@ -74,7 +74,6 @@ export async function createFlipbook(formData: FormData) {
         heyzineUrl: validatedData.heyzineUrl,
         iframeContent,
         coverImageUrl: thumbnailUrl,
-        category: validatedData.category,
         ageGroup: validatedData.ageGroup,
         createdById: session.user.id,
         isPublished: isPublishedNow,
@@ -100,7 +99,6 @@ export async function createFlipbook(formData: FormData) {
 export async function updateFlipbook(flipbookId: string, data: {
     title: string;
     description?: string;
-    category?: string;
     ageGroup?: string;
     heyzineUrl?: string; // Changed from pdfUrl
     isPublished?: boolean;
@@ -110,8 +108,7 @@ export async function updateFlipbook(flipbookId: string, data: {
         const updateData: {
             title: string;
             description?: string;
-            category?: string;
-            ageGroup?: string;
+            ageGroup?: string | null;
             isPublished?: boolean;
             isFree?: boolean;
             heyzineUrl?: string;
@@ -120,8 +117,8 @@ export async function updateFlipbook(flipbookId: string, data: {
         } = {
             title: data.title,
             description: data.description,
-            category: data.category,
-            ageGroup: data.ageGroup,
+            // normalize incoming ageGroup: empty -> null, any "all" variant -> "all"
+            ageGroup: data.ageGroup && data.ageGroup.trim() !== "" ? (/all/i.test(data.ageGroup) ? "all" : data.ageGroup) : null,
             isPublished: data.isPublished,
             isFree: data.isFree
         };
@@ -292,8 +289,7 @@ export async function getCustomerFlipbooks(childProfileId?: string) {
                     ...(childAgeGroup ? [{
                         OR: [
                             { ageGroup: childAgeGroup },
-                            { ageGroup: "all" },
-                            { ageGroup: "ALL" },
+                            { ageGroup: { contains: "all", mode: "insensitive" as const } },
                             { ageGroup: "" },
                             { ageGroup: null }
                         ]
@@ -314,8 +310,8 @@ export async function getCustomerFlipbooks(childProfileId?: string) {
         });
 
         // Flatten progress (take first item from array) and serialize to plain objects
-        const flipbooksWithProgress = flipbooks.map(fb => {
-            const progress = fb.progress[0] || null;
+        const flipbooksWithProgress = (flipbooks as any).map((fb: any) => {
+            const progress = fb.progress?.[0] || null;
             return {
                 id: fb.id,
                 title: fb.title,
@@ -325,7 +321,6 @@ export async function getCustomerFlipbooks(childProfileId?: string) {
                 heyzineUrl: fb.heyzineUrl,
                 iframeContent: fb.iframeContent,
                 totalPages: fb.totalPages,
-                category: fb.category,
                 ageGroup: fb.ageGroup,
                 isPublished: fb.isPublished,
                 isFree: fb.isFree,
@@ -428,23 +423,5 @@ export async function updateFlipbookProgress(data: {
 }
 
 export async function getAllCategories() {
-    try {
-        const categories = await prisma.flipbook.findMany({
-            where: {
-                category: { not: null }
-            },
-            select: {
-                category: true
-            },
-            distinct: ['category']
-        });
-
-        return categories
-            .map(f => f.category)
-            .filter((cat): cat is string => cat !== null)
-            .sort();
-    } catch (error) {
-        console.error("Failed to get categories:", error);
-        return [];
-    }
+    return [];
 }

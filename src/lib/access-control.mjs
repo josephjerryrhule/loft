@@ -24,8 +24,13 @@ export function canUseParentLibraryForChild(role, childProfileId) {
 
 export function isAllAgeGroup(ageGroup) {
   if (!ageGroup) return true;
-  const normalized = String(ageGroup).trim().toLowerCase();
-  return normalized === "" || normalized === "all" || normalized === "all age groups";
+  const normalized = String(ageGroup).trim().toLowerCase().replace(/[_-]+/g, " ");
+  return (
+    normalized === "" ||
+    normalized === "all" ||
+    normalized === "all age groups" ||
+    normalized === "all ages"
+  );
 }
 
 export function isFlipbookReadableForChild({

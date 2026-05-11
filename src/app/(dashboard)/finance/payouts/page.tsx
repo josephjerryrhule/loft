@@ -273,7 +273,7 @@ export default function PayoutRequestsPage() {
             </DialogTitle>
             <DialogDescription>
               {confirmDialog?.action === "approve" && `Approve the payout request from ${confirmDialog?.name}?`}
-              {confirmDialog?.action === "paid" && `Confirm payment has been disbursed to ${confirmDialog?.name}. This will also mark all their approved commissions as paid.`}
+              {confirmDialog?.action === "paid" && `Confirm payment has been disbursed to ${confirmDialog?.name}. This will mark approved commissions as paid up to the payout amount.`}
               {confirmDialog?.action === "reject" && `Reject the payout request from ${confirmDialog?.name}?`}
             </DialogDescription>
           </DialogHeader>

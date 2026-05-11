@@ -5,14 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createFlipbook, getAllFlipbooks, getAllCategories } from "@/app/actions/flipbooks";
+import { createFlipbook, getAllFlipbooks } from "@/app/actions/flipbooks";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { FileUpload } from "@/components/ui/file-upload";
 import { FlipbookActions } from "@/components/flipbook/FlipbookActions";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { Loader2 } from "lucide-react";
-import { TagInput } from "@/components/ui/tag-input";
 import { DateTimePicker } from "@/components/ui/datetime-picker";
 import { toast } from "sonner";
 import { getAgeGroupLabel } from "@/lib/utils";
@@ -23,15 +22,12 @@ export default function AdminFlipbooksPage() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(12);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
   const [schedulePublish, setSchedulePublish] = useState(false);
   const [publishDate, setPublishDate] = useState<Date | undefined>(undefined);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     loadFlipbooks();
-    loadCategories();
   }, []);
 
   const loadFlipbooks = async () => {
@@ -46,23 +42,9 @@ export default function AdminFlipbooksPage() {
     }
   };
 
-  const loadCategories = async () => {
-    try {
-      const cats = await getAllCategories();
-      setCategories(cats);
-    } catch (error) {
-      console.error("Failed to load categories:", error);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    
-    // Add category from state
-    if (selectedCategory.length > 0) {
-      formData.set("category", selectedCategory[0]);
-    }
     
     // Add publish date if scheduled
     if (schedulePublish && publishDate) {
@@ -82,11 +64,9 @@ export default function AdminFlipbooksPage() {
     } else {
       toast.success("Flipbook created successfully");
       setDialogOpen(false);
-      setSelectedCategory([]);
       setSchedulePublish(false);
       setPublishDate(undefined);
       loadFlipbooks();
-      loadCategories(); // Refresh categories
     }
   };
 
@@ -119,20 +99,6 @@ export default function AdminFlipbooksPage() {
                   <Label>Title</Label>
                   <Input name="title" placeholder="E.g. Monthly Gazette" required />
                </div>
-               <div>
-                  <Label>Category</Label>
-                  <TagInput
-                    value={selectedCategory}
-                    onChange={setSelectedCategory}
-                    suggestions={categories}
-                    placeholder="Type to search or add new category..."
-                    maxTags={1}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Select from existing categories or type and press Enter to add a new one
-                  </p>
-               </div>
-
                <div>
                   <Label>Age Group</Label>
                    <select 
@@ -209,7 +175,6 @@ export default function AdminFlipbooksPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Title</TableHead>
-              <TableHead>Category</TableHead>
               <TableHead>Age Group</TableHead>
               <TableHead>Author</TableHead>
               <TableHead>Status</TableHead>
@@ -229,13 +194,6 @@ export default function AdminFlipbooksPage() {
             {paginatedFlipbooks.map((book) => (
               <TableRow key={book.id}>
                 <TableCell className="font-medium">{book.title}</TableCell>
-                <TableCell>
-                    {book.category && (
-                        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
-                            {book.category}
-                        </span>
-                    )}
-                </TableCell>
                 <TableCell>
                     {book.ageGroup ? (
                         <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">

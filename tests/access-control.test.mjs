@@ -5,6 +5,7 @@ import {
   canCreateSubscriptionForProfile,
   canUseCustomerLibrary,
   canUseParentLibraryForChild,
+  isAllAgeGroup,
   isFlipbookReadableForChild,
 } from "../src/lib/access-control.mjs";
 
@@ -59,4 +60,20 @@ test("child flipbook readability respects free, subscription, and age group", ()
     }),
     true
   );
+});
+
+test("all-age variants are treated as readable for every child age group", () => {
+  for (const allAgeValue of [null, "", "all", "ALL", "All Ages", "all ages", "ALL_AGES", "all age groups"]) {
+    assert.equal(isAllAgeGroup(allAgeValue), true, `${allAgeValue} should be all-age`);
+    assert.equal(
+      isFlipbookReadableForChild({
+        isFree: true,
+        childHasSubscription: false,
+        flipbookAgeGroup: allAgeValue,
+        childAgeGroup: "LOFT_365",
+      }),
+      true,
+      `${allAgeValue} should be readable for LOFT_365`
+    );
+  }
 });

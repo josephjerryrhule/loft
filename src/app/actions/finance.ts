@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { Role } from "@/lib/types";
 import { unstable_noStore as noStore } from "next/cache";
+import { selectCommissionIdsForPayout } from "@/lib/payout.mjs";
 
 async function assertFinanceRole() {
   const session = await auth();
@@ -334,17 +335,35 @@ export async function financeMarkPayoutPaid(payoutRequestId: string, adminNotes?
 
   const payout = await prisma.payoutRequest.findUnique({ where: { id: payoutRequestId } });
   if (!payout) return { error: "Payout not found" };
+  if (payout.status !== "APPROVED") {
+    return { error: "Only approved payout requests can be marked as paid" };
+  }
 
-  // Mark payout as paid and mark all APPROVED commissions for this user as PAID
+  const approvedCommissions = await prisma.commission.findMany({
+    where: { userId: payout.userId, status: "APPROVED" },
+    orderBy: { createdAt: "asc" },
+    select: { id: true, amount: true },
+  });
+
+  const commissionsToMarkPaid = selectCommissionIdsForPayout(
+    Number(payout.amount),
+    approvedCommissions
+  );
+  const paidAt = new Date();
+
   await prisma.$transaction([
     prisma.payoutRequest.update({
       where: { id: payoutRequestId },
-      data: { status: "PAID", processedAt: new Date(), adminNotes: adminNotes || null },
+      data: { status: "PAID", processedAt: paidAt, adminNotes: adminNotes || null },
     }),
-    prisma.commission.updateMany({
-      where: { userId: payout.userId, status: "APPROVED" },
-      data: { status: "PAID", paidAt: new Date() },
-    }),
+    ...(commissionsToMarkPaid.length > 0
+      ? [
+          prisma.commission.updateMany({
+            where: { id: { in: commissionsToMarkPaid } },
+            data: { status: "PAID", paidAt },
+          }),
+        ]
+      : []),
   ]);
 
   revalidatePath("/finance/payouts");
