@@ -579,6 +579,8 @@ loft/
 └── tsconfig.json              # TypeScript config
 ```
 
+**Note:** Recent updates (2026-05-11): Flipbook age-group handling normalized; Bookshelf component fixed; `category` validation removed. See `docs/changes/2026-05-11-flipbook-agegroup.md` for details.
+
 ---
 
 ## 👨‍💻 Development
