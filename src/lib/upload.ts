@@ -18,9 +18,13 @@ export async function saveFileLocally(
   const fileName = `${randomUUID()}.${extension}`;
   
   // Define absolute path to upload directory
-  // We store in public/uploads/{folder} so they are accessible via browser
-  const uploadDir = path.join(process.cwd(), 'public', 'uploads', folder);
+  // In some production environments (like Plesk), you might want to save directly to a served folder
+  // Defaults to public/uploads if not specified
+  const baseUploadDir = process.env.UPLOAD_DIR_BASE || path.join(process.cwd(), 'public', 'uploads');
+  const uploadDir = path.join(baseUploadDir, folder);
   
+  console.log(`[Upload] Saving file to: ${uploadDir}/${fileName}`);
+
   // Ensure directory exists
   try {
     await fs.access(uploadDir);
@@ -34,6 +38,7 @@ export async function saveFileLocally(
   await fs.writeFile(filePath, buffer);
 
   // Return public URL path
+  // If UPLOAD_DIR_BASE is used, we still assume the URL is relative to the domain root /uploads/
   return `/uploads/${folder}/${fileName}`;
 }
 
@@ -43,12 +48,14 @@ export async function deleteFile(fileUrl: string): Promise<boolean> {
     // Expecting url like: /uploads/misc/xyz.jpg
     if (!fileUrl.startsWith('/uploads/')) return false;
 
-    const relativePath = fileUrl.substring(1); // Remove leading slash
-    const fullPath = path.join(process.cwd(), 'public', relativePath);
+    const relativePath = fileUrl.replace('/uploads/', ''); 
+    const baseUploadDir = process.env.UPLOAD_DIR_BASE || path.join(process.cwd(), 'public', 'uploads');
+    const fullPath = path.join(baseUploadDir, relativePath);
 
-    // Security check: ensure path is within public/uploads
-    const uploadsRoot = path.join(process.cwd(), 'public', 'uploads');
-    if (!fullPath.startsWith(uploadsRoot)) {
+    console.log(`[Upload] Deleting file from: ${fullPath}`);
+
+    // Security check: ensure path is within baseUploadDir
+    if (!fullPath.startsWith(baseUploadDir)) {
         console.error("Invalid file deletion path detected");
         return false;
     }

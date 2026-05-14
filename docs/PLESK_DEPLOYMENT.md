@@ -110,9 +110,9 @@ Use a managed PostgreSQL service:
 3. **Configure Node.js settings:**
    - ✅ **Enable Node.js:** Yes
    - ✅ **Node.js version:** 20.x or 22.x (latest LTS)
-   - ✅ **Document root:** `/httpdocs`
+   - ✅ **Document root:** `/httpdocs/public` (CRITICAL: Must point to /public for images to work)
    - ✅ **Application mode:** Production
-   - ✅ **Application root:** `/httpdocs` (or custom path)
+   - ✅ **Application root:** `/httpdocs`
    - ✅ **Application startup file:** Leave empty (we'll use PM2)
    - ✅ **Custom environment variables:** (add later)
 
@@ -602,14 +602,16 @@ pm2 restart loft
    chown -R your-plesk-user:psacln uploads
    ```
 
-### 502 Bad Gateway
+### 404 on Uploaded Files (Local Storage)
 
-- **Cause:** Node.js app not running or wrong port
-- **Fix:** 
-  ```bash
-  pm2 restart loft
-  pm2 logs loft
-  ```
+If uploads are successful but return a 404 when accessed via URL:
+
+1. **Check Document Root:** Ensure Plesk's **Document Root** is set to `/httpdocs/public` (not just `/httpdocs`).
+2. **Verify Directory:** Check if the file exists at `/var/www/vhosts/yourdomain.com/httpdocs/public/uploads/profiles/...`.
+3. **Custom Upload Path:** If you cannot change the Document Root, you can force the app to save elsewhere by adding an environment variable in Plesk:
+   - `UPLOAD_DIR_BASE = /var/www/vhosts/yourdomain.com/httpdocs/uploads`
+   - (This will save to `/httpdocs/uploads` which matches the `/uploads/` URL if Document Root is `/httpdocs`).
+4. **Permissions:** Ensure the `uploads` folder has `775` permissions.
 
 ### Memory Issues
 
