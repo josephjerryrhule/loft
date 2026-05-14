@@ -17,7 +17,6 @@ export const revalidate = 0;
 export default async function ManagerDashboardPage() {
   // Role protection - only managers can access
   const session = await auth();
-  // @ts-expect-error - role exists in our custom session type
   if (!session?.user || session.user.role !== "MANAGER") {
     redirect("/parent");
   }

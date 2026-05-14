@@ -20,7 +20,6 @@ export default async function AffiliateDashboardPage() {
   const session = await auth();
   
   // Role protection - only affiliates can access
-  // @ts-expect-error - role exists in our custom session type
   if (!session?.user || session.user.role !== "AFFILIATE") {
     redirect("/parent");
   }
