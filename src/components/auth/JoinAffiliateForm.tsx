@@ -23,7 +23,7 @@ const registerSchema = z.object({
   lastName: z.string().min(2, "Last name is too short"),
   email: z.string().email("Invalid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  phone: z.string().optional(),
+  phone: z.string().min(1, "WhatsApp number is required"),
   role: z.nativeEnum(Role),
   managerCode: z.string().min(1, "Manager code is required"),
   referralCode: z.string().optional(),
@@ -103,10 +103,10 @@ export function JoinAffiliateForm({ managerCode }: JoinAffiliateFormProps) {
 
               <FormField control={form.control} name="phone" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone Number</FormLabel>
+                  <FormLabel>WhatsApp Number</FormLabel>
                   <FormControl>
                     <PhoneInput
-                      placeholder="Enter phone number"
+                      placeholder="Enter WhatsApp number"
                       defaultCountry="GH"
                       value={field.value}
                       onChange={field.onChange}

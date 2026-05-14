@@ -145,9 +145,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     // Return empty session to force logout
                     return { ...session, user: undefined };
                 }
-                // @ts-ignore
-                session.user.role = user.role;
-                // @ts-ignore
+                session.user.role = user.role as any;
                 session.user.requirePasswordReset = user.requirePasswordReset;
             }
         }

@@ -100,11 +100,12 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
 
               <FormField control={form.control} name="phoneNumber" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone Number</FormLabel>
-                   <FormControl>
-                    <PhoneInputComponent 
-                        value={field.value} 
-                        onChange={field.onChange} 
+                  <FormLabel>WhatsApp Number</FormLabel>
+                  <FormControl>
+                    <PhoneInputComponent
+                      placeholder="Enter WhatsApp number"
+                      value={field.value}
+                      onChange={field.onChange} 
                     />
                   </FormControl>
                   <FormMessage />

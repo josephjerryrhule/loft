@@ -100,10 +100,10 @@ function RegisterForm() {
 
               <FormField control={form.control} name="phone" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone Number (Optional)</FormLabel>
+                  <FormLabel>WhatsApp Number</FormLabel>
                   <FormControl>
                     <PhoneInput
-                      placeholder="Enter phone number"
+                      placeholder="Enter WhatsApp number"
                       defaultCountry="GH"
                       value={field.value}
                       onChange={field.onChange}

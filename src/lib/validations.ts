@@ -38,9 +38,8 @@ export const passwordSchema = z
 // Phone number validation (international format)
 export const phoneSchema = z
   .string()
-  .regex(/^\+?[1-9]\d{1,14}$/, "Please enter a valid international phone number (e.g., +1234567890)")
-  .optional()
-  .or(z.literal(""));
+  .min(1, "WhatsApp number is required")
+  .regex(/^\+?[1-9]\d{1,14}$/, "Please enter a valid international WhatsApp number (e.g., +1234567890)");
 
 // Name validation
 export const nameSchema = z

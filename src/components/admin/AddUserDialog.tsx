@@ -112,11 +112,12 @@ export function AddUserDialog() {
 
               <FormField control={form.control} name="phone" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone Number</FormLabel>
+                  <FormLabel>WhatsApp Number</FormLabel>
                   <FormControl>
-                    <PhoneInputComponent 
-                        value={field.value} 
-                        onChange={field.onChange} 
+                    <PhoneInputComponent
+                      placeholder="Enter WhatsApp number"
+                      value={field.value}
+                      onChange={field.onChange} 
                     />
                   </FormControl>
                   <FormMessage />

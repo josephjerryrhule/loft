@@ -16,6 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AlertCircle, User } from "lucide-react";
 import { getAgeGroupLabel } from "@/lib/utils";
 import Link from "next/link";
+import { Role } from "@/lib/types";
 
 interface Plan {
   id: string;
@@ -36,6 +37,7 @@ interface SubscribePlanButtonProps {
   allPlans?: Plan[]; // All available plans to choose from
   userEmail: string;
   userId: string;
+  userRole?: Role | string;
   childProfiles?: ChildProfile[];
   initialChildId?: string; // Pre-select a specific child (lock to that child)
   allowSelfProfile?: boolean;
@@ -47,9 +49,10 @@ export function SubscribePlanButton({
   allPlans,
   userEmail,
   userId,
+  userRole,
   childProfiles = [],
   initialChildId,
-  allowSelfProfile = true,
+  allowSelfProfile = false,
   label,
 }: SubscribePlanButtonProps) {
   const [open, setOpen] = useState(false);
@@ -176,7 +179,7 @@ export function SubscribePlanButton({
                   </>
                 )}
 
-                {childProfiles.length === 0 && (
+                {childProfiles.length === 0 && userRole !== Role.CUSTOMER && (
                   <div className="rounded-lg bg-amber-500/10 p-3 flex items-start gap-3 border border-amber-500/20">
                     <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
                     <div className="text-sm">

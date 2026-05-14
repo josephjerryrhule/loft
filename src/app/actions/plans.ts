@@ -209,3 +209,71 @@ export async function subscribeToPlan(planId: string) {
         return { error: "Failed to subscribe" };
     }
 }
+
+export async function assignSubscriptionToChild(subscriptionId: string, childId: string) {
+    const session = await auth();
+    if (!session?.user?.id) return { error: "Unauthorized" };
+    const userId = session.user.id;
+
+    try {
+        // Verify ownership and that it's unassigned
+        const subscription = await prisma.subscription.findFirst({
+            where: { 
+                id: subscriptionId, 
+                customerId: userId,
+                childProfileId: null,
+                status: "ACTIVE"
+            }
+        });
+
+        if (!subscription) {
+            return { error: "Subscription not found or already assigned" };
+        }
+
+        // Verify child ownership
+        const child = await prisma.childProfile.findFirst({
+            where: { id: childId, parentId: userId }
+        });
+
+        if (!child) {
+            return { error: "Child profile not found" };
+        }
+
+        // Assign to child and cancel any existing active subscriptions for that child
+        await prisma.$transaction([
+            prisma.subscription.updateMany({
+                where: {
+                    customerId: userId,
+                    childProfileId: childId,
+                    status: "ACTIVE"
+                },
+                data: { status: "CANCELLED" }
+            }),
+            prisma.subscription.update({
+                where: { id: subscriptionId },
+                data: { childProfileId: childId }
+            }),
+            prisma.activityLog.create({
+                data: {
+                    userId,
+                    actionType: "ASSIGN_SUBSCRIPTION",
+                    actionDetails: JSON.stringify({
+                        subscriptionId,
+                        childId,
+                        childName: child.name
+                    })
+                }
+            })
+        ]);
+
+        revalidatePath("/parent");
+        revalidatePath("/parent/plans");
+        revalidatePath("/parent/children");
+        
+        return { success: true };
+    } catch (e) {
+        console.error("Failed to assign subscription:", e);
+        return { error: "Failed to assign subscription" };
+    }
+}
+

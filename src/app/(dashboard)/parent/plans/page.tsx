@@ -3,8 +3,9 @@ import { getChildProfiles } from "@/app/actions/children";
 import { auth } from "@/auth";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Info, Users, CreditCard, Calendar } from "lucide-react";
+import { Check, Info, Users, CreditCard, Calendar, AlertCircle } from "lucide-react";
 import { SubscribePlanButton } from "@/components/payment/SubscribePlanButton";
+import { AssignSubscriptionDialog } from "@/components/payment/AssignSubscriptionDialog";
 import {
     Table,
     TableBody,
@@ -42,6 +43,8 @@ export default async function CustomerPlansPage() {
         return activeSubscriptions.find(sub => sub.childProfileId === childProfileId);
     };
 
+    const unassignedSubscriptions = activeSubscriptions.filter(sub => !sub.childProfileId);
+
     return (
         <div className="space-y-8 max-w-6xl mx-auto py-8">
             <div className="flex flex-col gap-2">
@@ -52,6 +55,20 @@ export default async function CustomerPlansPage() {
                     Manage access and plans for your children.
                 </p>
             </div>
+
+            {unassignedSubscriptions.length > 0 && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
+                    <Info className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                        <h5 className="font-semibold text-amber-800 leading-none">Unassigned Subscriptions Found</h5>
+                        <p className="text-sm text-amber-700">
+                            You have {unassignedSubscriptions.length} active subscription(s) not currently assigned to any child. 
+                            Please assign them below to give your children access.
+                        </p>
+                    </div>
+                </div>
+            )}
+
 
             <Tabs defaultValue="management" className="w-full">
                 <TabsList className="grid w-full max-w-md grid-cols-2 mb-8">
@@ -132,9 +149,11 @@ export default async function CustomerPlansPage() {
                                                             allPlans={plans}
                                                             userEmail={userEmail}
                                                             userId={userId}
+                                                            userRole={(session.user as any)?.role}
                                                             childProfiles={childProfiles}
                                                             initialChildId={child.id}
                                                             label={sub ? "Change Plan" : "Upgrade Access"}
+                                                            allowSelfProfile={false}
                                                         />
                                                     </TableCell>
                                                 </TableRow>
@@ -145,7 +164,51 @@ export default async function CustomerPlansPage() {
                             </div>
                         </CardContent>
                     </Card>
+
+                    {unassignedSubscriptions.length > 0 && (
+                        <Card className="border-none shadow-xl bg-amber-50/50 backdrop-blur">
+                            <CardHeader>
+                                <CardTitle className="text-xl flex items-center gap-2 text-amber-800">
+                                    <AlertCircle className="h-5 w-5 text-amber-600" />
+                                    Unassigned Subscriptions
+                                </CardTitle>
+                                <CardDescription className="text-amber-700">
+                                    These subscriptions are active but not tied to any child profile.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="rounded-xl border border-amber-200 bg-background/50 overflow-hidden">
+                                    <Table>
+                                        <TableHeader className="bg-amber-100/50">
+                                            <TableRow>
+                                                <TableHead>Plan</TableHead>
+                                                <TableHead>Amount</TableHead>
+                                                <TableHead>Expiry</TableHead>
+                                                <TableHead className="text-right">Action</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {unassignedSubscriptions.map((sub) => (
+                                                <TableRow key={sub.id}>
+                                                    <TableCell className="font-medium">{sub.plan.name}</TableCell>
+                                                    <TableCell>GHS {Number(sub.plan.price).toFixed(2)}</TableCell>
+                                                    <TableCell>{new Date(sub.endDate).toLocaleDateString()}</TableCell>
+                                                    <TableCell className="text-right">
+                                                        <AssignSubscriptionDialog 
+                                                            subscriptionId={sub.id} 
+                                                            childProfiles={childProfiles} 
+                                                        />
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
                 </TabsContent>
+
 
                 <TabsContent value="plans" className="space-y-6">
                     <Card className="border-none shadow-xl bg-card/50 backdrop-blur">
@@ -212,7 +275,7 @@ export default async function CustomerPlansPage() {
                                                 <TableCell>
                                                     <div className="flex flex-wrap gap-2">
                                                         {plan.features?.split("\n").slice(0, 2).map((feature, i) => (
-                                                            <Badge key={i} variant="secondary" className="flex items-center gap-1 font-normal bg-primary/5 text-primary-foreground/80">
+                                                            <Badge key={i} variant="secondary" className="flex items-center gap-1 font-normal bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
                                                                 <Check className="h-3 w-3 text-primary" />
                                                                 {feature}
                                                             </Badge>
@@ -229,6 +292,7 @@ export default async function CustomerPlansPage() {
                                                         plan={plan}
                                                         userEmail={userEmail}
                                                         userId={userId}
+                                                        userRole={(session.user as any)?.role}
                                                         childProfiles={childProfiles}
                                                         allowSelfProfile={false}
                                                     />
