@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Only Admin can generate for others
-    if (userId !== session.user.id && (session.user as any).role !== "ADMIN") {
+    if (userId !== session.user.id && (session.user as { role?: string }).role !== "ADMIN") {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

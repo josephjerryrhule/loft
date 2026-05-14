@@ -19,7 +19,7 @@ export async function updateUser(userId: string, data: {
 }) {
     try {
         const session = await auth();
-        // @ts-ignore - role exists in our custom session type
+        // @ts-expect-error - role exists in our custom session type
         if (!session?.user || session.user.role !== "ADMIN") {
             return { error: "Unauthorized" };
         }
@@ -33,7 +33,6 @@ export async function updateUser(userId: string, data: {
         if (!currentUser) return { error: "User not found" };
         
         const statusChanged = currentUser.status !== data.status;
-        const roleChanged = currentUser.role !== data.role;
         
         let ambassadorId = currentUser.ambassadorId;
         const prefix = data.role === "MANAGER" ? "LFT-MGR" : "LFT-AMB";
@@ -96,7 +95,7 @@ export async function updateUser(userId: string, data: {
 export async function deleteUser(userId: string) {
     try {
         const session = await auth();
-        // @ts-ignore - role exists in our custom session type
+        // @ts-expect-error - role exists in our custom session type
         if (!session?.user || session.user.role !== "ADMIN") {
             return { error: "Unauthorized" };
         }

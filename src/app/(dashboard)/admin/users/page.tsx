@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Loader2 } from "lucide-react";
 import { AddUserDialog } from "@/components/admin/AddUserDialog";
@@ -13,8 +12,22 @@ import { TablePagination } from "@/components/ui/table-pagination";
 import { getAllUsers } from "@/app/actions/admin";
 
 
+interface User {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  phoneNumber: string | null;
+  role: string;
+  status: string;
+  profilePictureUrl: string | null;
+  ambassadorId: string | null;
+  ambassadorExpiry: Date | null;
+  createdAt: Date;
+}
+
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(12);
@@ -22,20 +35,18 @@ export default function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
+    async function loadUsers() {
+      try {
+        const data = await getAllUsers();
+        setUsers(data);
+      } catch (error) {
+        console.error("Failed to load users:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
     loadUsers();
   }, []);
-
-  const loadUsers = async () => {
-    try {
-      setLoading(true);
-      const data = await getAllUsers();
-      setUsers(data);
-    } catch (error) {
-      console.error("Failed to load users:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const filteredUsers = users.filter((user) => {
     const matchesRole = roleFilter === "ALL" || user.role === roleFilter;

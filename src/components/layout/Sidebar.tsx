@@ -15,7 +15,6 @@ import {
   Settings,
   LogOut,
   FileText,
-  UserPlus,
   Menu,
   BarChart3,
   TrendingUp,
@@ -109,10 +108,11 @@ function NavContent({ userRole, setOpen, logoUrl, platformName, hasChildren }: {
             {logoUrl ? (
               <div className="flex items-center gap-3">
                 <div className="relative w-10 h-10">
-                  <img 
+                  <Image 
                     src={logoUrl} 
                     alt={platformName || "Logo"} 
-                    className="object-contain w-full h-full"
+                    fill
+                    className="object-contain"
                   />
                 </div>
                 <div>

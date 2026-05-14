@@ -6,10 +6,18 @@ import { Button } from "@/components/ui/button";
 import { QrCode, Download, Printer, Share2, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { AmbassadorBadge } from "./AmbassadorBadge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface MarketingToolsProps {
-  user: any;
+  user: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    role: string;
+    ambassadorId: string | null;
+    profilePictureUrl: string | null;
+    status: string;
+    ambassadorExpiry: Date | null;
+  };
   logoUrl?: string;
 }
 
@@ -39,8 +47,9 @@ export function MarketingTools({ user, logoUrl }: MarketingToolsProps) {
       window.URL.revokeObjectURL(url);
       
       toast.success("QR code downloaded successfully");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to download QR code");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to download QR code";
+      toast.error(message);
     } finally {
       setDownloadingQR(false);
     }

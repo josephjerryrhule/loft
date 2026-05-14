@@ -1,7 +1,5 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { User, CheckCircle2, XCircle, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import { format } from "date-fns";
