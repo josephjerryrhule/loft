@@ -242,6 +242,9 @@ cd /var/www/vhosts/yourdomain.com/httpdocs
 # Install dependencies
 npm install
 
+# IMPORTANT: Install sharp for production image optimization
+npm install sharp
+
 # Generate Prisma client
 npx prisma generate
 
@@ -414,8 +417,8 @@ npm run build
    ```bash
    ssh your-plesk-user@your-server.com
    cd /var/www/vhosts/yourdomain.com/httpdocs/public
-   mkdir -p uploads/flipbooks uploads/products uploads/misc
-   chmod -R 755 uploads
+   mkdir -p uploads/flipbooks uploads/products uploads/misc uploads/profiles
+   chmod -R 775 uploads
    chown -R your-plesk-user:psacln uploads
    ```
 

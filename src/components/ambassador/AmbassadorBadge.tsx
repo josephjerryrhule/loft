@@ -72,6 +72,7 @@ export function AmbassadorBadge({ user, logoUrl }: AmbassadorBadgeProps) {
                 src={user.profilePictureUrl} 
                 alt={fullName} 
                 fill 
+                unoptimized
                 className="object-cover"
               />
             ) : (

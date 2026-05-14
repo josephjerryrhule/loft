@@ -133,6 +133,7 @@ export default async function VerifyPage({ params }: VerifyPageProps) {
                     src={user.profilePictureUrl} 
                     alt={fullName} 
                     fill 
+                    unoptimized
                     className="object-cover"
                   />
                 ) : (

@@ -88,6 +88,7 @@ export function FileUpload({
                 src={uploadedUrl} 
                 alt="Avatar Preview" 
                 fill 
+                unoptimized
                 className="object-cover"
               />
             ) : (
