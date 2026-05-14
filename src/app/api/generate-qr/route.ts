@@ -7,16 +7,21 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     
-    // @ts-ignore - role exists in our custom session type
-    if (!session?.user || session.user.role !== "ADMIN") {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const searchParams = request.nextUrl.searchParams;
-    const userId = searchParams.get("userId");
+    let userId = searchParams.get("userId");
 
+    // If no userId provided, default to current session user
     if (!userId) {
-      return NextResponse.json({ error: "User ID required" }, { status: 400 });
+      userId = session.user.id;
+    }
+
+    // Only Admin can generate for others
+    if (userId !== session.user.id && (session.user as any).role !== "ADMIN") {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Get user details

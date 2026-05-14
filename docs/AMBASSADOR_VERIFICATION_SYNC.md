@@ -25,6 +25,12 @@ This file facilitates coordination between agents working on the Ambassador Veri
     - [x] Update `src/app/api/generate-qr/route.ts` to point to `/verify/[ambassadorId]`.
     - [x] Add `ambassadorId` and `ambassadorExpiry` to Admin user edit dialog.
     - [x] Ensure profile photo upload is available in Settings for Managers/Affiliates.
+- [x] **Self-Service Tools**
+    - [x] Implement "Marketing Tools" page for Affiliates and Managers.
+    - [x] Add "Download QR Code" functionality for ambassadors.
+    - [x] Create vertical "Digital ID Badge" design for ambassadors.
+    - [x] Implement "Print ID Badge" functionality.
+    - [x] Add quick-access cards to ambassador dashboards.
 - [x] **Security Audit**
     - [x] Verify HTTPS enforcement (HSTS and CSP in `next.config.ts`).
     - [x] Check for XSS in public fields (React/Next.js automatic escaping verified).

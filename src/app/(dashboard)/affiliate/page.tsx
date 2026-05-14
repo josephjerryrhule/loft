@@ -8,6 +8,9 @@ import { RequestPayoutDialog } from "@/components/dashboard/RequestPayoutDialog"
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { TrendingUp } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 // Force dynamic rendering - this page requires authentication and real-time data
 export const dynamic = 'force-dynamic';
@@ -48,6 +51,19 @@ export default async function AffiliateDashboardPage() {
       
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Marketing Tools</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold italic text-[#E87154]">Active</div>
+            <p className="text-xs text-muted-foreground mb-4">QR Code & ID Badge ready</p>
+            <Button asChild variant="outline" size="sm" className="w-full border-[#E87154]/20 hover:bg-[#E87154]/5 hover:text-[#E87154]">
+                <Link href="/affiliate/marketing">Get Tools</Link>
+            </Button>
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">My Referrals</CardTitle>

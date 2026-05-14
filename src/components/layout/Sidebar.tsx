@@ -52,11 +52,13 @@ function getLinks(userRole?: string, hasChildren?: boolean) {
   const managerLinks = [
     { href: "/manager", label: "Dashboard", icon: LayoutDashboard },
     { href: "/manager/team", label: "My Team", icon: Users },
+    { href: "/manager/marketing", label: "Marketing Tools", icon: TrendingUp },
     { href: "/manager/commissions", label: "Commissions", icon: CreditCard },
   ];
 
   const affiliateLinks = [
      { href: "/affiliate", label: "Dashboard", icon: LayoutDashboard },
+     { href: "/affiliate/marketing", label: "Marketing Tools", icon: TrendingUp },
      { href: "/affiliate/commissions", label: "My Earnings", icon: CreditCard },
   ];
 

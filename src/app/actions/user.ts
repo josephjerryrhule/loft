@@ -41,12 +41,23 @@ export async function updateUser(userId: string, data: {
         // Auto-generate ID if role is MANAGER or AFFILIATE and they don't have one 
         // OR if their current ID doesn't match the new role's prefix (Managers should have LFT-MGR)
         if ((data.role === "MANAGER" || data.role === "AFFILIATE") && (!ambassadorId || !ambassadorId.startsWith(prefix))) {
-          const count = await prisma.user.count({
+          const existingUsers = await prisma.user.findMany({
             where: {
               ambassadorId: { startsWith: prefix }
+            },
+            select: { ambassadorId: true }
+          });
+
+          let maxNum = 0;
+          existingUsers.forEach(u => {
+            if (u.ambassadorId) {
+              const parts = u.ambassadorId.split("-");
+              const num = parseInt(parts[parts.length - 1]);
+              if (!isNaN(num) && num > maxNum) maxNum = num;
             }
           });
-          ambassadorId = `${prefix}-${(count + 1).toString().padStart(3, "0")}`;
+          
+          ambassadorId = `${prefix}-${(maxNum + 1).toString().padStart(3, "0")}`;
         }
         
         await prisma.user.update({
@@ -318,71 +329,28 @@ export async function getParentDashboardData() {
     }
 }
 
-export async function getCustomerOrders(page = 1, pageSize = 10) {
+export async function getAmbassadorData() {
     const session = await auth();
-    if (!session?.user?.id) {
-        throw new Error("Unauthorized");
-    }
-
-    const skip = (page - 1) * pageSize;
+    if (!session?.user?.id) return null;
 
     try {
-        const [orders, total] = await Promise.all([
-            prisma.order.findMany({
-                where: { customerId: session.user.id },
-                include: { 
-                    product: true,
-                    referredBy: {
-                        select: {
-                            firstName: true,
-                            lastName: true,
-                            email: true
-                        }
-                    }
-                },
-                orderBy: { createdAt: "desc" },
-                skip,
-                take: pageSize
-            }),
-            prisma.order.count({
-                where: { customerId: session.user.id }
-            })
-        ]);
-
-        // Serialize to plain objects
-        return {
-            orders: orders.map(order => ({
-                id: order.id,
-                orderNumber: order.orderNumber,
-                quantity: order.quantity,
-                unitPrice: order.unitPrice.toNumber(),
-                totalAmount: order.totalAmount.toNumber(),
-                customizationData: order.customizationData,
-                status: order.status,
-                paymentStatus: order.paymentStatus,
-                paymentReference: order.paymentReference,
-                completedFileUrl: order.completedFileUrl,
-                customerUploadUrl: order.customerUploadUrl,
-                createdAt: order.createdAt.toISOString(),
-                product: {
-                    id: order.product.id,
-                    title: order.product.title,
-                    description: order.product.description,
-                    productType: order.product.productType,
-                    price: order.product.price.toNumber(),
-                    featuredImageUrl: order.product.featuredImageUrl
-                },
-                referredBy: order.referredBy ? {
-                    firstName: order.referredBy.firstName,
-                    lastName: order.referredBy.lastName,
-                    email: order.referredBy.email
-                } : null
-            })),
-            total,
-            totalPages: Math.ceil(total / pageSize)
-        };
+        const user = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                role: true,
+                status: true,
+                ambassadorId: true,
+                ambassadorExpiry: true,
+                profilePictureUrl: true,
+                inviteCode: true,
+            }
+        });
+        return user;
     } catch (error) {
-        console.error("Failed to get customer orders:", error);
-        throw error;
+        console.error("Failed to get ambassador data:", error);
+        return null;
     }
 }

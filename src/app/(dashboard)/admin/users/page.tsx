@@ -103,6 +103,7 @@ export default function AdminUsersPage() {
           <TableHeader>
             <TableRow>
               <TableHead>User</TableHead>
+              <TableHead>ID</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Joined</TableHead>
@@ -132,6 +133,11 @@ export default function AdminUsersPage() {
                         <span className="text-xs text-muted-foreground">{user.email}</span>
                     </div>
                   </div>
+                </TableCell>
+                <TableCell>
+                   <span className="font-mono text-[11px] font-bold text-slate-500">
+                     {user.ambassadorId || '-'}
+                   </span>
                 </TableCell>
                 <TableCell>
                    <Badge variant="outline" className="uppercase text-[10px] tracking-wide font-bold">

@@ -69,12 +69,23 @@ export async function registerUser(formData: z.infer<typeof registerSchema>) {
       newInviteCode = Math.random().toString(36).substring(2, 10).toUpperCase();
       
       const prefix = role === Role.MANAGER ? "LFT-MGR" : "LFT-AMB";
-      const count = await prisma.user.count({
+      const existingUsers = await prisma.user.findMany({
         where: {
           ambassadorId: { startsWith: prefix }
+        },
+        select: { ambassadorId: true }
+      });
+
+      let maxNum = 0;
+      existingUsers.forEach(u => {
+        if (u.ambassadorId) {
+          const parts = u.ambassadorId.split("-");
+          const num = parseInt(parts[parts.length - 1]);
+          if (!isNaN(num) && num > maxNum) maxNum = num;
         }
       });
-      ambassadorId = `${prefix}-${(count + 1).toString().padStart(3, "0")}`;
+      
+      ambassadorId = `${prefix}-${(maxNum + 1).toString().padStart(3, "0")}`;
   }
 
   try {
