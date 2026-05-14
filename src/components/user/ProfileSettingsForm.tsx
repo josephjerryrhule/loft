@@ -9,6 +9,7 @@ import { useState } from "react";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { Loader2 } from "lucide-react";
+import { FileUpload } from "@/components/ui/file-upload";
 
 interface ProfileSettingsFormProps {
     user: {
@@ -21,26 +22,30 @@ interface ProfileSettingsFormProps {
         state: string | null;
         postalCode: string | null;
         country: string | null;
+        role: string;
+        profilePictureUrl: string | null;
     };
 }
 
 export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
     const [loading, setLoading] = useState(false);
     const [phoneNumber, setPhoneNumber] = useState<string | undefined>(user.phoneNumber || undefined);
+    
+    const isAmbassador = user.role === "MANAGER" || user.role === "AFFILIATE";
 
     const handleSubmit = async (formData: FormData) => {
         setLoading(true);
-        // Phone input value might not be in formData automatically if controlled separately,
-        // but since we are using 'name' prop on PhoneInput it *might* work if it uses native input under the hood. 
-        // However, standard react-phone-number-input doesn't always inject a hidden input.
-        // Let's ensure we send it.
         formData.set("phoneNumber", phoneNumber || "");
 
         try {
-            await updateProfile(formData);
-            toast.success("Profile updated successfully");
+            const result = await updateProfile(formData);
+            if (result && result.error) {
+                toast.error(result.error);
+            } else {
+                toast.success("Profile updated successfully");
+            }
         } catch (error) {
-            toast.error("Failed to update profile");
+            toast.error("An unexpected error occurred");
         } finally {
             setLoading(false);
         }
@@ -48,6 +53,23 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
 
     return (
         <form action={handleSubmit} className="space-y-4">
+            {isAmbassador && (
+                <div className="pb-6 border-b mb-6 flex justify-center">
+                    <div className="max-w-xs w-full">
+                        <FileUpload 
+                            label="Profile Photo (Verification Page)" 
+                            name="profilePictureUrl" 
+                            accept="image/*"
+                            defaultValue={user.profilePictureUrl || ""}
+                            variant="avatar"
+                        />
+                        <p className="text-[0.75rem] text-muted-foreground mt-4 text-center">
+                            Recommended: Square image, min 400x400px. This photo will be shown on your public verification page.
+                        </p>
+                    </div>
+                </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="firstName">First name</Label>

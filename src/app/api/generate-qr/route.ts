@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
         lastName: true,
         role: true,
         inviteCode: true,
+        ambassadorId: true,
       },
     });
 
@@ -44,32 +45,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (!user.inviteCode) {
+    if (!user.ambassadorId) {
       return NextResponse.json(
-        { error: "User has no invite code" },
+        { error: "User has no ambassador ID. Please assign one in Admin settings." },
         { status: 400 }
       );
     }
 
-    // Construct the invite URL
+    // Construct the verification URL
     const baseUrl = process.env.NEXTAUTH_URL || request.nextUrl.origin;
-    let inviteUrl: string;
+    const verifyUrl = `${baseUrl}/verify/${user.ambassadorId}`;
     
-    if (user.role === "MANAGER") {
-      // Manager QR code links to affiliate signup
-      inviteUrl = `${baseUrl}/join/affiliate/${user.inviteCode}`;
-    } else if (user.role === "AFFILIATE") {
-      // Affiliate QR code links to customer signup
-      inviteUrl = `${baseUrl}/join/customer/${user.inviteCode}`;
-    } else {
-      return NextResponse.json(
-        { error: "Invalid user role for QR code" },
-        { status: 400 }
-      );
-    }
-
     // Generate QR code as data URL
-    const qrCodeDataUrl = await QRCode.toDataURL(inviteUrl, {
+    const qrCodeDataUrl = await QRCode.toDataURL(verifyUrl, {
       width: 512,
       margin: 2,
       color: {

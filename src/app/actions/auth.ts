@@ -62,10 +62,19 @@ export async function registerUser(formData: z.infer<typeof registerSchema>) {
     if (referrer) referredById = referrer.id;
   }
 
-  // Generate invite code for Managers and Affiliates
+  // Generate invite code and ambassadorId for Managers and Affiliates
   let newInviteCode = null;
+  let ambassadorId = null;
   if (role === Role.MANAGER || role === Role.AFFILIATE) {
       newInviteCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+      
+      const prefix = role === Role.MANAGER ? "LFT-MGR" : "LFT-AMB";
+      const count = await prisma.user.count({
+        where: {
+          ambassadorId: { startsWith: prefix }
+        }
+      });
+      ambassadorId = `${prefix}-${(count + 1).toString().padStart(3, "0")}`;
   }
 
   try {
@@ -80,6 +89,7 @@ export async function registerUser(formData: z.infer<typeof registerSchema>) {
         managerId,
         referredById,
         inviteCode: newInviteCode,
+        ambassadorId,
         requirePasswordReset: isAdminCreated || false, // Force password reset for admin-created users
         isEmailVerified: isAdminCreated || false, // Auto-verify email for admin-created users
         address: address || null,

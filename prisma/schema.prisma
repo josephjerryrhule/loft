@@ -42,6 +42,10 @@ model User {
 
   status          String     @default("ACTIVE") // Enum: ACTIVE, SUSPENDED, PENDING
   
+  // Ambassador fields
+  ambassadorId      String?    @unique @map("ambassador_id")
+  ambassadorExpiry  DateTime?  @map("ambassador_expiry")
+
   // Email verification
   isEmailVerified Boolean    @default(false) @map("is_email_verified")
   
@@ -75,6 +79,7 @@ model User {
   @@index([managerId])
   @@index([referredById])
   @@index([inviteCode])
+  @@index([ambassadorId])
   @@index([createdAt])
   @@map("users")
 }

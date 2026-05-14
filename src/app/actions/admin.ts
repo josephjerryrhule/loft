@@ -278,6 +278,8 @@ export async function getAllUsers() {
                 role: true,
                 status: true,
                 profilePictureUrl: true,
+                ambassadorId: true,
+                ambassadorExpiry: true,
                 createdAt: true,
             }
         });

@@ -77,3 +77,4 @@ export const loginRateLimit = createRateLimiter(5, "15m"); // 5 attempts per 15 
 export const apiRateLimit = createRateLimiter(100, "1m"); // 100 requests per minute
 export const passwordResetRateLimit = createRateLimiter(3, "1h"); // 3 requests per hour
 export const emailVerificationRateLimit = createRateLimiter(5, "1h"); // 5 requests per hour
+export const verificationRateLimit = createRateLimiter(20, "1m"); // 20 requests per minute

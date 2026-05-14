@@ -5,6 +5,7 @@ import { revalidatePath, unstable_noStore as noStore } from "next/cache";
 import { auth } from "@/auth";
 import { sendAccountStatusChangeEmail } from "@/lib/email";
 import { canUseCustomerLibrary } from "@/lib/access-control.mjs";
+import { z } from "zod";
 
 export async function updateUser(userId: string, data: {
     firstName: string;
@@ -13,15 +14,40 @@ export async function updateUser(userId: string, data: {
     phoneNumber?: string;
     role: string;
     status: string;
+    ambassadorExpiry?: Date | null;
+    profilePictureUrl?: string | null;
 }) {
     try {
-        // Get current user to check if status is changing
+        const session = await auth();
+        // @ts-ignore - role exists in our custom session type
+        if (!session?.user || session.user.role !== "ADMIN") {
+            return { error: "Unauthorized" };
+        }
+
+        // Get current user to check if status is changing or if we need to generate an ID
         const currentUser = await prisma.user.findUnique({
             where: { id: userId },
-            select: { status: true, email: true, firstName: true, lastName: true },
+            select: { status: true, email: true, firstName: true, lastName: true, role: true, ambassadorId: true },
         });
         
-        const statusChanged = currentUser && currentUser.status !== data.status;
+        if (!currentUser) return { error: "User not found" };
+        
+        const statusChanged = currentUser.status !== data.status;
+        const roleChanged = currentUser.role !== data.role;
+        
+        let ambassadorId = currentUser.ambassadorId;
+        const prefix = data.role === "MANAGER" ? "LFT-MGR" : "LFT-AMB";
+        
+        // Auto-generate ID if role is MANAGER or AFFILIATE and they don't have one 
+        // OR if their current ID doesn't match the new role's prefix (Managers should have LFT-MGR)
+        if ((data.role === "MANAGER" || data.role === "AFFILIATE") && (!ambassadorId || !ambassadorId.startsWith(prefix))) {
+          const count = await prisma.user.count({
+            where: {
+              ambassadorId: { startsWith: prefix }
+            }
+          });
+          ambassadorId = `${prefix}-${(count + 1).toString().padStart(3, "0")}`;
+        }
         
         await prisma.user.update({
             where: { id: userId },
@@ -32,6 +58,9 @@ export async function updateUser(userId: string, data: {
                 phoneNumber: data.phoneNumber,
                 role: data.role, 
                 status: data.status, 
+                ambassadorId,
+                ambassadorExpiry: data.ambassadorExpiry,
+                profilePictureUrl: data.profilePictureUrl,
             }
         });
         
@@ -55,6 +84,12 @@ export async function updateUser(userId: string, data: {
 
 export async function deleteUser(userId: string) {
     try {
+        const session = await auth();
+        // @ts-ignore - role exists in our custom session type
+        if (!session?.user || session.user.role !== "ADMIN") {
+            return { error: "Unauthorized" };
+        }
+
         await prisma.$transaction(async (tx) => {
             // 1. Detach managed users (if this user was a manager)
             await tx.user.updateMany({
@@ -130,20 +165,43 @@ export async function deleteUser(userId: string) {
     }
 }
 
+const profileSchema = z.object({
+    firstName: z.string().min(1, "First name is required").max(50),
+    lastName: z.string().min(1, "Last name is required").max(50),
+    phoneNumber: z.string().optional(),
+    address: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    postalCode: z.string().optional(),
+    country: z.string().optional(),
+    profilePictureUrl: z.string().optional().nullable(),
+});
+
 export async function updateProfile(formData: FormData) {
     const session = await auth();
     if (!session?.user?.id) {
         return { error: "Unauthorized" };
     }
     
-    const firstName = formData.get("firstName") as string;
-    const lastName = formData.get("lastName") as string;
-    const phoneNumber = formData.get("phoneNumber") as string;
-    const address = formData.get("address") as string;
-    const city = formData.get("city") as string;
-    const state = formData.get("state") as string;
-    const postalCode = formData.get("postalCode") as string;
-    const country = formData.get("country") as string;
+    const rawData = {
+        firstName: formData.get("firstName"),
+        lastName: formData.get("lastName"),
+        phoneNumber: formData.get("phoneNumber"),
+        address: formData.get("address"),
+        city: formData.get("city"),
+        state: formData.get("state"),
+        postalCode: formData.get("postalCode"),
+        country: formData.get("country"),
+        profilePictureUrl: formData.get("profilePictureUrl"),
+    };
+
+    const validatedData = profileSchema.safeParse(rawData);
+
+    if (!validatedData.success) {
+        return { error: "Invalid input: " + validatedData.error.issues.map(e => e.message).join(", ") };
+    }
+
+    const { firstName, lastName, phoneNumber, address, city, state, postalCode, country, profilePictureUrl } = validatedData.data;
     
     try {
         await prisma.user.update({
@@ -151,12 +209,13 @@ export async function updateProfile(formData: FormData) {
             data: {
                 firstName,
                 lastName,
-                phoneNumber,
+                phoneNumber: phoneNumber || null,
                 address: address || null,
                 city: city || null,
                 state: state || null,
                 postalCode: postalCode || null,
                 country: country || null,
+                profilePictureUrl: profilePictureUrl || null,
             }
         });
         revalidatePath("/settings");

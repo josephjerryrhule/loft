@@ -6,7 +6,7 @@ import { z } from "zod";
 import { updateUser } from "@/app/actions/user";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Role, UserStatus } from "@/lib/types"; // Ensure these match schema strings
@@ -18,8 +18,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PhoneInputComponent } from "@/components/ui/phone-input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { FileUpload } from "@/components/ui/file-upload";
 
 const editUserSchema = z.object({
   firstName: z.string().min(2),
@@ -28,6 +29,9 @@ const editUserSchema = z.object({
   phoneNumber: z.string().min(10, "Phone number is required"), 
   role: z.string(), 
   status: z.string(),
+  ambassadorId: z.string().optional().nullable(),
+  ambassadorExpiry: z.string().optional().nullable(),
+  profilePictureUrl: z.string().optional().nullable(),
 });
 
 interface EditUserDialogProps {
@@ -47,11 +51,35 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
       phoneNumber: user.phoneNumber || "",
       role: user.role,
       status: user.status,
+      ambassadorId: user.ambassadorId || "",
+      ambassadorExpiry: user.ambassadorExpiry ? new Date(user.ambassadorExpiry).toISOString().split('T')[0] : "",
+      profilePictureUrl: user.profilePictureUrl || "",
     },
   });
 
+  // Reset form when user or open state changes
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        email: user.email || "",
+        phoneNumber: user.phoneNumber || "",
+        role: user.role,
+        status: user.status,
+        ambassadorId: user.ambassadorId || "",
+        ambassadorExpiry: user.ambassadorExpiry ? new Date(user.ambassadorExpiry).toISOString().split('T')[0] : "",
+        profilePictureUrl: user.profilePictureUrl || "",
+      });
+    }
+  }, [user, open, form]);
+
   async function onSubmit(values: z.infer<typeof editUserSchema>) {
-    const result = await updateUser(user.id, values);
+    const formattedValues = {
+      ...values,
+      ambassadorExpiry: values.ambassadorExpiry ? new Date(values.ambassadorExpiry) : null,
+    };
+    const result = await updateUser(user.id, formattedValues as any);
     if (result && result.error) {
       toast.error(result.error);
     } else {
@@ -155,6 +183,38 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
                     </FormItem>
                 )} />
               </div>
+
+              {(form.watch("role") === Role.MANAGER || form.watch("role") === Role.AFFILIATE) && (
+                <div className="space-y-4 border-t pt-4 mt-2">
+                  <div className="flex justify-center pb-2">
+                    <FileUpload 
+                      label="Ambassador Photo" 
+                      name="profilePictureUrl" 
+                      accept="image/*"
+                      defaultValue={form.watch("profilePictureUrl") || ""}
+                      onUpload={(url) => form.setValue("profilePictureUrl", url)}
+                      variant="avatar"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField control={form.control} name="ambassadorId" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{form.watch("role") === Role.MANAGER ? "Manager ID" : "Ambassador ID"}</FormLabel>
+                        <FormControl><Input {...field} value={field.value || ""} placeholder="Auto-generated" disabled className="bg-slate-50 cursor-not-allowed" /></FormControl>
+                        <FormDescription className="text-[10px]">Managed by system</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="ambassadorExpiry" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ambassador Expiry</FormLabel>
+                        <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </div>
+                </div>
+              )}
 
               <div className="flex justify-end pt-2">
                  <Button type="submit">Save Changes</Button>
