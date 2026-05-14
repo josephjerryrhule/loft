@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Construct local file path
-    const filePath = path.join(process.cwd(), "public", fileUrl);
+    const filePath = path.join(/*turbopackIgnore: true*/ process.cwd(), "public", fileUrl);
 
     // Check if file exists
     if (!fs.existsSync(filePath)) {

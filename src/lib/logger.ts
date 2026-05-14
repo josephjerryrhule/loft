@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { prisma } from "@/lib/prisma";
 
-const LOG_DIR = process.env.LOG_DIR || path.join(process.cwd(), "logs");
+const LOG_DIR = process.env.LOG_DIR || path.join(/*turbopackIgnore: true*/ process.cwd(), "logs");
 const LOG_FILE = path.join(LOG_DIR, "app.log");
 
 async function ensureLogDir() {

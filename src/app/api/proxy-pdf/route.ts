@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     if (url.startsWith('/uploads/')) {
         const fs = require('fs').promises;
         const path = require('path');
-        const fullPath = path.join(process.cwd(), 'public', url);
+        const fullPath = path.join(/*turbopackIgnore: true*/ process.cwd(), 'public', url);
         
         try {
             const fileBuffer = await fs.readFile(fullPath);
