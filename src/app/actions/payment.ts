@@ -78,7 +78,7 @@ export async function processSubscriptionPayment(reference: string, planId: stri
     if (!customerId && verificationData.metadata.userId) {
         customerId = verificationData.metadata.userId;
     }
-    if (typeof verificationData.metadata.childProfileId === "string") {
+    if (typeof verificationData.metadata.childProfileId === "string" && verificationData.metadata.childProfileId.trim() !== "") {
         childProfileId = verificationData.metadata.childProfileId;
     }
   }
@@ -99,7 +99,7 @@ export async function processSubscriptionPayment(reference: string, planId: stri
            return { error: verification.error || "Payment verification failed" };
         }
         verificationData = verification.data;
-        if (typeof verificationData.metadata?.childProfileId === "string" && !childProfileId) {
+        if (typeof verificationData.metadata?.childProfileId === "string" && verificationData.metadata.childProfileId.trim() !== "" && !childProfileId) {
             childProfileId = verificationData.metadata.childProfileId;
         }
     }
@@ -455,7 +455,7 @@ export async function initializePayment(data: {
         type: data.type,
         userId: userId,
         itemId: data.itemId,
-        childProfileId: data.childProfileId,
+        childProfileId: data.childProfileId && data.childProfileId.trim() !== "" ? data.childProfileId : undefined,
         quantity: data.quantity || 1,
         customizationData: data.customizationData,
         customerUploadUrl: data.customerUploadUrl,
