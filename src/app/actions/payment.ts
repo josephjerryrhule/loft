@@ -253,12 +253,14 @@ export async function processSubscriptionPayment(reference: string, planId: stri
 }
 
 export async function processProductPayment(
-  reference: string,
-  productId: string,
-  quantity: number | string = 1,
-  customizationData?: string,
-  customerUploadUrl?: string
+    reference: string, 
+    productId: string, 
+    quantity: number | string = 1, 
+    customizationData?: any, 
+    customerUploadUrl?: string,
+    skipRevalidate: boolean = false
 ) {
+
   const session = await auth();
   if (!session?.user?.id) return { error: "Unauthorized" };
 
@@ -390,8 +392,10 @@ export async function processProductPayment(
     }
 
     // Invalidate caches
-    revalidatePath("/parent/orders");
-    revalidatePath("/customer/orders");
+    if (!skipRevalidate) {
+      revalidatePath("/parent/orders");
+      revalidatePath("/customer/orders");
+    }
 
     return { success: true, order };
   } catch (error) {

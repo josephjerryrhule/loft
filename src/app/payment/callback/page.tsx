@@ -56,25 +56,17 @@ async function verifyAndProcessPayment(reference: string): Promise<PaymentVerifi
         return { success: true, type, message: "Subscription activated successfully!" };
       } catch (err) {
         console.error("Subscription processing error:", err);
-        // Check if it's a known benign error (like revalidatePath during render)
-        if (err instanceof Error && err.message.includes("revalidatePath")) {
-          return { success: true, type, message: "Subscription activated successfully!" };
-        }
         return { success: false, type, message: "Failed to process subscription" };
       }
     } else if (type === "product") {
       try {
-        const productResult = await processProductPayment(reference, itemId, quantity, customizationData, customerUploadUrl);
+        const productResult = await processProductPayment(reference, itemId, quantity, customizationData, customerUploadUrl, true);
         if (productResult.error) {
           return { success: false, type, message: productResult.error };
         }
         return { success: true, type, message: "Purchase completed successfully!" };
       } catch (err) {
         console.error("Product processing error:", err);
-        // Check if it's a known benign error (like revalidatePath during render)
-        if (err instanceof Error && err.message.includes("revalidatePath")) {
-          return { success: true, type, message: "Purchase completed successfully!" };
-        }
         return { success: false, type, message: "Failed to process order" };
       }
     }
