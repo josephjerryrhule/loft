@@ -26,8 +26,11 @@ export default async function SettingsPage() {
     if (!user) return <div>User not found</div>;
 
     const isAdmin = user.role === "ADMIN" || user.role === Role.ADMIN;
+    const isOpsManager = user.role === "OPERATIONS_MANAGER" || user.role === Role.OPERATIONS_MANAGER;
+    const canSeeSystemSettings = isAdmin || isOpsManager;
+    
     let systemSettings = {};
-    if (isAdmin) {
+    if (canSeeSystemSettings) {
         systemSettings = await getSystemSettings();
     }
 
@@ -42,7 +45,7 @@ export default async function SettingsPage() {
                 <TabsList className="mb-4">
                     <TabsTrigger value="profile">My Profile</TabsTrigger>
                     <TabsTrigger value="security">Security</TabsTrigger>
-                    {isAdmin && <TabsTrigger value="system">System Admin</TabsTrigger>}
+                    {canSeeSystemSettings && <TabsTrigger value="system">System Admin</TabsTrigger>}
                 </TabsList>
 
                 <TabsContent value="profile">

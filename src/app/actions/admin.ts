@@ -8,7 +8,8 @@ import { canCreateSubscriptionForProfile } from "@/lib/access-control.mjs";
 
 export async function approveCommission(commissionId: string) {
     const session = await auth();
-    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+    const role = (session?.user as any)?.role;
+    if (!session?.user?.id || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
         return { error: "Unauthorized" };
     }
 
@@ -70,7 +71,8 @@ export async function approveCommission(commissionId: string) {
 
 export async function bulkApproveCommissions() {
     const session = await auth();
-    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+    const role = (session?.user as any)?.role;
+    if (!session?.user?.id || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
         return { error: "Unauthorized" };
     }
 
@@ -150,7 +152,8 @@ export async function bulkApproveCommissions() {
 
 export async function approvePayoutRequest(requestId: string) {
     const session = await auth();
-    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+    const role = (session?.user as any)?.role;
+    if (!session?.user?.id || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
         return { error: "Unauthorized" };
     }
 
@@ -262,7 +265,8 @@ export async function approvePayoutRequest(requestId: string) {
 
 export async function getAllUsers() {
     const session = await auth();
-    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+    const role = (session?.user as any)?.role;
+    if (!session?.user?.id || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
         throw new Error("Unauthorized");
     }
 
@@ -292,7 +296,8 @@ export async function getAllUsers() {
 
 export async function getAdminUserChildren(userId: string) {
     const session = await auth();
-    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+    const role = (session?.user as any)?.role;
+    if (!session?.user?.id || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
         throw new Error("Unauthorized");
     }
 
@@ -317,7 +322,8 @@ export async function getAdminUserChildren(userId: string) {
 
 export async function getAllOrders() {
     const session = await auth();
-    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+    const role = (session?.user as any)?.role;
+    if (!session?.user?.id || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
         throw new Error("Unauthorized");
     }
 
@@ -347,7 +353,8 @@ export async function getAllOrders() {
 
 export async function getFinanceData() {
     const session = await auth();
-    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+    const role = (session?.user as any)?.role;
+    if (!session?.user?.id || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
         throw new Error("Unauthorized");
     }
 
@@ -426,7 +433,8 @@ export async function adminAssignPlan(data: {
     reason?: string;
 }) {
     const session = await auth();
-    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+    const role = (session?.user as any)?.role;
+    if (!session?.user?.id || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
         return { error: "Unauthorized" };
     }
 
@@ -511,7 +519,8 @@ export async function adminAssignPlan(data: {
 
 export async function getAdminUserSubscriptions(userId: string) {
     const session = await auth();
-    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+    const role = (session?.user as any)?.role;
+    if (!session?.user?.id || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
         throw new Error("Unauthorized");
     }
 
@@ -530,7 +539,8 @@ export async function getAdminUserSubscriptions(userId: string) {
 
 export async function updateOrderStatus(orderId: string, status: string, completedFileUrl?: string) {
     const session = await auth();
-    if (!session?.user?.id || (session.user as any).role !== "ADMIN") {
+    const role = (session?.user as any)?.role;
+    if (!session?.user?.id || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
         return { error: "Unauthorized" };
     }
 

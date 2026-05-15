@@ -140,10 +140,12 @@ export async function registerUser(formData: z.infer<typeof registerSchema>) {
       });
     }
 
-    // Process signup commission if customer was referred
+    // Signup bonus system removed per new requirements
+    /*
     if ((role === Role.PARENT || role === Role.CUSTOMER) && referralCode) {
       await processSignupCommission(newUser.id, referralCode);
     }
+    */
 
     // Send welcome email
     sendWelcomeEmail({
@@ -403,8 +405,9 @@ export async function checkLoginStatus(email: string, password: string) {
       return { error: "INVALID_CREDENTIALS" };
     }
 
-    // Then check email verification (skip for ADMIN)
-    if (user.role !== "ADMIN" && !user.isEmailVerified) {
+    // Then check email verification (skip for STAFF)
+    const isStaff = ["ADMIN", "OPERATIONS_MANAGER", "MANAGER", "FINANCE"].includes(user.role);
+    if (!isStaff && !user.isEmailVerified) {
       return { error: "EMAIL_NOT_VERIFIED", email: user.email };
     }
 

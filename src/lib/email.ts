@@ -443,26 +443,52 @@ export async function sendCommissionEarnedEmail(data: {
   amount: number;
   orderId?: string;
   subscriptionId?: string;
-  type: "AFFILIATE" | "MANAGER";
+  sourceId?: string;
+  type: "AFFILIATE" | "MANAGER" | "REFERRAL" | "OVERRIDE_TL" | "OVERRIDE_MGR" | "OVERRIDE_OM";
 }) {
   const branding = await getBranding();
-  const source = data.orderId ? `Order #${data.orderId}` : `Subscription #${data.subscriptionId}`;
+  const actualSourceId = data.orderId || data.subscriptionId || data.sourceId || "Unknown";
+  const source = data.orderId ? `Order #${data.orderId}` : 
+                 data.subscriptionId ? `Subscription #${data.subscriptionId}` : 
+                 `Transaction #${data.sourceId || "Unknown"}`;
+  
+  const typeLabels: Record<string, string> = {
+    AFFILIATE: "affiliate",
+    MANAGER: "manager",
+    REFERRAL: "referral",
+    OVERRIDE_TL: "team leader override",
+    OVERRIDE_MGR: "manager override",
+    OVERRIDE_OM: "operations manager override"
+  };
+
+  const dashboardPaths: Record<string, string> = {
+    AFFILIATE: "affiliate/commissions",
+    MANAGER: "manager/commissions",
+    REFERRAL: "affiliate/commissions",
+    OVERRIDE_TL: "affiliate/commissions",
+    OVERRIDE_MGR: "manager/commissions",
+    OVERRIDE_OM: "admin/finance"
+  };
+
+  const label = typeLabels[data.type] || "commission";
+  const path = dashboardPaths[data.type] || "settings";
+
   const content = `
     <h2>You Earned a Commission! 💰</h2>
     <p>Hi ${data.recipientName},</p>
-    <p>Great news! You've earned a ${data.type.toLowerCase()} commission.</p>
+    <p>Great news! You've earned a <strong>${label}</strong> commission.</p>
     <div class="info-box" style="text-align: center;">
-      <p class="amount">${branding.currency}${data.amount.toLocaleString()}</p>
+      <p class="amount">${branding.currency}${data.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
       <p>Commission from ${source}</p>
     </div>
     <p>This amount has been added to your pending balance.</p>
-    <a href="${branding.siteUrl}/${data.type === "MANAGER" ? "manager" : "affiliate"}/commissions" class="button">View Commissions</a>
+    <a href="${branding.siteUrl}/${path}" class="button">View Commissions</a>
     <p>Best regards,<br>The ${branding.platformName} Team</p>
   `;
 
   return sendEmail({
     to: data.recipientEmail,
-    subject: `Commission Earned - ${branding.currency}${data.amount.toLocaleString()}`,
+    subject: `Commission Earned - ${branding.currency}${data.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
     html: emailWrapper(content, branding.platformName, branding.logoUrl),
   });
 }
@@ -782,6 +808,49 @@ export async function sendPasswordResetEmail(data: {
   return sendEmail({
     to: data.userEmail,
     subject: `Reset Your Password - ${branding.platformName}`,
+    html: emailWrapper(content, branding.platformName, branding.logoUrl),
+  });
+}
+
+// 13. Hierarchy Change (Promotion/Assignment)
+export async function sendHierarchyChangeEmail(data: {
+  userEmail: string;
+  userName: string;
+  type: "PROMOTION" | "ASSIGNMENT";
+  newRole?: string;
+  managerName?: string;
+  teamLeaderName?: string;
+}) {
+  const branding = await getBranding();
+  let content = "";
+
+  if (data.type === "PROMOTION") {
+    content = `
+      <h2>Congratulations on Your Promotion! 🎊</h2>
+      <p>Hi ${data.userName},</p>
+      <p>We are excited to inform you that you have been promoted to <strong>${data.newRole?.replace('_', ' ')}</strong>!</p>
+      <div class="info-box">
+        <p>Your hard work and dedication have paid off. Your new role comes with additional responsibilities and earning opportunities.</p>
+      </div>
+      <a href="${branding.siteUrl}/auth/login" class="button">Go to Your New Dashboard</a>
+    `;
+  } else {
+    content = `
+      <h2>Team Assignment Update</h2>
+      <p>Hi ${data.userName},</p>
+      <p>Your team assignment has been updated.</p>
+      <div class="info-box">
+        ${data.managerName ? `<p><strong>Manager:</strong> ${data.managerName}</p>` : ""}
+        ${data.teamLeaderName ? `<p><strong>Team Leader:</strong> ${data.teamLeaderName}</p>` : ""}
+      </div>
+      <p>You can now see your team structure and performance metrics in your dashboard.</p>
+      <a href="${branding.siteUrl}/auth/login" class="button">View Dashboard</a>
+    `;
+  }
+
+  return sendEmail({
+    to: data.userEmail,
+    subject: data.type === "PROMOTION" ? "Congratulations on Your Promotion!" : "Team Assignment Update",
     html: emailWrapper(content, branding.platformName, branding.logoUrl),
   });
 }

@@ -123,23 +123,26 @@ function LoginForm() {
         
         // Direct redirect based on role
         if (sessionData?.user?.role) {
-          switch (sessionData.user.role) {
-            case Role.ADMIN:
+          const role = sessionData.user.role;
+          switch (role) {
+            case "ADMIN":
+            case "OPERATIONS_MANAGER":
               router.push("/admin");
               break;
-            case Role.MANAGER:
+            case "MANAGER":
               router.push("/manager");
               break;
-            case Role.AFFILIATE:
+            case "TEAM_LEADER":
+            case "AFFILIATE":
               router.push("/affiliate");
               break;
-            case Role.PARENT:
+            case "PARENT":
               router.push("/parent");
               break;
-            case Role.CUSTOMER:
+            case "CUSTOMER":
               router.push("/customer");
               break;
-            case Role.FINANCE:
+            case "FINANCE":
               router.push("/finance");
               break;
             default:

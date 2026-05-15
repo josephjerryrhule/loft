@@ -30,9 +30,12 @@ import { AssignPlanDialog } from "./AssignPlanDialog";
 
 interface UserActionsProps {
     user: any;
+    managers?: { id: string, name: string }[];
+    teamLeaders?: { id: string, name: string }[];
+    operationsManagers?: { id: string, name: string }[];
 }
 
-export function UserActions({ user }: UserActionsProps) {
+export function UserActions({ user, managers = [], teamLeaders = [], operationsManagers = [] }: UserActionsProps) {
     const router = useRouter();
     const [editOpen, setEditOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
@@ -132,6 +135,9 @@ export function UserActions({ user }: UserActionsProps) {
                 user={user} 
                 open={editOpen} 
                 onOpenChange={setEditOpen} 
+                managers={managers}
+                teamLeaders={teamLeaders}
+                operationsManagers={operationsManagers}
             />
 
             <AdminViewChildrenDialog

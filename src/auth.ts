@@ -108,8 +108,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             return null;
           }
 
-          // Check if email is verified (skip for ADMIN users)
-          if (user.role !== "ADMIN" && !user.isEmailVerified) {
+          // Check if email is verified (skip for STAFF users)
+          const isStaff = ["ADMIN", "OPERATIONS_MANAGER", "MANAGER", "FINANCE"].includes(user.role);
+          if (!isStaff && !user.isEmailVerified) {
             return null;
           }
           

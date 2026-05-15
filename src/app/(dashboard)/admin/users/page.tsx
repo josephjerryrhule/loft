@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { AddUserDialog } from "@/components/admin/AddUserDialog";
 import { UserActions } from "@/components/admin/UserActions";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { getAllUsers } from "@/app/actions/admin";
+import { formatRole } from "@/lib/format-utils";
 
 
 interface User {
@@ -33,6 +34,24 @@ export default function AdminUsersPage() {
   const [itemsPerPage, setItemsPerPage] = useState(12);
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+
+  const operationsManagers = useMemo(() => 
+    users.filter(u => u.role === "OPERATIONS_MANAGER")
+         .map(u => ({ id: u.id, name: `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email })),
+    [users]
+  );
+
+  const managers = useMemo(() => 
+    users.filter(u => u.role === "MANAGER")
+         .map(u => ({ id: u.id, name: `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email })),
+    [users]
+  );
+
+  const teamLeaders = useMemo(() => 
+    users.filter(u => u.role === "TEAM_LEADER")
+         .map(u => ({ id: u.id, name: `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email })),
+    [users]
+  );
 
   useEffect(() => {
     async function loadUsers() {
@@ -100,7 +119,9 @@ export default function AdminUsersPage() {
              >
                 <option value="ALL">All Roles</option>
                 <option value="ADMIN">Admin</option>
+                <option value="OPERATIONS_MANAGER">Operations Manager</option>
                 <option value="MANAGER">Manager</option>
+                <option value="TEAM_LEADER">Team Leader</option>
                 <option value="AFFILIATE">Affiliate</option>
                 <option value="CUSTOMER">Customer</option>
                 <option value="PARENT">Parent</option>
@@ -151,8 +172,8 @@ export default function AdminUsersPage() {
                    </span>
                 </TableCell>
                 <TableCell>
-                   <Badge variant="outline" className="uppercase text-[10px] tracking-wide font-bold">
-                     {user.role}
+                   <Badge variant="outline" className="text-[10px] tracking-wide font-bold">
+                     {formatRole(user.role)}
                    </Badge>
                 </TableCell>
                 <TableCell>
@@ -164,7 +185,7 @@ export default function AdminUsersPage() {
                     {new Date(user.createdAt).toLocaleDateString()}
                 </TableCell>
                 <TableCell className="text-right">
-                    <UserActions user={user} />
+                    <UserActions user={user} managers={managers} teamLeaders={teamLeaders} operationsManagers={operationsManagers} />
                 </TableCell>
               </TableRow>
             ))}

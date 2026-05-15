@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { TablePagination } from "@/components/ui/table-pagination";
@@ -23,6 +23,11 @@ interface RecentActivityTableProps {
 export function RecentActivityTable({ activities }: RecentActivityTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const totalPages = Math.ceil(activities.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -54,7 +59,9 @@ export function RecentActivityTable({ activities }: RecentActivityTableProps) {
                 <Badge variant="outline">{getActionTypeLabel(log.actionType)}</Badge>
               </TableCell>
               <TableCell className="max-w-xs truncate">{formatActivityDetails(log.actionType, log.actionDetails || "")}</TableCell>
-              <TableCell className="text-muted-foreground">{new Date(log.createdAt).toLocaleString()}</TableCell>
+              <TableCell className="text-muted-foreground">
+                {isMounted ? new Date(log.createdAt).toLocaleString() : ""}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -417,37 +417,84 @@ export function SystemSettingsForm({ settings }: SystemSettingsFormProps) {
                     <Card>
                         <CardHeader>
                             <CardTitle>Commission Structure</CardTitle>
-                            <CardDescription>Configure global commission rates and payout settings.</CardDescription>
+                            <CardDescription>Configure global commission rates and override percentages.</CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="signupBonus">Signup Bonus (Fixed Amount)</Label>
-                                <Input 
-                                    type="number" 
-                                    id="signupBonus" 
-                                    name="signupBonus" 
-                                    defaultValue={settings.signupBonus || "5"} 
-                                    placeholder="5" 
-                                    min="0"
-                                    step="0.01"
-                                />
-                                <p className="text-[0.8rem] text-muted-foreground">Fixed amount earned per customer signup.</p>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
+                        <CardContent className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <Label htmlFor="managerCommissionPercentage">Manager Commission (%)</Label>
+                                    <Label htmlFor="globalPaidPlanReferralRate">Global Paid Plan Referral Rate (%)</Label>
                                     <Input 
                                         type="number" 
-                                        id="managerCommissionPercentage" 
-                                        name="managerCommissionPercentage" 
-                                        defaultValue={settings.managerCommissionPercentage || "20"} 
+                                        id="globalPaidPlanReferralRate" 
+                                        name="globalPaidPlanReferralRate" 
+                                        defaultValue={settings.globalPaidPlanReferralRate || "20"} 
                                         placeholder="20" 
                                         min="0"
                                         max="100"
+                                        step="0.1"
                                     />
-                                    <p className="text-[0.8rem] text-muted-foreground">Percentage of order/subscription total.</p>
+                                    <p className="text-[0.8rem] text-muted-foreground">Standard rate earned by any referrer on a paid subscription purchase.</p>
                                 </div>
                                 <div className="space-y-2">
+                                    <Label htmlFor="operationsManagerOverrideRate">Operations Manager Override Rate (%)</Label>
+                                    <Input 
+                                        type="number" 
+                                        id="operationsManagerOverrideRate" 
+                                        name="operationsManagerOverrideRate" 
+                                        defaultValue={settings.operationsManagerOverrideRate || "5"} 
+                                        placeholder="5" 
+                                        min="0"
+                                        max="100"
+                                        step="0.1"
+                                    />
+                                    <p className="text-[0.8rem] text-muted-foreground">Percentage of total system earnings received by the Operations Manager.</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="managerOverrideRate">Manager Override Rate (%)</Label>
+                                    <Input 
+                                        type="number" 
+                                        id="managerOverrideRate" 
+                                        name="managerOverrideRate" 
+                                        defaultValue={settings.managerOverrideRate || settings.managerCommissionPercentage || "3"} 
+                                        placeholder="3" 
+                                        min="0"
+                                        max="100"
+                                        step="0.1"
+                                    />
+                                    <p className="text-[0.8rem] text-muted-foreground">Percentage override Managers earn on all sales transactions in their hierarchy.</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="teamLeaderOverrideRate">Team Leader Override Rate (%)</Label>
+                                    <Input 
+                                        type="number" 
+                                        id="teamLeaderOverrideRate" 
+                                        name="teamLeaderOverrideRate" 
+                                        defaultValue={settings.teamLeaderOverrideRate || "2"} 
+                                        placeholder="2" 
+                                        min="0"
+                                        max="100"
+                                        step="0.1"
+                                    />
+                                    <p className="text-[0.8rem] text-muted-foreground">Percentage override Team Leaders earn on their assigned team.</p>
+                                </div>
+                            </div>
+
+                            <div className="pt-4 border-t space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-0.5">
+                                        <Label>Leaderboard Visibility</Label>
+                                        <p className="text-[0.8rem] text-muted-foreground">Toggle whether the ambassador leaderboard is visible to all roles.</p>
+                                    </div>
+                                    <input 
+                                        type="checkbox" 
+                                        name="leaderboardVisible" 
+                                        defaultChecked={settings.leaderboardVisible === "true" || settings.leaderboardVisible === true}
+                                        value="true"
+                                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                    />
+                                </div>
+                                
+                                <div className="space-y-2 max-w-sm">
                                     <Label htmlFor="minimumPayoutAmount">Minimum Payout Amount (GHS)</Label>
                                     <Input 
                                         type="number" 

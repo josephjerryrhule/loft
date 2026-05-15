@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getTeamMembers } from "@/app/actions/manager";
+import { getTeamMembers, getManagerTeamLeaders } from "@/app/actions/manager";
 import { InviteAffiliateDialog } from "@/components/manager/InviteAffiliateDialog";
+import { UserActions } from "@/components/admin/UserActions";
 import {
   Table,
   TableBody,
@@ -20,14 +21,18 @@ interface TeamMember {
     firstName: string | null;
     lastName: string | null;
     email: string;
+    role: string;
     status: string;
     createdAt: string | Date;
     referralsCount: number;
+    teamLeaderId: string | null;
+    teamLeaderName: string | null;
 }
 
 
 export default function ManagerTeamPage() {
     const [team, setTeam] = useState<TeamMember[]>([]);
+    const [teamLeaders, setTeamLeaders] = useState<{id: string, name: string}[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -41,10 +46,14 @@ export default function ManagerTeamPage() {
     async function loadTeam(page: number) {
         setLoading(true);
         try {
-            const data = await getTeamMembers(page, pageSize);
-            setTeam(data.members as TeamMember[]);
-            setTotalPages(data.totalPages);
-            setTotal(data.total);
+            const [teamData, leadersData] = await Promise.all([
+                getTeamMembers(page, pageSize),
+                getManagerTeamLeaders()
+            ]);
+            setTeam(teamData.members as TeamMember[]);
+            setTeamLeaders(leadersData);
+            setTotalPages(teamData.totalPages);
+            setTotal(teamData.total);
         } catch (error) {
             console.error("Failed to load team:", error);
         } finally {
@@ -75,33 +84,49 @@ export default function ManagerTeamPage() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Name</TableHead>
-                            <TableHead>Email</TableHead>
+                            <TableHead>Role</TableHead>
+                            <TableHead>Team Leader</TableHead>
                             <TableHead>Customers Referred</TableHead>
                             <TableHead>Status</TableHead>
-                            <TableHead>Joined Date</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {team.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center h-24">
+                                <TableCell colSpan={6} className="text-center h-24">
                                     No team members yet. Invite someone!
                                 </TableCell>
                             </TableRow>
                         ) : (
                             team.map((member) => (
                                 <TableRow key={member.id}>
-                                    <TableCell className="font-medium">
-                                        {member.firstName} {member.lastName}
+                                    <TableCell>
+                                        <div className="flex flex-col">
+                                            <span className="font-medium">{member.firstName} {member.lastName}</span>
+                                            <span className="text-xs text-muted-foreground">{member.email}</span>
+                                        </div>
                                     </TableCell>
-                                    <TableCell>{member.email}</TableCell>
-                                    <TableCell>{member.referralsCount}</TableCell>
+                                    <TableCell>
+                                        <Badge variant="outline" className="text-[10px] uppercase">
+                                            {member.role}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <span className="text-sm">{member.teamLeaderName || "-"}</span>
+                                    </TableCell>
+                                    <TableCell className="text-center">{member.referralsCount}</TableCell>
                                     <TableCell>
                                         <Badge variant={member.status === 'ACTIVE' ? 'default' : 'secondary'}>
                                             {member.status}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell>{new Date(member.createdAt).toLocaleDateString()}</TableCell>
+                                    <TableCell className="text-right">
+                                        <UserActions 
+                                            user={member} 
+                                            teamLeaders={teamLeaders.filter(l => l.id !== member.id)} 
+                                        />
+                                    </TableCell>
                                 </TableRow>
                             ))
                         )}

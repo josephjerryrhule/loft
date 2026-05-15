@@ -10,6 +10,9 @@ import { TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
+import { CopyInviteLinkButton } from "@/components/affiliate/CopyInviteLinkButton";
+import { prisma } from "@/lib/prisma";
+
 // Force dynamic rendering - this page requires authentication and real-time data
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -21,6 +24,11 @@ export default async function ManagerDashboardPage() {
     redirect("/parent");
   }
 
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { inviteCode: true }
+  });
+
   const stats = await getManagerStats();
   const activities = await getRecentManagerActivities();
   const chartData = await getMonthlyEarningsData();
@@ -30,7 +38,21 @@ export default async function ManagerDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Manager Dashboard</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">Manager Dashboard</h1>
+        {user?.inviteCode && (
+          <div className="flex gap-2">
+            <CopyInviteLinkButton 
+              text={`/join/customer/${user.inviteCode}`} 
+              label="Recruit Customer" 
+            />
+            <CopyInviteLinkButton 
+              text={`/join/affiliate/${user.inviteCode}`} 
+              label="Recruit Affiliate" 
+            />
+          </div>
+        )}
+      </div>
       
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

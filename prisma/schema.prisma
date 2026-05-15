@@ -17,7 +17,7 @@ model User {
   id              String     @id @default(uuid())
   email           String     @unique
   passwordHash    String     @map("password_hash")
-  role            String     // Enum: ADMIN, MANAGER, AFFILIATE, PARENT, CUSTOMER, FINANCE
+  role            String     // Enum: ADMIN, OPERATIONS_MANAGER, MANAGER, TEAM_LEADER, AFFILIATE, PARENT, CUSTOMER, FINANCE
   firstName       String?    @map("first_name")
   lastName        String?    @map("last_name")
   phoneNumber     String?    @map("phone_number")
@@ -33,6 +33,10 @@ model User {
   managerId       String?    @map("manager_id")
   manager         User?      @relation("ManagerAffiliates", fields: [managerId], references: [id])
   affiliates      User[]     @relation("ManagerAffiliates")
+
+  teamLeaderId    String?    @map("team_leader_id")
+  teamLeader      User?      @relation("TeamLeaderAffiliates", fields: [teamLeaderId], references: [id])
+  teamMembers     User[]     @relation("TeamLeaderAffiliates")
 
   inviteCode      String?    @unique @map("invite_code")
   

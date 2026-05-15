@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath, unstable_noStore as noStore } from "next/cache";
 import { auth } from "@/auth";
-import { sendAccountStatusChangeEmail } from "@/lib/email";
+import { sendAccountStatusChangeEmail, sendHierarchyChangeEmail } from "@/lib/email";
 import { canUseCustomerLibrary } from "@/lib/access-control.mjs";
 import { z } from "zod";
 
@@ -16,29 +16,62 @@ export async function updateUser(userId: string, data: {
     status: string;
     ambassadorExpiry?: Date | null;
     profilePictureUrl?: string | null;
+    managerId?: string | null;
+    teamLeaderId?: string | null;
 }) {
     try {
         const session = await auth();
-        if (!session?.user || session.user.role !== "ADMIN") {
+        const viewerRole = (session?.user as any)?.role;
+        const viewerId = session?.user?.id;
+        
+        if (!viewerId || (viewerRole !== "ADMIN" && viewerRole !== "OPERATIONS_MANAGER" && viewerRole !== "MANAGER")) {
             return { error: "Unauthorized" };
         }
 
-        // Get current user to check if status is changing or if we need to generate an ID
+        // Get current user to check permissions and state
         const currentUser = await prisma.user.findUnique({
             where: { id: userId },
-            select: { status: true, email: true, firstName: true, lastName: true, role: true, ambassadorId: true },
+            select: { 
+                id: true,
+                status: true, 
+                email: true, 
+                firstName: true, 
+                lastName: true, 
+                role: true, 
+                ambassadorId: true,
+                managerId: true
+            },
         });
         
         if (!currentUser) return { error: "User not found" };
+
+        // Manager specific restrictions
+        if (viewerRole === "MANAGER") {
+            if (currentUser.managerId !== viewerId) {
+                return { error: "Unauthorized: You can only update your own team members" };
+            }
+            // Managers can't change emails or promote to roles above them
+            if (currentUser.email !== data.email) {
+                return { error: "Managers cannot change user emails" };
+            }
+            if (data.role === "ADMIN" || data.role === "OPERATIONS_MANAGER" || data.role === "MANAGER") {
+                 // Managers can only promote to TEAM_LEADER or AFFILIATE
+                 if (data.role !== currentUser.role && data.role !== "TEAM_LEADER" && data.role !== "AFFILIATE") {
+                    return { error: "Managers can only promote to Team Leader or Affiliate" };
+                 }
+            }
+        }
         
         const statusChanged = currentUser.status !== data.status;
         
         let ambassadorId = currentUser.ambassadorId;
-        const prefix = data.role === "MANAGER" ? "LFT-MGR" : "LFT-AMB";
+        const prefix = data.role === "MANAGER" ? "LFT-MGR" : 
+                       data.role === "OPERATIONS_MANAGER" ? "LFT-OPS" : 
+                       data.role === "TEAM_LEADER" ? "LFT-TL" : "LFT-AMB";
         
-        // Auto-generate ID if role is MANAGER or AFFILIATE and they don't have one 
-        // OR if their current ID doesn't match the new role's prefix (Managers should have LFT-MGR)
-        if ((data.role === "MANAGER" || data.role === "AFFILIATE") && (!ambassadorId || !ambassadorId.startsWith(prefix))) {
+        // Auto-generate ID if role is an ambassador role and they don't have one 
+        const isAmbassadorRole = ["MANAGER", "AFFILIATE", "TEAM_LEADER", "OPERATIONS_MANAGER"].includes(data.role);
+        if (isAmbassadorRole && (!ambassadorId || !ambassadorId.startsWith(prefix))) {
           const existingUsers = await prisma.user.findMany({
             where: {
               ambassadorId: { startsWith: prefix }
@@ -70,9 +103,52 @@ export async function updateUser(userId: string, data: {
                 ambassadorId,
                 ambassadorExpiry: data.ambassadorExpiry,
                 profilePictureUrl: data.profilePictureUrl,
+                managerId: data.managerId,
+                teamLeaderId: data.teamLeaderId,
             }
         });
         
+        // Log promotion/assignment if applicable
+        if (currentUser.role !== data.role || currentUser.managerId !== data.managerId) {
+            await prisma.activityLog.create({
+                data: {
+                    userId: viewerId,
+                    actionType: "USER_HIERARCHY_UPDATE",
+                    actionDetails: JSON.stringify({
+                        targetUserId: userId,
+                        oldRole: currentUser.role,
+                        newRole: data.role,
+                        oldManagerId: currentUser.managerId,
+                        newManagerId: data.managerId
+                    })
+                }
+            });
+        }
+
+        // Send hierarchy change emails
+        if (currentUser.role !== data.role) {
+            sendHierarchyChangeEmail({
+                userEmail: data.email,
+                userName: `${data.firstName} ${data.lastName}`.trim(),
+                type: "PROMOTION",
+                newRole: data.role
+            }).catch(console.error);
+        } else if (currentUser.managerId !== data.managerId || currentUser.teamLeaderId !== data.teamLeaderId) {
+            // Fetch names for assignment email
+            const [mgr, tl] = await Promise.all([
+                data.managerId ? prisma.user.findUnique({ where: { id: data.managerId }, select: { firstName: true, lastName: true } }) : null,
+                data.teamLeaderId ? prisma.user.findUnique({ where: { id: data.teamLeaderId }, select: { firstName: true, lastName: true } }) : null
+            ]);
+
+            sendHierarchyChangeEmail({
+                userEmail: data.email,
+                userName: `${data.firstName} ${data.lastName}`.trim(),
+                type: "ASSIGNMENT",
+                managerName: mgr ? `${mgr.firstName} ${mgr.lastName}` : undefined,
+                teamLeaderName: tl ? `${tl.firstName} ${tl.lastName}` : undefined
+            }).catch(console.error);
+        }
+
         // Send email notification if status changed
         if (statusChanged && currentUser) {
           sendAccountStatusChangeEmail({
@@ -84,6 +160,7 @@ export async function updateUser(userId: string, data: {
         }
         
         revalidatePath("/admin/users");
+        revalidatePath("/manager/team");
         return { success: true };
     } catch (error) {
         console.error("Failed to update user:", error);
@@ -94,7 +171,8 @@ export async function updateUser(userId: string, data: {
 export async function deleteUser(userId: string) {
     try {
         const session = await auth();
-        if (!session?.user || session.user.role !== "ADMIN") {
+        const role = (session?.user as any)?.role;
+        if (!session?.user || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
             return { error: "Unauthorized" };
         }
 

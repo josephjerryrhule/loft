@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PhoneInputComponent } from "@/components/ui/phone-input";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FileUpload } from "@/components/ui/file-upload";
 
@@ -32,15 +32,20 @@ const editUserSchema = z.object({
   ambassadorId: z.string().optional().nullable(),
   ambassadorExpiry: z.string().optional().nullable(),
   profilePictureUrl: z.string().optional().nullable(),
+  managerId: z.string().optional().nullable(),
+  teamLeaderId: z.string().optional().nullable(),
 });
 
 interface EditUserDialogProps {
-    user: any; // Type strictly if possible
+    user: any; 
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    managers?: { id: string, name: string }[];
+    teamLeaders?: { id: string, name: string }[];
+    operationsManagers?: { id: string, name: string }[];
 }
 
-export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps) {
+export function EditUserDialog({ user, open, onOpenChange, managers = [], teamLeaders = [], operationsManagers = [] }: EditUserDialogProps) {
   const router = useRouter();
   const form = useForm<z.infer<typeof editUserSchema>>({
     resolver: zodResolver(editUserSchema),
@@ -54,6 +59,8 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
       ambassadorId: user.ambassadorId || "",
       ambassadorExpiry: user.ambassadorExpiry ? new Date(user.ambassadorExpiry).toISOString().split('T')[0] : "",
       profilePictureUrl: user.profilePictureUrl || "",
+      managerId: user.managerId || "none",
+      teamLeaderId: user.teamLeaderId || "none",
     },
   });
 
@@ -70,6 +77,8 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
         ambassadorId: user.ambassadorId || "",
         ambassadorExpiry: user.ambassadorExpiry ? new Date(user.ambassadorExpiry).toISOString().split('T')[0] : "",
         profilePictureUrl: user.profilePictureUrl || "",
+        managerId: user.managerId || "none",
+        teamLeaderId: user.teamLeaderId || "none",
       });
     }
   }, [user, open, form]);
@@ -78,6 +87,8 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
     const formattedValues = {
       ...values,
       ambassadorExpiry: values.ambassadorExpiry ? new Date(values.ambassadorExpiry) : null,
+      managerId: values.managerId === "none" ? null : values.managerId,
+      teamLeaderId: values.teamLeaderId === "none" ? null : values.teamLeaderId,
     };
     const result = await updateUser(user.id, formattedValues as any);
     if (result && result.error) {
@@ -154,7 +165,9 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
                         <SelectItem value={Role.CUSTOMER}>Customer</SelectItem>
                         <SelectItem value={Role.PARENT}>Parent</SelectItem>
                         <SelectItem value={Role.AFFILIATE}>Affiliate</SelectItem>
+                        <SelectItem value={Role.TEAM_LEADER}>Team Leader</SelectItem>
                         <SelectItem value={Role.MANAGER}>Manager</SelectItem>
+                        <SelectItem value={Role.OPERATIONS_MANAGER}>Operations Manager</SelectItem>
                         <SelectItem value={Role.ADMIN}>Admin</SelectItem>
                         <SelectItem value={Role.FINANCE}>Finance</SelectItem>
                         </SelectContent>
@@ -176,7 +189,6 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
                         <SelectItem value="ACTIVE">Active</SelectItem>
                         <SelectItem value="SUSPENDED">Suspended</SelectItem>
                         <SelectItem value="BANNED">Banned</SelectItem>
-                        <SelectItem value="ONE_TIME_PURCHASE">One Time Purchase</SelectItem>
                         </SelectContent>
                     </Select>
                     <FormMessage />
@@ -184,7 +196,7 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
                 )} />
               </div>
 
-              {(form.watch("role") === Role.MANAGER || form.watch("role") === Role.AFFILIATE) && (
+              {[Role.MANAGER, Role.AFFILIATE, Role.TEAM_LEADER, Role.OPERATIONS_MANAGER].includes(form.watch("role") as Role) && (
                 <div className="space-y-4 border-t pt-4 mt-2">
                   <div className="flex justify-center pb-2">
                     <FileUpload 
@@ -199,7 +211,7 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
                   <div className="grid grid-cols-2 gap-4">
                     <FormField control={form.control} name="ambassadorId" render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{form.watch("role") === Role.MANAGER ? "Manager ID" : "Ambassador ID"}</FormLabel>
+                        <FormLabel>Ambassador ID</FormLabel>
                         <FormControl><Input {...field} value={field.value || ""} placeholder="Auto-generated" disabled className="bg-slate-50 cursor-not-allowed" /></FormControl>
                         <FormDescription className="text-[10px]">Managed by system</FormDescription>
                         <FormMessage />
@@ -212,6 +224,100 @@ export function EditUserDialog({ user, open, onOpenChange }: EditUserDialogProps
                         <FormMessage />
                       </FormItem>
                     )} />
+                  </div>
+
+                  {/* Role-based Hierarchy Assignments */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Manager Role -> Assigned Operations Manager */}
+                    {form.watch("role") === Role.MANAGER && (
+                      <FormField control={form.control} name="managerId" render={({ field }) => (
+                        <FormItem className="col-span-2">
+                          <FormLabel>Assigned Operations Manager</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select Operations Manager" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="none">No Operations Manager</SelectItem>
+                              {operationsManagers.map(m => (
+                                <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    )}
+
+                    {/* Team Leader Role -> Assigned Manager */}
+                    {form.watch("role") === Role.TEAM_LEADER && (
+                      <FormField control={form.control} name="managerId" render={({ field }) => (
+                        <FormItem className="col-span-2">
+                          <FormLabel>Assigned Manager</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select Manager" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="none">No Manager</SelectItem>
+                              {managers.map(m => (
+                                <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    )}
+
+                    {/* Affiliate Role -> Assigned Manager & Team Leader */}
+                    {form.watch("role") === Role.AFFILIATE && (
+                      <>
+                        <FormField control={form.control} name="managerId" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Assigned Manager</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select Manager" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="none">No Manager</SelectItem>
+                                {managers.map(m => (
+                                  <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+
+                        <FormField control={form.control} name="teamLeaderId" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Assigned Team Leader</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select Team Leader" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="none">No Team Leader</SelectItem>
+                                {teamLeaders.map(tl => (
+                                  <SelectItem key={tl.id} value={tl.id}>{tl.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      </>
+                    )}
                   </div>
                 </div>
               )}

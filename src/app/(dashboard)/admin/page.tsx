@@ -173,10 +173,11 @@ async function getRecentSales() {
 }
 
 export default async function AdminDashboardPage() {
-  // Role protection - only admins can access
+  // Role protection - admins and operations manager can access
   const session = await auth();
   // @ts-ignore - role exists in our custom session type
-  if (!session?.user || session.user.role !== "ADMIN") {
+  const role = session?.user?.role;
+  if (!session?.user || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
     redirect("/parent");
   }
 

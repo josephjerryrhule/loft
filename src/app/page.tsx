@@ -17,18 +17,26 @@ export default async function Home() {
   const role = session.user.role;
 
   switch (role) {
-    case Role.ADMIN:
+    case "ADMIN":
+    case "OPERATIONS_MANAGER":
       redirect("/admin");
-    case Role.MANAGER:
+      break;
+    case "MANAGER":
       redirect("/manager");
-    case Role.AFFILIATE:
+      break;
+    case "TEAM_LEADER":
+    case "AFFILIATE":
       redirect("/affiliate");
-    case Role.PARENT:
+      break;
+    case "PARENT":
       redirect("/parent");
-    case Role.CUSTOMER:
+      break;
+    case "CUSTOMER":
       redirect("/customer");
-    case Role.FINANCE:
+      break;
+    case "FINANCE":
       redirect("/finance");
+      break;
     default:
       redirect("/auth/login"); // Fallback
   }

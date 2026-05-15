@@ -4,11 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { formatRole } from "@/lib/format-utils";
 import { Button } from "@/components/ui/button";
 import { Role } from "@/lib/types";
 import {
   LayoutDashboard,
   Users,
+  Shield,
   BookOpen,
   ShoppingBag,
   CreditCard,
@@ -37,15 +39,29 @@ function getLinks(userRole?: string, hasChildren?: boolean) {
     { href: "/settings", label: "Settings", icon: Settings },
   ];
 
+  const leaderboardLink = { href: "/leaderboard", label: "Leaderboard", icon: BarChart3 };
+
   const adminLinks = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/users", label: "User Management", icon: Users },
+    { href: "/admin/ambassadors", label: "Ambassador Management", icon: Shield },
     { href: "/admin/flipbooks", label: "Flipbooks", icon: BookOpen },
     { href: "/admin/products", label: "Products", icon: ShoppingBag },
     { href: "/admin/orders", label: "Orders", icon: FileText },
     { href: "/admin/plans", label: "Plans", icon: CreditCard },
     { href: "/admin/finance", label: "Finance & Payouts", icon: CreditCard },
     { href: "/admin/payments", label: "Payment Tracker", icon: Wallet },
+    leaderboardLink,
+  ];
+
+  const operationsManagerLinks = [
+    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/users", label: "User Management", icon: Users },
+    { href: "/admin/ambassadors", label: "Ambassador Management", icon: Shield },
+    { href: "/admin/orders", label: "Orders", icon: FileText },
+    { href: "/admin/finance", label: "Ambassador Earnings", icon: CreditCard },
+    { href: "/admin/payments", label: "Payment Tracker", icon: Wallet },
+    leaderboardLink,
   ];
 
   const managerLinks = [
@@ -53,12 +69,22 @@ function getLinks(userRole?: string, hasChildren?: boolean) {
     { href: "/manager/team", label: "My Team", icon: Users },
     { href: "/manager/marketing", label: "Marketing Tools", icon: TrendingUp },
     { href: "/manager/commissions", label: "Commissions", icon: CreditCard },
+    leaderboardLink,
+  ];
+
+  const teamLeaderLinks = [
+    { href: "/affiliate", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/team-leader/team", label: "My Team", icon: Users },
+    { href: "/affiliate/marketing", label: "Marketing Tools", icon: TrendingUp },
+    { href: "/affiliate/commissions", label: "My Earnings", icon: CreditCard },
+    leaderboardLink,
   ];
 
   const affiliateLinks = [
      { href: "/affiliate", label: "Dashboard", icon: LayoutDashboard },
      { href: "/affiliate/marketing", label: "Marketing Tools", icon: TrendingUp },
      { href: "/affiliate/commissions", label: "My Earnings", icon: CreditCard },
+     leaderboardLink,
   ];
 
   const parentLinks = [
@@ -86,14 +112,17 @@ function getLinks(userRole?: string, hasChildren?: boolean) {
     { href: "/finance/payments", label: "Payment Tracker", icon: Wallet },
     { href: "/finance/signups", label: "Daily Signups", icon: TrendingUp },
     { href: "/finance/payouts", label: "Payout Requests", icon: BarChart3 },
+    leaderboardLink,
   ];
 
   if (userRole === Role.ADMIN) return [...adminLinks, ...commonLinks];
+  if (userRole === Role.OPERATIONS_MANAGER) return [...operationsManagerLinks, ...commonLinks];
   if (userRole === Role.MANAGER) return [...managerLinks, ...commonLinks];
+  if (userRole === Role.TEAM_LEADER) return [...teamLeaderLinks, ...commonLinks];
   if (userRole === Role.AFFILIATE) return [...affiliateLinks, ...commonLinks];
   if (userRole === Role.PARENT) return [...parentLinks, ...commonLinks];
   if (userRole === Role.CUSTOMER) return [...customerLinks, ...commonLinks];
-  if (userRole === Role.FINANCE) return financeLinks; // No settings — read/export + payout only
+  if (userRole === Role.FINANCE) return [...financeLinks, ...commonLinks];
 
   return commonLinks;
 }
@@ -117,13 +146,13 @@ function NavContent({ userRole, setOpen, logoUrl, platformName, hasChildren }: {
                 </div>
                 <div>
                   <h1 className="text-xl font-bold tracking-tight">{platformName || "Loft"}</h1>
-                  <p className="text-xs text-slate-400 uppercase tracking-wider">{userRole || "Guest"}</p>
+                  <p className="text-xs text-slate-400 tracking-wider">{userRole ? formatRole(userRole) : "Guest"}</p>
                 </div>
               </div>
             ) : (
               <>
                 <h1 className="text-2xl font-bold tracking-tight">{platformName || "Loft"}</h1>
-                <p className="text-xs text-slate-400 mt-1 uppercase tracking-wider">{userRole || "Guest"}</p>
+                <p className="text-xs text-slate-400 mt-1 tracking-wider">{userRole ? formatRole(userRole) : "Guest"}</p>
               </>
             )}
           </div>

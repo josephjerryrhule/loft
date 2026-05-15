@@ -84,31 +84,53 @@ export async function getTeamMembers(page = 1, pageSize = 10) {
 
     const skip = (page - 1) * pageSize;
 
+    const where = { 
+        managerId: session.user.id, 
+        role: { in: [Role.AFFILIATE, Role.TEAM_LEADER] } 
+    };
+
     const [members, total] = await Promise.all([
         prisma.user.findMany({
-            where: { managerId: session.user.id, role: Role.AFFILIATE },
+            where,
             include: {
                 _count: {
                     select: { referrals: true }
-                }
+                },
+                teamLeader: { select: { firstName: true, lastName: true } }
             },
             skip,
             take: pageSize,
             orderBy: { createdAt: "desc" }
         }),
         prisma.user.count({
-            where: { managerId: session.user.id, role: Role.AFFILIATE }
+            where
         })
     ]);
     
     return {
         members: members.map(m => ({
             ...m,
-            referralsCount: m._count.referrals
+            referralsCount: m._count.referrals,
+            teamLeaderName: m.teamLeader ? `${m.teamLeader.firstName} ${m.teamLeader.lastName}` : null
         })),
         total,
         totalPages: Math.ceil(total / pageSize)
     };
+}
+
+export async function getManagerTeamLeaders() {
+    const session = await auth();
+    if (!session?.user?.id) return [];
+
+    const leaders = await prisma.user.findMany({
+        where: { managerId: session.user.id, role: Role.TEAM_LEADER },
+        select: { id: true, firstName: true, lastName: true, email: true }
+    });
+
+    return leaders.map(l => ({
+        id: l.id,
+        name: `${l.firstName || ""} ${l.lastName || ""}`.trim() || l.email
+    }));
 }
 
 export async function getManagerCommissions(page = 1, pageSize = 10) {
