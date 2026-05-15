@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     // 1. Resolve the path exactly like the upload utility does
     const relativePath = fileUrl.replace('/uploads/', ''); 
     const baseUploadDir = process.env.UPLOAD_DIR_BASE || path.join(/*turbopackIgnore: true*/ process.cwd(), 'public', 'uploads');
-    const fullPath = path.join(baseUploadDir, relativePath);
+    const fullPath = path.join(/*turbopackIgnore: true*/ baseUploadDir, relativePath);
 
     // 2. Check if file exists
     const exists = fs.existsSync(fullPath);
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
             directoryPath: dirPath,
             directoryExists: dirExists,
             directoryStats: dirStats,
-            cwd: process.cwd(),
+            cwd: path.join(/*turbopackIgnore: true*/ process.cwd(), ''),
             envBaseDir: process.env.UPLOAD_DIR_BASE || "Not Set",
         }
     });

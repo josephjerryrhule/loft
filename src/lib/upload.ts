@@ -21,7 +21,7 @@ export async function saveFileLocally(
   // In some production environments (like Plesk), you might want to save directly to a served folder
   // Defaults to public/uploads if not specified
   const baseUploadDir = process.env.UPLOAD_DIR_BASE || path.join(/*turbopackIgnore: true*/ process.cwd(), 'public', 'uploads');
-  const uploadDir = path.join(baseUploadDir, folder);
+  const uploadDir = path.join(/*turbopackIgnore: true*/ baseUploadDir, folder);
   
   console.log(`[Upload] Saving file to: ${uploadDir}/${fileName}`);
 
@@ -32,7 +32,7 @@ export async function saveFileLocally(
     await fs.mkdir(uploadDir, { recursive: true });
   }
 
-  const filePath = path.join(uploadDir, fileName);
+  const filePath = path.join(/*turbopackIgnore: true*/ uploadDir, fileName);
 
   // Write file to disk
   await fs.writeFile(filePath, buffer);
@@ -50,7 +50,7 @@ export async function deleteFile(fileUrl: string): Promise<boolean> {
 
     const relativePath = fileUrl.replace('/uploads/', ''); 
     const baseUploadDir = process.env.UPLOAD_DIR_BASE || path.join(/*turbopackIgnore: true*/ process.cwd(), 'public', 'uploads');
-    const fullPath = path.join(baseUploadDir, relativePath);
+    const fullPath = path.join(/*turbopackIgnore: true*/ baseUploadDir, relativePath);
 
     console.log(`[Upload] Deleting file from: ${fullPath}`);
 
