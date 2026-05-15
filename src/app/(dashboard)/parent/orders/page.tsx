@@ -10,6 +10,7 @@ import { getCustomerOrders } from "@/app/actions/user";
 import { getSystemSettings } from "@/app/actions/settings";
 import { getCurrencySymbol } from "@/lib/utils";
 import { ViewOrderDialog } from "@/components/order/ViewOrderDialog";
+import Image from "next/image";
 import { Pagination } from "@/components/ui/pagination";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -192,10 +193,13 @@ export default function CustomerOrdersPage() {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           {order.product.featuredImageUrl && (
-                            <img
+                            <Image
                               src={order.product.featuredImageUrl}
                               alt={order.product.title}
-                              className="h-10 w-10 rounded object-cover"
+                              width={40}
+                              height={40}
+                              unoptimized
+                              className="rounded object-cover"
                             />
                           )}
                           <div>

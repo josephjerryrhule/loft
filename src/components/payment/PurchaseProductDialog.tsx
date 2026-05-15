@@ -11,6 +11,7 @@ import { Minus, Plus, ShoppingCart } from "lucide-react";
 import { PaystackButton } from "@/components/payment/PaystackButton";
 import { getSystemSettings } from "@/app/actions/settings";
 import { getCurrencySymbol } from "@/lib/utils";
+import Image from "next/image";
 
 function getFileExtension(url: string) {
   if (!url) return '';
@@ -102,10 +103,13 @@ export function PurchaseProductDialog({
           {/* Product Info */}
           <div className="flex gap-4">
             {product.featuredImageUrl && (
-              <img
+              <Image
                 src={product.featuredImageUrl}
                 alt={product.title}
-                className="h-20 w-20 rounded-lg object-cover"
+                width={80}
+                height={80}
+                unoptimized
+                className="rounded-lg object-cover"
               />
             )}
             <div className="flex-1">

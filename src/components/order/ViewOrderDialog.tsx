@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Package, User, CreditCard, Calendar, FileText, Download } from "lucide-react";
 import { getCurrencySymbol } from "@/lib/utils";
+import Image from "next/image";
 
 interface ViewOrderDialogProps {
   open: boolean;
@@ -150,10 +151,13 @@ export function ViewOrderDialog({ open, onOpenChange, order, currency = "GHS" }:
             <div className="bg-muted/50 rounded-lg p-4">
               <div className="flex gap-4">
                 {order.product.featuredImageUrl && (
-                  <img
+                  <Image
                     src={order.product.featuredImageUrl}
                     alt={order.product.title}
-                    className="h-20 w-20 rounded-lg object-cover"
+                    width={80}
+                    height={80}
+                    unoptimized
+                    className="rounded-lg object-cover"
                   />
                 )}
                 <div className="flex-1 space-y-2">
