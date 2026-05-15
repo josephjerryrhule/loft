@@ -10,6 +10,10 @@ import { TablePagination } from "@/components/ui/table-pagination";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { getFinanceData, bulkApproveCommissions } from "@/app/actions/admin";
 import { toast } from "sonner";
+import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { DollarSign, Wallet, TrendingUp, Clock, ArrowUpRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 
 export default function AdminFinancePage() {
@@ -86,202 +90,232 @@ export default function AdminFinancePage() {
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Finance & Payouts</h1>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <PageHeader
+        title="Finance & Payouts"
+        subtitle="Manage ambassador commissions, payout requests, and system revenue"
+      />
 
       {/* Finance KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              GHS {stats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+        <PremiumKPICard
+          title="Total Revenue"
+          value={`GHS ${stats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+          icon={DollarSign}
+          theme="primary"
+          trend={{ value: "From orders", label: "Completed sales", type: "up" }}
+        />
+        <PremiumKPICard
+          title="Commissions Paid"
+          value={`GHS ${stats.paidCommissions.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+          icon={CheckCircle2}
+          theme="success"
+          description="Total paid to ambassadors"
+        />
+        <PremiumKPICard
+          title="Pending Approval"
+          value={`GHS ${stats.pendingCommissions.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+          icon={Clock}
+          theme="warning"
+          description="Awaiting admin review"
+        />
+        <PremiumKPICard
+          title="Approved (Ready)"
+          value={`GHS ${stats.approvedCommissions.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+          icon={Wallet}
+          theme="info"
+          description="Ready for payout"
+        />
+      </div>
+
+      <div className="grid gap-8 lg:grid-cols-1">
+        {/* Payout Requests */}
+        <Card className="border-none shadow-md overflow-hidden bg-white dark:bg-slate-900">
+          <CardHeader className="border-b border-slate-50 dark:border-slate-800 pb-4">
+            <div className="flex items-center justify-between">
+                <div>
+                    <CardTitle className="text-lg font-bold">Payout Requests</CardTitle>
+                    <CardDescription>Withdrawal requests from ambassadors</CardDescription>
+                </div>
+                <div className="h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500">
+                    <Wallet size={20} />
+                </div>
             </div>
-            <p className="text-xs text-muted-foreground">From completed orders</p>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent border-none">
+                  <TableHead className="pl-6">Ambassador</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Requested</TableHead>
+                  <TableHead className="text-right pr-6">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedPayouts.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-12 text-slate-400">
+                      No pending payout requests.
+                    </TableCell>
+                  </TableRow>
+                )}
+                {paginatedPayouts.map((req: any) => (
+                  <TableRow key={req.id} className="group transition-colors">
+                    <TableCell className="pl-6 font-bold text-slate-900 dark:text-white">{req.user.email}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-800 border-none">
+                        {req.user.role}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-black text-slate-900 dark:text-white">
+                        <span className="text-[10px] text-slate-400 mr-1">GHS</span>
+                        {Number(req.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={req.status === "PAID" ? "default" : req.status === "APPROVED" ? "secondary" : "outline"}
+                        className={cn(
+                            "text-[10px] font-bold uppercase tracking-wider",
+                            req.status === "PAID" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-none",
+                            req.status === "APPROVED" && "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-none",
+                            req.status === "PENDING" && "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-none"
+                        )}
+                      >
+                        {req.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-slate-500">
+                        {new Date(req.requestedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </TableCell>
+                    <TableCell className="text-right pr-6">
+                      <AdminPayoutActions payout={req} onSuccess={loadFinanceData} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="p-4 border-t border-slate-50 dark:border-slate-800">
+              <TablePagination
+                currentPage={payoutPage}
+                totalPages={payoutTotalPages}
+                itemsPerPage={payoutItemsPerPage}
+                totalItems={payoutRequests.length}
+                onPageChange={setPayoutPage}
+                onItemsPerPageChange={(value) => {
+                  setPayoutItemsPerPage(value);
+                  setPayoutPage(1);
+                }}
+              />
+            </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Commissions Paid</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              GHS {stats.paidCommissions.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+
+        {/* Recent Commissions */}
+        <Card className="border-none shadow-md overflow-hidden bg-white dark:bg-slate-900">
+          <CardHeader className="border-b border-slate-50 dark:border-slate-800 pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg font-bold">Recent Commissions</CardTitle>
+                <CardDescription>Audit log of all earned commissions</CardDescription>
+              </div>
+              <div className="flex items-center gap-3">
+                {recentCommissions.some(c => c.status === "PENDING") && (
+                <Button 
+                    onClick={handleBulkApprove}
+                    disabled={bulkApproving}
+                    size="sm"
+                    className="gap-2 bg-[#E87154] hover:bg-[#D66144] shadow-lg shadow-[#E87154]/20"
+                >
+                    {bulkApproving ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                    <CheckCircle2 className="h-4 w-4" />
+                    )}
+                    Approve All Pending
+                </Button>
+                )}
+                <div className="h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[#E87154]">
+                    <TrendingUp size={20} />
+                </div>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground">Total paid to affiliates/managers</p>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-amber-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Pending Commissions</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-amber-600">
-              GHS {stats.pendingCommissions.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent border-none">
+                  <TableHead className="pl-6">Recipient</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="text-right pr-6">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedCommissions.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-12 text-slate-400">
+                      No commissions yet.
+                    </TableCell>
+                  </TableRow>
+                )}
+                {paginatedCommissions.map((comm: any) => (
+                  <TableRow key={comm.id} className="group transition-colors">
+                    <TableCell className="pl-6 font-bold text-slate-900 dark:text-white">{comm.user?.email || "Unknown"}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-800 border-none">
+                        {comm.sourceType === "SIGNUP" ? "Signup Bonus" : 
+                         comm.sourceType === "SUBSCRIPTION" ? "Subscription" : 
+                         comm.sourceType === "PRODUCT" ? "Sale" : comm.sourceType}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-black text-emerald-600">
+                        <span className="text-[10px] opacity-70 mr-1">GHS</span>
+                        {Number(comm.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={comm.status === "PAID" ? "default" : comm.status === "APPROVED" ? "secondary" : "outline"}
+                        className={cn(
+                            "text-[10px] font-bold uppercase tracking-wider",
+                            comm.status === "PAID" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-none",
+                            comm.status === "APPROVED" && "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-none",
+                            comm.status === "PENDING" && "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-none"
+                        )}
+                      >
+                        {comm.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-slate-500">
+                         {new Date(comm.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </TableCell>
+                    <TableCell className="text-right pr-6">
+                      <AdminCommissionActions id={comm.id} status={comm.status} onSuccess={loadFinanceData} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="p-4 border-t border-slate-50 dark:border-slate-800">
+              <TablePagination
+                currentPage={commissionPage}
+                totalPages={commissionTotalPages}
+                itemsPerPage={commissionItemsPerPage}
+                totalItems={recentCommissions.length}
+                onPageChange={setCommissionPage}
+                onItemsPerPageChange={(value) => {
+                  setCommissionItemsPerPage(value);
+                  setCommissionPage(1);
+                }}
+              />
             </div>
-            <p className="text-xs text-muted-foreground">Awaiting approval</p>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-purple-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Ready to Pay</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
-              GHS {stats.approvedCommissions.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-            </div>
-            <p className="text-xs text-muted-foreground">Approved commissions</p>
           </CardContent>
         </Card>
       </div>
-
-      {/* Payout Requests */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Payout Requests</CardTitle>
-          <CardDescription>Requests from affiliates and managers</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Requested</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedPayouts.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    No pending payout requests.
-                  </TableCell>
-                </TableRow>
-              )}
-              {paginatedPayouts.map((req: any) => (
-                <TableRow key={req.id}>
-                  <TableCell className="font-medium">{req.user.email}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{req.user.role}</Badge>
-                  </TableCell>
-                  <TableCell>GHS {Number(req.amount).toFixed(2)}</TableCell>
-                  <TableCell>
-                    <Badge variant={req.status === "PAID" ? "default" : req.status === "APPROVED" ? "secondary" : "outline"}>
-                      {req.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{new Date(req.requestedAt).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <AdminPayoutActions payout={req} onSuccess={loadFinanceData} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <div className="mt-4">
-            <TablePagination
-              currentPage={payoutPage}
-              totalPages={payoutTotalPages}
-              itemsPerPage={payoutItemsPerPage}
-              totalItems={payoutRequests.length}
-              onPageChange={setPayoutPage}
-              onItemsPerPageChange={(value) => {
-                setPayoutItemsPerPage(value);
-                setPayoutPage(1);
-              }}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Recent Commissions */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Recent Commissions</CardTitle>
-              <CardDescription>All commission entries</CardDescription>
-            </div>
-            {recentCommissions.some(c => c.status === "PENDING") && (
-              <Button 
-                onClick={handleBulkApprove}
-                disabled={bulkApproving}
-                className="gap-2"
-              >
-                {bulkApproving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="h-4 w-4" />
-                )}
-                Approve All Pending
-              </Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedCommissions.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    No commissions yet.
-                  </TableCell>
-                </TableRow>
-              )}
-              {paginatedCommissions.map((comm: any) => (
-                <TableRow key={comm.id}>
-                  <TableCell className="font-medium">{comm.user?.email || "Unknown"}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {comm.sourceType === "SIGNUP" ? "Signup Bonus" : 
-                       comm.sourceType === "SUBSCRIPTION" ? "Subscription" : 
-                       comm.sourceType === "PRODUCT" ? "Sale" : comm.sourceType}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-green-600 font-medium">GHS {Number(comm.amount).toFixed(2)}</TableCell>
-                  <TableCell>
-                    <Badge variant={comm.status === "PAID" ? "default" : comm.status === "APPROVED" ? "secondary" : "outline"}>
-                      {comm.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{new Date(comm.createdAt).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <AdminCommissionActions id={comm.id} status={comm.status} onSuccess={loadFinanceData} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <div className="mt-4">
-            <TablePagination
-              currentPage={commissionPage}
-              totalPages={commissionTotalPages}
-              itemsPerPage={commissionItemsPerPage}
-              totalItems={recentCommissions.length}
-              onPageChange={setCommissionPage}
-              onItemsPerPageChange={(value) => {
-                setCommissionItemsPerPage(value);
-                setCommissionPage(1);
-              }}
-            />
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

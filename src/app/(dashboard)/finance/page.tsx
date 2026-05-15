@@ -2,14 +2,17 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { getAmbassadorTrackingData } from "@/app/actions/finance";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Download, Users, TrendingUp, Wallet, AlertCircle } from "lucide-react";
+import { Loader2, Download, Users, TrendingUp, Wallet, AlertCircle, Search, Filter } from "lucide-react";
 import { toast } from "sonner";
+import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { DashboardTable } from "@/components/dashboard/DashboardTable";
 
 function exportToCSV(rows: any[]) {
   const headers = [
@@ -71,174 +74,164 @@ export default function AmbassadorTrackingPage() {
   const { rows = [], summary = {}, managers = [] } = data || {};
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Ambassador Tracking</h1>
-          <p className="text-muted-foreground mt-1">Full view of all ambassadors, activity, and commission earnings</p>
-        </div>
-        <Button onClick={() => exportToCSV(rows)} variant="outline" className="gap-2">
-          <Download className="h-4 w-4" /> Export CSV
-        </Button>
-      </div>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <PageHeader
+        title="Ambassador Tracking"
+        subtitle="Full view of all ambassadors, activity, and commission earnings"
+        actions={
+          <Button onClick={() => exportToCSV(rows)} variant="outline" className="gap-2 shadow-sm">
+            <Download className="h-4 w-4" /> Export CSV
+          </Button>
+        }
+      />
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Users className="h-4 w-4" /> Total Ambassadors
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{summary.totalAmbassadors ?? 0}</div>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" /> Total Commissions Earned
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              GHS {(summary.totalCommissionsEarned ?? 0).toFixed(2)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-amber-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" /> Outstanding Payouts
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-amber-600">
-              GHS {(summary.totalOutstanding ?? 0).toFixed(2)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-purple-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Wallet className="h-4 w-4" /> Total Paid Out
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
-              GHS {(summary.totalPaidOut ?? 0).toFixed(2)}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
-        <Input
-          placeholder="Search by name or email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-xs"
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <PremiumKPICard
+          title="Total Ambassadors"
+          value={summary.totalAmbassadors ?? 0}
+          icon={Users}
+          theme="info"
         />
-        <Select value={roleFilter} onValueChange={setRoleFilter}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Roles</SelectItem>
-            <SelectItem value="AFFILIATE">Affiliate</SelectItem>
-            <SelectItem value="MANAGER">Manager</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="ACTIVE">Active</SelectItem>
-            <SelectItem value="SUSPENDED">Suspended</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={managerFilter} onValueChange={setManagerFilter}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Manager" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Managers</SelectItem>
-            {managers.map((m: any) => (
-              <SelectItem key={m.id} value={m.id}>
-                {m.firstName || ""} {m.lastName || ""} {!m.firstName && !m.lastName ? m.email : ""}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {loading && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground self-center" />}
+        <PremiumKPICard
+          title="Total Commissions"
+          value={`GHS ${(summary.totalCommissionsEarned ?? 0).toFixed(2)}`}
+          icon={TrendingUp}
+          theme="success"
+        />
+        <PremiumKPICard
+          title="Outstanding Payouts"
+          value={`GHS ${(summary.totalOutstanding ?? 0).toFixed(2)}`}
+          icon={AlertCircle}
+          theme="warning"
+        />
+        <PremiumKPICard
+          title="Total Paid Out"
+          value={`GHS ${(summary.totalPaidOut ?? 0).toFixed(2)}`}
+          icon={Wallet}
+        />
       </div>
 
-      {/* Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Ambassador</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Manager</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Recruits</TableHead>
-                <TableHead className="text-right">Revenue (GHS)</TableHead>
-                <TableHead className="text-right">Commissions (GHS)</TableHead>
-                <TableHead className="text-right">Outstanding (GHS)</TableHead>
-                <TableHead className="text-right">Paid Out (GHS)</TableHead>
-                <TableHead>Joined</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.length === 0 && (
+      <div className="space-y-4">
+          {/* Filters Bar */}
+          <Card className="border-none shadow-sm bg-white dark:bg-slate-900 overflow-visible">
+            <CardContent className="p-4 flex flex-wrap items-center gap-3">
+                <div className="relative flex-1 min-w-[240px]">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                        placeholder="Search by name or email..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="pl-9 bg-slate-50 dark:bg-slate-800 border-none h-10"
+                    />
+                </div>
+                <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-slate-400 mr-1" />
+                    <Select value={roleFilter} onValueChange={setRoleFilter}>
+                        <SelectTrigger className="w-36 h-10 bg-slate-50 dark:bg-slate-800 border-none">
+                            <SelectValue placeholder="Role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Roles</SelectItem>
+                            <SelectItem value="AFFILIATE">Affiliate</SelectItem>
+                            <SelectItem value="MANAGER">Manager</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="w-36 h-10 bg-slate-50 dark:bg-slate-800 border-none">
+                            <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Status</SelectItem>
+                            <SelectItem value="ACTIVE">Active</SelectItem>
+                            <SelectItem value="SUSPENDED">Suspended</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Select value={managerFilter} onValueChange={setManagerFilter}>
+                        <SelectTrigger className="w-48 h-10 bg-slate-50 dark:bg-slate-800 border-none">
+                            <SelectValue placeholder="Manager" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Managers</SelectItem>
+                            {managers.map((m: any) => (
+                                <SelectItem key={m.id} value={m.id}>
+                                    {m.firstName || ""} {m.lastName || ""} {!m.firstName && !m.lastName ? m.email : ""}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                {loading && <Loader2 className="h-5 w-5 animate-spin text-[#E87154] ml-auto" />}
+            </CardContent>
+          </Card>
+
+          {/* Data Table */}
+          <DashboardTable
+            title="Ambassador Network"
+            description="Detailed performance metrics for every ambassador"
+            icon={<Users size={18} />}
+          >
+            <Table>
+              <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
-                    No ambassadors found.
-                  </TableCell>
+                  <TableHead className="font-bold">Ambassador</TableHead>
+                  <TableHead className="font-bold">Role</TableHead>
+                  <TableHead className="font-bold">Manager</TableHead>
+                  <TableHead className="font-bold">Status</TableHead>
+                  <TableHead className="text-right font-bold">Recruits</TableHead>
+                  <TableHead className="text-right font-bold">Revenue (GHS)</TableHead>
+                  <TableHead className="text-right font-bold">Comm. (GHS)</TableHead>
+                  <TableHead className="text-right font-bold text-amber-600">Owed (GHS)</TableHead>
+                  <TableHead className="text-right font-bold text-emerald-600">Paid (GHS)</TableHead>
+                  <TableHead className="font-bold">Joined</TableHead>
                 </TableRow>
-              )}
-              {rows.map((row: any) => (
-                <TableRow key={row.id}>
-                  <TableCell>
-                    <div className="font-medium">{row.name}</div>
-                    <div className="text-xs text-muted-foreground">{row.email}</div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={row.role === "MANAGER" ? "default" : "secondary"}>
-                      {row.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">{row.manager}</TableCell>
-                  <TableCell>
-                    <Badge variant={row.status === "ACTIVE" ? "default" : "destructive"}>
-                      {row.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right font-medium">{row.customersRecruited}</TableCell>
-                  <TableCell className="text-right">{row.revenueGenerated.toFixed(2)}</TableCell>
-                  <TableCell className="text-right text-green-600 font-medium">
-                    {row.totalCommissions.toFixed(2)}
-                  </TableCell>
-                  <TableCell className="text-right text-amber-600">
-                    {row.outstandingPayouts.toFixed(2)}
-                  </TableCell>
-                  <TableCell className="text-right text-purple-600">
-                    {row.paidOut.toFixed(2)}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {new Date(row.joinedAt).toLocaleDateString()}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {rows.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
+                      No ambassadors found.
+                    </TableCell>
+                  </TableRow>
+                )}
+                {rows.map((row: any) => (
+                  <TableRow key={row.id} className="group transition-colors">
+                    <TableCell>
+                      <div className="font-bold text-slate-900 dark:text-white">{row.name}</div>
+                      <div className="text-[10px] text-slate-500 font-medium">{row.email}</div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={row.role === "MANAGER" ? "bg-indigo-500/10 text-indigo-600 border-none" : "bg-slate-500/10 text-slate-600 border-none"}>
+                        {row.role}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-slate-500 text-xs font-medium">{row.manager || "-"}</TableCell>
+                    <TableCell>
+                      <Badge className={row.status === "ACTIVE" ? "bg-emerald-500/10 text-emerald-600 border-none" : "bg-destructive/10 text-destructive border-none"}>
+                        {row.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-black">{row.customersRecruited}</TableCell>
+                    <TableCell className="text-right font-medium">{row.revenueGenerated.toFixed(2)}</TableCell>
+                    <TableCell className="text-right text-slate-900 dark:text-white font-bold">
+                      {row.totalCommissions.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right text-amber-600 font-black">
+                      {row.outstandingPayouts.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right text-emerald-600 font-black">
+                      {row.paidOut.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-xs text-slate-500 font-medium">
+                      {new Date(row.joinedAt).toLocaleDateString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </DashboardTable>
+      </div>
     </div>
   );
 }
+

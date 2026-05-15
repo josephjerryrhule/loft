@@ -59,16 +59,10 @@ export async function generateMetadata(): Promise<Metadata> {
   // Create metadata with proper icon configuration
   const icons: Metadata['icons'] = {};
   
+  // Default favicon
+  icons.icon = settings.faviconUrl || "/favicon.ico";
   if (settings.faviconUrl) {
-    // For custom favicons, use the full URL with multiple sizes
-    icons.icon = [
-      { url: faviconUrl, sizes: '32x32', type: 'image/x-icon' },
-      { url: faviconUrl, sizes: '16x16', type: 'image/x-icon' },
-    ];
-    icons.apple = faviconUrl;
-  } else {
-    // Default favicon
-    icons.icon = "/favicon.ico";
+    icons.apple = settings.faviconUrl;
   }
   
   return {

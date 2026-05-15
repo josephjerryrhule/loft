@@ -39,7 +39,8 @@ export async function updateUser(userId: string, data: {
                 lastName: true, 
                 role: true, 
                 ambassadorId: true,
-                managerId: true
+                managerId: true,
+                teamLeaderId: true
             },
         });
         
@@ -54,11 +55,8 @@ export async function updateUser(userId: string, data: {
             if (currentUser.email !== data.email) {
                 return { error: "Managers cannot change user emails" };
             }
-            if (data.role === "ADMIN" || data.role === "OPERATIONS_MANAGER" || data.role === "MANAGER") {
-                 // Managers can only promote to TEAM_LEADER or AFFILIATE
-                 if (data.role !== currentUser.role && data.role !== "TEAM_LEADER" && data.role !== "AFFILIATE") {
-                    return { error: "Managers can only promote to Team Leader or Affiliate" };
-                 }
+            if (data.role !== "TEAM_LEADER" && data.role !== "AFFILIATE" && data.role !== currentUser.role) {
+                return { error: "Managers can only promote to Team Leader or Affiliate" };
             }
         }
         

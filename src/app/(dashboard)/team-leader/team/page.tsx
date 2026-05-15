@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { Role } from "@/lib/types";
+import { getTeamMembers } from "@/app/actions/team-leader";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { DashboardTable } from "@/components/dashboard/DashboardTable";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -8,80 +9,49 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Users, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { prisma } from "@/lib/prisma";
 
-async function getManagerTeamMembers(managerId: string) {
-    const members = await prisma.user.findMany({
-        where: { managerId: managerId },
-        select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            role: true,
-            status: true,
-            createdAt: true,
-            profilePictureUrl: true,
-            _count: {
-                select: {
-                    referrals: true,
-                    referredOrders: true
-                }
-            }
-        },
-        orderBy: { createdAt: "desc" }
-    });
-
-    return members.map(m => ({
-        ...m,
-        name: `${m.firstName || ""} ${m.lastName || ""}`.trim() || m.email,
-        salesCount: m._count.referrals + m._count.referredOrders
-    }));
-}
-
-export default async function ManagerTeamPage() {
+export default async function TeamLeaderTeamPage() {
     const session = await auth();
     // @ts-ignore
     const role = session?.user?.role;
 
-    if (!session?.user || role !== Role.MANAGER) {
+    if (!session?.user || role !== Role.TEAM_LEADER) {
         redirect("/parent");
     }
 
-    const teamMembers = await getManagerTeamMembers(session.user.id);
+    const teamMembers = await getTeamMembers();
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <PageHeader 
                 title="My Team" 
-                subtitle="Affiliates and Team Leaders managed by you"
+                subtitle="Affiliates assigned to your team"
                 actions={
                     <Button variant="outline" size="sm" disabled>
-                        <UserPlus size={16} className="mr-2" /> Invite Affiliate
+                        <UserPlus size={16} className="mr-2" /> Recruit New
                     </Button>
                 }
             />
 
             <DashboardTable
                 title="Team Members"
-                description="Performance of everyone in your hierarchy"
+                description="Monitor performance of your assigned affiliates"
                 icon={<Users size={18} />}
             >
                 <Table>
                     <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
                         <TableRow>
-                            <TableHead className="font-bold">Member</TableHead>
-                            <TableHead className="font-bold">Role</TableHead>
+                            <TableHead className="font-bold">Affiliate</TableHead>
                             <TableHead className="font-bold">Status</TableHead>
-                            <TableHead className="text-right font-bold">Sales</TableHead>
+                            <TableHead className="text-right font-bold">Total Sales</TableHead>
                             <TableHead className="font-bold">Joined</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {teamMembers.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-12 text-slate-400">
-                                    No members in your team yet.
+                                <TableCell colSpan={4} className="text-center py-12 text-slate-400">
+                                    No affiliates assigned to your team yet.
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -98,11 +68,6 @@ export default async function ManagerTeamPage() {
                                                 <p className="text-[10px] text-slate-500 font-medium">{member.email}</p>
                                             </div>
                                         </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge className={member.role === Role.TEAM_LEADER ? "bg-blue-500/10 text-blue-600 border-none" : "bg-slate-500/10 text-slate-600 border-none"}>
-                                            {member.role}
-                                        </Badge>
                                     </TableCell>
                                     <TableCell>
                                         <Badge className={member.status === "ACTIVE" ? "bg-emerald-500/10 text-emerald-600 border-none" : "bg-destructive/10 text-destructive border-none"}>

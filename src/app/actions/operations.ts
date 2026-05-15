@@ -5,6 +5,41 @@ import { prisma } from "@/lib/prisma";
 import { Role } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
+export async function getHierarchyData() {
+    const session = await auth();
+    const role = (session?.user as any)?.role;
+    
+    if (!session?.user?.id || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
+        throw new Error("Unauthorized");
+    }
+
+    const [opsManagers, managers, teamLeaders] = await Promise.all([
+        prisma.user.findMany({
+            where: { role: "OPERATIONS_MANAGER" },
+            select: { id: true, firstName: true, lastName: true, email: true }
+        }),
+        prisma.user.findMany({
+            where: { role: "MANAGER" },
+            select: { id: true, firstName: true, lastName: true, email: true }
+        }),
+        prisma.user.findMany({
+            where: { role: "TEAM_LEADER" },
+            select: { id: true, firstName: true, lastName: true, email: true }
+        })
+    ]);
+
+    const format = (u: any) => ({
+        id: u.id,
+        name: `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email
+    });
+
+    return {
+        operationsManagers: opsManagers.map(format),
+        managers: managers.map(format),
+        teamLeaders: teamLeaders.map(format)
+    };
+}
+
 export async function getAmbassadorHierarchy() {
     const session = await auth();
     const role = (session?.user as any)?.role;
@@ -51,7 +86,7 @@ export async function getAmbassadorHierarchy() {
     }));
 }
 
-export async function getHierarchyData() {
+export async function getOperationsDashboardStats() {
     const session = await auth();
     const role = (session?.user as any)?.role;
     
@@ -59,29 +94,45 @@ export async function getHierarchyData() {
         throw new Error("Unauthorized");
     }
 
-    const [operationsManagers, managers, teamLeaders] = await Promise.all([
-        prisma.user.findMany({
-            where: { role: "OPERATIONS_MANAGER" },
-            select: { id: true, firstName: true, lastName: true, email: true }
+    const [
+        totalAmbassadors,
+        totalManagers,
+        totalTeamLeaders,
+        totalAffiliates,
+        commissions,
+        referrals
+    ] = await Promise.all([
+        prisma.user.count({ where: { role: { in: ["OPERATIONS_MANAGER", "MANAGER", "TEAM_LEADER", "AFFILIATE"] } } }),
+        prisma.user.count({ where: { role: "MANAGER" } }),
+        prisma.user.count({ where: { role: "TEAM_LEADER" } }),
+        prisma.user.count({ where: { role: "AFFILIATE" } }),
+        prisma.commission.aggregate({
+            _sum: { amount: true },
         }),
         prisma.user.findMany({
-            where: { role: "MANAGER" },
-            select: { id: true, firstName: true, lastName: true, email: true }
-        }),
-        prisma.user.findMany({
-            where: { role: "TEAM_LEADER" },
-            select: { id: true, firstName: true, lastName: true, email: true }
+            where: { referredById: { not: null } },
+            include: {
+                subscriptions: {
+                    where: { paymentStatus: "COMPLETED" },
+                    include: { plan: true }
+                }
+            }
         })
     ]);
 
-    const format = (users: any[]) => users.map(u => ({
-        id: u.id,
-        name: `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email
-    }));
+    const totalAmbassadorRevenue = referrals.reduce((sum, ref) => {
+        return sum + ref.subscriptions.reduce((subSum, sub) => subSum + Number(sub.plan.price), 0);
+    }, 0);
+
+    const totalCommissions = Number(commissions._sum.amount) || 0;
 
     return {
-        operationsManagers: format(operationsManagers),
-        managers: format(managers),
-        teamLeaders: format(teamLeaders)
+        totalAmbassadors,
+        totalManagers,
+        totalTeamLeaders,
+        totalAffiliates,
+        totalAmbassadorRevenue,
+        totalCommissions,
+        referralCount: referrals.length
     };
 }

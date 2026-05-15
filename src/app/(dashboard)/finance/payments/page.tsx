@@ -10,6 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, Download, DollarSign, TrendingUp, AlertTriangle, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { cn } from "@/lib/utils";
 
 function exportToCSV(rows: any[]) {
   const headers = [
@@ -78,130 +81,116 @@ export default function PaymentTrackerPage() {
   const { transactions = [], plans = [], summary = {} } = data || {};
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Payment Tracker</h1>
-          <p className="text-muted-foreground mt-1">Log of all subscription payments across all plans and regions</p>
-        </div>
-        <Button onClick={() => exportToCSV(transactions)} variant="outline" className="gap-2">
-          <Download className="h-4 w-4" /> Export CSV
-        </Button>
-      </div>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <PageHeader
+        title="Payment Tracker"
+        subtitle="Complete log of all subscription payments across all plans and regions"
+        actions={
+          <Button onClick={() => exportToCSV(transactions)} variant="outline" size="sm" className="gap-2">
+            <Download className="h-4 w-4" /> Export CSV
+          </Button>
+        }
+      />
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <DollarSign className="h-4 w-4" /> Total Revenue
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              GHS {(summary.totalRevenue ?? 0).toFixed(2)}
-            </div>
-            <p className="text-xs text-muted-foreground">All time</p>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Calendar className="h-4 w-4" /> This Month
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              GHS {(summary.revenueThisMonth ?? 0).toFixed(2)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-indigo-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" /> This Week
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-indigo-600">
-              GHS {(summary.revenueThisWeek ?? 0).toFixed(2)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-red-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" /> Failed This Month
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{summary.failedThisMonth ?? 0}</div>
-            <p className="text-xs text-muted-foreground">Transactions</p>
-          </CardContent>
-        </Card>
+        <PremiumKPICard
+          title="Total Revenue"
+          value={`GHS ${(summary.totalRevenue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+          icon={DollarSign}
+          theme="success"
+          trend={{ value: "All time", label: "Lifetime earnings", type: "up" }}
+        />
+        <PremiumKPICard
+          title="This Month"
+          value={`GHS ${(summary.revenueThisMonth ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+          icon={Calendar}
+          theme="primary"
+        />
+        <PremiumKPICard
+          title="This Week"
+          value={`GHS ${(summary.revenueThisWeek ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+          icon={TrendingUp}
+          theme="info"
+        />
+        <PremiumKPICard
+          title="Failed (Month)"
+          value={summary.failedThisMonth ?? 0}
+          icon={AlertTriangle}
+          theme="warning"
+          description="Transactions this month"
+        />
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3">
-        <Input
-          placeholder="Search by parent name or reference..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-xs"
-        />
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="COMPLETED">Completed</SelectItem>
-            <SelectItem value="PENDING">Pending</SelectItem>
-            <SelectItem value="FAILED">Failed</SelectItem>
-            <SelectItem value="CANCELLED">Cancelled</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={gatewayFilter} onValueChange={setGatewayFilter}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Gateway" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Gateways</SelectItem>
-            <SelectItem value="PAYSTACK">Paystack</SelectItem>
-            <SelectItem value="STRIPE">Stripe</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={currencyFilter} onValueChange={setCurrencyFilter}>
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="Currency" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Currencies</SelectItem>
-            <SelectItem value="GHS">GHS</SelectItem>
-            <SelectItem value="USD">USD</SelectItem>
-            <SelectItem value="NGN">NGN</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={planFilter} onValueChange={setPlanFilter}>
-          <SelectTrigger className="w-44">
-            <SelectValue placeholder="Plan" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Plans</SelectItem>
-            {plans.map((p: any) => (
-              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {loading && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground self-center" />}
-      </div>
+      <Card className="border-none shadow-sm bg-white dark:bg-slate-900">
+        <CardContent className="p-4">
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[240px]">
+              <Input
+                placeholder="Search by parent name or reference..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-800 border-none"
+              />
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-40 bg-slate-50 dark:bg-slate-800 border-none">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="COMPLETED">Completed</SelectItem>
+                  <SelectItem value="PENDING">Pending</SelectItem>
+                  <SelectItem value="FAILED">Failed</SelectItem>
+                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={gatewayFilter} onValueChange={setGatewayFilter}>
+                <SelectTrigger className="w-40 bg-slate-50 dark:bg-slate-800 border-none">
+                  <SelectValue placeholder="Gateway" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Gateways</SelectItem>
+                  <SelectItem value="PAYSTACK">Paystack</SelectItem>
+                  <SelectItem value="STRIPE">Stripe</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={currencyFilter} onValueChange={setCurrencyFilter}>
+                <SelectTrigger className="w-36 bg-slate-50 dark:bg-slate-800 border-none">
+                  <SelectValue placeholder="Currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Currencies</SelectItem>
+                  <SelectItem value="GHS">GHS</SelectItem>
+                  <SelectItem value="USD">USD</SelectItem>
+                  <SelectItem value="NGN">NGN</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={planFilter} onValueChange={setPlanFilter}>
+                <SelectTrigger className="w-44 bg-slate-50 dark:bg-slate-800 border-none">
+                  <SelectValue placeholder="Plan" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Plans</SelectItem>
+                  {plans.map((p: any) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {loading && <Loader2 className="h-5 w-5 animate-spin text-primary self-center" />}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Table */}
-      <Card>
+      <Card className="border-none shadow-md overflow-hidden bg-white dark:bg-slate-900">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="hover:bg-transparent">
                 <TableHead>Date</TableHead>
                 <TableHead>Parent</TableHead>
                 <TableHead>Child</TableHead>
@@ -210,43 +199,63 @@ export default function PaymentTrackerPage() {
                 <TableHead>Gateway</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Type</TableHead>
-                <TableHead>Reference</TableHead>
+                <TableHead className="text-right">Reference</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {transactions.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
-                    No transactions found.
+                  <TableCell colSpan={9} className="text-center py-20 text-slate-400">
+                    <div className="flex flex-col items-center gap-2">
+                      <DollarSign className="h-10 w-10 opacity-20" />
+                      <p>No transactions found matching your filters.</p>
+                    </div>
                   </TableCell>
                 </TableRow>
               )}
               {transactions.map((tx: any) => (
-                <TableRow key={tx.id}>
-                  <TableCell className="text-sm">{new Date(tx.date).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <div className="font-medium text-sm">{tx.parentName}</div>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{tx.childName}</TableCell>
-                  <TableCell className="text-sm">{tx.plan}</TableCell>
-                  <TableCell className="font-medium">
-                    {tx.currency} {tx.amount.toFixed(2)}
+                <TableRow key={tx.id} className="group transition-colors">
+                  <TableCell className="text-sm font-medium text-slate-500">
+                    {new Date(tx.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="text-xs">{tx.gateway}</Badge>
+                    <div className="font-bold text-sm text-slate-900 dark:text-white">{tx.parentName}</div>
+                  </TableCell>
+                  <TableCell className="text-sm text-slate-500">{tx.childName || "—"}</TableCell>
+                  <TableCell className="text-sm font-medium">{tx.plan}</TableCell>
+                  <TableCell className="font-black text-slate-900 dark:text-white">
+                    <span className="text-[10px] text-slate-400 mr-1">{tx.currency}</span>
+                    {tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={STATUS_COLORS[tx.paymentStatus] || "outline"}>
+                    <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-800 border-none">
+                      {tx.gateway}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge 
+                      variant={STATUS_COLORS[tx.paymentStatus] || "outline"}
+                      className={cn(
+                        "text-[10px] font-bold uppercase tracking-wider",
+                        tx.paymentStatus === "COMPLETED" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-none",
+                        tx.paymentStatus === "FAILED" && "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-none",
+                        tx.paymentStatus === "PENDING" && "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-none"
+                      )}
+                    >
                       {tx.paymentStatus}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={tx.isRecurring ? "secondary" : "outline"} className="text-xs">
-                      {tx.isRecurring ? "Recurring" : "New"}
+                    <Badge variant={tx.isRecurring ? "secondary" : "outline"} className="text-[10px] font-bold border-none">
+                      {tx.isRecurring ? "RECURRING" : "NEW"}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-xs text-muted-foreground font-mono">
-                    {tx.paymentReference ? tx.paymentReference.slice(0, 16) + "..." : "—"}
+                  <TableCell className="text-[10px] text-slate-400 font-mono text-right">
+                    {tx.paymentReference ? (
+                      <span title={tx.paymentReference}>
+                        {tx.paymentReference.slice(0, 8)}...{tx.paymentReference.slice(-4)}
+                      </span>
+                    ) : "—"}
                   </TableCell>
                 </TableRow>
               ))}

@@ -2,25 +2,42 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/com
 import { prisma } from "@/lib/prisma";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { RecentActivityTable } from "@/components/admin/RecentActivityTable";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { PaymentStatus } from "@/lib/types";
 import { cache } from "@/lib/cache";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { 
+  Users, 
+  ShoppingBag, 
+  TrendingUp, 
+  Plus, 
+  DollarSign, 
+  Clock,
+  ArrowUpRight,
+  ShieldCheck,
+  CreditCard,
+  Target,
+  BarChart3
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { DashboardTable } from "@/components/dashboard/DashboardTable";
+import { getOperationsDashboardStats } from "@/app/actions/operations";
+import { getLeaderboardData } from "@/app/actions/leaderboard";
+import { Role } from "@/lib/types";
 
-// Force dynamic rendering - this page requires authentication and real-time data
+// Force dynamic rendering
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 async function getStats() {
-    // Check cache first (5 minute TTL)
     const cacheKey = 'admin:stats';
     const cached = cache.get<{ totalUsers: number; totalOrders: number; totalFlipbooks: number; totalRevenue: number; totalSubscriptions: number; paidSubscriptions: number; freeSubscriptions: number; pendingPayout: number }>(cacheKey);
     if (cached) return cached;
 
-    // Run all queries in parallel for better performance
     const [
         totalUsers,
         totalOrders,
@@ -56,30 +73,23 @@ async function getStats() {
     const freeSubscriptions = subscriptions.length - paidSubscriptions;
 
     const stats = { totalUsers, totalOrders, totalFlipbooks, totalRevenue, totalSubscriptions, paidSubscriptions, freeSubscriptions, pendingPayout };
-    
-    // Cache for 5 minutes
     cache.set(cacheKey, stats, 300000);
-    
     return stats;
 }
 
 async function getMonthlyRevenueData() {
-    // Check cache first (10 minute TTL)
     const cacheKey = 'admin:monthly-revenue';
     const cached = cache.get<{ name: string; total: number }[]>(cacheKey);
     if (cached) return cached;
 
     const now = new Date();
     const monthDates = [];
-    
-    // Prepare date ranges
     for (let i = 5; i >= 0; i--) {
         const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const endDate = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
         monthDates.push({ date, endDate, name: date.toLocaleString('default', { month: 'short' }) });
     }
 
-    // Fetch all months in parallel
     const monthlyData = await Promise.all(
         monthDates.map(async ({ date, endDate, name }) => {
             const [orderRevenue, subscriptions] = await Promise.all([
@@ -107,20 +117,17 @@ async function getMonthlyRevenueData() {
         })
     );
 
-    // Cache for 10 minutes
     cache.set(cacheKey, monthlyData, 600000);
-    
     return monthlyData;
 }
 
 async function getRecentActivity() {
-    // Cache for 2 minutes
     const cacheKey = 'admin:recent-activity';
     const cached = cache.get<any[]>(cacheKey);
     if (cached) return cached;
 
     const activities = await prisma.activityLog.findMany({
-        take: 1000,
+        take: 10,
         orderBy: { createdAt: 'desc' },
         include: { 
             user: { 
@@ -140,7 +147,6 @@ async function getRecentActivity() {
 }
 
 async function getRecentSales() {
-    // Cache for 2 minutes
     const cacheKey = 'admin:recent-sales';
     const cached = cache.get<any[]>(cacheKey);
     if (cached) return cached;
@@ -173,125 +179,212 @@ async function getRecentSales() {
 }
 
 export default async function AdminDashboardPage() {
-  // Role protection - admins and operations manager can access
   const session = await auth();
-  // @ts-ignore - role exists in our custom session type
+  // @ts-ignore
   const role = session?.user?.role;
-  if (!session?.user || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
+  if (!session?.user || (role !== Role.ADMIN && role !== Role.OPERATIONS_MANAGER)) {
     redirect("/parent");
   }
 
-  // Fetch all data in parallel for maximum performance
-  const [stats, revenueData, recentActivity, recentSales] = await Promise.all([
+  const isOpsManager = role === Role.OPERATIONS_MANAGER;
+
+  const [stats, revenueData, recentActivity, recentSales, opsStats, topAmbassadors] = await Promise.all([
     getStats(),
     getMonthlyRevenueData(),
     getRecentActivity(),
-    getRecentSales()
+    getRecentSales(),
+    isOpsManager ? getOperationsDashboardStats() : Promise.resolve(null),
+    isOpsManager ? getLeaderboardData({}).then(data => data.slice(0, 5)) : Promise.resolve([])
   ]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-      </div>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <PageHeader
+        title=""
+        showGreeting
+        userName={session.user.name || "Admin"}
+        actions={
+          <>
+            {!isOpsManager && (
+                <Button asChild size="sm" className="bg-[#E87154] hover:bg-[#D66144] shadow-lg shadow-[#E87154]/20">
+                  <Link href="/admin/flipbooks" className="flex items-center gap-2">
+                    <Plus size={16} /> New Flipbook
+                  </Link>
+                </Button>
+            )}
+            <Button asChild variant="outline" size="sm">
+              <Link href="/admin/users" className="flex items-center gap-2">
+                <Users size={16} /> Manage Users
+              </Link>
+            </Button>
+            {isOpsManager && (
+                 <Button asChild size="sm" className="bg-[#E87154] hover:bg-[#D66144] shadow-lg shadow-[#E87154]/20">
+                    <Link href="/admin/ambassadors" className="flex items-center gap-2">
+                        <Target size={16} /> Manage Ambassadors
+                    </Link>
+                 </Button>
+            )}
+          </>
+        }
+      />
 
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">GHS {stats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-            <p className="text-xs text-muted-foreground">All time earnings</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalUsers}</div>
-            <p className="text-xs text-muted-foreground">Active platform users</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Subscriptions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalSubscriptions}</div>
-            <p className="text-xs text-muted-foreground">{stats.paidSubscriptions} Paid | {stats.freeSubscriptions} Free</p>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-amber-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Payouts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-amber-600">GHS {stats.pendingPayout.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-            <p className="text-xs text-muted-foreground">Commissions to pay</p>
-          </CardContent>
-        </Card>
+        <PremiumKPICard
+          title={isOpsManager ? "System Revenue" : "Total Revenue"}
+          value={`GHS ${stats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+          theme="primary"
+          icon={DollarSign}
+          trend={{ value: "Trending Up", label: "All time earnings", type: "up" }}
+        />
+
+        {isOpsManager && opsStats ? (
+            <PremiumKPICard
+                title="Total Ambassadors"
+                value={opsStats.totalAmbassadors.toLocaleString()}
+                description={`${opsStats.totalManagers} Managers, ${opsStats.totalTeamLeaders} TLs`}
+                icon={Target}
+                theme="info"
+            />
+        ) : (
+            <PremiumKPICard
+                title="Total Users"
+                value={stats.totalUsers.toLocaleString()}
+                description="Active platform users"
+                icon={Users}
+            />
+        )}
+
+        <PremiumKPICard
+          title={isOpsManager ? "Ambassador Sales" : "Active Subscriptions"}
+          value={isOpsManager && opsStats ? opsStats.referralCount : stats.totalSubscriptions}
+          icon={isOpsManager ? BarChart3 : CreditCard}
+          className={!isOpsManager ? "border-b-4 border-b-[#E87154]" : ""}
+          description={isOpsManager ? "Referrals generated by team" : `${stats.paidSubscriptions} Paid, ${stats.freeSubscriptions} Free`}
+          theme={isOpsManager ? "success" : "white"}
+        />
+
+        <PremiumKPICard
+          title="Pending Payouts"
+          value={`GHS ${stats.pendingPayout.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+          description="Commissions to pay"
+          icon={Clock}
+          className="border-b-4 border-b-amber-500"
+        />
       </div>
 
-      {/* Full-width Revenue Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Revenue Overview</CardTitle>
-          <CardDescription>Monthly revenue over the last 6 months</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <RevenueChart data={revenueData} />
-        </CardContent>
-      </Card>
+      {isOpsManager && topAmbassadors.length > 0 && (
+          <DashboardTable
+            title="Top Performers"
+            description="Highest performing ambassadors across the system"
+            icon={<TrendingUp size={18} />}
+            actions={
+                <Link href="/leaderboard" className="text-xs font-bold text-[#E87154] hover:underline flex items-center">
+                    Full Leaderboard <ArrowUpRight size={12} className="ml-0.5" />
+                </Link>
+            }
+          >
+             <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                {topAmbassadors.map((entry: any) => (
+                    <div key={entry.id} className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-black">
+                                #{entry.rank}
+                            </div>
+                            <Avatar className="h-9 w-9 border-2 border-white dark:border-slate-800 shadow-sm">
+                                <AvatarImage src={entry.avatar || ""} alt={entry.name} />
+                                <AvatarFallback className="text-[10px] font-bold">{entry.name[0]}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <p className="text-sm font-bold text-slate-900 dark:text-white">{entry.name}</p>
+                                <p className="text-[10px] text-slate-500">{entry.role}</p>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-xs font-black text-slate-900 dark:text-white">{entry.salesCount} Sales</p>
+                            <p className="text-[10px] text-emerald-600 font-bold">GHS {entry.revenue?.toFixed(2) || "0.00"}</p>
+                        </div>
+                    </div>
+                ))}
+             </div>
+          </DashboardTable>
+      )}
 
-      {/* Full-width Recent Sales */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Sales</CardTitle>
-          <CardDescription>Latest orders placed on the platform</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Revenue Chart */}
+        <Card className="lg:col-span-2 border-none shadow-md overflow-hidden bg-white dark:bg-slate-900">
+          <CardHeader className="flex flex-row items-center justify-between pb-4">
+            <div>
+              <CardTitle className="text-lg font-bold">Revenue Overview</CardTitle>
+              <CardDescription>Monthly revenue over the last 6 months</CardDescription>
+            </div>
+            <div className="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[#E87154]">
+               <TrendingUp size={16} />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <RevenueChart data={revenueData} />
+          </CardContent>
+        </Card>
+
+        {/* Recent Sales List */}
+        <DashboardTable
+          title="Recent Sales"
+          description="Latest platform orders"
+          icon={<ShoppingBag size={18} />}
+          actions={
+            <Link href="/admin/orders" className="text-xs font-bold text-[#E87154] hover:underline flex items-center">
+               View All <ArrowUpRight size={12} className="ml-0.5" />
+            </Link>
+          }
+        >
           {recentSales.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-8 text-center">No sales yet.</p>
+            <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+               <ShoppingBag size={40} className="mb-2 opacity-20" />
+               <p className="text-sm">No sales yet.</p>
+            </div>
           ) : (
-            <div className="space-y-4">
+            <div className="divide-y divide-slate-100 dark:divide-slate-800">
               {recentSales.map((order: any) => (
-                <div key={order.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-10 w-10">
+                <div key={order.id} className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-9 w-9 border-2 border-white dark:border-slate-800 shadow-sm">
                       <AvatarImage src={order.customer.profilePictureUrl || ""} alt="Avatar" />
-                      <AvatarFallback>{order.customer.firstName?.[0] || order.customer.email[0]}</AvatarFallback>
+                      <AvatarFallback className="bg-slate-100 dark:bg-slate-800 text-[10px] font-bold">
+                        {order.customer.firstName?.[0] || order.customer.email[0]}
+                      </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="font-medium">{order.product.title}</p>
-                      <p className="text-sm text-muted-foreground">{order.customer.email}</p>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold truncate text-slate-900 dark:text-white">{order.product.title}</p>
+                      <p className="text-[10px] text-slate-500 truncate">{order.customer.email}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <Badge variant={order.paymentStatus === "COMPLETED" ? "default" : "secondary"}>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-xs font-black text-emerald-600">+GHS {Number(order.totalAmount).toFixed(2)}</p>
+                    <Badge variant="outline" className="text-[9px] h-3.5 px-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border-emerald-500/20">
                       {order.paymentStatus}
                     </Badge>
-                    <span className="font-bold text-green-600">+GHS {Number(order.totalAmount).toFixed(2)}</span>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </DashboardTable>
+      </div>
 
-      {/* Recent Activity Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>Latest actions on the platform</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <RecentActivityTable activities={recentActivity} />
-        </CardContent>
-      </Card>
+      {/* Recent Activity Section */}
+      <DashboardTable
+        title="Platform Activity"
+        description="Real-time audit log of system events"
+        icon={<ShieldCheck size={18} />}
+        actions={
+          <Button variant="ghost" size="sm" className="text-slate-500 hover:text-[#E87154]" asChild>
+             <Link href="/admin/activity">View Audit Log</Link>
+          </Button>
+        }
+      >
+        <RecentActivityTable activities={recentActivity} />
+      </DashboardTable>
     </div>
   );
 }

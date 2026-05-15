@@ -5,7 +5,6 @@ import { hash, compare } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { Role } from "@/lib/types";
 import { getAppUrl } from "@/lib/utils";
-import { processSignupCommission } from "@/lib/commission";
 import { sendPasswordResetEmail, sendWelcomeEmail, sendAffiliateWelcomeEmail, sendAffiliateJoinedManagerEmail, sendEmailVerification } from "@/lib/email";
 import { randomBytes, createHash } from "crypto";
 

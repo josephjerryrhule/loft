@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { formatActivityDetails, getActionTypeLabel } from "@/lib/activity-formatter";
+import { cn } from "@/lib/utils";
 
 interface ActivityLog {
   id: string;
@@ -35,50 +36,60 @@ export function RecentActivityTable({ activities }: RecentActivityTableProps) {
 
   return (
     <div className="space-y-4">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>User</TableHead>
-            <TableHead>Action</TableHead>
-            <TableHead>Details</TableHead>
-            <TableHead>Time</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {paginatedActivities.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
-                No recent activity logged.
-              </TableCell>
+      <div className="border-none rounded-xl overflow-hidden bg-white dark:bg-slate-900 shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent border-none">
+              <TableHead className="pl-6">User</TableHead>
+              <TableHead>Action</TableHead>
+              <TableHead>Details</TableHead>
+              <TableHead className="text-right pr-6">Time</TableHead>
             </TableRow>
-          )}
-          {paginatedActivities.map((log) => (
-            <TableRow key={log.id}>
-              <TableCell className="font-medium">{log.user?.email || "System"}</TableCell>
-              <TableCell>
-                <Badge variant="outline">{getActionTypeLabel(log.actionType)}</Badge>
-              </TableCell>
-              <TableCell className="max-w-xs truncate">{formatActivityDetails(log.actionType, log.actionDetails || "")}</TableCell>
-              <TableCell className="text-muted-foreground">
-                {isMounted ? new Date(log.createdAt).toLocaleString() : ""}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {paginatedActivities.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-12 text-slate-400">
+                  No recent activity logged.
+                </TableCell>
+              </TableRow>
+            )}
+            {paginatedActivities.map((log) => (
+              <TableRow key={log.id} className="group transition-colors">
+                <TableCell className="pl-6 font-bold text-sm text-slate-900 dark:text-white">
+                    {log.user?.email || "System"}
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-800 border-none">
+                    {getActionTypeLabel(log.actionType)}
+                  </Badge>
+                </TableCell>
+                <TableCell className="max-w-xs truncate text-sm text-slate-500">
+                    {formatActivityDetails(log.actionType, log.actionDetails || "")}
+                </TableCell>
+                <TableCell className="text-right pr-6 text-xs text-slate-400 font-medium">
+                  {isMounted ? new Date(log.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ""}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
       
       {activities.length > 0 && (
-        <TablePagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          itemsPerPage={itemsPerPage}
-          totalItems={activities.length}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={(value) => {
-            setItemsPerPage(value);
-            setCurrentPage(1);
-          }}
-        />
+        <div className="px-2">
+            <TablePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            itemsPerPage={itemsPerPage}
+            totalItems={activities.length}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={(value) => {
+                setItemsPerPage(value);
+                setCurrentPage(1);
+            }}
+            />
+        </div>
       )}
     </div>
   );

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { formatRole } from "@/lib/format-utils";
 import { Button } from "@/components/ui/button";
 import { Role } from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
 import {
   LayoutDashboard,
   Users,
@@ -132,11 +133,11 @@ function NavContent({ userRole, setOpen, logoUrl, platformName, hasChildren }: {
     const links = getLinks(userRole, hasChildren);
 
     return (
-        <div className="flex flex-col h-full bg-slate-900 text-white w-full p-4">
-          <div className="mb-8 px-4">
+        <div className="flex flex-col h-full bg-[#0F172A] text-slate-300 w-full p-4 border-r border-white/5 shadow-2xl">
+          <div className="mb-10 px-4">
             {logoUrl ? (
               <div className="flex items-center gap-3">
-                <div className="relative w-10 h-10">
+                <div className="relative w-10 h-10 p-1 bg-white/10 rounded-xl">
                   <Image 
                     src={logoUrl} 
                     alt={platformName || "Logo"} 
@@ -144,54 +145,59 @@ function NavContent({ userRole, setOpen, logoUrl, platformName, hasChildren }: {
                     className="object-contain"
                   />
                 </div>
-                <div>
-                  <h1 className="text-xl font-bold tracking-tight">{platformName || "Loft"}</h1>
-                  <p className="text-xs text-slate-400 tracking-wider">{userRole ? formatRole(userRole) : "Guest"}</p>
+                <div className="flex flex-col">
+                  <h1 className="text-xl font-black tracking-tight text-white leading-none mb-1">{platformName || "Loft"}</h1>
+                  <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-[#E87154]/30 text-white bg-[#E87154]/20">
+                    {userRole ? formatRole(userRole) : "Guest"}
+                  </Badge>
                 </div>
               </div>
             ) : (
               <>
-                <h1 className="text-2xl font-bold tracking-tight">{platformName || "Loft"}</h1>
-                <p className="text-xs text-slate-400 mt-1 tracking-wider">{userRole ? formatRole(userRole) : "Guest"}</p>
+                <h1 className="text-2xl font-black tracking-tight text-white mb-1">{platformName || "Loft"}</h1>
+                <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-[#E87154]/30 text-white bg-[#E87154]/20">
+                  {userRole ? formatRole(userRole) : "Guest"}
+                </Badge>
               </>
             )}
           </div>
     
-          <nav className="flex-1 space-y-1">
+          <nav className="flex-1 space-y-1.5">
             {links.map((link) => {
               const Icon = link.icon;
-              // Precise active state: Exact match OR sub-path match (but exclude root dashboards from matching sub-paths of other items if they share prefix, though here they don't share prefix with other items, BUT /admin is prefix of /admin/users)
-              // We want /admin to match ONLY /admin. 
-              // We want /admin/users to match /admin/users AND /admin/users/123.
-              
               const isRootDashboard = ["/admin", "/manager", "/affiliate", "/parent", "/finance"].includes(link.href);
               const isActive = pathname === link.href || (!isRootDashboard && pathname.startsWith(`${link.href}/`));
 
               return (
-                <Link key={link.href} href={link.href} onClick={() => setOpen && setOpen(false)}>
+                <Link key={link.href} href={link.href} onClick={() => setOpen && setOpen(false)} className="block group">
                   <Button
                     variant="ghost"
                     className={cn(
-                      "w-full justify-start gap-3 mb-1",
-                      isActive ? "bg-slate-800 text-white" : "text-slate-400 hover:text-white hover:bg-slate-800"
+                      "w-full justify-start gap-3 relative overflow-hidden transition-all duration-300 h-11 px-4 rounded-lg",
+                      isActive 
+                        ? "bg-white/10 text-white font-bold shadow-lg border border-white/10" 
+                        : "text-slate-400 hover:text-white hover:bg-white/5 font-medium"
                     )}
                   >
-                    <Icon size={18} />
-                    {link.label}
+                    {isActive && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#E87154] rounded-r-full shadow-[0_0_15px_#E87154] z-10" />
+                    )}
+                    <Icon size={20} className={cn("transition-all duration-300 shrink-0", isActive ? "text-[#E87154] scale-110" : "text-slate-500 group-hover:text-white group-hover:scale-110")} />
+                    <span className="text-sm tracking-wide">{link.label}</span>
                   </Button>
                 </Link>
               );
             })}
           </nav>
     
-          <div className="pt-4 border-t border-slate-800">
+          <div className="pt-4 border-t border-white/5">
             <Button
                 variant="ghost"
-                className="w-full justify-start gap-3 text-white hover:text-red-300 hover:bg-red-900/20"
+                className="w-full justify-start gap-3 text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                 onClick={() => signOut({ callbackUrl: "/auth/login" })}
             >
                 <LogOut size={18} />
-                Sign Out
+                <span className="text-sm">Sign Out</span>
             </Button>
           </div>
         </div>
@@ -200,7 +206,7 @@ function NavContent({ userRole, setOpen, logoUrl, platformName, hasChildren }: {
 
 export function Sidebar({ userRole, logoUrl, platformName, hasChildren }: SidebarProps) {
   return (
-    <div className="hidden md:flex flex-col h-full bg-slate-900 text-white w-64 border-r border-slate-800">
+    <div className="hidden md:flex flex-col h-full bg-[#0F172A] text-slate-300 w-64 border-r border-white/5">
          <NavContent userRole={userRole} logoUrl={logoUrl} platformName={platformName} hasChildren={hasChildren} />
     </div>
   );
@@ -212,11 +218,11 @@ export function MobileNav({ userRole, logoUrl, platformName, hasChildren }: Side
     return (
         <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
+                <Button variant="ghost" size="icon" className="md:hidden text-slate-300 hover:text-white">
                     <Menu />
                 </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="p-0 border-r-0 bg-slate-900 w-72 text-white">
+            <SheetContent side="left" className="p-0 border-r-0 bg-[#0F172A] w-72 text-white">
                  <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                  <NavContent userRole={userRole} setOpen={setOpen} logoUrl={logoUrl} platformName={platformName} hasChildren={hasChildren} />
             </SheetContent>
