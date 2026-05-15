@@ -11,6 +11,8 @@ import { verificationRateLimit } from "@/lib/ratelimit";
 import { headers } from "next/headers";
 import { getSystemSettings } from "@/app/actions/settings";
 
+import { VerificationTimestamp } from "@/components/verify/VerificationTimestamp";
+
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -202,9 +204,7 @@ export default async function VerifyPage({ params }: VerifyPageProps) {
             <p className="text-[9px] uppercase font-black text-slate-300 tracking-[0.3em]">
               Verified At
             </p>
-            <p className="text-slate-900 text-xs font-bold">
-              {format(new Date(), "MMM dd, yyyy · HH:mm:ss")}
-            </p>
+            <VerificationTimestamp />
           </div>
 
           {/* CTA Buttons */}
