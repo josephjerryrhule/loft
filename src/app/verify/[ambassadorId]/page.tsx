@@ -227,7 +227,7 @@ export default async function VerifyPage({ params }: VerifyPageProps) {
             )}
             
             <a 
-              href={`mailto:support@loft.com?subject=Suspicious%20Ambassador%20Report:%20${ambassadorId}&body=I%20would%20like%20to%20report%20suspicious%20activity%20regarding%20ambassador%20${ambassadorId}%20(${fullName}).`}
+              href={`mailto:support@landoffairytales.com?subject=Suspicious%20Ambassador%20Report:%20${ambassadorId}&body=I%20would%20like%20to%20report%20suspicious%20activity%20regarding%20ambassador%20${ambassadorId}%20(${fullName}).`}
               className="block text-center text-[10px] text-slate-300 hover:text-[#E87154] transition-colors font-bold uppercase tracking-widest mt-4"
             >
               Report suspicious activity
@@ -237,7 +237,7 @@ export default async function VerifyPage({ params }: VerifyPageProps) {
       </Card>
       
       <p className="mt-8 text-slate-300 text-[10px] text-center max-w-[240px] font-bold leading-relaxed uppercase tracking-tighter">
-        Official LOFT authorized verification page. All rights reserved.
+        Official authorized verification page. All rights reserved.
       </p>
     </div>
   );
