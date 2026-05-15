@@ -110,7 +110,7 @@ export function TagInput({
                 ))
               ) : (
                 <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                  Press <kbd className="px-1 py-0.5 text-xs bg-muted border rounded">Enter</kbd> to add "{inputValue}"
+                  Press <kbd className="px-1 py-0.5 text-xs bg-muted border rounded">Enter</kbd> to add &quot;{inputValue}&quot;
                 </div>
               )}
             </div>

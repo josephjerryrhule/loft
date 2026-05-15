@@ -1,7 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from "@/auth";
+import { apiRateLimit } from "@/lib/ratelimit";
+import { headers } from "next/headers";
+
+const ALLOWED_REMOTE_DOMAINS = [
+    'landoffairytales.com',
+    'loft.com',
+    'supabase.co',
+    'heyzine.com',
+    'aflip.in'
+];
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limiting
+    const headersList = await headers();
+    const ip = headersList.get("x-forwarded-for") || "anonymous";
+    const { success } = await apiRateLimit.limit(ip);
+    if (!success) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const url = request.nextUrl.searchParams.get('url');
     
     if (!url) {
@@ -31,12 +55,23 @@ export async function GET(request: NextRequest) {
         }
     }
 
-    // Validate remote URL (Supabase or other trusted sources if needed)
-    // For now, we loosen the check to allow migration testing, or keep it strict if desired.
-    // But since we are moving away from Supabase, we might want to allow others?
-    // Let's keep it somewhat safe but allow valid URLs.
+    // Validate remote URL
     if (!url.startsWith('http')) {
        return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
+    }
+
+    // Domain check
+    try {
+        const parsedUrl = new URL(url);
+        const isAllowed = ALLOWED_REMOTE_DOMAINS.some(domain => 
+            parsedUrl.hostname === domain || parsedUrl.hostname.endsWith(`.${domain}`)
+        );
+        
+        if (!isAllowed) {
+            return NextResponse.json({ error: 'Domain not allowed' }, { status: 403 });
+        }
+    } catch (e) {
+        return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 });
     }
 
     // Fetch the PDF from remote source

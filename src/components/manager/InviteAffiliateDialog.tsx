@@ -31,12 +31,6 @@ export function InviteAffiliateDialog({ inviteCode: initialCode }: InviteAffilia
   const [loading, setLoading] = useState(!initialCode);
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    if (!initialCode && open) {
-      loadInviteCode();
-    }
-  }, [open, initialCode]);
-
   async function loadInviteCode() {
     setLoading(true);
     try {
@@ -48,6 +42,12 @@ export function InviteAffiliateDialog({ inviteCode: initialCode }: InviteAffilia
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (!initialCode && open) {
+      loadInviteCode();
+    }
+  }, [open, initialCode]);
 
   const inviteLink = inviteCode 
     ? `${typeof window !== 'undefined' ? window.location.origin : ''}/join/affiliate/${inviteCode}`

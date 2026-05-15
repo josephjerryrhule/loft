@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { saveFileLocally } from "@/lib/upload";
+import { auth } from "@/auth";
+import { apiRateLimit } from "@/lib/ratelimit";
+import { headers } from "next/headers";
 
 const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
 const ALLOWED_FILE_TYPES = [
@@ -8,11 +11,6 @@ const ALLOWED_FILE_TYPES = [
   "image/jpg",
   "image/png",
   "image/avif",
-  // "image/gif", // Removed per user request
-  // "image/webp", // Removed per user request
-  // "text/plain", // Removed per user request
-  // "application/msword", // Removed per user request
-  // "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // Removed per user request
 ];
 
 // Route segment config for App Router
@@ -22,6 +20,19 @@ export const maxDuration = 30; // Max execution time in seconds
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limiting
+    const headersList = await headers();
+    const ip = headersList.get("x-forwarded-for") || "anonymous";
+    const { success } = await apiRateLimit.limit(ip);
+    if (!success) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const folder = (formData.get("folder") as string) || "misc";

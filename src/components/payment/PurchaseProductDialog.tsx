@@ -54,8 +54,11 @@ export function PurchaseProductDialog({
       const settings = await getSystemSettings();
       setCurrency(settings.currency || "GHS");
     }
+    loadSettings();
+  }, []);
+
+  useEffect(() => {
     if (open) {
-      loadSettings();
       setQuantity(1);
       setNotes("");
       setCustomFields({});

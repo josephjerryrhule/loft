@@ -1,7 +1,9 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { auth } from "@/auth";
+import { apiRateLimit } from "@/lib/ratelimit";
+import { headers } from "next/headers";
 
 function getMimeType(filename: string): string {
   const ext = path.extname(filename).toLowerCase();
@@ -20,13 +22,26 @@ function getMimeType(filename: string): string {
 }
 
 export async function GET(request: NextRequest) {
-  const fileUrl = request.nextUrl.searchParams.get("url");
-
-  if (!fileUrl) {
-    return NextResponse.json({ error: "Missing file URL" }, { status: 400 });
-  }
-
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limiting
+    const headersList = await headers();
+    const ip = headersList.get("x-forwarded-for") || "anonymous";
+    const { success } = await apiRateLimit.limit(ip);
+    if (!success) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
+    const fileUrl = request.nextUrl.searchParams.get("url");
+
+    if (!fileUrl) {
+      return NextResponse.json({ error: "Missing file URL" }, { status: 400 });
+    }
+
     // Only allow downloads from /uploads directory for security
     if (!fileUrl.startsWith("/uploads/")) {
       return NextResponse.json({ error: "Invalid file path" }, { status: 403 });

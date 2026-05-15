@@ -23,10 +23,6 @@ export default function AdminFinancePage() {
   const [commissionPage, setCommissionPage] = useState(1);
   const [commissionItemsPerPage, setCommissionItemsPerPage] = useState(12);
 
-  useEffect(() => {
-    loadFinanceData();
-  }, []);
-
   const loadFinanceData = async () => {
     try {
       setLoading(true);
@@ -40,6 +36,10 @@ export default function AdminFinancePage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadFinanceData();
+  }, []);
 
   const handleBulkApprove = async () => {
     const pendingCount = recentCommissions.filter(c => c.status === "PENDING").length;

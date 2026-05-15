@@ -2,9 +2,8 @@
 
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, CheckCircle2, Upload, X, User, FileText, File as FileIcon } from "lucide-react";
+import { Loader2, CheckCircle2, Upload, X, User } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -65,9 +64,10 @@ export function FileUpload({
         onUpload(data.url);
       }
       toast.success("Uploaded successfully!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      toast.error(error.message || "Failed to upload");
+      const message = error instanceof Error ? error.message : "Failed to upload";
+      toast.error(message);
     } finally {
       setUploading(false);
     }

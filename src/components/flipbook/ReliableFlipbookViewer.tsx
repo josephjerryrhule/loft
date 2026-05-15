@@ -38,9 +38,9 @@ export function ReliableFlipbookViewer({
     const [error, setError] = useState<string | null>(null);
     const [dimensions, setDimensions] = useState({ width: 600, height: 800 });
     const [isMobile, setIsMobile] = useState(false);
+    const [hasMarkedComplete, setHasMarkedComplete] = useState(false);
     const bookRef = useRef<any>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
-    const hasMarkedCompleteRef = useRef(false);
     const initialLoadRef = useRef(false);
 
     // Initialize audio with actual sound file
@@ -268,12 +268,12 @@ export function ReliableFlipbookViewer({
                     />
                     
                     {/* Manual Complete Button for Iframe */}
-                    {onComplete && !hasMarkedCompleteRef.current && (
+                    {onComplete && !hasMarkedComplete && (
                          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 mt-4">
                             <Button
                                 onClick={() => {
-                                    if (!hasMarkedCompleteRef.current) {
-                                        hasMarkedCompleteRef.current = true;
+                                    if (!hasMarkedComplete) {
+                                        setHasMarkedComplete(true);
                                         onComplete();
                                     }
                                 }}
@@ -386,13 +386,13 @@ export function ReliableFlipbookViewer({
                         <span className="font-medium">Page {currentPage + 1} of {numPages}</span>
                         
                         {/* Mark Complete Button when on last page or last spread */}
-                        {currentPage >= numPages - 2 && !hasMarkedCompleteRef.current && onComplete && (
+                        {currentPage >= numPages - 2 && !hasMarkedComplete && onComplete && (
                             <>
                                 <div className="w-px h-4 bg-white/30 hidden" />
                                 <Button
                                     onClick={() => {
-                                        if (!hasMarkedCompleteRef.current) {
-                                            hasMarkedCompleteRef.current = true;
+                                        if (!hasMarkedComplete) {
+                                            setHasMarkedComplete(true);
                                             onComplete();
                                         }
                                     }}
