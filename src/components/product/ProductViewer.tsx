@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import Image from "next/image";
 
 interface ProductViewerProps {
   product: any;
@@ -23,12 +24,14 @@ export function ProductViewer({ product, open, onOpenChange }: ProductViewerProp
         </DialogHeader>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Image Section */}
-            <div className="bg-gray-100 rounded-lg flex items-center justify-center p-4 min-h-[300px]">
+            <div className="bg-gray-100 rounded-lg flex items-center justify-center p-4 min-h-[300px] relative">
                 {product.featuredImageUrl ? (
-                    <img 
+                    <Image 
                         src={product.featuredImageUrl} 
                         alt={product.title} 
-                        className="max-h-[400px] w-full object-contain rounded"
+                        fill
+                        unoptimized
+                        className="object-contain rounded"
                     />
                 ) : (
                     <div className="text-gray-400">No Image Available</div>

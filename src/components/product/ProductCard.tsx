@@ -7,6 +7,7 @@ import { ShoppingBag } from "lucide-react";
 import { PurchaseProductDialog } from "@/components/payment/PurchaseProductDialog";
 import { getSystemSettings } from "@/app/actions/settings";
 import { getCurrencySymbol } from "@/lib/utils";
+import Image from "next/image";
 
 interface ProductCardProps {
   product: {
@@ -41,12 +42,14 @@ export function ProductCard({ product, userEmail, userId }: ProductCardProps) {
   return (
     <>
       <Card className="flex flex-col">
-        <div className="h-48 bg-slate-100 flex items-center justify-center text-slate-400">
+        <div className="h-48 bg-slate-100 flex items-center justify-center text-slate-400 relative">
           {product.featuredImageUrl ? (
-            <img
+            <Image
               src={product.featuredImageUrl}
               alt={product.title}
-              className="h-full w-full object-cover"
+              fill
+              unoptimized
+              className="object-cover"
             />
           ) : (
             <ShoppingBag size={48} />
