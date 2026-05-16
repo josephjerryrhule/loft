@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { saveFileLocally } from "@/lib/upload";
+import { uploadFile } from "@/lib/upload";
 import { auth } from "@/auth";
 import { apiRateLimit } from "@/lib/ratelimit";
 import { headers } from "next/headers";
@@ -65,13 +65,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const publicUrl = await saveFileLocally(file, folder);
+    const publicUrl = await uploadFile(file, folder);
 
     return NextResponse.json({ url: publicUrl }, { status: 200 });
   } catch (error) {
-    console.error("Upload error:", error);
+    console.error("Upload error details:", error);
     return NextResponse.json(
-      { error: "Failed to upload file" },
+      { error: "Failed to upload file", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
