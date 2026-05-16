@@ -210,19 +210,22 @@ async function processOverrides({
   // 2. Manager Override (3%)
   // Managers get override on Affiliates and Team Leaders they manage
   if (referrer.managerId) {
-    const managerOverride = amount * rates.managerOverrideRate;
-    await prisma.commission.create({
-      data: {
-        userId: referrer.managerId,
-        sourceType,
-        sourceId,
-        amount: managerOverride,
-        status: "PENDING"
-      }
-    });
-
     const manager = await prisma.user.findUnique({ where: { id: referrer.managerId } });
-    if (manager) {
+    
+    // Only apply manager override if the assigned manager is NOT an Operations Manager.
+    // Operations Managers only earn from the global ops override.
+    if (manager && manager.role !== Role.OPERATIONS_MANAGER) {
+      const managerOverride = amount * rates.managerOverrideRate;
+      await prisma.commission.create({
+        data: {
+          userId: referrer.managerId,
+          sourceType,
+          sourceId,
+          amount: managerOverride,
+          status: "PENDING"
+        }
+      });
+
       sendCommissionEarnedEmail({
         recipientEmail: manager.email,
         recipientName: `${manager.firstName || ""} ${manager.lastName || ""}`.trim() || "Manager",
