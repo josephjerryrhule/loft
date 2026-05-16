@@ -103,14 +103,23 @@ async function _uploadToSupabaseProvider(
 }
 
 // Main upload function that decides based on environment
-export async function uploadToSupabase(
+export async function uploadFile(
   file: File,
   folder: string = "misc"
 ): Promise<string> {
-  if (USE_LOCAL_STORAGE) {
-      return saveFileLocally(file, folder);
+  // Check if we are in a serverless environment (like Vercel) where local fs is read-only.
+  // If we have Supabase configured, use it. Otherwise, if we are in local dev, allow local storage.
+  const isServerless = !!process.env.VERCEL || !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+  
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL && (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY)) {
+      return _uploadToSupabaseProvider(file, folder);
   }
-  return _uploadToSupabaseProvider(file, folder);
+  
+  if (isServerless) {
+      throw new Error("Local file storage is not supported in this environment. Please configure Supabase.");
+  }
+  
+  return saveFileLocally(file, folder);
 }
 
 export async function deleteFromSupabase(fileUrl: string): Promise<boolean> {
