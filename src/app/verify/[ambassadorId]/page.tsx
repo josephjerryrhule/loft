@@ -33,8 +33,8 @@ export default async function VerifyPage({ params }: VerifyPageProps) {
 
   if (!rateLimitSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-[#020617]">
-        <Card className="w-full max-w-md border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white dark:bg-slate-900">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50">
+        <Card className="w-full max-w-md border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white">
             <div className="bg-amber-500 p-10 text-white relative">
                 <div className="absolute top-0 right-0 p-10 opacity-10 rotate-12">
                     <Clock size={120} />
@@ -48,7 +48,7 @@ export default async function VerifyPage({ params }: VerifyPageProps) {
             <p className="text-slate-500 font-medium leading-relaxed">
               You have made too many verification requests in a short period. Please wait a moment before attempting again.
             </p>
-            <Button asChild variant="outline" className="h-12 w-full rounded-xl font-bold border-slate-200 dark:border-slate-800">
+            <Button asChild variant="outline" className="h-12 w-full rounded-xl font-bold border-stone-200">
                 <Link href="/">Return to Home</Link>
             </Button>
           </CardContent>
@@ -81,8 +81,8 @@ export default async function VerifyPage({ params }: VerifyPageProps) {
 
   if (!user || (user.role !== "MANAGER" && user.role !== "AFFILIATE" && user.role !== "TEAM_LEADER" && user.role !== "OPERATIONS_MANAGER")) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-[#020617]">
-        <Card className="w-full max-w-md border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white dark:bg-slate-900">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50">
+        <Card className="w-full max-w-md border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white">
             <div className="bg-slate-900 p-10 text-white relative">
                 <div className="absolute top-0 right-0 p-10 opacity-10 rotate-12">
                     <ShieldAlert size={120} />
@@ -94,9 +94,9 @@ export default async function VerifyPage({ params }: VerifyPageProps) {
             </div>
           <CardContent className="p-10 text-center space-y-6">
             <p className="text-slate-500 font-medium leading-relaxed">
-              The ambassador ID <span className="font-black text-slate-900 dark:text-white underline decoration-[#E87154]">{ambassadorId}</span> could not be verified in our official records.
+              The ambassador ID <span className="font-black text-slate-900 underline decoration-[#E87154]">{ambassadorId}</span> could not be verified in our official records.
             </p>
-            <Button asChild variant="outline" className="h-12 w-full rounded-xl font-bold border-slate-200 dark:border-slate-800">
+            <Button asChild variant="outline" className="h-12 w-full rounded-xl font-bold border-stone-200">
                 <Link href="/">Return to Home</Link>
             </Button>
           </CardContent>
@@ -112,8 +112,7 @@ export default async function VerifyPage({ params }: VerifyPageProps) {
   const roleDisplay = user.role.replace(/_/g, ' ');
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-[#020617] transition-colors duration-500">
-       {/* Dynamic Background Elements */}
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-slate-50 transition-colors duration-500">
        <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-[#E87154]/5 rounded-full blur-[120px]" />
         <div className="absolute -bottom-[10%] right-[20%] w-[35%] h-[35%] bg-emerald-500/5 rounded-full blur-[110px]" />
@@ -141,10 +140,7 @@ export default async function VerifyPage({ params }: VerifyPageProps) {
       </div>
 
       <Card className="w-full max-w-md border-none shadow-xl overflow-hidden rounded-[2.5rem] bg-white relative z-10">
-        <div className="bg-[#FFFAF5] p-10 border-b border-stone-100 relative">
-          <div className="absolute top-0 right-0 p-10 opacity-5 rotate-12 scale-110">
-              {isActive ? <ShieldCheck size={160} className="text-stone-900" /> : <AlertCircle size={160} className="text-stone-900" />}
-          </div>
+        <div className="bg-[#FFFAF5] p-10 relative">
           
           <div className="relative z-10 flex flex-col items-center">
             <div className="relative mb-6">
@@ -156,7 +152,7 @@ export default async function VerifyPage({ params }: VerifyPageProps) {
                     className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-700"
                   />
                 ) : (
-                  <User className="w-16 h-16 text-slate-200" />
+                  <User className="w-16 h-16 text-stone-300" />
                 )}
               </div>
               <div className="absolute -bottom-3 -right-3">
@@ -184,7 +180,6 @@ export default async function VerifyPage({ params }: VerifyPageProps) {
         </div>
 
         <CardContent className="p-10 space-y-10">
-          {/* Status Banner */}
           <div className="flex justify-center">
             {isActive ? (
               <div className="flex items-center gap-3 px-8 py-3 bg-emerald-50 border-2 border-emerald-100 rounded-2xl shadow-sm">
@@ -199,7 +194,6 @@ export default async function VerifyPage({ params }: VerifyPageProps) {
             )}
           </div>
 
-          {/* Staff Details */}
           <div className="bg-stone-50 rounded-[1.5rem] p-8 space-y-6 shadow-inner border-none">
             <div className="flex justify-between items-center group">
                 <span className="text-slate-400 text-[10px] uppercase font-black tracking-[0.2em] group-hover:text-[#E87154] transition-colors">Staff ID</span>
@@ -224,7 +218,6 @@ export default async function VerifyPage({ params }: VerifyPageProps) {
             </div>
           </div>
 
-          {/* Action Zone */}
           <div className="space-y-4">
             {isActive && (user.role === "AFFILIATE" || user.role === "TEAM_LEADER") && (
               <Button asChild className="w-full h-14 rounded-2xl bg-[#E87154] hover:bg-[#D66144] font-black shadow-xl shadow-[#E87154]/20 transition-all active:scale-95 text-white text-base group">
