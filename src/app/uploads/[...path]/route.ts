@@ -13,13 +13,11 @@ export async function GET(
 ) {
     const pathParts = (await params).path;
     const relativePath = pathParts.join('/');
-    
-    // Resolve base directory
-    const baseUploadDir = process.env.UPLOAD_DIR_BASE || path.join(/*turbopackIgnore: true*/ process.cwd(), 'public', 'uploads');
-    const fullPath = path.join(/*turbopackIgnore: true*/ baseUploadDir, relativePath);
+    const baseUploadDir = path.resolve(/*turbopackIgnore: true*/ process.cwd(), 'public', 'uploads');
+    const fullPath = path.resolve(baseUploadDir, relativePath);
 
     // Security: Ensure the path is within the uploads directory
-    if (!fullPath.startsWith(baseUploadDir)) {
+    if (fullPath !== baseUploadDir && !fullPath.startsWith(`${baseUploadDir}${path.sep}`)) {
         return new NextResponse("Forbidden", { status: 403 });
     }
 
