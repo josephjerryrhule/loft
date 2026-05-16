@@ -262,9 +262,16 @@ export default function LeaderboardClient({ initialData, viewerRole }: Leaderboa
                   </TableCell>
                   <TableCell className="text-center">
                        <div className="flex flex-col items-center gap-1">
-                          <span className="text-[10px] font-bold text-slate-500">
-                            {entry.monthlySubs} Mo / {entry.yearlySubs} Yr
-                          </span>
+                          <div className="flex flex-wrap justify-center gap-x-1 gap-y-0.5 max-w-[120px]">
+                            {entry.monthlySubs > 0 && <span className="text-[10px] font-bold text-slate-500">{entry.monthlySubs}Mo</span>}
+                            {entry.quarterlySubs > 0 && <span className="text-[10px] font-bold text-blue-500">{entry.quarterlySubs}Qt</span>}
+                            {entry.semiAnnualSubs > 0 && <span className="text-[10px] font-bold text-purple-500">{entry.semiAnnualSubs}Sa</span>}
+                            {entry.yearlySubs > 0 && <span className="text-[10px] font-bold text-[#E87154]">{entry.yearlySubs}Yr</span>}
+                            {entry.otherSubs > 0 && <span className="text-[10px] font-bold text-stone-400">{entry.otherSubs}*</span>}
+                            {entry.monthlySubs === 0 && entry.quarterlySubs === 0 && entry.semiAnnualSubs === 0 && entry.yearlySubs === 0 && entry.otherSubs === 0 && (
+                                <span className="text-[10px] font-bold text-slate-300">0</span>
+                            )}
+                          </div>
                        </div>
                   </TableCell>
                   {entry.revenue !== undefined && (

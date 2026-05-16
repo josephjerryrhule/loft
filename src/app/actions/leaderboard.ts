@@ -15,7 +15,9 @@ export interface LeaderboardEntry {
   referralsCount: number;
   monthlySubs: number;
   quarterlySubs: number;
+  semiAnnualSubs: number;
   yearlySubs: number;
+  otherSubs: number;
   productSales: number;
   revenue?: number;
   earnings?: number;
@@ -63,19 +65,12 @@ export async function getLeaderboardData(filters: {
       teamLeader: { select: { firstName: true, lastName: true } },
       referrals: {
         where: {
-          role: { in: [Role.PARENT, Role.CUSTOMER] },
-          subscriptions: {
-            some: {
-              paymentStatus: "COMPLETED",
-              status: "ACTIVE"
-            }
-          }
+          role: { in: [Role.PARENT, Role.CUSTOMER] }
         },
         include: {
           subscriptions: {
             where: {
-              paymentStatus: "COMPLETED",
-              status: "ACTIVE"
+              paymentStatus: "COMPLETED"
             },
             include: { plan: true }
           }
@@ -101,13 +96,18 @@ export async function getLeaderboardData(filters: {
     const referralsCount = user.referrals.length;
     let monthlySubs = 0;
     let quarterlySubs = 0;
+    let semiAnnualSubs = 0;
     let yearlySubs = 0;
+    let otherSubs = 0;
 
     user.referrals.forEach(referral => {
       referral.subscriptions.forEach(sub => {
-        if (sub.plan.durationDays === 30) monthlySubs++;
-        else if (sub.plan.durationDays === 90) quarterlySubs++;
-        else if (sub.plan.durationDays === 365) yearlySubs++;
+        const days = sub.plan.durationDays;
+        if (days >= 25 && days <= 35) monthlySubs++;
+        else if (days >= 80 && days <= 100) quarterlySubs++;
+        else if (days >= 170 && days <= 190) semiAnnualSubs++;
+        else if (days >= 360 && days <= 370) yearlySubs++;
+        else otherSubs++;
       });
     });
 
@@ -132,7 +132,9 @@ export async function getLeaderboardData(filters: {
       referralsCount,
       monthlySubs,
       quarterlySubs,
+      semiAnnualSubs,
       yearlySubs,
+      otherSubs,
       productSales,
       status: user.status,
       joinDate: user.createdAt,
