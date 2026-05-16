@@ -140,18 +140,15 @@ export default async function VerifyPage({ params }: VerifyPageProps) {
         <h1 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Official Credential Verification</h1>
       </div>
 
-      <Card className="w-full max-w-md border-none shadow-2xl overflow-hidden rounded-[2.5rem] bg-white relative z-10">
-        <div className={cn(
-            "p-10 text-white relative",
-            isActive ? "bg-slate-900" : "bg-stone-800"
-        )}>
-          <div className="absolute top-0 right-0 p-10 opacity-10 rotate-12 scale-110">
-              {isActive ? <ShieldCheck size={160} /> : <AlertCircle size={160} />}
+      <Card className="w-full max-w-md border-none shadow-xl overflow-hidden rounded-[2.5rem] bg-white relative z-10">
+        <div className="bg-[#FFFAF5] p-10 border-b border-stone-100 relative">
+          <div className="absolute top-0 right-0 p-10 opacity-5 rotate-12 scale-110">
+              {isActive ? <ShieldCheck size={160} className="text-stone-900" /> : <AlertCircle size={160} className="text-stone-900" />}
           </div>
           
           <div className="relative z-10 flex flex-col items-center">
             <div className="relative mb-6">
-              <div className="w-32 h-32 rounded-[2rem] overflow-hidden border-4 border-white bg-white flex items-center justify-center shadow-2xl group transition-all duration-500">
+              <div className="w-32 h-32 rounded-[2rem] overflow-hidden border-4 border-white bg-white flex items-center justify-center shadow-lg group transition-all duration-500">
                 {user.profilePictureUrl ? (
                   <img 
                     src={user.profilePictureUrl} 
@@ -164,21 +161,21 @@ export default async function VerifyPage({ params }: VerifyPageProps) {
               </div>
               <div className="absolute -bottom-3 -right-3">
                 {isActive ? (
-                  <div className="bg-[#E87154] text-white p-2 rounded-2xl border-4 border-white shadow-xl">
+                  <div className="bg-[#E87154] text-white p-2 rounded-2xl border-4 border-white shadow-md">
                     <CheckCircle2 className="w-8 h-8" />
                   </div>
                 ) : (
-                  <div className="bg-red-500 text-white p-2 rounded-2xl border-4 border-white shadow-xl">
+                  <div className="bg-red-500 text-white p-2 rounded-2xl border-4 border-white shadow-md">
                     <XCircle className="w-8 h-8" />
                   </div>
                 ) }
               </div>
             </div>
             
-            <div className="text-center space-y-1">
-                <h2 className="text-3xl font-black tracking-tight text-white">{fullName || "Staff Member"}</h2>
-                <div className="flex items-center justify-center gap-2">
-                    <Badge variant="outline" className="border-white/30 text-white bg-white/10 text-[10px] font-black uppercase tracking-[0.2em] px-3 h-6">
+            <div className="text-center space-y-1 mt-2">
+                <h2 className="text-3xl font-black tracking-tight text-slate-900">{fullName || "Staff Member"}</h2>
+                <div className="flex items-center justify-center gap-2 pt-1">
+                    <Badge variant="outline" className="border-stone-200 text-stone-500 bg-white shadow-sm text-[10px] font-black uppercase tracking-[0.2em] px-3 h-6">
                         {roleDisplay}
                     </Badge>
                 </div>
