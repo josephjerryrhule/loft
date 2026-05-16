@@ -72,6 +72,8 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+import { Providers } from "@/components/providers";
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -94,7 +96,9 @@ export default async function RootLayout({
             strategy="afterInteractive"
           />
         ) : null}
-        {children}
+        <Providers>
+          {children}
+        </Providers>
         <Toaster />
 
       </body>

@@ -27,6 +27,8 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { DashboardTable } from "@/components/dashboard/DashboardTable";
 import { getOperationsDashboardStats } from "@/app/actions/operations";
 import { getLeaderboardData } from "@/app/actions/leaderboard";
+import { getAffiliateStats } from "@/app/actions/affiliate";
+import { RequestPayoutDialog } from "@/components/dashboard/RequestPayoutDialog";
 import { Role } from "@/lib/types";
 
 // Force dynamic rendering
@@ -188,13 +190,14 @@ export default async function AdminDashboardPage() {
 
   const isOpsManager = role === Role.OPERATIONS_MANAGER;
 
-  const [stats, revenueData, recentActivity, recentSales, opsStats, topAmbassadors] = await Promise.all([
+  const [stats, revenueData, recentActivity, recentSales, opsStats, topAmbassadors, myStats] = await Promise.all([
     getStats(),
     getMonthlyRevenueData(),
     getRecentActivity(),
     getRecentSales(),
     isOpsManager ? getOperationsDashboardStats() : Promise.resolve(null),
-    isOpsManager ? getLeaderboardData({}).then(data => data.slice(0, 5)) : Promise.resolve([])
+    isOpsManager ? getLeaderboardData({}).then(data => data.slice(0, 5)) : Promise.resolve([]),
+    isOpsManager ? getAffiliateStats() : Promise.resolve(null)
   ]);
 
   return (
@@ -205,22 +208,27 @@ export default async function AdminDashboardPage() {
         userName={session.user.name || "Admin"}
         actions={
           <>
+            {isOpsManager && myStats && (
+                <RequestPayoutDialog 
+                    availableBalance={myStats.approvedBalance} 
+                />
+            )}
             {!isOpsManager && (
-                <Button asChild size="sm" className="bg-[#E87154] hover:bg-[#D66144] shadow-lg shadow-[#E87154]/20">
-                  <Link href="/admin/flipbooks" className="flex items-center gap-2">
-                    <Plus size={16} /> New Flipbook
+                <Button asChild className="bg-[#E87154] hover:bg-[#D66144] shadow-lg shadow-[#E87154]/20 h-12 px-8 rounded-2xl font-black transition-all active:scale-95">
+                  <Link href="/admin/flipbooks" className="flex items-center gap-3">
+                    <Plus size={20} /> New Flipbook
                   </Link>
                 </Button>
             )}
-            <Button asChild variant="outline" size="sm">
-              <Link href="/admin/users" className="flex items-center gap-2">
-                <Users size={16} /> Manage Users
+            <Button asChild variant="outline" className="h-12 px-8 rounded-2xl font-black border-2 border-slate-100 hover:bg-slate-50 transition-all active:scale-95">
+              <Link href="/admin/users" className="flex items-center gap-3">
+                <Users size={20} /> Manage Users
               </Link>
             </Button>
             {isOpsManager && (
-                 <Button asChild size="sm" className="bg-[#E87154] hover:bg-[#D66144] shadow-lg shadow-[#E87154]/20">
-                    <Link href="/admin/ambassadors" className="flex items-center gap-2">
-                        <Target size={16} /> Manage Ambassadors
+                 <Button asChild className="bg-[#E87154] hover:bg-[#D66144] shadow-lg shadow-[#E87154]/20 h-12 px-8 rounded-2xl font-black transition-all active:scale-95">
+                    <Link href="/admin/ambassadors" className="flex items-center gap-3">
+                        <Target size={20} /> Manage Ambassadors
                     </Link>
                  </Button>
             )}
@@ -284,24 +292,24 @@ export default async function AdminDashboardPage() {
                 </Link>
             }
           >
-             <div className="divide-y divide-slate-100 dark:divide-slate-800">
+             <div className="divide-y divide-slate-100">
                 {topAmbassadors.map((entry: any) => (
-                    <div key={entry.id} className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <div key={entry.id} className="flex items-center justify-between p-4 hover:bg-slate-50:bg-slate-800/50 transition-colors">
                         <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-black">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-xs font-black">
                                 #{entry.rank}
                             </div>
-                            <Avatar className="h-9 w-9 border-2 border-white dark:border-slate-800 shadow-sm">
+                            <Avatar className="h-9 w-9 border-2 border-white shadow-sm">
                                 <AvatarImage src={entry.avatar || ""} alt={entry.name} />
                                 <AvatarFallback className="text-[10px] font-bold">{entry.name[0]}</AvatarFallback>
                             </Avatar>
                             <div>
-                                <p className="text-sm font-bold text-slate-900 dark:text-white">{entry.name}</p>
+                                <p className="text-sm font-bold text-slate-900">{entry.name}</p>
                                 <p className="text-[10px] text-slate-500">{entry.role}</p>
                             </div>
                         </div>
                         <div className="text-right">
-                            <p className="text-xs font-black text-slate-900 dark:text-white">{entry.salesCount} Sales</p>
+                            <p className="text-xs font-black text-slate-900">{entry.salesCount} Sales</p>
                             <p className="text-[10px] text-emerald-600 font-bold">GHS {entry.revenue?.toFixed(2) || "0.00"}</p>
                         </div>
                     </div>
@@ -312,13 +320,13 @@ export default async function AdminDashboardPage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Revenue Chart */}
-        <Card className="lg:col-span-2 border-none shadow-md overflow-hidden bg-white dark:bg-slate-900">
+        <Card className="lg:col-span-2 border-none shadow-md overflow-hidden bg-white">
           <CardHeader className="flex flex-row items-center justify-between pb-4">
             <div>
               <CardTitle className="text-lg font-bold">Revenue Overview</CardTitle>
               <CardDescription>Monthly revenue over the last 6 months</CardDescription>
             </div>
-            <div className="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[#E87154]">
+            <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-[#E87154]">
                <TrendingUp size={16} />
             </div>
           </CardHeader>
@@ -344,24 +352,24 @@ export default async function AdminDashboardPage() {
                <p className="text-sm">No sales yet.</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            <div className="divide-y divide-slate-100">
               {recentSales.map((order: any) => (
-                <div key={order.id} className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                <div key={order.id} className="flex items-center justify-between p-4 hover:bg-slate-50:bg-slate-800/50 transition-colors">
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9 border-2 border-white dark:border-slate-800 shadow-sm">
+                    <Avatar className="h-9 w-9 border-2 border-white shadow-sm">
                       <AvatarImage src={order.customer.profilePictureUrl || ""} alt="Avatar" />
-                      <AvatarFallback className="bg-slate-100 dark:bg-slate-800 text-[10px] font-bold">
+                      <AvatarFallback className="bg-slate-100 text-[10px] font-bold">
                         {order.customer.firstName?.[0] || order.customer.email[0]}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <p className="text-sm font-bold truncate text-slate-900 dark:text-white">{order.product.title}</p>
+                      <p className="text-sm font-bold truncate text-slate-900">{order.product.title}</p>
                       <p className="text-[10px] text-slate-500 truncate">{order.customer.email}</p>
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-xs font-black text-emerald-600">+GHS {Number(order.totalAmount).toFixed(2)}</p>
-                    <Badge variant="outline" className="text-[9px] h-3.5 px-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border-emerald-500/20">
+                    <Badge variant="outline" className="text-[9px] h-3.5 px-1 bg-emerald-50 text-emerald-600 border-emerald-500/20">
                       {order.paymentStatus}
                     </Badge>
                   </div>

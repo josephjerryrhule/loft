@@ -12,6 +12,11 @@ export interface LeaderboardEntry {
   role: string;
   ambassadorId: string | null;
   salesCount: number;
+  referralsCount: number;
+  monthlySubs: number;
+  quarterlySubs: number;
+  yearlySubs: number;
+  productSales: number;
   revenue?: number;
   earnings?: number;
   status: string;
@@ -32,10 +37,10 @@ export async function getLeaderboardData(filters: {
   const viewerRole = (session.user as any).role;
   const viewerId = session.user.id;
 
-  // 1. Fetch all ambassadors (Affiliate, Team Leader, Manager, Operations Manager)
+  // 1. Fetch only Team Leaders and Affiliates
   const ambassadors = await prisma.user.findMany({
     where: {
-      role: { in: [Role.AFFILIATE, Role.TEAM_LEADER, Role.MANAGER, Role.OPERATIONS_MANAGER] },
+      role: { in: [Role.AFFILIATE, Role.TEAM_LEADER] },
       status: filters.status || undefined,
       ...(filters.role && { role: filters.role }),
       ...(filters.search && {
@@ -88,12 +93,23 @@ export async function getLeaderboardData(filters: {
 
   // 2. Process data and calculate stats
   let leaderboard: LeaderboardEntry[] = ambassadors.map(user => {
-    // Sales count = paid subscriptions from referred users
+    // Sales count = paid subscriptions from referred users + product sales
     const subscriptionSales = user.referrals.reduce((sum, referral) => sum + referral.subscriptions.length, 0);
-    // Product sales count
     const productSales = user.referredOrders.length;
-    
     const salesCount = subscriptionSales + productSales;
+
+    const referralsCount = user.referrals.length;
+    let monthlySubs = 0;
+    let quarterlySubs = 0;
+    let yearlySubs = 0;
+
+    user.referrals.forEach(referral => {
+      referral.subscriptions.forEach(sub => {
+        if (sub.plan.durationDays === 30) monthlySubs++;
+        else if (sub.plan.durationDays === 90) quarterlySubs++;
+        else if (sub.plan.durationDays === 365) yearlySubs++;
+      });
+    });
 
     // Revenue calculation
     const subscriptionRevenue = user.referrals.reduce((sum, referral) => {
@@ -113,6 +129,11 @@ export async function getLeaderboardData(filters: {
       role: user.role,
       ambassadorId: user.ambassadorId,
       salesCount,
+      referralsCount,
+      monthlySubs,
+      quarterlySubs,
+      yearlySubs,
+      productSales,
       status: user.status,
       joinDate: user.createdAt,
       managerName: user.manager ? `${user.manager.firstName || ""} ${user.manager.lastName || ""}`.trim() : undefined,
@@ -121,12 +142,17 @@ export async function getLeaderboardData(filters: {
 
     // Apply visibility rules for revenue and earnings
     const canViewRevenue = 
+      viewerRole === Role.ADMIN ||
+      viewerRole === Role.FINANCE ||
       viewerRole === Role.OPERATIONS_MANAGER || 
       (viewerRole === Role.MANAGER && (user.managerId === viewerId || user.id === viewerId)) ||
       (viewerId === user.id);
 
     const canViewEarnings = 
+      viewerRole === Role.ADMIN ||
+      viewerRole === Role.FINANCE ||
       viewerRole === Role.OPERATIONS_MANAGER || 
+      (viewerRole === Role.MANAGER && (user.managerId === viewerId || user.id === viewerId)) ||
       (viewerId === user.id);
 
     if (canViewRevenue) {

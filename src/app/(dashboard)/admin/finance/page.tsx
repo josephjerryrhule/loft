@@ -130,14 +130,14 @@ export default function AdminFinancePage() {
 
       <div className="grid gap-8 lg:grid-cols-1">
         {/* Payout Requests */}
-        <Card className="border-none shadow-md overflow-hidden bg-white dark:bg-slate-900">
-          <CardHeader className="border-b border-slate-50 dark:border-slate-800 pb-4">
+        <Card className="border-none shadow-md overflow-hidden bg-white">
+          <CardHeader className="border-b border-slate-50 pb-4">
             <div className="flex items-center justify-between">
                 <div>
                     <CardTitle className="text-lg font-bold">Payout Requests</CardTitle>
                     <CardDescription>Withdrawal requests from ambassadors</CardDescription>
                 </div>
-                <div className="h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500">
+                <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
                     <Wallet size={20} />
                 </div>
             </div>
@@ -164,13 +164,13 @@ export default function AdminFinancePage() {
                 )}
                 {paginatedPayouts.map((req: any) => (
                   <TableRow key={req.id} className="group transition-colors">
-                    <TableCell className="pl-6 font-bold text-slate-900 dark:text-white">{req.user.email}</TableCell>
+                    <TableCell className="pl-6 font-bold text-slate-900">{req.user.email}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-800 border-none">
+                      <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50 border-none">
                         {req.user.role}
                       </Badge>
                     </TableCell>
-                    <TableCell className="font-black text-slate-900 dark:text-white">
+                    <TableCell className="font-black text-slate-900">
                         <span className="text-[10px] text-slate-400 mr-1">GHS</span>
                         {Number(req.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </TableCell>
@@ -179,9 +179,9 @@ export default function AdminFinancePage() {
                         variant={req.status === "PAID" ? "default" : req.status === "APPROVED" ? "secondary" : "outline"}
                         className={cn(
                             "text-[10px] font-bold uppercase tracking-wider",
-                            req.status === "PAID" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-none",
-                            req.status === "APPROVED" && "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-none",
-                            req.status === "PENDING" && "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-none"
+                            req.status === "PAID" && "bg-emerald-100 text-emerald-700 border-none",
+                            req.status === "APPROVED" && "bg-blue-100 text-blue-700 border-none",
+                            req.status === "PENDING" && "bg-amber-100 text-amber-700 border-none"
                         )}
                       >
                         {req.status}
@@ -197,7 +197,7 @@ export default function AdminFinancePage() {
                 ))}
               </TableBody>
             </Table>
-            <div className="p-4 border-t border-slate-50 dark:border-slate-800">
+            <div className="p-4 border-t border-slate-50">
               <TablePagination
                 currentPage={payoutPage}
                 totalPages={payoutTotalPages}
@@ -214,8 +214,8 @@ export default function AdminFinancePage() {
         </Card>
 
         {/* Recent Commissions */}
-        <Card className="border-none shadow-md overflow-hidden bg-white dark:bg-slate-900">
-          <CardHeader className="border-b border-slate-50 dark:border-slate-800 pb-4">
+        <Card className="border-none shadow-md overflow-hidden bg-white">
+          <CardHeader className="border-b border-slate-50 pb-4">
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-lg font-bold">Recent Commissions</CardTitle>
@@ -237,7 +237,7 @@ export default function AdminFinancePage() {
                     Approve All Pending
                 </Button>
                 )}
-                <div className="h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[#E87154]">
+                <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-[#E87154]">
                     <TrendingUp size={20} />
                 </div>
               </div>
@@ -265,9 +265,9 @@ export default function AdminFinancePage() {
                 )}
                 {paginatedCommissions.map((comm: any) => (
                   <TableRow key={comm.id} className="group transition-colors">
-                    <TableCell className="pl-6 font-bold text-slate-900 dark:text-white">{comm.user?.email || "Unknown"}</TableCell>
+                    <TableCell className="pl-6 font-bold text-slate-900">{comm.user?.email || "Unknown"}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-800 border-none">
+                      <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50 border-none">
                         {comm.sourceType === "SIGNUP" ? "Signup Bonus" : 
                          comm.sourceType === "SUBSCRIPTION" ? "Subscription" : 
                          comm.sourceType === "PRODUCT" ? "Sale" : comm.sourceType}
@@ -282,9 +282,9 @@ export default function AdminFinancePage() {
                         variant={comm.status === "PAID" ? "default" : comm.status === "APPROVED" ? "secondary" : "outline"}
                         className={cn(
                             "text-[10px] font-bold uppercase tracking-wider",
-                            comm.status === "PAID" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-none",
-                            comm.status === "APPROVED" && "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-none",
-                            comm.status === "PENDING" && "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-none"
+                            comm.status === "PAID" && "bg-emerald-100 text-emerald-700 border-none",
+                            comm.status === "APPROVED" && "bg-blue-100 text-blue-700 border-none",
+                            comm.status === "PENDING" && "bg-amber-100 text-amber-700 border-none"
                         )}
                       >
                         {comm.status}
@@ -300,7 +300,7 @@ export default function AdminFinancePage() {
                 ))}
               </TableBody>
             </Table>
-            <div className="p-4 border-t border-slate-50 dark:border-slate-800">
+            <div className="p-4 border-t border-slate-50">
               <TablePagination
                 currentPage={commissionPage}
                 totalPages={commissionTotalPages}

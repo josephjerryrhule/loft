@@ -6,37 +6,37 @@ export function formatActivityDetails(actionType: string, detailsJson: string): 
     
     switch (actionType) {
       case "SUBSCRIPTION":
-        return `Subscribed to ${details.planName || "a plan"} for GHS ${details.amount?.toFixed(2) || "0.00"}`;
+        return `Joined the ${details.planName || "premium family"} for GHS ${details.amount?.toFixed(2) || "0.00"}`;
       
       case "CREATE_ORDER":
-        return `Purchased ${details.productTitle || "a product"} ${details.quantity > 1 ? `(${details.quantity}x)` : ""} for GHS ${details.totalAmount?.toFixed(2) || "0.00"}`;
+        return `Picked up ${details.productTitle || "a new story"} ${details.quantity > 1 ? `(${details.quantity}x)` : ""} for GHS ${details.totalAmount?.toFixed(2) || "0.00"}`;
       
       case "COMMISSION_APPROVED":
-        return `Commission of GHS ${details.amount?.toFixed(2) || "0.00"} approved`;
+        return `Approved a reward of GHS ${details.amount?.toFixed(2) || "0.00"}`;
       
       case "COMMISSION_EARNED":
-        return `Earned GHS ${details.amount?.toFixed(2) || "0.00"} commission from ${details.sourceType || "activity"}`;
+        return `Received GHS ${details.amount?.toFixed(2) || "0.00"} from ${details.sourceType === "SUBSCRIPTION" ? "a new family signup" : "a story purchase"}`;
       
       case "PAYOUT_REQUESTED":
-        return `Requested payout of GHS ${details.amount?.toFixed(2) || "0.00"} via ${details.paymentMethod || "payment method"}`;
+        return `Requested a withdrawal of GHS ${details.amount?.toFixed(2) || "0.00"}`;
       
       case "PAYOUT_RECEIVED":
-        return `Received payout of GHS ${details.amount?.toFixed(2) || "0.00"}`;
+        return `Successfully received a payment of GHS ${details.amount?.toFixed(2) || "0.00"}`;
       
       case "ADMIN_UPDATE_ORDER":
-        return `Order ${details.orderId || "unknown"} updated`;
+        return `Updated the details for order #${details.orderId?.slice(-6) || "unknown"}`;
       
       case "PAYMENT_RECEIVED":
-        return `Payment received (GHS ${(details.amount / 100)?.toFixed(2) || "0.00"}) - ${details.type || "transaction"}`;
+        return `Successfully processed a payment of GHS ${(details.amount / 100)?.toFixed(2) || "0.00"}`;
       
       case "USER_CREATED":
-        return `New ${details.role || "user"} account created: ${details.name || ""}`;
+        return `Welcomed a new ${details.role?.toLowerCase() || "member"}: ${details.name || "Unknown Friend"}`;
       
       case "USER_UPDATED":
-        return `Profile updated for ${details.name || "user"}`;
+        return `Updated personal details for ${details.name || "a member"}`;
       
       case "REFERRAL":
-        return `${details.referredName || "Someone"} signed up using referral link`;
+        return `${details.referredName || "A new friend"} joined the adventure through a referral`;
       
       default:
         // For any unknown types, try to show a formatted version

@@ -10,6 +10,10 @@ import { UserActions } from "@/components/admin/UserActions";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { formatRole } from "@/lib/format-utils";
 import { Card, CardContent } from "@/components/ui/card";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
+import { cn } from "@/lib/utils";
+import { Users } from "lucide-react";
 
 interface Ambassador {
   id: string;
@@ -74,97 +78,102 @@ export default function AmbassadorManagementClient({
   const paginatedAmbassadors = filteredAmbassadors.slice(startIndex, startIndex + itemsPerPage);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-            <h1 className="text-3xl font-bold tracking-tight">Ambassador Management</h1>
-            <p className="text-muted-foreground">Manage the platform hierarchy, promote staff, and assign roles.</p>
-        </div>
-      </div>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <PageHeader
+        title="Ambassador Management"
+        subtitle="Manage the platform hierarchy, promote staff, and assign roles."
+      />
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <Card className="bg-slate-50 border-slate-200 shadow-sm">
-              <CardContent className="pt-4 pb-2 text-center">
-                  <div className="text-2xl font-bold">{stats.total}</div>
-                  <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Total Staff</div>
-              </CardContent>
-          </Card>
-          <Card className="bg-blue-50 border-blue-100 shadow-sm">
-              <CardContent className="pt-4 pb-2 text-center text-blue-700">
-                  <div className="text-2xl font-bold">{stats.ops}</div>
-                  <div className="text-[10px] uppercase font-bold tracking-wider">Ops Managers</div>
-              </CardContent>
-          </Card>
-          <Card className="bg-purple-50 border-purple-100 shadow-sm">
-              <CardContent className="pt-4 pb-2 text-center text-purple-700">
-                  <div className="text-2xl font-bold">{stats.managers}</div>
-                  <div className="text-[10px] uppercase font-bold tracking-wider">Managers</div>
-              </CardContent>
-          </Card>
-          <Card className="bg-indigo-50 border-indigo-100 shadow-sm">
-              <CardContent className="pt-4 pb-2 text-center text-indigo-700">
-                  <div className="text-2xl font-bold">{stats.leaders}</div>
-                  <div className="text-[10px] uppercase font-bold tracking-wider">Team Leaders</div>
-              </CardContent>
-          </Card>
-          <Card className="bg-emerald-50 border-emerald-100 shadow-sm">
-              <CardContent className="pt-4 pb-2 text-center text-emerald-700">
-                  <div className="text-2xl font-bold">{stats.affiliates}</div>
-                  <div className="text-[10px] uppercase font-bold tracking-wider">Affiliates</div>
-              </CardContent>
-          </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <PremiumKPICard
+            title="Total Staff"
+            value={stats.total}
+            icon={Users}
+            theme="primary"
+          />
+          <PremiumKPICard
+            title="Ops Managers"
+            value={stats.ops}
+            icon={Shield}
+            theme="info"
+          />
+          <PremiumKPICard
+            title="Managers"
+            value={stats.managers}
+            icon={UserCheck}
+            theme="info"
+          />
+          <PremiumKPICard
+            title="Team Leaders"
+            value={stats.leaders}
+            icon={UserPlus}
+            theme="warning"
+          />
+          <PremiumKPICard
+            title="Affiliates"
+            value={stats.affiliates}
+            icon={Users}
+            theme="success"
+          />
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 bg-white dark:bg-slate-900 p-4 rounded-lg border shadow-sm">
-         <div className="flex-1 relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input 
-                placeholder="Search by name, email or ID..." 
-                className="pl-8 h-10" 
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-            />
-         </div>
-         <div className="w-full sm:w-[220px]">
-             <select 
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={roleFilter}
-                onChange={(e) => {
-                  setRoleFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-             >
-                <option value="ALL">All Roles</option>
-                <option value="OPERATIONS_MANAGER">Operations Managers</option>
-                <option value="MANAGER">Managers</option>
-                <option value="TEAM_LEADER">Team Leaders</option>
-                <option value="AFFILIATE">Affiliates</option>
-             </select>
-         </div>
-      </div>
+      <Card className="border-none shadow-sm bg-white">
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input 
+                    placeholder="Search by name, email or ID..." 
+                    className="pl-10 h-11 bg-slate-50 border-none" 
+                    value={searchQuery}
+                    onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
+                    }}
+                />
+            </div>
+            <div className="w-full sm:w-[240px]">
+                <select 
+                    className="flex h-11 w-full items-center justify-between rounded-md bg-slate-50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 border-none font-medium"
+                    value={roleFilter}
+                    onChange={(e) => {
+                    setRoleFilter(e.target.value);
+                    setCurrentPage(1);
+                    }}
+                >
+                    <option value="ALL">All Roles</option>
+                    <option value="OPERATIONS_MANAGER">Operations Managers</option>
+                    <option value="MANAGER">Managers</option>
+                    <option value="TEAM_LEADER">Team Leaders</option>
+                    <option value="AFFILIATE">Affiliates</option>
+                </select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      <div className="rounded-md border bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+      <div className="rounded-xl border-none shadow-md bg-white overflow-hidden">
         <Table>
-          <TableHeader className="bg-slate-50/50">
-            <TableRow>
-              <TableHead className="font-bold uppercase text-[10px] tracking-wider">Ambassador</TableHead>
-              <TableHead className="font-bold uppercase text-[10px] tracking-wider">ID</TableHead>
-              <TableHead className="font-bold uppercase text-[10px] tracking-wider">Role</TableHead>
-              <TableHead className="font-bold uppercase text-[10px] tracking-wider">Superior / Leader</TableHead>
-              <TableHead className="text-center font-bold uppercase text-[10px] tracking-wider">Sales</TableHead>
-              <TableHead className="font-bold uppercase text-[10px] tracking-wider">Status</TableHead>
-              <TableHead className="text-right font-bold uppercase text-[10px] tracking-wider">Actions</TableHead>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent border-none">
+              <TableHead className="pl-6">Ambassador</TableHead>
+              <TableHead>ID</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Superior / Leader</TableHead>
+              <TableHead className="text-center">Sales</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right pr-6">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedAmbassadors.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-12 text-muted-foreground italic">
-                  No ambassadors found matching your criteria.
+                <TableCell colSpan={7} className="text-center py-20 text-slate-400">
+                  <div className="flex flex-col items-center gap-2">
+                    <Search className="h-10 w-10 opacity-20" />
+                    <p>No ambassadors found matching your criteria.</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
@@ -173,26 +182,26 @@ export default function AmbassadorManagementClient({
                 const teamLeader = ambassadors.find(a => a.id === user.teamLeaderId);
 
                 return (
-                  <TableRow key={user.id} className="hover:bg-slate-50/50 transition-colors">
-                    <TableCell>
+                  <TableRow key={user.id} className="group transition-colors">
+                    <TableCell className="pl-6">
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9 border">
+                        <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
                           <AvatarImage src={user.profilePictureUrl || ""} />
-                          <AvatarFallback className="bg-slate-100">{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                          <AvatarFallback className="bg-slate-100 font-bold text-slate-500">{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
                             <span className="font-bold text-sm text-slate-900">{user.name}</span>
-                            <span className="text-[11px] text-muted-foreground">{user.email}</span>
+                            <span className="text-[11px] text-slate-500">{user.email}</span>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                       <span className="font-mono text-[11px] font-bold text-slate-500">
+                       <span className="font-mono text-[10px] font-black px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">
                          {user.ambassadorId || '-'}
                        </span>
                     </TableCell>
                     <TableCell>
-                       <Badge variant="outline" className="text-[10px] tracking-wide font-bold bg-white">
+                       <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50 border-none">
                          {formatRole(user.role)}
                        </Badge>
                     </TableCell>
@@ -200,14 +209,14 @@ export default function AmbassadorManagementClient({
                         <div className="flex flex-col gap-1">
                             {user.role === "MANAGER" && superior && (
                                 <div className="flex items-center gap-1.5">
-                                    <Shield className="h-3 w-3 text-blue-500" />
-                                    <span className="text-[11px] font-medium">{superior.name}</span>
+                                    <Shield className="h-3 w-3 text-[#E87154]" />
+                                    <span className="text-[11px] font-bold text-slate-700">{superior.name}</span>
                                 </div>
                             )}
                             {user.role === "TEAM_LEADER" && superior && (
                                 <div className="flex items-center gap-1.5">
-                                    <UserCheck className="h-3 w-3 text-purple-500" />
-                                    <span className="text-[11px] font-medium">{superior.name}</span>
+                                    <UserCheck className="h-3 w-3 text-[#E87154]" />
+                                    <span className="text-[11px] font-bold text-slate-700">{superior.name}</span>
                                 </div>
                             )}
                             {user.role === "AFFILIATE" && (
@@ -221,28 +230,35 @@ export default function AmbassadorManagementClient({
                                     {teamLeader && (
                                         <div className="flex items-center gap-1.5">
                                             <UserPlus className="h-3 w-3 text-indigo-500" />
-                                            <span className="text-[11px] font-medium">{teamLeader.name}</span>
+                                            <span className="text-[11px] font-medium text-slate-700">{teamLeader.name}</span>
                                         </div>
                                     )}
-                                    {!superior && !teamLeader && <span className="text-[11px] text-muted-foreground">-</span>}
+                                    {!superior && !teamLeader && <span className="text-[11px] text-slate-400">—</span>}
                                 </>
                             )}
                             {(user.role === "OPERATIONS_MANAGER" || (!superior && !teamLeader && user.role !== "AFFILIATE")) && (
-                                <span className="text-[11px] text-muted-foreground">-</span>
+                                <span className="text-[11px] text-slate-400">—</span>
                             )}
                         </div>
                     </TableCell>
                     <TableCell className="text-center">
-                        <span className="inline-flex items-center justify-center min-w-8 px-2 h-7 rounded-full bg-slate-100 font-bold text-slate-700 text-xs">
+                        <span className="inline-flex items-center justify-center min-w-[32px] h-7 rounded-full bg-slate-100 font-black text-slate-900 text-[10px]">
                             {user.salesCount}
                         </span>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={user.status === "ACTIVE" ? "default" : "secondary"} className="text-[10px]">
+                      <Badge 
+                        variant={user.status === "ACTIVE" ? "default" : "secondary"}
+                        className={cn(
+                            "text-[10px] font-bold uppercase tracking-wider",
+                            user.status === "ACTIVE" && "bg-emerald-100 text-emerald-700 border-none",
+                            "bg-slate-100 text-slate-500 border-none"
+                        )}
+                      >
                         {user.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right pr-6">
                         <UserActions 
                             user={user} 
                             managers={hierarchyData.managers} 
@@ -256,19 +272,20 @@ export default function AmbassadorManagementClient({
             )}
           </TableBody>
         </Table>
+        <div className="p-4 border-t border-slate-50">
+            <TablePagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                itemsPerPage={itemsPerPage}
+                totalItems={filteredAmbassadors.length}
+                onPageChange={setCurrentPage}
+                onItemsPerPageChange={(value) => {
+                setItemsPerPage(value);
+                setCurrentPage(1);
+                }}
+            />
+        </div>
       </div>
-
-      <TablePagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        itemsPerPage={itemsPerPage}
-        totalItems={filteredAmbassadors.length}
-        onPageChange={setCurrentPage}
-        onItemsPerPageChange={(value) => {
-          setItemsPerPage(value);
-          setCurrentPage(1);
-        }}
-      />
     </div>
   );
 }

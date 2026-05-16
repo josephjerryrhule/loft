@@ -11,7 +11,7 @@ async function assertFinanceRole() {
   const session = await auth();
   // @ts-ignore
   const role = session?.user?.role;
-  if (!session?.user || (role !== Role.FINANCE && role !== Role.ADMIN)) {
+  if (!session?.user || (role !== Role.FINANCE && role !== Role.ADMIN && role !== Role.OPERATIONS_MANAGER)) {
     throw new Error("Unauthorized");
   }
 }

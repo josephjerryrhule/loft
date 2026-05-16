@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Copy, UserPlus, Loader2 } from "lucide-react";
+import { Copy, UserPlus, Loader2, CheckCircle2, Globe, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
 
 // Server action to get invite code
@@ -63,44 +63,64 @@ export function InviteAffiliateDialog({ inviteCode: initialCode }: InviteAffilia
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Invite Affiliate
+        <Button className="bg-[#E87154] hover:bg-[#D66144] shadow-lg shadow-[#E87154]/20 gap-2 h-11 px-6 rounded-xl font-bold text-white">
+          <UserPlus size={18} /> Invite Affiliate
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Invite New Affiliate</DialogTitle>
-          <DialogDescription>
-            Share this link with potential affiliates to join your team.
-          </DialogDescription>
-        </DialogHeader>
-        {loading ? (
-          <div className="flex items-center justify-center py-4">
-            <Loader2 className="h-6 w-6 animate-spin" />
-          </div>
-        ) : inviteCode ? (
-          <div className="flex items-center space-x-2">
-            <div className="grid flex-1 gap-2">
-              <Label htmlFor="link" className="sr-only">
-                Link
-              </Label>
-              <Input
-                id="link"
-                defaultValue={inviteLink}
-                readOnly
-              />
+      <DialogContent className="sm:max-w-[50rem] w-[95vw] max-h-[95vh] overflow-y-auto border-none shadow-2xl p-0 rounded-2xl sm:rounded-[2rem]">
+        <div className="bg-[#E87154] p-6 sm:p-10 text-white relative">
+            <div className="absolute top-0 right-0 p-6 sm:p-10 opacity-10 rotate-12">
+                <UserPlus size={120} className="w-24 h-24 sm:w-32 sm:h-32" />
             </div>
-            <Button type="submit" size="sm" className="px-3" onClick={copyToClipboard}>
-              <span className="sr-only">Copy</span>
-              <Copy className="h-4 w-4" />
-            </Button>
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            Unable to load invite code. Please try again.
-          </p>
-        )}
+            <DialogHeader className="relative z-10">
+                <DialogTitle className="text-2xl sm:text-3xl font-black text-white leading-none">Team Expansion</DialogTitle>
+                <DialogDescription className="text-white/80 font-medium mt-3 text-sm sm:text-base italic">
+                    Grow your network by inviting new affiliates
+                </DialogDescription>
+            </DialogHeader>
+        </div>
+
+        <div className="p-6 sm:p-10 space-y-6 bg-white dark:bg-slate-900 overflow-x-hidden">
+            {loading ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-3">
+                    <Loader2 className="h-10 w-10 animate-spin text-[#E87154]" />
+                    <p className="text-sm font-bold text-slate-500">Generating secure link...</p>
+                </div>
+            ) : inviteCode ? (
+                <div className="space-y-5">
+                    <div className="p-5 sm:p-6 bg-slate-50 dark:bg-slate-800 rounded-[1.5rem] border-none space-y-4 shadow-inner">
+                        <div className="flex items-center gap-2">
+                            <LinkIcon size={14} className="text-[#E87154]" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Your Unique Invite Link</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="flex-1 overflow-hidden">
+                                <p className="text-sm sm:text-base font-black text-slate-900 dark:text-white truncate">{inviteLink}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <Button 
+                        onClick={copyToClipboard}
+                        className="w-full h-14 rounded-2xl bg-[#E87154] hover:bg-[#D66144] font-black shadow-xl shadow-[#E87154]/20 transition-all active:scale-95 gap-3 text-white text-base"
+                    >
+                        <Copy size={20} />
+                        Copy Invite Link
+                    </Button>
+                    
+                    <p className="text-[10px] text-center text-slate-400 font-bold uppercase tracking-widest px-4 leading-relaxed">
+                        Share this link privately. Anyone who signs up through this link will be automatically assigned to your team and hierarchy.
+                    </p>
+                </div>
+            ) : (
+                <div className="text-center py-12">
+                    <p className="text-sm font-bold text-red-500 mb-4">
+                        Unable to load your invite code.
+                    </p>
+                    <Button variant="outline" onClick={loadInviteCode} className="text-[#E87154] rounded-xl font-bold border-[#E87154]/20">Try Refreshing</Button>
+                </div>
+            )}
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -11,6 +11,7 @@ import { Loader2, BookOpen, RefreshCw, Baby, CreditCard, Sparkles, Plus, ArrowRi
 import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { useSession } from "next-auth/react";
+import { cn } from "@/lib/utils";
 
 type ParentChildProfile = {
   id: string;
@@ -70,7 +71,7 @@ export default function ParentDashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#E87154]" />
       </div>
     );
   }
@@ -87,13 +88,12 @@ export default function ParentDashboardPage() {
         actions={
           <Button
             variant="outline"
-            size="sm"
             onClick={handleRefresh}
             disabled={refreshing}
-            className="shadow-sm"
+            className="h-12 px-8 rounded-2xl font-black border-2 border-slate-100 dark:border-slate-800 hover:bg-slate-50 transition-all active:scale-95"
           >
-            <RefreshCw className={cn("h-4 w-4 mr-2", refreshing ? "animate-spin" : "")} />
-            Refresh
+            <RefreshCw className={cn("h-5 w-5 mr-3", refreshing ? "animate-spin" : "")} />
+            Refresh Data
           </Button>
         }
       />
@@ -132,26 +132,32 @@ export default function ParentDashboardPage() {
 
       <div className="grid gap-6">
         {/* My Children Section */}
-        <Card className="border-none shadow-md overflow-hidden bg-white dark:bg-slate-900">
-          <CardHeader className="flex flex-row items-center justify-between pb-6 border-b border-slate-50 dark:border-slate-800">
+        <Card className="border-none shadow-md overflow-hidden bg-white dark:bg-slate-900 rounded-[2rem]">
+          <CardHeader className="flex flex-row items-center justify-between p-8 sm:p-10 border-b border-slate-50 dark:border-slate-800">
             <div>
-              <CardTitle className="text-xl font-black">My Children</CardTitle>
-              <CardDescription>Reading progress and subscription status</CardDescription>
+              <div className="flex items-center gap-3 mb-1">
+                  <div className="h-6 w-6 rounded-lg bg-[#E87154]/20 flex items-center justify-center">
+                      <Baby size={12} className="text-[#E87154]" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Household Management</span>
+              </div>
+              <CardTitle className="text-2xl font-black">My Children</CardTitle>
+              <CardDescription className="text-sm font-medium">Reading progress and subscription status for your lofters</CardDescription>
             </div>
-            <div className="flex gap-2">
-                <Button asChild variant="outline" size="sm" className="h-8">
-                    <Link href="/parent/plans">
-                        <CreditCard className="h-3.5 w-3.5 mr-1.5" /> Plans
+            <div className="flex gap-3">
+                <Button asChild variant="outline" className="h-10 px-5 rounded-xl font-bold border-slate-200 dark:border-slate-800 hover:bg-slate-50 transition-all active:scale-95">
+                    <Link href="/parent/plans" className="flex items-center gap-2">
+                        <CreditCard className="h-4 w-4 text-[#E87154]" /> <span className="hidden sm:inline">View</span> Plans
                     </Link>
                 </Button>
-                <Button asChild size="sm" className="h-8 bg-[#E87154] hover:bg-[#D66144]">
-                    <Link href="/parent/children">
-                        <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Child
+                <Button asChild className="h-10 px-5 rounded-xl font-bold bg-[#E87154] hover:bg-[#D66144] shadow-lg shadow-[#E87154]/20 text-white transition-all active:scale-95">
+                    <Link href="/parent/children" className="flex items-center gap-2">
+                        <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Add</span> Profile
                     </Link>
                 </Button>
             </div>
           </CardHeader>
-          <CardContent className="pt-6">
+          <CardContent className="p-8 sm:p-10">
             {childProfiles.length === 0 ? (
               <div className="text-center py-16 space-y-4">
                 <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -159,7 +165,7 @@ export default function ParentDashboardPage() {
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white">No child profiles yet</h3>
                 <p className="text-slate-500 max-w-xs mx-auto">Add your first child to start their reading journey with Loft.</p>
-                <Button asChild className="bg-[#E87154] hover:bg-[#D66144]">
+                <Button asChild className="h-12 px-8 rounded-2xl font-black bg-[#E87154] hover:bg-[#D66144] shadow-xl shadow-[#E87154]/20 transition-all active:scale-95 text-white">
                   <Link href="/parent/children">Add Your First Child</Link>
                 </Button>
               </div>
@@ -168,62 +174,56 @@ export default function ParentDashboardPage() {
                 {childProfiles.map((child) => (
                   <div
                     key={child.id}
-                    className="group relative flex flex-col p-5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-xl hover:border-[#E87154]/20 transition-all duration-300"
+                    className="group relative flex flex-col p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-2xl hover:border-[#E87154]/20 transition-all duration-500"
                   >
-                    <div className="flex items-center gap-4 mb-4">
+                    <div className="flex items-center gap-4 mb-6">
                         <div
-                          className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg transform group-hover:rotate-3 transition-transform"
+                          className="w-16 h-16 rounded-[1.25rem] flex items-center justify-center text-white font-black text-2xl shadow-lg transform group-hover:rotate-6 transition-transform"
                           style={{ backgroundColor: child.avatarColor || "#E87154" }}
                         >
                           {child.name.substring(0, 2).toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                          <h4 className="font-black text-lg truncate text-slate-900 dark:text-white">{child.name}</h4>
-                          <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                             <BookOpen size={12} /> {child.completedBooks} books completed
+                          <h4 className="font-black text-xl truncate text-slate-900 dark:text-white tracking-tight">{child.name}</h4>
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                             <BookOpen size={14} /> {child.completedBooks} books read
                           </div>
                         </div>
                     </div>
 
-                    <div className="mt-auto space-y-3">
-                        <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Status</span>
-                            {child.activeSubscription ? (
-                              <Badge className="bg-emerald-500/10 text-emerald-600 border-none text-[10px] font-bold">
-                                ✓ {child.activeSubscription.plan.name}
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-amber-600 border-amber-500/20 bg-amber-50 dark:bg-amber-900/20 text-[10px] font-bold">
-                                No Active Plan
-                              </Badge>
-                            )}
-                        </div>
+                    <div className="mt-auto space-y-4">
+                      <div className="flex items-center justify-between px-1">
+                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Subscription</span>
+                          {child.activeSubscription ? (
+                            <Badge className="bg-emerald-100 text-emerald-700 border-none text-[10px] font-black uppercase tracking-widest px-3 h-6 shadow-sm">
+                              {child.activeSubscription.plan.name}
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50 text-[10px] font-black uppercase tracking-widest px-3 h-6">
+                              Inactive
+                            </Badge>
+                          )}
+                      </div>
 
-                        {!child.activeSubscription ? (
-                          <Button asChild variant="outline" className="w-full h-9 text-xs font-bold border-[#E87154]/20 text-[#E87154] hover:bg-[#E87154] hover:text-white group">
-                            <Link href="/parent/plans" className="flex items-center justify-center gap-2">
-                               Get a Plan <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                            </Link>
-                          </Button>
-                        ) : (
-                           <Button asChild variant="ghost" className="w-full h-9 text-xs font-bold text-slate-400 hover:text-slate-600">
-                             <Link href="/parent/children">Manage Profile</Link>
-                           </Button>
-                        )}
+                      {!child.activeSubscription ? (
+                        <Button asChild className="w-full h-12 rounded-2xl bg-[#E87154] hover:bg-[#D66144] font-black shadow-lg shadow-[#E87154]/20 transition-all active:scale-95 text-white group">
+                          <Link href="/parent/plans" className="flex items-center justify-center gap-2">
+                             Choose Plan <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                          </Link>
+                        </Button>
+                      ) : (
+                         <Button asChild variant="ghost" className="w-full h-11 rounded-xl text-xs font-black uppercase tracking-widest text-slate-400 hover:text-[#E87154] hover:bg-[#E87154]/5 transition-all">
+                           <Link href="/parent/children">Manage Access</Link>
+                         </Button>
+                      )}
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-// Helper function for class merging
-function cn(...inputs: any[]) {
-    return inputs.filter(Boolean).join(" ");
-}
-
+                    </div>
+                    ))}
+                    </div>
+                    )}
+                    </CardContent>
+                    </Card>
+                    </div>
+                    </div>
+                    );
+                    }

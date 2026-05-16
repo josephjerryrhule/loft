@@ -63,7 +63,7 @@ export default async function AffiliateDashboardPage() {
       />
       
       {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <PremiumKPICard
           title="Marketing Tools"
           value="Active"
@@ -172,7 +172,6 @@ export default async function AffiliateDashboardPage() {
             ) : (
                 /* Regular Affiliate Quick Actions */
                 <Card className="lg:col-span-2 border-none shadow-md bg-white dark:bg-slate-900 overflow-hidden relative group">
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#E87154]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     <CardHeader className="pb-2">
                         <CardTitle className="text-lg font-bold">Marketing Toolkit</CardTitle>
                         <CardDescription>Resources to help you grow your network</CardDescription>

@@ -61,7 +61,7 @@ export default async function ManagerDashboardPage() {
       />
       
       {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <PremiumKPICard
           title="Marketing Tools"
           value="Active"

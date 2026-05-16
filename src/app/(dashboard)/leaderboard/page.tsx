@@ -31,12 +31,7 @@ export default async function LeaderboardPage() {
   const initialData = await getLeaderboardData({});
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Ambassador Leaderboard</h1>
-        <p className="text-muted-foreground">Track performance and rankings across the platform.</p>
-      </div>
-
+    <div className="space-y-8 animate-in fade-in duration-500">
       <LeaderboardClient initialData={initialData} viewerRole={(session.user as any).role} />
     </div>
   );

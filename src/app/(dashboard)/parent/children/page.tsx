@@ -20,12 +20,14 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -46,7 +48,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, Plus, Pencil, Trash2, Baby } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Baby, BookOpen, Star, Sparkles, ChevronRight, Calendar, User, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import {
   AlertDialog,
@@ -58,11 +60,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { BookOpenCheck } from "lucide-react";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { cn } from "@/lib/utils";
 
 const AVATAR_COLORS = [
-  "#6366f1", "#8b5cf6", "#ec4899", "#f97316",
-  "#22c55e", "#14b8a6", "#3b82f6", "#f59e0b",
+  "#E87154", "#3b82f6", "#10b981", "#8b5cf6",
+  "#f59e0b", "#ec4899", "#14b8a6", "#6366f1",
 ];
 
 const formSchema = z.object({
@@ -73,16 +76,27 @@ const formSchema = z.object({
   avatarColor: z.string().optional(),
 });
 
-function ChildAvatar({ name, color }: { name: string; color: string }) {
+function ChildAvatar({ name, color, size = "md" }: { name: string; color: string; size?: "sm" | "md" | "lg" }) {
   const initials = name
     .split(" ")
+    .filter(Boolean)
     .map((w) => w[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();
+  
+  const sizeClasses = {
+    sm: "w-10 h-10 text-xs",
+    md: "w-16 h-16 text-xl",
+    lg: "w-24 h-24 text-3xl",
+  };
+
   return (
     <div
-      className="w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
+      className={cn(
+        "rounded-[2rem] flex items-center justify-center text-white font-black shadow-lg shadow-black/5 shrink-0 transition-transform duration-500",
+        sizeClasses[size]
+      )}
       style={{ backgroundColor: color }}
     >
       {initials}
@@ -143,7 +157,7 @@ function ChildFormDialog({
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success(child ? "Child profile updated!" : "Child profile created!");
+        toast.success(child ? "Profile updated!" : "New profile ready!");
         onOpenChange(false);
         onSaved();
       }
@@ -154,112 +168,127 @@ function ChildFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{child ? "Edit Child Profile" : "Add a Child"}</DialogTitle>
-          <DialogDescription>
-            {child
-              ? "Update your child's profile details."
-              : "Create a profile for your child to manage their subscriptions and reading."}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-[40rem] p-0 border-none shadow-2xl rounded-[2.5rem] overflow-hidden">
+        <div className="bg-[#FFFAF5] p-10 border-b border-stone-100 relative">
+            <div className="absolute top-0 right-0 p-10 opacity-5 rotate-12">
+                <Baby size={140} />
+            </div>
+            <DialogHeader className="relative z-10">
+                <div className="flex items-center gap-3 mb-2">
+                    <div className="h-6 w-6 rounded-lg bg-[#E87154]/10 flex items-center justify-center">
+                        <User size={12} className="text-[#E87154]" />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-stone-400">Profile Details</span>
+                </div>
+                <DialogTitle className="text-3xl font-black text-slate-900 leading-none">
+                    {child ? "Edit Profile" : "Add a New Member"}
+                </DialogTitle>
+                <DialogDescription className="text-slate-500 font-medium mt-3 text-base italic">
+                    {child ? "Keep your child's information up to date." : "Create a separate space for your child to explore magical stories."}
+                </DialogDescription>
+            </DialogHeader>
+        </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Child's Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. Ama" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Login Username</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. ama_reader" {...field} />
-                  </FormControl>
-                  <p className="text-[0.8rem] text-muted-foreground mt-1">This will be used for the child to log in without an email.</p>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="dateOfBirth"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Date of Birth</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="ageGroup"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Age Group</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="p-10 space-y-8 bg-white overflow-x-hidden">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Full Name</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select age group" />
-                      </SelectTrigger>
+                        <Input placeholder="e.g. Ama" className="h-12 bg-stone-50 border-stone-100 rounded-xl font-bold focus-visible:ring-[#E87154] shadow-sm px-4" {...field} />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="LITTLE_LOFTERS">{getAgeGroupLabel("LITTLE_LOFTERS")}</SelectItem>
-                      <SelectItem value="LOFT_365">{getAgeGroupLabel("LOFT_365")}</SelectItem>
-                      <SelectItem value="BIG_READERS">{getAgeGroupLabel("BIG_READERS")}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
 
-            <div className="space-y-2">
-              <FormLabel>Avatar Color</FormLabel>
-              <div className="flex gap-2 flex-wrap">
+                <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Login Username</FormLabel>
+                    <FormControl>
+                        <Input placeholder="e.g. ama_lofter" className="h-12 bg-stone-50 border-stone-100 rounded-xl font-bold focus-visible:ring-[#E87154] shadow-sm px-4" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                <FormField
+                control={form.control}
+                name="dateOfBirth"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Birth Date</FormLabel>
+                    <FormControl>
+                        <Input type="date" className="h-12 bg-stone-50 border-stone-100 rounded-xl font-bold focus-visible:ring-[#E87154] shadow-sm px-4" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+
+                <FormField
+                control={form.control}
+                name="ageGroup"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Age Group</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger className="h-12 bg-stone-50 border-stone-100 rounded-xl font-black focus:ring-[#E87154] shadow-sm px-4">
+                            <SelectValue placeholder="Select group" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-2xl border-none shadow-2xl p-2">
+                        <SelectItem value="LITTLE_LOFTERS" className="font-bold py-3 rounded-xl">{getAgeGroupLabel("LITTLE_LOFTERS")}</SelectItem>
+                        <SelectItem value="LOFT_365" className="font-bold py-3 rounded-xl">{getAgeGroupLabel("LOFT_365")}</SelectItem>
+                        <SelectItem value="BIG_READERS" className="font-bold py-3 rounded-xl">{getAgeGroupLabel("BIG_READERS")}</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
+
+            <div className="space-y-4">
+              <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Favorite Color</FormLabel>
+              <div className="flex gap-3 flex-wrap p-4 bg-stone-50 rounded-2xl border border-stone-100 shadow-inner">
                 {AVATAR_COLORS.map((color) => (
                   <button
                     key={color}
                     type="button"
                     onClick={() => setSelectedColor(color)}
-                    className={`w-8 h-8 rounded-full border-2 transition-transform ${
-                      selectedColor === color
-                        ? "border-foreground scale-110"
-                        : "border-transparent"
-                    }`}
+                    className={cn(
+                        "w-10 h-10 rounded-xl border-4 transition-all hover:scale-110",
+                        selectedColor === color ? "border-white shadow-md scale-110" : "border-transparent opacity-60"
+                    )}
                     style={{ backgroundColor: color }}
                   />
                 ))}
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={saving}>
-                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {child ? "Save Changes" : "Add Child"}
-              </Button>
-            </div>
+            <DialogFooter className="pt-4">
+              <div className="flex flex-col sm:flex-row gap-4 w-full">
+                <Button variant="ghost" type="button" className="flex-1 h-14 rounded-2xl text-stone-400 font-bold hover:text-slate-900 hover:bg-stone-50 transition-all text-base" onClick={() => onOpenChange(false)}>
+                    Cancel
+                </Button>
+                <Button type="submit" disabled={saving} className="flex-[2] h-14 rounded-2xl bg-[#E87154] hover:bg-[#D66144] font-black shadow-lg shadow-[#E87154]/20 transition-all active:scale-95 text-white text-base gap-3">
+                    {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShieldCheck className="h-5 w-5" />}
+                    {child ? "Update Profile" : "Create Profile"}
+                </Button>
+              </div>
+            </DialogFooter>
           </form>
         </Form>
       </DialogContent>
@@ -299,7 +328,7 @@ export default function ChildrenPage() {
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("Child profile deleted");
+        toast.success("Profile removed");
         setDeleteChildState(null);
         loadChildren();
       }
@@ -315,138 +344,154 @@ export default function ChildrenPage() {
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("Logging you in to child's dashboard...");
+        toast.success("Welcome back! Entering portal...");
         router.push("/child");
       }
     } catch (error) {
-      toast.error("Failed to login as child");
+      toast.error("Access denied");
     } finally {
       setLoggingInAs(null);
     }
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">My Children</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your children's profiles and their reading access.
-          </p>
-        </div>
-        <Button
-          onClick={() => {
-            setEditChild(null);
-            setDialogOpen(true);
-          }}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Add Child
-        </Button>
-      </div>
+    <div className="space-y-8 animate-in fade-in duration-500 pb-10">
+      <PageHeader
+        title="Family Members"
+        subtitle="Manage profiles and reading adventures for everyone in your household."
+        actions={
+            <Button
+                className="bg-[#E87154] hover:bg-[#D66144] shadow-lg shadow-[#E87154]/20 gap-3 h-12 px-8 rounded-2xl font-black text-white transition-all active:scale-95"
+                onClick={() => {
+                    setEditChild(null);
+                    setDialogOpen(true);
+                }}
+            >
+                <Plus size={20} /> Add Member
+            </Button>
+        }
+      />
 
       {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <div className="flex flex-col items-center justify-center h-96 gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-[#E87154]" />
+          <p className="text-xs font-black text-stone-300 uppercase tracking-[0.3em]">Synchronizing Profiles</p>
         </div>
       ) : children.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-16 gap-4">
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-              <Baby className="h-8 w-8 text-muted-foreground" />
+        <Card className="border-2 border-dashed border-stone-200 bg-stone-50/30 rounded-[3rem]">
+          <CardContent className="flex flex-col items-center justify-center py-24 gap-6">
+            <div className="w-24 h-24 rounded-[2.5rem] bg-white shadow-sm flex items-center justify-center border border-stone-100">
+              <Baby className="h-10 w-10 text-stone-300" />
             </div>
-            <div className="text-center">
-              <p className="font-medium text-lg">No children added yet</p>
-              <p className="text-muted-foreground text-sm mt-1">
-                Add a child profile to manage their subscriptions and reading progress.
+            <div className="text-center space-y-2">
+              <h3 className="text-2xl font-black text-slate-900">Your family list is empty</h3>
+              <p className="text-slate-500 font-medium max-w-sm mx-auto">
+                Add a profile for each child so they can have their own personalized bookshelf and reading progress.
               </p>
             </div>
             <Button
+              className="bg-[#E87154] hover:bg-[#D66144] shadow-xl shadow-[#E87154]/20 h-14 px-10 rounded-2xl font-black text-white group transition-all"
               onClick={() => {
                 setEditChild(null);
                 setDialogOpen(true);
               }}
             >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Your First Child
+              Add Your First Child <ChevronRight className="ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {children.map((child) => (
-            <Card key={child.id} className="relative group">
-              <CardHeader className="flex flex-row items-center gap-4 pb-2">
-                <ChildAvatar name={child.name} color={child.avatarColor || "#6366f1"} />
-                <div className="flex-1 min-w-0">
-                  <CardTitle className="text-base truncate">{child.name}</CardTitle>
-                  <CardDescription className="text-xs mt-0.5">
-                    {getAgeGroupLabel(child.ageGroup)}
-                  </CardDescription>
-                  {child.dateOfBirth && (
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Born: {new Date(child.dateOfBirth).toLocaleDateString()}
-                    </p>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>
-                    {child.subscriptions?.length
-                      ? `${child.subscriptions[0].plan.name} Active`
-                      : "No active subscription"}
-                  </span>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => {
-                        setEditChild(child);
-                        setDialogOpen(true);
-                      }}
-                    >
-                      <Pencil className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => setDeleteChildState(child)}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          {children.map((child) => {
+            const hasSub = child.subscriptions?.length > 0;
+            return (
+                <Card key={child.id} className="border-none shadow-md hover:shadow-xl transition-all duration-500 rounded-[2.5rem] bg-white overflow-hidden group">
+                  <div className="p-8">
+                    <div className="flex items-center justify-between mb-8">
+                        <ChildAvatar name={child.name} color={child.avatarColor || "#E87154"} />
+                        <div className="flex flex-col items-end gap-2">
+                            {hasSub ? (
+                                <Badge className="bg-emerald-50 text-emerald-600 border-none px-3 h-6 text-[10px] font-black uppercase tracking-widest">Premium</Badge>
+                            ) : (
+                                <Badge variant="outline" className="border-stone-100 text-stone-400 px-3 h-6 text-[10px] font-black uppercase tracking-widest">Free Basic</Badge>
+                            )}
+                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 rounded-xl hover:bg-stone-50 text-stone-400 hover:text-slate-900"
+                                    onClick={() => {
+                                        setEditChild(child);
+                                        setDialogOpen(true);
+                                    }}
+                                >
+                                    <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 rounded-xl hover:bg-red-50 text-stone-300 hover:text-red-500"
+                                    onClick={() => setDeleteChildState(child)}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
 
-                <div className="flex flex-col gap-2">
-                  <Button 
-                    variant="outline" 
-                    className="w-full h-9 text-sm" 
-                    size="sm"
-                    onClick={() => handleLoginAsChild(child.id)}
-                    disabled={loggingInAs === child.id}
-                  >
-                    {loggingInAs === child.id ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <BookOpenCheck className="mr-2 h-4 w-4" />
-                    )}
-                    Start Reading
-                  </Button>
-                  
-                  {!child.subscriptions?.length && (
-                    <Link href={`/parent/plans?childId=${child.id}`} className="w-full">
-                      <Button className="w-full h-9 text-sm" size="sm">
-                        Buy Subscription
-                      </Button>
-                    </Link>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                    <div className="space-y-1 mb-8">
+                        <h3 className="text-2xl font-black text-slate-900 tracking-tight">{child.name}</h3>
+                        <div className="flex items-center gap-3 text-stone-400 font-bold text-xs uppercase tracking-widest">
+                            <span>{getAgeGroupLabel(child.ageGroup)}</span>
+                            {child.dateOfBirth && (
+                                <>
+                                    <div className="h-1 w-1 rounded-full bg-stone-200" />
+                                    <span>{new Date(child.dateOfBirth).getFullYear()}</span>
+                                </>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="space-y-4 pt-6 border-t border-stone-50">
+                        <Button 
+                            className="w-full h-14 bg-stone-900 hover:bg-black text-white rounded-2xl font-black text-base shadow-lg transition-all active:scale-95 gap-3"
+                            onClick={() => handleLoginAsChild(child.id)}
+                            disabled={loggingInAs === child.id}
+                        >
+                            {loggingInAs === child.id ? (
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                            ) : (
+                                <BookOpen className="h-5 w-5" />
+                            )}
+                            Open Library
+                        </Button>
+                        
+                        {!hasSub && (
+                            <Button asChild variant="outline" className="w-full h-14 border-stone-100 hover:bg-emerald-50 hover:border-emerald-100 hover:text-emerald-700 rounded-2xl font-black text-base transition-all group">
+                                <Link href={`/parent/plans?childId=${child.id}`}>
+                                    Upgrade to Premium <Sparkles size={18} className="ml-2 text-amber-400" />
+                                </Link>
+                            </Button>
+                        )}
+                    </div>
+                  </div>
+                </Card>
+            );
+          })}
+
+          {/* Quick Add Placeholder */}
+          <button 
+            className="border-4 border-dashed border-stone-100 hover:border-[#E87154]/20 rounded-[2.5rem] p-8 flex flex-col items-center justify-center gap-4 transition-all group min-h-[320px]"
+            onClick={() => {
+                setEditChild(null);
+                setDialogOpen(true);
+            }}
+          >
+            <div className="w-16 h-16 rounded-[2rem] bg-stone-50 group-hover:bg-[#E87154]/10 flex items-center justify-center text-stone-300 group-hover:text-[#E87154] transition-all">
+                <Plus size={32} />
+            </div>
+            <span className="font-black text-stone-300 group-hover:text-slate-900 uppercase tracking-widest text-xs transition-colors">Add Member</span>
+          </button>
         </div>
       )}
 
@@ -458,23 +503,23 @@ export default function ChildrenPage() {
       />
 
       <AlertDialog open={!!deleteChild} onOpenChange={(v) => !v && setDeleteChildState(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-[2.5rem] border-none shadow-2xl p-10">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Child Profile?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete <strong>{deleteChild?.name}</strong>'s profile and all
-              associated reading progress. This action cannot be undone.
+            <AlertDialogTitle className="text-2xl font-black text-slate-900">Remove Profile?</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-500 font-medium text-base mt-2">
+              This will permanently delete <strong>{deleteChild?.name}</strong>'s library profile and all
+              their magical reading progress. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="mt-8 gap-4">
+            <AlertDialogCancel className="h-12 rounded-xl font-bold border-stone-100 hover:bg-stone-50">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={deleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black shadow-lg shadow-red-600/20 px-8"
             >
-              {deleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Delete
+              {deleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+              Remove Permanently
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

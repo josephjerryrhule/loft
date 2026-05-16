@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, ShieldAlert, Clock, User, Mail, ExternalLink } from "lucide-react";
+import { CheckCircle2, XCircle, ShieldAlert, Clock, User, Mail, ExternalLink, ShieldCheck, Sparkles, AlertCircle, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -12,6 +12,7 @@ import { headers } from "next/headers";
 import { getSystemSettings } from "@/app/actions/settings";
 
 import { VerificationTimestamp } from "@/components/verify/VerificationTimestamp";
+import { cn } from "@/lib/utils";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -32,23 +33,24 @@ export default async function VerifyPage({ params }: VerifyPageProps) {
 
   if (!rateLimitSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-[#FFFAF5]">
-        <Card className="w-full max-w-md border-orange-200">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <div className="p-3 bg-orange-100 rounded-full">
-                <Clock className="w-12 h-12 text-orange-600" />
-              </div>
+      <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-[#020617]">
+        <Card className="w-full max-w-md border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white dark:bg-slate-900">
+            <div className="bg-amber-500 p-10 text-white relative">
+                <div className="absolute top-0 right-0 p-10 opacity-10 rotate-12">
+                    <Clock size={120} />
+                </div>
+                <CardHeader className="relative z-10 p-0">
+                    <CardTitle className="text-2xl font-black uppercase tracking-tight">Access Throttled</CardTitle>
+                    <CardDescription className="text-white/80 font-medium mt-2">Too many verification requests detected.</CardDescription>
+                </CardHeader>
             </div>
-            <CardTitle className="text-2xl font-bold text-orange-600">TOO MANY REQUESTS</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center space-y-4">
-            <p className="text-slate-600">
-              You have made too many verification requests in a short period.
+          <CardContent className="p-10 text-center space-y-6">
+            <p className="text-slate-500 font-medium leading-relaxed">
+              You have made too many verification requests in a short period. Please wait a moment before attempting again.
             </p>
-            <p className="text-sm text-slate-500">
-              Please wait a moment before trying again.
-            </p>
+            <Button asChild variant="outline" className="h-12 w-full rounded-xl font-bold border-slate-200 dark:border-slate-800">
+                <Link href="/">Return to Home</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -75,29 +77,28 @@ export default async function VerifyPage({ params }: VerifyPageProps) {
   ]);
 
   const logoUrl = settings.logoUrl || "/logo.png";
-  const brandColor = "#E87154";
+  const platformName = settings.platformName || "Loft";
 
-  if (!user || (user.role !== "MANAGER" && user.role !== "AFFILIATE")) {
+  if (!user || (user.role !== "MANAGER" && user.role !== "AFFILIATE" && user.role !== "TEAM_LEADER" && user.role !== "OPERATIONS_MANAGER")) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-[#FFFAF5]">
-        <Card className="w-full max-w-md border-slate-200 shadow-none">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <div className="p-3 bg-slate-100 rounded-full">
-                <ShieldAlert className="w-12 h-12 text-slate-400" />
-              </div>
+      <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-[#020617]">
+        <Card className="w-full max-w-md border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white dark:bg-slate-900">
+            <div className="bg-slate-900 p-10 text-white relative">
+                <div className="absolute top-0 right-0 p-10 opacity-10 rotate-12">
+                    <ShieldAlert size={120} />
+                </div>
+                <CardHeader className="relative z-10 p-0">
+                    <CardTitle className="text-2xl font-black uppercase tracking-tight">Not Authorized</CardTitle>
+                    <CardDescription className="text-slate-400 font-medium mt-2">Identity verification failed.</CardDescription>
+                </CardHeader>
             </div>
-            <CardTitle className="text-2xl font-bold text-slate-900 uppercase tracking-tight">NOT AUTHORIZED</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center space-y-4">
-            <p className="text-slate-600">
-              The ambassador ID <span className="font-mono font-bold text-slate-900">{ambassadorId}</span> could not be verified in our system.
+          <CardContent className="p-10 text-center space-y-6">
+            <p className="text-slate-500 font-medium leading-relaxed">
+              The ambassador ID <span className="font-black text-slate-900 dark:text-white underline decoration-[#E87154]">{ambassadorId}</span> could not be verified in our official records.
             </p>
-            <div className="pt-4">
-              <Button asChild variant="outline" className="w-full border-slate-200 hover:bg-slate-50">
+            <Button asChild variant="outline" className="h-12 w-full rounded-xl font-bold border-slate-200 dark:border-slate-800">
                 <Link href="/">Return to Home</Link>
-              </Button>
-            </div>
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -108,136 +109,165 @@ export default async function VerifyPage({ params }: VerifyPageProps) {
   const isActive = user.status === "ACTIVE" && !isExpired;
   
   const fullName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
-  const roleName = user.role === "MANAGER" ? "Loft Manager" : "Loft Affiliate";
+  const roleDisplay = user.role.replace(/_/g, ' ');
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#FFFAF5]">
-      <div className="mb-8 flex flex-col items-center">
-        <div className="relative w-40 h-16 mb-4">
-          <Image 
-            src={logoUrl} 
-            alt="Platform Logo" 
-            fill 
-            className="object-contain" 
-            priority
-          />
-        </div>
-        <h1 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Official Verification</h1>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-[#020617] transition-colors duration-500">
+       {/* Dynamic Background Elements */}
+       <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-[#E87154]/5 rounded-full blur-[120px]" />
+        <div className="absolute -bottom-[10%] right-[20%] w-[35%] h-[35%] bg-emerald-500/5 rounded-full blur-[110px]" />
       </div>
 
-      <Card className="w-full max-w-md border-slate-100 shadow-sm overflow-hidden rounded-xl">
-        <CardHeader className="pb-2 pt-8">
-          <div className="flex justify-center mb-6">
-            <div className="relative">
-              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white bg-slate-50 flex items-center justify-center shadow-md">
+      <div className="mb-10 flex flex-col items-center relative z-10">
+        <div className="flex items-center gap-4 group">
+            {logoUrl ? (
+                <div className="relative w-12 h-12 p-1.5 bg-white rounded-2xl shadow-xl border border-stone-100 transition-transform group-hover:rotate-6 duration-300">
+                    <img 
+                        src={logoUrl} 
+                        alt={platformName} 
+                        className="object-contain w-full h-full"
+                    />
+                </div>
+            ) : (
+                <div className="h-12 w-12 rounded-2xl bg-[#E87154] flex items-center justify-center text-white shadow-lg">
+                    <Sparkles size={24} />
+                </div>
+            )}
+            <span className="text-3xl font-black tracking-tighter text-slate-900 uppercase">{platformName}</span>
+        </div>
+        <div className="h-8 w-px bg-stone-200 my-4" />
+        <h1 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Official Credential Verification</h1>
+      </div>
+
+      <Card className="w-full max-w-md border-none shadow-2xl overflow-hidden rounded-[2.5rem] bg-white relative z-10">
+        <div className={cn(
+            "p-10 text-white relative",
+            isActive ? "bg-slate-900" : "bg-stone-800"
+        )}>
+          <div className="absolute top-0 right-0 p-10 opacity-10 rotate-12 scale-110">
+              {isActive ? <ShieldCheck size={160} /> : <AlertCircle size={160} />}
+          </div>
+          
+          <div className="relative z-10 flex flex-col items-center">
+            <div className="relative mb-6">
+              <div className="w-32 h-32 rounded-[2rem] overflow-hidden border-4 border-white bg-white flex items-center justify-center shadow-2xl group transition-all duration-500">
                 {user.profilePictureUrl ? (
-                  <Image 
+                  <img 
                     src={user.profilePictureUrl} 
                     alt={fullName} 
-                    fill 
-                    unoptimized
-                    className="object-cover"
+                    className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-700"
                   />
                 ) : (
                   <User className="w-16 h-16 text-slate-200" />
                 )}
               </div>
-              <div className="absolute -bottom-2 right-0">
+              <div className="absolute -bottom-3 -right-3">
                 {isActive ? (
-                  <div className="bg-[#E87154] text-white p-1.5 rounded-full border-4 border-white shadow-sm">
-                    <CheckCircle2 className="w-6 h-6" />
+                  <div className="bg-[#E87154] text-white p-2 rounded-2xl border-4 border-white shadow-xl">
+                    <CheckCircle2 className="w-8 h-8" />
                   </div>
                 ) : (
-                  <div className="bg-slate-400 text-white p-1.5 rounded-full border-4 border-white shadow-sm">
-                    <XCircle className="w-6 h-6" />
+                  <div className="bg-red-500 text-white p-2 rounded-2xl border-4 border-white shadow-xl">
+                    <XCircle className="w-8 h-8" />
                   </div>
                 ) }
               </div>
             </div>
+            
+            <div className="text-center space-y-1">
+                <h2 className="text-3xl font-black tracking-tight text-white">{fullName || "Staff Member"}</h2>
+                <div className="flex items-center justify-center gap-2">
+                    <Badge variant="outline" className="border-white/30 text-white bg-white/10 text-[10px] font-black uppercase tracking-[0.2em] px-3 h-6">
+                        {roleDisplay}
+                    </Badge>
+                </div>
+            </div>
           </div>
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{fullName}</h2>
-            <p className="font-semibold uppercase tracking-wider text-[10px] mt-1" style={{ color: brandColor }}>{roleName}</p>
-          </div>
-        </CardHeader>
+        </div>
 
-        <CardContent className="space-y-6 pt-4">
-          {/* Status Badge */}
+        <CardContent className="p-10 space-y-10">
+          {/* Status Banner */}
           <div className="flex justify-center">
             {isActive ? (
-              <Badge className="bg-[#E87154] text-white hover:bg-[#E87154] border-none px-6 py-2 text-xs font-black tracking-widest flex gap-2 items-center rounded-full">
-                VERIFIED ACTIVE
-              </Badge>
+              <div className="flex items-center gap-3 px-8 py-3 bg-emerald-50 border-2 border-emerald-100 rounded-2xl shadow-sm">
+                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs font-black tracking-[0.3em] text-emerald-700 uppercase">Verified Active</span>
+              </div>
             ) : (
-              <Badge className="bg-slate-900 text-white hover:bg-slate-900 border-none px-6 py-2 text-xs font-black tracking-widest flex gap-2 items-center rounded-full">
-                NOT AUTHORIZED
-              </Badge>
+              <div className="flex items-center gap-3 px-8 py-3 bg-red-50 border-2 border-red-100 rounded-2xl shadow-sm">
+                <div className="h-2 w-2 rounded-full bg-red-500" />
+                <span className="text-xs font-black tracking-[0.3em] text-red-700 uppercase">Access Expired</span>
+              </div>
             )}
           </div>
-{/* Details Grid */}
-<div className="grid grid-cols-1 gap-4 bg-slate-50/50 p-6 rounded-xl border border-slate-100">
-  <div className="flex justify-between items-center">
-    <span className="text-slate-400 text-[10px] uppercase font-bold tracking-tighter">Ambassador ID</span>
-    <span className="font-mono font-bold text-slate-900 text-sm">{user.ambassadorId}</span>
-  </div>
 
-  <div className="flex justify-between items-center border-t border-slate-100 pt-4">
-    <span className="text-slate-400 text-[10px] uppercase font-bold tracking-tighter">
-      {isActive ? 'Valid Until' : 'Expired On'}
-    </span>
-    <span className="font-bold text-slate-900 text-sm">
-      {/* If deactivated, show the date it was last updated (deactivation date) or expiry date */}
-      {!isActive 
-        ? (user.ambassadorExpiry && isExpired 
-            ? format(new Date(user.ambassadorExpiry), "MMM dd, yyyy") 
-            : format(new Date(user.updatedAt), "MMM dd, yyyy"))
-        : (user.ambassadorExpiry 
-            ? format(new Date(user.ambassadorExpiry), "MMM dd, yyyy") 
-            : 'Indefinite')}
-    </span>
-  </div>
-</div>
+          {/* Staff Details */}
+          <div className="bg-stone-50 rounded-[1.5rem] p-8 space-y-6 shadow-inner border-none">
+            <div className="flex justify-between items-center group">
+                <span className="text-slate-400 text-[10px] uppercase font-black tracking-[0.2em] group-hover:text-[#E87154] transition-colors">Staff ID</span>
+                <span className="font-mono font-black text-slate-900 text-base tracking-tighter">{user.ambassadorId}</span>
+            </div>
 
+            <div className="h-px bg-stone-200/50" />
 
-          {/* Verification Timestamp */}
-          <div className="text-center space-y-1 py-2">
-            <p className="text-[9px] uppercase font-black text-slate-300 tracking-[0.3em]">
-              Verified At
-            </p>
-            <VerificationTimestamp />
+            <div className="flex justify-between items-center group">
+                <span className="text-slate-400 text-[10px] uppercase font-black tracking-[0.2em] group-hover:text-[#E87154] transition-colors">
+                {isActive ? 'Valid Until' : 'Expired On'}
+                </span>
+                <span className="font-black text-slate-900 text-base">
+                {!isActive 
+                    ? (user.ambassadorExpiry && isExpired 
+                        ? format(new Date(user.ambassadorExpiry), "MMM dd, yyyy") 
+                        : format(new Date(user.updatedAt), "MMM dd, yyyy"))
+                    : (user.ambassadorExpiry 
+                        ? format(new Date(user.ambassadorExpiry), "MMM dd, yyyy") 
+                        : 'Permanent Role')}
+                </span>
+            </div>
           </div>
 
-          {/* CTA Buttons */}
-          <div className="space-y-3 pt-2">
-            {isActive && user.role === "AFFILIATE" && (
-              <Button asChild className="w-full bg-slate-900 hover:bg-slate-800 text-white shadow-lg h-12 font-bold text-xs uppercase tracking-widest rounded-xl transition-all">
-                <Link href={`/join/customer/${user.inviteCode}`}>
-                  Join as Customer
-                  <ExternalLink className="ml-2 w-4 h-4" />
-                </Link>
-              </Button>
-            )}
-            {isActive && user.role === "MANAGER" && (
-              <Button asChild className="w-full bg-slate-900 hover:bg-slate-800 text-white shadow-lg h-12 font-bold text-xs uppercase tracking-widest rounded-xl transition-all">
-                <Link href={`/join/affiliate/${user.inviteCode}`}>
-                  Join as Affiliate
-                  <ExternalLink className="ml-2 w-4 h-4" />
+          {/* Action Zone */}
+          <div className="space-y-4">
+            {isActive && (user.role === "AFFILIATE" || user.role === "TEAM_LEADER") && (
+              <Button asChild className="w-full h-14 rounded-2xl bg-[#E87154] hover:bg-[#D66144] font-black shadow-xl shadow-[#E87154]/20 transition-all active:scale-95 text-white text-base group">
+                <Link href={`/join/customer/${user.inviteCode}`} className="flex items-center justify-center gap-3">
+                  Visit Library
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
             )}
             
-            <a 
-              href={`mailto:support@landoffairytales.com?subject=Suspicious%20Ambassador%20Report:%20${ambassadorId}&body=I%20would%20like%20to%20report%20suspicious%20activity%20regarding%20ambassador%20${ambassadorId}%20(${fullName}).`}
-              className="block text-center text-[10px] text-slate-300 hover:text-[#E87154] transition-colors font-bold uppercase tracking-widest mt-4"
-            >
-              Report suspicious activity
-            </a>
+            {isActive && (user.role === "MANAGER" || user.role === "OPERATIONS_MANAGER") && (
+              <Button asChild className="w-full h-14 rounded-2xl bg-slate-900 hover:bg-black font-black shadow-xl transition-all active:scale-95 text-white text-base group">
+                <Link href={`/join/affiliate/${user.inviteCode}`} className="flex items-center justify-center gap-3">
+                  Join the Team
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+            )}
+
+            <div className="pt-4 flex flex-col items-center gap-4">
+                <div className="text-center space-y-1">
+                    <p className="text-[9px] uppercase font-black text-slate-300 tracking-[0.4em]">
+                    Verified At
+                    </p>
+                    <VerificationTimestamp />
+                </div>
+
+                <a 
+                    href={`mailto:support@loft.com?subject=Verification%20Query:%20${ambassadorId}`}
+                    className="text-[9px] font-black text-slate-400 hover:text-[#E87154] transition-colors uppercase tracking-[0.2em] underline underline-offset-4"
+                >
+                    Report an Issue
+                </a>
+            </div>
           </div>
         </CardContent>
       </Card>
       
-      <p className="mt-8 text-slate-300 text-[10px] text-center max-w-[240px] font-bold leading-relaxed uppercase tracking-tighter">
-        Official authorized verification page. All rights reserved.
+      <p className="mt-12 text-slate-400 text-[10px] text-center max-w-[280px] font-bold leading-relaxed uppercase tracking-[0.3em] opacity-50">
+        Loft Verification Node. All rights reserved.
       </p>
     </div>
   );

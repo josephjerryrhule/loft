@@ -8,14 +8,13 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
 import { resetPassword, validateResetToken } from "@/app/actions/auth";
-import { ArrowLeft, Lock, CheckCircle, XCircle, Loader2 } from "lucide-react";
-import { passwordResetSchema } from "@/lib/validations";
+import { ArrowLeft, Lock, CheckCircle2, XCircle, Loader2, ShieldCheck, Save, Sparkles, ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-// Local schema for form (since we don't include token in the form)
 const resetFormSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string(),
@@ -73,6 +72,7 @@ function ResetPasswordForm() {
         toast.error(result.error);
       } else {
         setIsSubmitted(true);
+        toast.success("Security keys updated!");
       }
     } catch {
       toast.error("Something went wrong. Please try again.");
@@ -81,156 +81,163 @@ function ResetPasswordForm() {
     }
   }
 
-  // Loading state
   if (isValidating) {
     return (
-      <div className="flex justify-center items-center p-4 w-full">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="flex flex-col items-center gap-4">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              <p className="text-muted-foreground">Validating reset link...</p>
+        <Card className="border border-stone-100 shadow-md overflow-hidden rounded-[2rem] bg-white w-full max-w-md">
+            <div className="flex flex-col items-center justify-center h-96 gap-4">
+                <Loader2 className="h-12 w-12 animate-spin text-[#E87154]" />
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-stone-400">Verifying Link</p>
             </div>
-          </CardContent>
         </Card>
-      </div>
     );
   }
 
-  // Invalid token state
   if (!isValid && !isSubmitted) {
     return (
-      <div className="flex justify-center items-center p-4 w-full">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-              <XCircle className="h-6 w-6 text-red-600" />
+        <Card className="border border-stone-100 shadow-md overflow-hidden rounded-[2rem] bg-white w-full max-w-md">
+            <div className="p-10 pb-0">
+                <CardHeader className="p-0">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="h-6 w-6 rounded-lg bg-red-50 flex items-center justify-center">
+                            <XCircle size={12} className="text-red-600" />
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-stone-400">Access Denied</span>
+                    </div>
+                    <CardTitle className="text-3xl font-bold leading-none tracking-tight text-stone-900">Invalid Link</CardTitle>
+                    <CardDescription className="text-stone-500 font-medium mt-4 text-base">
+                        {errorMessage || "This password reset link is invalid or has expired."}
+                    </CardDescription>
+                </CardHeader>
             </div>
-            <CardTitle>Invalid Reset Link</CardTitle>
-            <CardDescription>
-              {errorMessage || "This password reset link is invalid or has expired."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground text-center">
-              Password reset links expire after 1 hour for security reasons.
-            </p>
-            <div className="flex flex-col gap-2">
-              <Link href="/auth/forgot-password">
-                <Button className="w-full">Request New Reset Link</Button>
-              </Link>
-              <Link href="/auth/login">
-                <Button variant="ghost" className="w-full">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Login
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
+
+            <CardContent className="p-10 space-y-6 text-center sm:text-left">
+                <div className="bg-stone-50 rounded-xl p-6 border border-stone-100">
+                    <p className="text-sm text-stone-600 font-medium leading-relaxed italic">
+                        For your protection, reset links expire after <span className="font-bold text-stone-900">1 hour</span>.
+                    </p>
+                </div>
+                
+                <div className="flex flex-col gap-3">
+                    <Button asChild className="h-12 rounded-xl bg-[#E87154] hover:bg-[#D66144] font-bold shadow-sm transition-all active:scale-95 text-white">
+                        <Link href="/auth/forgot-password">Request New Link</Link>
+                    </Button>
+                    <Button asChild variant="ghost" className="h-12 rounded-xl font-bold text-stone-400 hover:text-stone-900 transition-all gap-2">
+                        <Link href="/auth/login">
+                            <ArrowLeft size={18} />
+                            Back to Sign In
+                        </Link>
+                    </Button>
+                </div>
+            </CardContent>
         </Card>
-      </div>
     );
   }
 
-  // Success state
   if (isSubmitted) {
     return (
-      <div className="flex justify-center items-center p-4 w-full">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-              <CheckCircle className="h-6 w-6 text-green-600" />
+        <Card className="border border-stone-100 shadow-md overflow-hidden rounded-[2rem] bg-white w-full max-w-md">
+            <div className="p-10 pb-0">
+                <CardHeader className="p-0 text-center sm:text-left">
+                    <div className="flex items-center justify-center sm:justify-start gap-3 mb-2">
+                        <div className="h-6 w-6 rounded-lg bg-emerald-50 flex items-center justify-center">
+                            <ShieldCheck size={12} className="text-emerald-600" />
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-stone-400">Security Updated</span>
+                    </div>
+                    <CardTitle className="text-3xl font-bold leading-none tracking-tight text-stone-900">Success!</CardTitle>
+                    <CardDescription className="text-stone-500 font-medium mt-4 text-base">
+                        Your password has been updated successfully.
+                    </CardDescription>
+                </CardHeader>
             </div>
-            <CardTitle>Password Reset Successful</CardTitle>
-            <CardDescription>
-              Your password has been changed successfully.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button className="w-full" onClick={() => router.push("/auth/login")}>
-              Log In with New Password
-            </Button>
-          </CardContent>
+
+            <CardContent className="p-10">
+                <Button className="w-full h-12 rounded-xl bg-stone-900 hover:bg-black font-bold shadow-sm transition-all active:scale-95 text-white group text-base" onClick={() => router.push("/auth/login")}>
+                    Log In Now
+                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+            </CardContent>
         </Card>
-      </div>
     );
   }
 
-  // Reset form
   return (
-    <div className="flex justify-center items-center p-4 w-full">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-            <Lock className="h-6 w-6" />
-          </div>
-          <CardTitle>Reset Your Password</CardTitle>
-          <CardDescription>
-            Enter your new password below.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>New Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+    <Card className="border border-stone-100 shadow-md overflow-hidden rounded-[2rem] bg-white w-full max-w-md">
+      <div className="p-10 pb-0">
+          <CardHeader className="p-0">
+            <div className="flex items-center gap-3 mb-2">
+                <div className="h-6 w-6 rounded-lg bg-[#E87154]/10 flex items-center justify-center">
+                    <ShieldCheck size={12} className="text-[#E87154]" />
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-stone-400">Security Update</span>
+            </div>
+            <CardTitle className="text-3xl font-bold leading-none tracking-tight text-stone-900">Set New Password</CardTitle>
+            <CardDescription className="text-stone-500 font-medium mt-4 text-base">
+                Create a strong, unique password to protect your account.
+            </CardDescription>
+          </CardHeader>
+      </div>
 
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <CardContent className="p-10">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500 ml-1">New Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="••••••••" className="h-12 bg-stone-50 border-stone-100 rounded-xl font-medium focus-visible:ring-[#E87154] px-5" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Resetting..." : "Reset Password"}
-              </Button>
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500 ml-1">Verify Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="••••••••" className="h-12 bg-stone-50 border-stone-100 rounded-xl font-medium focus-visible:ring-[#E87154] px-5" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <Link href="/auth/login">
-                <Button variant="ghost" className="w-full">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Login
+            <div className="space-y-3 pt-2">
+                <Button type="submit" className="w-full h-12 rounded-xl bg-[#E87154] hover:bg-[#D66144] font-bold shadow-sm transition-all active:scale-95 text-white text-base group" disabled={isLoading}>
+                    {isLoading ? <Loader2 className="mr-3 h-5 w-5 animate-spin" /> : <Save className="mr-3 h-5 w-5" />}
+                    {isLoading ? "Updating..." : "Update Password"}
+                    {!isLoading && <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />}
                 </Button>
-              </Link>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-    </div>
+
+                <Button asChild variant="ghost" className="w-full h-12 rounded-xl font-bold text-stone-400 hover:text-stone-900 transition-all gap-2">
+                    <Link href="/auth/login">
+                        <ArrowLeft size={18} />
+                        Back to Sign In
+                    </Link>
+                </Button>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 }
 
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
-      <div className="flex justify-center items-center p-4 w-full">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="flex flex-col items-center gap-4">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              <p className="text-muted-foreground">Loading...</p>
+        <Card className="border border-stone-100 shadow-md overflow-hidden rounded-[2rem] bg-white w-full max-w-md">
+            <div className="flex items-center justify-center h-96">
+                <Loader2 className="h-10 w-10 animate-spin text-[#E87154]" />
             </div>
-          </CardContent>
         </Card>
-      </div>
     }>
       <ResetPasswordForm />
     </Suspense>

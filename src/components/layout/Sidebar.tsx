@@ -133,7 +133,7 @@ function NavContent({ userRole, setOpen, logoUrl, platformName, hasChildren }: {
     const links = getLinks(userRole, hasChildren);
 
     return (
-        <div className="flex flex-col h-full bg-[#0F172A] text-slate-300 w-full p-4 border-r border-white/5 shadow-2xl">
+        <div className="flex flex-col h-full bg-[#1C1917] text-stone-300 w-full p-4 border-r border-white/5 shadow-md">
           <div className="mb-10 px-4">
             {logoUrl ? (
               <div className="flex items-center gap-3">
@@ -175,14 +175,14 @@ function NavContent({ userRole, setOpen, logoUrl, platformName, hasChildren }: {
                     className={cn(
                       "w-full justify-start gap-3 relative overflow-hidden transition-all duration-300 h-11 px-4 rounded-lg",
                       isActive 
-                        ? "bg-white/10 text-white font-bold shadow-lg border border-white/10" 
-                        : "text-slate-400 hover:text-white hover:bg-white/5 font-medium"
+                        ? "bg-white/10 text-white font-bold border border-white/10" 
+                        : "text-stone-400 hover:text-white hover:bg-white/5 font-medium"
                     )}
                   >
                     {isActive && (
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#E87154] rounded-r-full shadow-[0_0_15px_#E87154] z-10" />
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#E87154] rounded-r-full z-10" />
                     )}
-                    <Icon size={20} className={cn("transition-all duration-300 shrink-0", isActive ? "text-[#E87154] scale-110" : "text-slate-500 group-hover:text-white group-hover:scale-110")} />
+                    <Icon size={20} className={cn("transition-all duration-300 shrink-0", isActive ? "text-[#E87154] scale-110" : "text-stone-500 group-hover:text-white group-hover:scale-110")} />
                     <span className="text-sm tracking-wide">{link.label}</span>
                   </Button>
                 </Link>
@@ -193,7 +193,7 @@ function NavContent({ userRole, setOpen, logoUrl, platformName, hasChildren }: {
           <div className="pt-4 border-t border-white/5">
             <Button
                 variant="ghost"
-                className="w-full justify-start gap-3 text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                className="w-full justify-start gap-3 text-stone-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                 onClick={() => signOut({ callbackUrl: "/auth/login" })}
             >
                 <LogOut size={18} />
@@ -206,7 +206,7 @@ function NavContent({ userRole, setOpen, logoUrl, platformName, hasChildren }: {
 
 export function Sidebar({ userRole, logoUrl, platformName, hasChildren }: SidebarProps) {
   return (
-    <div className="hidden md:flex flex-col h-full bg-[#0F172A] text-slate-300 w-64 border-r border-white/5">
+    <div className="hidden md:flex flex-col h-full bg-[#1C1917] text-stone-300 w-64 border-r border-white/5">
          <NavContent userRole={userRole} logoUrl={logoUrl} platformName={platformName} hasChildren={hasChildren} />
     </div>
   );
@@ -218,11 +218,11 @@ export function MobileNav({ userRole, logoUrl, platformName, hasChildren }: Side
     return (
         <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden text-slate-300 hover:text-white">
+                <Button variant="ghost" size="icon" className="md:hidden text-stone-300 hover:text-white">
                     <Menu />
                 </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="p-0 border-r-0 bg-[#0F172A] w-72 text-white">
+            <SheetContent side="left" className="p-0 border-r-0 bg-[#1C1917] w-72 text-white">
                  <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                  <NavContent userRole={userRole} setOpen={setOpen} logoUrl={logoUrl} platformName={platformName} hasChildren={hasChildren} />
             </SheetContent>

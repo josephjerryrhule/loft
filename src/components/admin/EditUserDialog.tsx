@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Role, UserStatus } from "@/lib/types"; // Ensure these match schema strings
+import { Role } from "@/lib/types"; 
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,7 @@ import { PhoneInputComponent } from "@/components/ui/phone-input";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FileUpload } from "@/components/ui/file-upload";
+import { UserCog, Save, ShieldCheck } from "lucide-react";
 
 const editUserSchema = z.object({
   firstName: z.string().min(2),
@@ -102,28 +103,33 @@ export function EditUserDialog({ user, open, onOpenChange, managers = [], teamLe
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Edit User</DialogTitle>
-          <DialogDescription>
-            Update user details.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-[50rem] w-[95vw] max-h-[95vh] overflow-y-auto border-none shadow-2xl p-0 rounded-2xl sm:rounded-[2rem]">
+        <div className="bg-[#FFFAF5] p-6 sm:p-10 border-b border-stone-100 relative">
+            <div className="absolute top-0 right-0 p-6 sm:p-10 opacity-5 rotate-12">
+                <UserCog className="w-24 h-24 sm:w-36 sm:h-36 text-stone-900" />
+            </div>
+            <DialogHeader className="relative z-10">
+                <DialogTitle className="text-2xl sm:text-3xl font-black text-slate-900 leading-none">Personal Info</DialogTitle>
+                <DialogDescription className="text-slate-500 font-medium mt-3 text-sm sm:text-base">
+                    Update their account details and roles.
+                </DialogDescription>
+            </DialogHeader>
+        </div>
         
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 sm:p-10 space-y-6 sm:space-y-8 bg-white dark:bg-slate-900 overflow-x-hidden">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <FormField control={form.control} name="firstName" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>First Name</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">First Name</FormLabel>
+                    <FormControl><Input placeholder="John" className="h-11 sm:h-12 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold focus-visible:ring-[#E87154] shadow-inner px-4" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="lastName" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Last Name</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Last Name</FormLabel>
+                    <FormControl><Input placeholder="Doe" className="h-11 sm:h-12 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold focus-visible:ring-[#E87154] shadow-inner px-4" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -131,15 +137,15 @@ export function EditUserDialog({ user, open, onOpenChange, managers = [], teamLe
               
               <FormField control={form.control} name="email" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
+                  <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Email Address</FormLabel>
+                  <FormControl><Input placeholder="john@example.com" className="h-11 sm:h-12 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold focus-visible:ring-[#E87154] shadow-inner px-4" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
 
               <FormField control={form.control} name="phoneNumber" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>WhatsApp Number</FormLabel>
+                  <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">WhatsApp Number</FormLabel>
                   <FormControl>
                     <PhoneInputComponent
                       placeholder="Enter WhatsApp number"
@@ -151,25 +157,25 @@ export function EditUserDialog({ user, open, onOpenChange, managers = [], teamLe
                 </FormItem>
               )} />
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pt-2">
                 <FormField control={form.control} name="role" render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Role</FormLabel>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">System Role</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-11 sm:h-12 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold focus:ring-[#E87154] shadow-inner px-4 text-sm sm:text-base">
                             <SelectValue placeholder="Select a role" />
                         </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
-                        <SelectItem value={Role.CUSTOMER}>Customer</SelectItem>
-                        <SelectItem value={Role.PARENT}>Parent</SelectItem>
-                        <SelectItem value={Role.AFFILIATE}>Affiliate</SelectItem>
-                        <SelectItem value={Role.TEAM_LEADER}>Team Leader</SelectItem>
-                        <SelectItem value={Role.MANAGER}>Manager</SelectItem>
-                        <SelectItem value={Role.OPERATIONS_MANAGER}>Operations Manager</SelectItem>
-                        <SelectItem value={Role.ADMIN}>Admin</SelectItem>
-                        <SelectItem value={Role.FINANCE}>Finance</SelectItem>
+                        <SelectContent className="rounded-2xl border-none shadow-2xl p-2">
+                        <SelectItem value={Role.CUSTOMER} className="font-bold py-2 sm:py-3 rounded-xl">Customer Account</SelectItem>
+                        <SelectItem value={Role.PARENT} className="font-bold py-2 sm:py-3 rounded-xl">Parent Account</SelectItem>
+                        <SelectItem value={Role.AFFILIATE} className="font-bold py-2 sm:py-3 rounded-xl">Affiliate Staff</SelectItem>
+                        <SelectItem value={Role.TEAM_LEADER} className="font-bold py-2 sm:py-3 rounded-xl text-[#E87154]">Team Leader</SelectItem>
+                        <SelectItem value={Role.MANAGER} className="font-bold py-2 sm:py-3 rounded-xl text-blue-600">Platform Manager</SelectItem>
+                        <SelectItem value={Role.OPERATIONS_MANAGER} className="font-bold py-2 sm:py-3 rounded-xl text-purple-600">Operations Lead</SelectItem>
+                        <SelectItem value={Role.ADMIN} className="font-bold py-2 sm:py-3 rounded-xl text-indigo-600">Administrator</SelectItem>
+                        <SelectItem value={Role.FINANCE} className="font-bold py-2 sm:py-3 rounded-xl text-emerald-600">Finance Control</SelectItem>
                         </SelectContent>
                     </Select>
                     <FormMessage />
@@ -178,17 +184,17 @@ export function EditUserDialog({ user, open, onOpenChange, managers = [], teamLe
 
                  <FormField control={form.control} name="status" render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Status</FormLabel>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Account Status</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-11 sm:h-12 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold focus:ring-[#E87154] shadow-inner px-4 text-sm sm:text-base">
                             <SelectValue placeholder="Select status" />
                         </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
-                        <SelectItem value="ACTIVE">Active</SelectItem>
-                        <SelectItem value="SUSPENDED">Suspended</SelectItem>
-                        <SelectItem value="BANNED">Banned</SelectItem>
+                        <SelectContent className="rounded-2xl border-none shadow-2xl p-2">
+                        <SelectItem value="ACTIVE" className="font-bold py-2 sm:py-3 rounded-xl text-emerald-600">Active</SelectItem>
+                        <SelectItem value="SUSPENDED" className="font-bold py-2 sm:py-3 rounded-xl text-amber-600">Suspended</SelectItem>
+                        <SelectItem value="BANNED" className="font-bold py-2 sm:py-3 rounded-xl text-red-600">Banned</SelectItem>
                         </SelectContent>
                     </Select>
                     <FormMessage />
@@ -197,8 +203,8 @@ export function EditUserDialog({ user, open, onOpenChange, managers = [], teamLe
               </div>
 
               {[Role.MANAGER, Role.AFFILIATE, Role.TEAM_LEADER, Role.OPERATIONS_MANAGER].includes(form.watch("role") as Role) && (
-                <div className="space-y-4 border-t pt-4 mt-2">
-                  <div className="flex justify-center pb-2">
+                <div className="space-y-6 border-t pt-8 mt-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                  <div className="flex justify-center pb-4">
                     <FileUpload 
                       label="Ambassador Photo" 
                       name="profilePictureUrl" 
@@ -208,41 +214,38 @@ export function EditUserDialog({ user, open, onOpenChange, managers = [], teamLe
                       variant="avatar"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField control={form.control} name="ambassadorId" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Ambassador ID</FormLabel>
-                        <FormControl><Input {...field} value={field.value || ""} placeholder="Auto-generated" disabled className="bg-slate-50 cursor-not-allowed" /></FormControl>
-                        <FormDescription className="text-[10px]">Managed by system</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                    <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Ambassador ID</FormLabel>
+                        <Input value={user.ambassadorId || ""} placeholder="Auto-generated" disabled className="h-11 sm:h-12 bg-slate-100 dark:bg-slate-800/50 border-none rounded-xl font-black cursor-not-allowed opacity-70 px-4" />
+                        <FormDescription className="text-[10px] font-bold text-slate-400 ml-1">System Managed</FormDescription>
+                    </FormItem>
                     <FormField control={form.control} name="ambassadorExpiry" render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Ambassador Expiry</FormLabel>
-                        <FormControl><Input type="date" {...field} value={field.value || ""} /></FormControl>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Expiry Date</FormLabel>
+                        <FormControl><Input type="date" className="h-11 sm:h-12 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold focus-visible:ring-[#E87154] shadow-inner px-4 text-sm sm:text-base" {...field} value={field.value || ""} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
                   </div>
 
                   {/* Role-based Hierarchy Assignments */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-6">
                     {/* Manager Role -> Assigned Operations Manager */}
                     {form.watch("role") === Role.MANAGER && (
                       <FormField control={form.control} name="managerId" render={({ field }) => (
-                        <FormItem className="col-span-2">
-                          <FormLabel>Assigned Operations Manager</FormLabel>
+                        <FormItem className="animate-in slide-in-from-top-2 duration-300">
+                          <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Assigned Operations Manager</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="h-11 sm:h-12 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold focus:ring-[#E87154] shadow-inner px-4 text-sm sm:text-base">
                                 <SelectValue placeholder="Select Operations Manager" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent>
-                              <SelectItem value="none">No Operations Manager</SelectItem>
+                            <SelectContent className="rounded-2xl border-none shadow-2xl p-2">
+                              <SelectItem value="none" className="italic opacity-70 py-2 sm:py-3 rounded-xl">No Operations Manager</SelectItem>
                               {operationsManagers.map(m => (
-                                <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                                <SelectItem key={m.id} value={m.id} className="font-bold py-2 sm:py-3 rounded-xl">{m.name}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -254,18 +257,18 @@ export function EditUserDialog({ user, open, onOpenChange, managers = [], teamLe
                     {/* Team Leader Role -> Assigned Manager */}
                     {form.watch("role") === Role.TEAM_LEADER && (
                       <FormField control={form.control} name="managerId" render={({ field }) => (
-                        <FormItem className="col-span-2">
-                          <FormLabel>Assigned Manager</FormLabel>
+                        <FormItem className="animate-in slide-in-from-top-2 duration-300">
+                          <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Assigned Manager</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="h-11 sm:h-12 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold focus:ring-[#E87154] shadow-inner px-4 text-sm sm:text-base">
                                 <SelectValue placeholder="Select Manager" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent>
-                              <SelectItem value="none">No Manager</SelectItem>
+                            <SelectContent className="rounded-2xl border-none shadow-2xl p-2">
+                              <SelectItem value="none" className="italic opacity-70 py-2 sm:py-3 rounded-xl">No Manager</SelectItem>
                               {managers.map(m => (
-                                <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                                <SelectItem key={m.id} value={m.id} className="font-bold py-2 sm:py-3 rounded-xl">{m.name}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -276,20 +279,20 @@ export function EditUserDialog({ user, open, onOpenChange, managers = [], teamLe
 
                     {/* Affiliate Role -> Assigned Manager & Team Leader */}
                     {form.watch("role") === Role.AFFILIATE && (
-                      <>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 animate-in slide-in-from-top-2 duration-300">
                         <FormField control={form.control} name="managerId" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Assigned Manager</FormLabel>
+                            <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Assigned Manager</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
                               <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger className="h-11 sm:h-12 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold focus:ring-[#E87154] shadow-inner px-4 text-sm sm:text-base">
                                   <SelectValue placeholder="Select Manager" />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent>
-                                <SelectItem value="none">No Manager</SelectItem>
+                              <SelectContent className="rounded-2xl border-none shadow-2xl p-2">
+                                <SelectItem value="none" className="italic opacity-70 py-2 sm:py-3 rounded-xl">No Manager</SelectItem>
                                 {managers.map(m => (
-                                  <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                                  <SelectItem key={m.id} value={m.id} className="font-bold py-2 sm:py-3 rounded-xl">{m.name}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
@@ -299,31 +302,34 @@ export function EditUserDialog({ user, open, onOpenChange, managers = [], teamLe
 
                         <FormField control={form.control} name="teamLeaderId" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Assigned Team Leader</FormLabel>
+                            <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Team Leader</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
                               <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger className="h-11 sm:h-12 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold focus:ring-[#E87154] shadow-inner px-4 text-sm sm:text-base">
                                   <SelectValue placeholder="Select Team Leader" />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent>
-                                <SelectItem value="none">No Team Leader</SelectItem>
+                              <SelectContent className="rounded-2xl border-none shadow-2xl p-2">
+                                <SelectItem value="none" className="italic opacity-70 py-2 sm:py-3 rounded-xl">No Team Leader</SelectItem>
                                 {teamLeaders.map(tl => (
-                                  <SelectItem key={tl.id} value={tl.id}>{tl.name}</SelectItem>
+                                  <SelectItem key={tl.id} value={tl.id} className="font-bold py-2 sm:py-3 rounded-xl">{tl.name}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
                             <FormMessage />
                           </FormItem>
                         )} />
-                      </>
+                      </div>
                     )}
                   </div>
                 </div>
               )}
 
-              <div className="flex justify-end pt-2">
-                 <Button type="submit">Save Changes</Button>
+              <div className="flex justify-end pt-4 sm:pt-6">
+                 <Button type="submit" className="w-full h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-[#E87154] hover:bg-[#D66144] font-black shadow-xl shadow-[#E87154]/20 transition-all active:scale-95 text-white text-sm sm:text-base">
+                    <Save className="mr-2 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6" />
+                    Save Changes
+                 </Button>
               </div>
             </form>
           </Form>

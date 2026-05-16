@@ -27,54 +27,65 @@ export function PremiumKPICard({
   className,
 }: PremiumKPICardProps) {
   const themes = {
-    primary: "from-[#E87154] to-[#f09c86] text-white",
-    success: "from-emerald-500 to-teal-400 text-white",
-    warning: "from-amber-500 to-orange-400 text-white",
-    info: "from-blue-500 to-indigo-400 text-white",
-    white: "bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-none shadow-md",
+    primary: "bg-[#FFFAF5] text-slate-900 border border-[#E87154]/20",
+    success: "bg-[#F5F8F5] text-slate-900 border border-[#7C9070]/20",
+    warning: "bg-amber-50 text-slate-900 border border-amber-200",
+    info: "bg-slate-50 text-slate-900 border border-slate-200",
+    white: "bg-white text-slate-900 border border-stone-100 shadow-sm",
   };
 
-  const isGradient = theme !== "white";
+  const isThemed = theme !== "white";
 
   return (
     <Card
       className={cn(
-        "relative overflow-hidden transition-all duration-300 hover:shadow-lg group",
-        isGradient ? cn("bg-gradient-to-br border-none shadow-xl", themes[theme]) : themes[theme],
+        "relative overflow-hidden transition-all duration-300 hover:shadow-md group rounded-3xl",
+        themes[theme],
         className
       )}
     >
       {Icon && (
         <div
           className={cn(
-            "absolute top-0 right-0 p-4 opacity-10 transform translate-x-2 -translate-y-2 group-hover:scale-110 transition-transform",
-            isGradient ? "text-white" : "text-slate-900 dark:text-white"
+            "absolute top-0 right-0 p-6 opacity-10 transform translate-x-2 -translate-y-2 group-hover:scale-110 transition-transform",
+            theme === "primary" ? "text-[#E87154]" :
+            theme === "success" ? "text-[#7C9070]" :
+            theme === "warning" ? "text-amber-500" :
+            "text-slate-500"
           )}
         >
           <Icon size={80} />
         </div>
       )}
-      <CardHeader className="pb-2">
-        <CardTitle className={cn("text-sm font-medium", isGradient ? "opacity-90" : "text-slate-500 dark:text-slate-400")}>
+      <CardHeader className="pb-3 pt-6 px-6">
+        <CardTitle className={cn(
+            "text-[10px] font-black uppercase tracking-[0.2em]", 
+            theme === "primary" ? "text-[#E87154]" :
+            theme === "success" ? "text-[#7C9070]" :
+            theme === "warning" ? "text-amber-600" :
+            "text-slate-400"
+        )}>
           {title}
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="text-3xl font-black">{value}</div>
+      <CardContent className="px-6 pb-6 pt-0 relative z-10">
+        <div className="text-3xl font-black tracking-tighter text-slate-900">{value}</div>
         {description && (
-          <p className={cn("text-xs mt-1", isGradient ? "opacity-80" : "text-slate-400")}>
+          <p className="text-[11px] mt-1.5 font-bold uppercase tracking-widest text-slate-500">
             {description}
           </p>
         )}
         {trend && (
           <div
             className={cn(
-              "mt-2 flex items-center text-xs font-medium w-fit px-2 py-0.5 rounded-full",
-              isGradient ? "bg-white/20" : "bg-slate-100 dark:bg-slate-800"
+              "mt-4 flex items-center text-[10px] font-black uppercase tracking-widest w-fit px-3 py-1.5 rounded-lg shadow-sm transition-all border",
+              theme === "primary" ? "bg-white text-[#E87154] border-[#E87154]/20" :
+              theme === "success" ? "bg-white text-[#7C9070] border-[#7C9070]/20" :
+              "bg-white text-slate-500 border-slate-200"
             )}
           >
-            <span className="mr-1">{trend.value}</span>
-            <span className={isGradient ? "opacity-80" : "text-slate-500"}>{trend.label}</span>
+            <span className={cn("mr-1.5", trend.type === "up" ? "text-emerald-500" : trend.type === "down" ? "text-red-500" : "")}>{trend.value}</span>
+            <span className="opacity-70">{trend.label}</span>
           </div>
         )}
       </CardContent>

@@ -5,13 +5,17 @@ import { getFinancePayoutRequests, financeApprovePayout, financeMarkPayoutPaid, 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, CheckCircle2, XCircle, Wallet, Clock, Download } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, Wallet, Clock, Download, ArrowUpRight, Search, ShieldCheck, DollarSign, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
+import { cn } from "@/lib/utils";
 
 function exportToCSV(requests: any[]) {
   const headers = ["Ambassador", "Role", "Amount (GHS)", "Status", "Requested", "Processed", "Notes"];
@@ -88,7 +92,7 @@ export default function PayoutRequestsPage() {
   if (loading && !data) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#E87154]" />
       </div>
     );
   }
@@ -96,208 +100,245 @@ export default function PayoutRequestsPage() {
   const { requests = [], summary = {} } = data || {};
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Payout Requests</h1>
-          <p className="text-muted-foreground mt-1">Review and issue payouts to ambassadors and managers</p>
-        </div>
-        <Button onClick={() => exportToCSV(requests)} variant="outline" className="gap-2">
-          <Download className="h-4 w-4" /> Export CSV
-        </Button>
-      </div>
+    <div className="space-y-8 animate-in fade-in duration-500 pb-10">
+      <PageHeader
+        title="Payout Requests"
+        subtitle="Review, authorize, and verify commission disbursements for the ambassador network"
+        actions={
+          <Button 
+            onClick={() => exportToCSV(requests)} 
+            variant="outline" 
+            className="h-12 px-8 rounded-2xl font-black border-2 border-slate-100 dark:border-slate-800 hover:bg-slate-50 transition-all active:scale-95 gap-3"
+          >
+            <Download className="h-5 w-5" /> Export Requests
+          </Button>
+        }
+      />
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="border-l-4 border-l-amber-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Clock className="h-4 w-4" /> Pending
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-amber-600">{summary.totalPending ?? 0}</div>
-            <p className="text-xs text-muted-foreground">
-              GHS {(summary.amountPending ?? 0).toFixed(2)} outstanding
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Approved</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{summary.totalApproved ?? 0}</div>
-            <p className="text-xs text-muted-foreground">Ready to pay</p>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4" /> Paid Out
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{summary.totalPaid ?? 0}</div>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-slate-400">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Wallet className="h-4 w-4" /> Total Requests
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{requests.length}</div>
-          </CardContent>
-        </Card>
+        <PremiumKPICard
+          title="Pending Queue"
+          value={summary.totalPending ?? 0}
+          description={`GHS ${(summary.amountPending ?? 0).toLocaleString()} total`}
+          icon={Clock}
+          theme="warning"
+          trend={{ value: "Review", label: "Required", type: "neutral" }}
+        />
+        <PremiumKPICard
+          title="Approved (Ready)"
+          value={summary.totalApproved ?? 0}
+          description="Awaiting disbursement"
+          icon={ShieldCheck}
+          theme="info"
+        />
+        <PremiumKPICard
+          title="Settled (Paid)"
+          value={summary.totalPaid ?? 0}
+          description="Successfully disbursed"
+          icon={CheckCircle2}
+          theme="success"
+          trend={{ value: "Finalized", label: "Complete", type: "up" }}
+        />
+        <PremiumKPICard
+          title="Total Lifetime"
+          value={requests.length}
+          description="Aggregated requests"
+          icon={Wallet}
+        />
       </div>
 
-      {/* Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Payout Requests</CardTitle>
-          <CardDescription>Approve pending requests, then mark as paid once funds are disbursed</CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
+      {/* Table Card */}
+      <div className="rounded-[2rem] border-none shadow-xl overflow-hidden bg-white dark:bg-slate-900">
+        <div className="p-8 pb-4 border-b border-slate-50 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <CardTitle className="text-xl font-black">Payment History</CardTitle>
+                <CardDescription>Comprehensive history of all withdrawal requests and settlements</CardDescription>
+            </div>
+            <div className="h-10 w-10 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                <Search size={18} />
+            </div>
+        </div>
+        <div className="overflow-x-auto relative w-full">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Ambassador</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Amount (GHS)</TableHead>
+              <TableRow className="hover:bg-transparent border-none">
+                <TableHead className="pl-10">Ambassador</TableHead>
+                <TableHead>System Role</TableHead>
+                <TableHead>Requested Value</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Requested</TableHead>
-                <TableHead>Processed</TableHead>
-                <TableHead>Notes</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>Timeline</TableHead>
+                <TableHead>Admin Notes</TableHead>
+                <TableHead className="text-right pr-10">Control</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {requests.length === 0 && (
+              {requests.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
-                    No payout requests yet.
+                  <TableCell colSpan={7} className="text-center py-24 text-slate-400">
+                    <div className="flex flex-col items-center gap-3">
+                        <Wallet className="h-12 w-12 opacity-10" />
+                        <p className="font-bold tracking-wide">The payout queue is currently empty.</p>
+                    </div>
                   </TableCell>
                 </TableRow>
-              )}
-              {requests.map((req: any) => (
-                <TableRow key={req.id}>
-                  <TableCell>
-                    <div className="font-medium text-sm">
-                      {req.user.firstName || ""} {req.user.lastName || ""}
-                    </div>
-                    <div className="text-xs text-muted-foreground">{req.user.email}</div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{req.user.role}</Badge>
-                  </TableCell>
-                  <TableCell className="font-bold">
-                    {Number(req.amount).toFixed(2)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        req.status === "PAID" ? "default"
-                          : req.status === "APPROVED" ? "secondary"
-                          : req.status === "REJECTED" ? "destructive"
-                          : "outline"
-                      }
-                    >
-                      {req.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm">{new Date(req.requestedAt).toLocaleDateString()}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {req.processedAt ? new Date(req.processedAt).toLocaleDateString() : "—"}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground max-w-[120px] truncate">
-                    {req.adminNotes || "—"}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {req.status === "PENDING" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-blue-600 border-blue-200 hover:bg-blue-50 gap-1"
-                          disabled={actionLoading === req.id}
-                          onClick={() => setConfirmDialog({ id: req.id, action: "approve", name: req.user.email })}
-                        >
-                          <CheckCircle2 className="h-3.5 w-3.5" /> Approve
-                        </Button>
-                      )}
-                      {req.status === "APPROVED" && (
-                        <Button
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700 gap-1"
-                          disabled={actionLoading === req.id}
-                          onClick={() => setConfirmDialog({ id: req.id, action: "paid", name: req.user.email })}
-                        >
-                          <Wallet className="h-3.5 w-3.5" /> Mark Paid
-                        </Button>
-                      )}
-                      {(req.status === "PENDING" || req.status === "APPROVED") && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-red-500 hover:bg-red-50 hover:text-red-600 gap-1"
-                          disabled={actionLoading === req.id}
-                          onClick={() => setConfirmDialog({ id: req.id, action: "reject", name: req.user.email })}
-                        >
-                          <XCircle className="h-3.5 w-3.5" /> Reject
-                        </Button>
-                      )}
-                      {req.status === "PAID" && (
-                        <span className="text-xs text-green-600 font-medium flex items-center gap-1">
-                          <CheckCircle2 className="h-3.5 w-3.5" /> Paid
+              ) : (
+                requests.map((req: any) => (
+                  <TableRow key={req.id} className="group transition-all duration-300">
+                    <TableCell className="pl-10 py-6">
+                      <div className="flex flex-col">
+                        <span className="font-black text-slate-900 dark:text-white tracking-tight group-hover:text-[#E87154] transition-colors">{req.user.firstName || ""} {req.user.lastName || "Staff Account"}</span>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{req.user.email}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-[9px] font-black uppercase tracking-[0.2em] bg-slate-50 dark:bg-slate-800 border-none px-3 h-6">
+                        {req.user.role}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="text-base font-black text-slate-900 dark:text-white leading-none whitespace-nowrap">
+                            <span className="text-[10px] text-slate-400 mr-1 font-bold uppercase">GHS</span>
+                            {Number(req.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </span>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        className={cn(
+                            "text-[10px] font-black uppercase tracking-widest border-none px-3 h-7 shadow-sm",
+                            req.status === "PAID" && "bg-emerald-500 text-white",
+                            req.status === "APPROVED" && "bg-blue-500 text-white",
+                            req.status === "REJECTED" && "bg-red-500 text-white",
+                            req.status === "PENDING" && "bg-amber-500 text-white"
+                        )}
+                      >
+                        {req.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                        <div className="flex flex-col">
+                            <span className="text-xs font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">{new Date(req.requestedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                            {req.processedAt && <span className="text-[10px] text-emerald-500 font-black uppercase tracking-tighter mt-0.5">Settled {new Date(req.processedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>}
+                        </div>
+                    </TableCell>
+                    <TableCell className="max-w-[150px] truncate text-[11px] font-medium text-slate-400 italic">
+                      {req.adminNotes || "No remarks"}
+                    </TableCell>
+                    <TableCell className="text-right pr-10">
+                      <div className="flex items-center justify-end gap-2">
+                        {req.status === "PENDING" && (
+                          <Button
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700 h-9 rounded-xl font-black text-[10px] uppercase tracking-widest px-4 shadow-lg shadow-blue-500/20"
+                            disabled={actionLoading === req.id}
+                            onClick={() => setConfirmDialog({ id: req.id, action: "approve", name: req.user.email })}
+                          >
+                            Authorize
+                          </Button>
+                        )}
+                        {req.status === "APPROVED" && (
+                          <Button
+                            size="sm"
+                            className="bg-emerald-600 hover:bg-emerald-700 h-9 rounded-xl font-black text-[10px] uppercase tracking-widest px-4 shadow-lg shadow-emerald-500/20"
+                            disabled={actionLoading === req.id}
+                            onClick={() => setConfirmDialog({ id: req.id, action: "paid", name: req.user.email })}
+                          >
+                            Mark Paid
+                          </Button>
+                        )}
+                        {(req.status === "PENDING" || req.status === "APPROVED") && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-9 w-9 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 transition-all"
+                            disabled={actionLoading === req.id}
+                            onClick={() => setConfirmDialog({ id: req.id, action: "reject", name: req.user.email })}
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                        )}
+                        {req.status === "PAID" && (
+                          <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 dark:bg-emerald-900/10 px-3 py-1.5 rounded-xl border border-emerald-100 dark:border-emerald-900/20 shadow-sm">
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Finalized</span>
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+        </div>
+        <div className="p-6 border-t border-slate-50 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/30 text-center">
+            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Verified</span>
+        </div>
+      </div>
 
       {/* Confirm Dialog */}
       <Dialog open={!!confirmDialog} onOpenChange={() => { setConfirmDialog(null); setNotes(""); }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {confirmDialog?.action === "approve" && "Approve Payout Request"}
-              {confirmDialog?.action === "paid" && "Mark as Paid"}
-              {confirmDialog?.action === "reject" && "Reject Payout Request"}
-            </DialogTitle>
-            <DialogDescription>
-              {confirmDialog?.action === "approve" && `Approve the payout request from ${confirmDialog?.name}?`}
-              {confirmDialog?.action === "paid" && `Confirm payment has been disbursed to ${confirmDialog?.name}. This will mark approved commissions as paid up to the payout amount.`}
-              {confirmDialog?.action === "reject" && `Reject the payout request from ${confirmDialog?.name}?`}
-            </DialogDescription>
-          </DialogHeader>
-          {(confirmDialog?.action === "paid" || confirmDialog?.action === "reject") && (
-            <Textarea
-              placeholder="Add notes (optional)..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-            />
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setConfirmDialog(null); setNotes(""); }}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAction}
-              disabled={!!actionLoading}
-              variant={confirmDialog?.action === "reject" ? "destructive" : "default"}
-              className={confirmDialog?.action === "paid" ? "bg-green-600 hover:bg-green-700" : ""}
-            >
-              {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm"}
-            </Button>
-          </DialogFooter>
+        <DialogContent className="sm:max-w-[32rem] border-none shadow-2xl p-0 rounded-[2rem] overflow-hidden bg-white">
+            <div className={cn(
+                "p-8 relative border-b border-stone-100",
+                confirmDialog?.action === "reject" ? "bg-red-50 text-red-900" : "bg-[#FFFAF5] text-slate-900"
+            )}>
+                <div className="absolute top-0 right-0 p-8 opacity-5 rotate-12">
+                    {confirmDialog?.action === "paid" ? <Wallet size={100} className="text-stone-900" /> : <ShieldCheck size={100} className={confirmDialog?.action === "reject" ? "text-red-900" : "text-stone-900"} />}
+                </div>
+                <DialogHeader className="relative z-10">
+                    <DialogTitle className="text-2xl font-black leading-none">
+                        {confirmDialog?.action === "approve" && "Authorize Payout"}
+                        {confirmDialog?.action === "paid" && "Disbursement Finalization"}
+                        {confirmDialog?.action === "reject" && "Nullify Request"}
+                    </DialogTitle>
+                    <DialogDescription className="font-medium mt-3 text-sm italic text-stone-500">
+                        {confirmDialog?.action === "approve" && `Verification for ${confirmDialog?.name}`}
+                        {confirmDialog?.action === "paid" && `Disbursing funds to ${confirmDialog?.name}`}
+                        {confirmDialog?.action === "reject" && `Archiving request from ${confirmDialog?.name}`}
+                    </DialogDescription>
+                </DialogHeader>
+            </div>
+            
+            <div className="p-8 space-y-6 bg-white dark:bg-slate-900">
+                {(confirmDialog?.action === "paid" || confirmDialog?.action === "reject") && (
+                    <div className="space-y-3">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Administrative Remarks</Label>
+                        <Textarea
+                            placeholder="Add internal notes regarding this disbursement..."
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            className="min-h-[100px] bg-slate-50 dark:bg-slate-800 border-none rounded-2xl font-medium focus-visible:ring-[#E87154] shadow-inner p-4"
+                        />
+                    </div>
+                )}
+                
+                {confirmDialog?.action === "paid" && (
+                    <div className="bg-amber-50 dark:bg-amber-900/10 p-4 rounded-xl border border-amber-100 dark:border-amber-900/20 text-xs font-bold text-amber-700 dark:text-amber-400 leading-relaxed">
+                        NOTICE: This action confirms that funds have been moved via external gateway. Approved commissions for this user will be marked as settled.
+                    </div>
+                )}
+
+                <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-2">
+                    <Button variant="ghost" className="flex-1 h-12 rounded-xl text-slate-400 font-bold hover:text-slate-900 hover:bg-slate-100 transition-all" onClick={() => { setConfirmDialog(null); setNotes(""); }}>
+                        Discard
+                    </Button>
+                    <Button
+                        onClick={handleAction}
+                        disabled={!!actionLoading}
+                        className={cn(
+                            "flex-[2] h-12 rounded-xl font-black shadow-lg transition-all active:scale-95 text-white",
+                            confirmDialog?.action === "reject" ? "bg-red-600 hover:bg-red-700 shadow-red-600/20" : 
+                            confirmDialog?.action === "paid" ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20" : 
+                            "bg-blue-600 hover:bg-blue-700 shadow-blue-500/20"
+                        )}
+                    >
+                        {actionLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Commit Action"}
+                    </Button>
+                </DialogFooter>
+            </div>
         </DialogContent>
       </Dialog>
     </div>

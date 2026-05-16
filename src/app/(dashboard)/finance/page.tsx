@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { getAmbassadorTrackingData } from "@/app/actions/finance";
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -172,58 +173,80 @@ export default function AmbassadorTrackingPage() {
             icon={<Users size={18} />}
           >
             <Table>
-              <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
-                <TableRow>
-                  <TableHead className="font-bold">Ambassador</TableHead>
-                  <TableHead className="font-bold">Role</TableHead>
-                  <TableHead className="font-bold">Manager</TableHead>
-                  <TableHead className="font-bold">Status</TableHead>
-                  <TableHead className="text-right font-bold">Recruits</TableHead>
-                  <TableHead className="text-right font-bold">Revenue (GHS)</TableHead>
-                  <TableHead className="text-right font-bold">Comm. (GHS)</TableHead>
-                  <TableHead className="text-right font-bold text-amber-600">Owed (GHS)</TableHead>
-                  <TableHead className="text-right font-bold text-emerald-600">Paid (GHS)</TableHead>
-                  <TableHead className="font-bold">Joined</TableHead>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent border-none">
+                  <TableHead className="pl-6">Ambassador</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Manager</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-center">Recruits</TableHead>
+                  <TableHead className="text-right">Revenue</TableHead>
+                  <TableHead className="text-right">Comm.</TableHead>
+                  <TableHead className="text-right">Owed</TableHead>
+                  <TableHead className="text-right">Paid</TableHead>
+                  <TableHead className="text-right pr-6">Joined</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {rows.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
-                      No ambassadors found.
+                    <TableCell colSpan={10} className="text-center py-20 text-slate-400">
+                      <div className="flex flex-col items-center gap-2">
+                        <Users className="h-10 w-10 opacity-20" />
+                        <p>No ambassadors found.</p>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )}
                 {rows.map((row: any) => (
                   <TableRow key={row.id} className="group transition-colors">
-                    <TableCell>
-                      <div className="font-bold text-slate-900 dark:text-white">{row.name}</div>
+                    <TableCell className="pl-6">
+                      <div className="font-bold text-sm text-slate-900 dark:text-white">{row.name}</div>
                       <div className="text-[10px] text-slate-500 font-medium">{row.email}</div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={row.role === "MANAGER" ? "bg-indigo-500/10 text-indigo-600 border-none" : "bg-slate-500/10 text-slate-600 border-none"}>
+                      <Badge variant="outline" className={cn(
+                        "text-[10px] font-bold uppercase tracking-wider border-none",
+                        row.role === "MANAGER" ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30" : "bg-slate-50 text-slate-600 dark:bg-slate-800"
+                      )}>
                         {row.role}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-slate-500 text-xs font-medium">{row.manager || "-"}</TableCell>
+                    <TableCell className="text-slate-500 text-[11px] font-medium">{row.manager || "-"}</TableCell>
                     <TableCell>
-                      <Badge className={row.status === "ACTIVE" ? "bg-emerald-500/10 text-emerald-600 border-none" : "bg-destructive/10 text-destructive border-none"}>
+                      <Badge 
+                        variant={row.status === "ACTIVE" ? "default" : "secondary"}
+                        className={cn(
+                            "text-[10px] font-bold uppercase tracking-wider border-none",
+                            row.status === "ACTIVE" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-slate-100 text-slate-500"
+                        )}
+                      >
                         {row.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right font-black">{row.customersRecruited}</TableCell>
-                    <TableCell className="text-right font-medium">{row.revenueGenerated.toFixed(2)}</TableCell>
-                    <TableCell className="text-right text-slate-900 dark:text-white font-bold">
-                      {row.totalCommissions.toFixed(2)}
+                    <TableCell className="text-center">
+                        <span className="inline-flex items-center justify-center min-w-[28px] h-6 rounded-full bg-slate-100 dark:bg-slate-800 font-black text-slate-900 dark:text-white text-[10px]">
+                            {row.customersRecruited}
+                        </span>
                     </TableCell>
-                    <TableCell className="text-right text-amber-600 font-black">
-                      {row.outstandingPayouts.toFixed(2)}
+                    <TableCell className="text-right text-sm font-medium">
+                        <span className="text-[10px] text-slate-400 mr-1">GHS</span>
+                        {row.revenueGenerated.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </TableCell>
-                    <TableCell className="text-right text-emerald-600 font-black">
-                      {row.paidOut.toFixed(2)}
+                    <TableCell className="text-right text-sm font-bold text-slate-900 dark:text-white">
+                        <span className="text-[10px] text-slate-400 mr-1">GHS</span>
+                        {row.totalCommissions.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </TableCell>
-                    <TableCell className="text-xs text-slate-500 font-medium">
-                      {new Date(row.joinedAt).toLocaleDateString()}
+                    <TableCell className="text-right text-sm font-black text-amber-600">
+                        <span className="text-[10px] opacity-70 mr-1">GHS</span>
+                        {row.outstandingPayouts.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </TableCell>
+                    <TableCell className="text-right text-sm font-black text-emerald-600">
+                        <span className="text-[10px] opacity-70 mr-1">GHS</span>
+                        {row.paidOut.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </TableCell>
+                    <TableCell className="text-right pr-6 text-xs text-slate-500 font-medium">
+                      {new Date(row.joinedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </TableCell>
                   </TableRow>
                 ))}

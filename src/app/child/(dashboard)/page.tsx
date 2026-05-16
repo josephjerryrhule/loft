@@ -71,7 +71,7 @@ export default async function ChildDashboardPage() {
         {lastReadProgress ? (
           <div className="bg-white rounded-[40px] p-8 md:p-12 border border-[#E87154]/10 shadow-[0_20px_50px_rgba(232,113,84,0.08)] relative overflow-hidden group">
              {/* Decorative Background */}
-             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-[#E87154]/5 to-transparent rounded-full -mr-48 -mt-48 blur-3xl"></div>
+             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#E87154]/5 rounded-full -mr-48 -mt-48 blur-3xl"></div>
              
              <div className="relative flex flex-col md:flex-row gap-10 items-center">
                 <div className="w-48 md:w-64 aspect-[3/4] relative rounded-3xl overflow-hidden shadow-2xl transform group-hover:rotate-2 transition-transform duration-700">
@@ -104,7 +104,8 @@ export default async function ChildDashboardPage() {
                         </div>
                         <div className="h-4 w-full bg-[#F5F5F5] rounded-full overflow-hidden border border-[#E87154]/5">
                           <div 
-                            className="h-full bg-gradient-to-r from-[#E87154] to-[#FFD93D] rounded-full shadow-[0_0_15px_rgba(232,113,84,0.3)] transition-all duration-1500" 
+                            className="h-full bg-[#E87154] rounded-full shadow-[0_0_15px_rgba(232,113,84,0.3)] transition-all duration-1500"
+ 
                             style={{ width: `${lastReadProgress.progress}%` }}
                           ></div>
                         </div>
@@ -144,15 +145,15 @@ export default async function ChildDashboardPage() {
       {/* Library Section */}
       <div className="space-y-12">
         <div className="flex items-center gap-4">
-           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#E87154]/20 to-[#E87154]/20"></div>
+           <div className="h-px flex-1 bg-stone-100"></div>
            <h2 className="text-2xl font-black text-[#2D2D2D] font-quicksand uppercase tracking-[0.2em]">The Bookshelf</h2>
-           <div className="h-px flex-1 bg-gradient-to-l from-transparent via-[#E87154]/20 to-[#E87154]/20"></div>
+           <div className="h-px flex-1 bg-stone-100"></div>
         </div>
         <Bookshelf flipbooks={flipbooks} />
       </div>
 
       {!hasAccess && (
-        <div className="bg-gradient-to-r from-[#E87154] to-[#D65D41] p-10 rounded-[40px] shadow-xl text-white relative overflow-hidden group">
+        <div className="bg-[#E87154] p-10 rounded-[40px] shadow-xl text-white relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl group-hover:scale-110 transition-transform duration-700"></div>
           <div className="relative flex flex-col sm:flex-row items-center gap-8">
             <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center text-4xl">🎁</div>
@@ -170,3 +171,4 @@ export default async function ChildDashboardPage() {
     </div>
   );
 }
+
