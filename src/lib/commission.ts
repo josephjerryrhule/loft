@@ -131,7 +131,13 @@ export async function processSubscriptionCommission(subscriptionId: string, cust
     const rates = await getCommissionRates();
     
     // Direct Referral Commission on Subscription
-    const directCommissionAmount = planPrice * rates.globalPaidPlanReferralRate;
+    // Use plan-specific rate if available, otherwise fallback to global system rate
+    let referralRate = rates.globalPaidPlanReferralRate;
+    if (subscription.plan.affiliateCommissionPercentage !== null && subscription.plan.affiliateCommissionPercentage !== undefined) {
+        referralRate = Number(subscription.plan.affiliateCommissionPercentage) / 100;
+    }
+
+    const directCommissionAmount = planPrice * referralRate;
 
     await prisma.commission.create({
         data: {
