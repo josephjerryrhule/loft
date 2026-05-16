@@ -43,14 +43,21 @@ export async function registerUser(formData: z.infer<typeof registerSchema>) {
   const hashedPassword = await hash(password, 10);
 
   let managerId = null;
+  let teamLeaderId = null;
   let referredById = null;
 
   if (role === Role.AFFILIATE && managerCode) {
-    const manager = await prisma.user.findUnique({
+    const inviter = await prisma.user.findUnique({
       where: { inviteCode: managerCode },
     });
-    if (!manager) return { error: "Invalid Manager Invite Code" };
-    managerId = manager.id;
+    if (!inviter) return { error: "Invalid Invite Code" };
+    
+    if (inviter.role === Role.TEAM_LEADER) {
+        teamLeaderId = inviter.id;
+        managerId = inviter.managerId; // Inherit the manager from the team leader
+    } else {
+        managerId = inviter.id;
+    }
   }
 
   if ((role === Role.PARENT || role === Role.CUSTOMER) && referralCode) {
@@ -97,6 +104,7 @@ export async function registerUser(formData: z.infer<typeof registerSchema>) {
         phoneNumber: phone || "",
         role,
         managerId,
+        teamLeaderId,
         referredById,
         inviteCode: newInviteCode,
         ambassadorId,
