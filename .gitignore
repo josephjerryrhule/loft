@@ -49,3 +49,5 @@ tests/
 /.claude/
 /graphify-out
 /logs
+# Superpowers brainstorming companion
+.superpowers/
