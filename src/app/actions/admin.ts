@@ -285,6 +285,8 @@ export async function getAllUsers() {
                 ambassadorId: true,
                 ambassadorExpiry: true,
                 createdAt: true,
+                managerId: true,
+                teamLeaderId: true,
             }
         });
         return users;

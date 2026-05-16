@@ -1,5 +1,5 @@
 // Paystack payment utilities
-import { getSystemSettings } from "@/app/actions/settings";
+import { getSystemSettings, getSystemSettingsServerSecret } from "@/app/actions/settings";
 
 /**
  * Gets the active Paystack public key based on the current mode
@@ -7,25 +7,27 @@ import { getSystemSettings } from "@/app/actions/settings";
 export async function getPaystackPublicKey(): Promise<string> {
   const settings = await getSystemSettings();
   const mode = settings.paystackMode || "test";
-  
+
   if (mode === "live") {
     return settings.paystackLivePublicKey || process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "";
   }
-  
+
   return settings.paystackTestPublicKey || process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "";
 }
 
 /**
- * Gets the active Paystack secret key based on the current mode (server-side only)
+ * Gets the active Paystack secret key based on the current mode (server-side only).
+ * Uses the server-secret accessor so the key is fetched regardless of the
+ * caller's session role (initialization runs from any logged-in user).
  */
 export async function getPaystackSecretKey(): Promise<string> {
-  const settings = await getSystemSettings();
+  const settings = await getSystemSettingsServerSecret();
   const mode = settings.paystackMode || "test";
-  
+
   if (mode === "live") {
     return settings.paystackLiveSecretKey || process.env.PAYSTACK_SECRET_KEY || "";
   }
-  
+
   return settings.paystackTestSecretKey || process.env.PAYSTACK_SECRET_KEY || "";
 }
 

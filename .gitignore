@@ -45,3 +45,6 @@ next-env.d.ts
 artifacts/
 scratch/
 tests/
+
+/.claude/
+/graphify-out

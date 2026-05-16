@@ -28,6 +28,8 @@ interface User {
   ambassadorId: string | null;
   ambassadorExpiry: Date | null;
   createdAt: Date;
+  managerId: string | null;
+  teamLeaderId: string | null;
 }
 
 export default function AdminUsersPage() {

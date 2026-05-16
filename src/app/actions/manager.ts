@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Role } from "@/lib/types";
 import { revalidatePath } from "next/cache";
+import { sendHierarchyChangeEmail } from "@/lib/email";
 
 export async function getManagerStats() {
   const session = await auth();
@@ -297,6 +298,96 @@ export async function getRecentManagerActivities() {
     return activities
         .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
         .slice(0, 50);
+}
+
+/**
+ * Manager-scoped role flip for direct team members. Lets a manager toggle
+ * one of their own affiliates between AFFILIATE and TEAM_LEADER without
+ * giving them access to the full updateUser surface.
+ */
+export async function setTeamMemberRole(userId: string, newRole: "AFFILIATE" | "TEAM_LEADER") {
+    const session = await auth();
+    const role = (session?.user as any)?.role;
+    if (!session?.user?.id || role !== Role.MANAGER) {
+        return { error: "Unauthorized" };
+    }
+
+    if (newRole !== Role.AFFILIATE && newRole !== Role.TEAM_LEADER) {
+        return { error: "Invalid role" };
+    }
+
+    const target = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, role: true, managerId: true, email: true, firstName: true, lastName: true, ambassadorId: true }
+    });
+
+    if (!target) return { error: "User not found" };
+    if (target.managerId !== session.user.id) {
+        return { error: "Unauthorized: not your team member" };
+    }
+    if (target.role !== Role.AFFILIATE && target.role !== Role.TEAM_LEADER) {
+        return { error: "Can only promote affiliates or demote team leaders" };
+    }
+    if (target.role === newRole) {
+        return { error: "Already has this role" };
+    }
+
+    // If promoting an affiliate to team leader, mint a TL ambassador ID when missing.
+    let ambassadorId = target.ambassadorId;
+    if (newRole === Role.TEAM_LEADER && (!ambassadorId || !ambassadorId.startsWith("LFT-TL"))) {
+        const existing = await prisma.user.findMany({
+            where: { ambassadorId: { startsWith: "LFT-TL" } },
+            select: { ambassadorId: true }
+        });
+        let maxNum = 0;
+        existing.forEach(u => {
+            if (u.ambassadorId) {
+                const parts = u.ambassadorId.split("-");
+                const num = parseInt(parts[parts.length - 1]);
+                if (!isNaN(num) && num > maxNum) maxNum = num;
+            }
+        });
+        ambassadorId = `LFT-TL-${(maxNum + 1).toString().padStart(3, "0")}`;
+    }
+
+    // Demotion: clear any affiliates pointing to this user as teamLeader so we
+    // don't leave dangling references.
+    if (newRole === Role.AFFILIATE && target.role === Role.TEAM_LEADER) {
+        await prisma.user.updateMany({
+            where: { teamLeaderId: userId },
+            data: { teamLeaderId: null }
+        });
+    }
+
+    await prisma.user.update({
+        where: { id: userId },
+        data: { role: newRole, ambassadorId }
+    });
+
+    await prisma.activityLog.create({
+        data: {
+            userId: session.user.id,
+            actionType: "USER_HIERARCHY_UPDATE",
+            actionDetails: JSON.stringify({
+                targetUserId: userId,
+                oldRole: target.role,
+                newRole,
+                actor: "manager"
+            })
+        }
+    });
+
+    // Fire-and-forget hierarchy notification email.
+    sendHierarchyChangeEmail({
+        userEmail: target.email,
+        userName: `${target.firstName || ""} ${target.lastName || ""}`.trim() || target.email,
+        type: "PROMOTION",
+        newRole
+    }).catch(console.error);
+
+    revalidatePath("/manager/team");
+    revalidatePath("/manager");
+    return { success: true };
 }
 
 export async function getMonthlyEarningsData() {

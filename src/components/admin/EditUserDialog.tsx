@@ -236,7 +236,7 @@ export function EditUserDialog({ user, open, onOpenChange, managers = [], teamLe
                       <FormField control={form.control} name="managerId" render={({ field }) => (
                         <FormItem className="animate-in slide-in-from-top-2 duration-300">
                           <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Assigned Operations Manager</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
+                          <Select onValueChange={field.onChange} value={field.value || "none"}>
                             <FormControl>
                               <SelectTrigger className="h-11 sm:h-12 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold focus:ring-[#E87154] shadow-inner px-4 text-sm sm:text-base">
                                 <SelectValue placeholder="Select Operations Manager" />
@@ -259,7 +259,7 @@ export function EditUserDialog({ user, open, onOpenChange, managers = [], teamLe
                       <FormField control={form.control} name="managerId" render={({ field }) => (
                         <FormItem className="animate-in slide-in-from-top-2 duration-300">
                           <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Assigned Manager</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
+                          <Select onValueChange={field.onChange} value={field.value || "none"}>
                             <FormControl>
                               <SelectTrigger className="h-11 sm:h-12 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold focus:ring-[#E87154] shadow-inner px-4 text-sm sm:text-base">
                                 <SelectValue placeholder="Select Manager" />
@@ -283,7 +283,7 @@ export function EditUserDialog({ user, open, onOpenChange, managers = [], teamLe
                         <FormField control={form.control} name="managerId" render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Assigned Manager</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
+                            <Select onValueChange={field.onChange} value={field.value || "none"}>
                               <FormControl>
                                 <SelectTrigger className="h-11 sm:h-12 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold focus:ring-[#E87154] shadow-inner px-4 text-sm sm:text-base">
                                   <SelectValue placeholder="Select Manager" />
@@ -303,7 +303,7 @@ export function EditUserDialog({ user, open, onOpenChange, managers = [], teamLe
                         <FormField control={form.control} name="teamLeaderId" render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Team Leader</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
+                            <Select onValueChange={field.onChange} value={field.value || "none"}>
                               <FormControl>
                                 <SelectTrigger className="h-11 sm:h-12 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold focus:ring-[#E87154] shadow-inner px-4 text-sm sm:text-base">
                                   <SelectValue placeholder="Select Team Leader" />
