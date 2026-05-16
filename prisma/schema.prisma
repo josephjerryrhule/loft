@@ -126,25 +126,43 @@ model SubscriptionPlan {
   @@map("subscription_plans")
 }
 
+model Category {
+  id           String     @id @default(uuid())
+  name         String     @unique
+  slug         String     @unique
+  displayOrder Int        @default(0) @map("display_order")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  flipbooks    Flipbook[]
+
+  @@index([displayOrder])
+  @@map("categories")
+}
+
 model Flipbook {
-  id            String             @id @default(uuid())
-  title         String
-  description   String?
-  coverImageUrl String?            @map("cover_image_url")
-  pdfUrl        String?            @map("pdf_url")
-  totalPages    Int?               @map("total_pages")
-  category      String?
-  isPublished   Boolean            @default(false) @map("is_published")
-  isFree        Boolean            @default(false) @map("is_free")
-  publishedAt   DateTime?          @map("published_at")
-  createdById   String             @map("created_by")
-  createdAt     DateTime           @default(now()) @map("created_at")
-  updatedAt     DateTime           @updatedAt @map("updated_at")
-  heyzineUrl    String?            @map("heyzine_url")
-  iframeContent String?            @map("iframe_content")
-  ageGroup      String?            @map("age_group")
-  progress      FlipbookProgress[]
-  createdBy     User               @relation(fields: [createdById], references: [id])
+  id                   String             @id @default(uuid())
+  title                String
+  description          String?
+  coverImageUrl        String?            @map("cover_image_url")
+  pdfUrl               String?            @map("pdf_url")
+  totalPages           Int?               @map("total_pages")
+  category             String?
+  isPublished          Boolean            @default(false) @map("is_published")
+  isFree               Boolean            @default(false) @map("is_free")
+  publishedAt          DateTime?          @map("published_at")
+  createdById          String             @map("created_by")
+  createdAt            DateTime           @default(now()) @map("created_at")
+  updatedAt            DateTime           @updatedAt @map("updated_at")
+  heyzineUrl           String?            @map("heyzine_url")
+  iframeContent        String?            @map("iframe_content")
+  ageGroup             String?            @map("age_group")
+  categoryId           String?            @map("category_id")
+  pagesManifest        Json?              @map("pages_manifest")
+  optimizedPdfUrl      String?            @map("optimized_pdf_url")
+  sourceType           FlipbookSource     @default(HEYZINE) @map("source_type")
+  processingStartedAt  DateTime?          @map("processing_started_at")
+  categoryRef          Category?          @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  progress             FlipbookProgress[]
+  createdBy            User               @relation(fields: [createdById], references: [id])
 
   @@index([createdById])
   @@index([category])
@@ -152,6 +170,8 @@ model Flipbook {
   @@index([isFree])
   @@index([createdAt])
   @@index([publishedAt])
+  @@index([categoryId])
+  @@index([sourceType])
   @@map("flipbooks")
 }
 
@@ -343,4 +363,9 @@ model ChildLoginToken {
 
   @@index([childId])
   @@map("child_login_tokens")
+}
+
+enum FlipbookSource {
+  HEYZINE
+  SELF_HOSTED
 }
