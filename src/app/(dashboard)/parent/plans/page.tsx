@@ -171,33 +171,33 @@ export default async function CustomerPlansPage() {
                     </Card>
 
                     {unassignedSubscriptions.length > 0 && (
-                        <Card className="border-none shadow-lg overflow-hidden bg-stone-900 text-white rounded-[2rem] animate-in zoom-in-95 duration-500">
-                            <CardHeader className="p-8 sm:p-10 border-b border-white/5">
+                        <Card className="border-none shadow-md overflow-hidden bg-stone-50 text-slate-900 rounded-[2rem] animate-in zoom-in-95 duration-500">
+                            <CardHeader className="p-8 sm:p-10 border-b border-stone-100">
                                 <div className="flex items-center gap-3 mb-1">
-                                    <div className="h-6 w-6 rounded-lg bg-amber-500/20 flex items-center justify-center">
-                                        <AlertCircle size={12} className="text-amber-500" />
+                                    <div className="h-6 w-6 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                                        <AlertCircle size={12} className="text-amber-600" />
                                     </div>
-                                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-stone-500">Waiting for assignment</span>
+                                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-stone-500">Action Required</span>
                                 </div>
                                 <CardTitle className="text-2xl font-black">Link Your Plans</CardTitle>
-                                <CardDescription className="text-stone-400 font-medium">These plans are active but need to be linked to a member profile.</CardDescription>
+                                <CardDescription className="text-stone-600 font-medium italic">These plans are active but need to be linked to a member profile.</CardDescription>
                             </CardHeader>
                             <CardContent className="p-0">
                                 <Table>
                                     <TableHeader>
                                         <TableRow className="hover:bg-transparent border-none">
                                             <TableHead className="pl-10 text-stone-500">Plan Type</TableHead>
-                                            <TableHead className="text-stone-500 text-right">Price (GHS)</TableHead>
-                                            <TableHead className="text-stone-500">Duration</TableHead>
-                                            <TableHead className="text-right pr-10 text-stone-500">Action</TableHead>
+                                            <TableHead className="text-stone-500 text-right">Price</TableHead>
+                                            <TableHead className="text-stone-500">Renewal Date</TableHead>
+                                            <TableHead className="text-right pr-10 text-stone-500">Assignment</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {unassignedSubscriptions.map((sub) => (
-                                            <TableRow key={sub.id} className="border-white/5 transition-colors hover:bg-white/5">
-                                                <TableCell className="pl-10 py-6 font-black text-white">{sub.plan.name}</TableCell>
+                                            <TableRow key={sub.id} className="border-stone-100 transition-colors hover:bg-white/50">
+                                                <TableCell className="pl-10 py-6 font-black text-slate-900">{sub.plan.name}</TableCell>
                                                 <TableCell className="text-right font-black text-[#E87154]">GHS {Number(sub.plan.price).toFixed(2)}</TableCell>
-                                                <TableCell className="text-stone-400 font-medium">{new Date(sub.endDate).toLocaleDateString()}</TableCell>
+                                                <TableCell className="text-stone-600 font-medium">{new Date(sub.endDate).toLocaleDateString()}</TableCell>
                                                 <TableCell className="text-right pr-10">
                                                     <AssignSubscriptionDialog 
                                                         subscriptionId={sub.id} 
