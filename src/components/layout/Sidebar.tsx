@@ -60,7 +60,8 @@ function getLinks(userRole?: string, hasChildren?: boolean) {
     { href: "/admin/users", label: "User Management", icon: Users },
     { href: "/admin/ambassadors", label: "Ambassador Management", icon: Shield },
     { href: "/admin/orders", label: "Orders", icon: FileText },
-    { href: "/admin/finance", label: "Ambassador Earnings", icon: CreditCard },
+    { href: "/admin/finance", label: "System Revenue", icon: CreditCard },
+    { href: "/admin/commissions", label: "My Earnings", icon: Wallet },
     { href: "/admin/payments", label: "Payment Tracker", icon: Wallet },
     leaderboardLink,
   ];
