@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { DollarSign, Wallet, TrendingUp, Clock, ArrowUpRight } from "lucide-react";
+import { formatRole } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 
 
@@ -167,7 +168,7 @@ export default function AdminFinancePage() {
                     <TableCell className="pl-6 font-bold text-slate-900">{req.user.email}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50 border-none">
-                        {req.user.role}
+                        {formatRole(req.user.role)}
                       </Badge>
                     </TableCell>
                     <TableCell className="font-black text-slate-900">

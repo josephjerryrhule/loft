@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
 import { cn } from "@/lib/utils";
+import { formatRole } from "@/lib/format-utils";
 
 function exportToCSV(requests: any[]) {
   const headers = ["Ambassador", "Role", "Amount (GHS)", "Status", "Requested", "Processed", "Notes"];
@@ -193,7 +194,7 @@ export default function PayoutRequestsPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-[9px] font-black uppercase tracking-[0.2em] bg-slate-50 dark:bg-slate-800 border-none px-3 h-6">
-                        {req.user.role}
+                        {formatRole(req.user.role)}
                       </Badge>
                     </TableCell>
                     <TableCell>

@@ -15,6 +15,7 @@ import { useState } from "react";
 import { Loader2, CheckCircle, Eye, Wallet, User as UserIcon, CreditCard, Clock, CheckCircle2, DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { formatRole } from "@/lib/format-utils";
 
 export function AdminCommissionActions({ id, status, onSuccess }: { id: string, status: string, onSuccess?: () => void }) {
     const [loading, setLoading] = useState(false);
@@ -81,7 +82,7 @@ export function AdminPayoutActions({ payout, onSuccess }: { payout: PayoutReques
     }
 
     return (
-        <div className="flex gap-2">
+        <div className="flex gap-2 justify-end">
             <Dialog open={viewOpen} onOpenChange={setViewOpen}>
                 <DialogTrigger asChild>
                     <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-full hover:bg-[#E87154]/10 hover:text-[#E87154] transition-colors">
@@ -121,7 +122,7 @@ export function AdminPayoutActions({ payout, onSuccess }: { payout: PayoutReques
                                     <div className="flex items-center gap-2">
                                         <p className="text-xs text-slate-500 font-medium">{payout.user.email}</p>
                                         <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-white dark:bg-slate-900 border-none shadow-sm h-4">
-                                            {payout.user.role}
+                                            {formatRole(payout.user.role)}
                                         </Badge>
                                     </div>
                                 </div>

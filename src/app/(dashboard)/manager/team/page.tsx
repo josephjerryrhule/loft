@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Users, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
+import { TeamMemberRoleAction } from "@/components/manager/TeamMemberRoleAction";
+import { formatRole } from "@/lib/format-utils";
 
 async function getManagerTeamMembers(managerId: string) {
     const members = await prisma.user.findMany({
@@ -75,12 +77,13 @@ export default async function ManagerTeamPage() {
                             <TableHead className="font-bold">Status</TableHead>
                             <TableHead className="text-right font-bold">Sales</TableHead>
                             <TableHead className="font-bold">Joined</TableHead>
+                            <TableHead className="text-right font-bold">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {teamMembers.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-12 text-slate-400">
+                                <TableCell colSpan={6} className="text-center py-12 text-slate-400">
                                     No members in your team yet.
                                 </TableCell>
                             </TableRow>
@@ -101,7 +104,7 @@ export default async function ManagerTeamPage() {
                                     </TableCell>
                                     <TableCell>
                                         <Badge className={member.role === Role.TEAM_LEADER ? "bg-blue-500/10 text-blue-600 border-none" : "bg-slate-500/10 text-slate-600 border-none"}>
-                                            {member.role}
+                                            {formatRole(member.role)}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
@@ -114,6 +117,13 @@ export default async function ManagerTeamPage() {
                                     </TableCell>
                                     <TableCell className="text-xs text-slate-500 font-medium">
                                         {new Date(member.createdAt).toLocaleDateString()}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <TeamMemberRoleAction
+                                            userId={member.id}
+                                            currentRole={member.role}
+                                            name={member.name}
+                                        />
                                     </TableCell>
                                 </TableRow>
                             ))

@@ -57,7 +57,7 @@ function Podium({ top3, viewerRole }: { top3: LeaderboardEntry[], viewerRole: st
                 <h3 className="font-bold truncate px-2">{top3[1].name}</h3>
                 <p className="text-xs text-muted-foreground mb-2">{top3[1].ambassadorId}</p>
                 <div className="flex flex-col gap-1 items-center">
-                    <Badge variant="secondary" className="font-bold">{top3[1].referralsCount} Referrals</Badge>
+                    <Badge variant="secondary" className="font-bold">{top3[1].paidReferralsCount}/{top3[1].referralsCount} Paid Referrals</Badge>
                     <span className="text-[10px] text-stone-500 font-bold">{top3[1].salesCount} Total Subs</span>
                 </div>
                 {canViewProfile && (
@@ -88,7 +88,7 @@ function Podium({ top3, viewerRole }: { top3: LeaderboardEntry[], viewerRole: st
                 <div className="flex flex-col items-center gap-2">
                     <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-700 px-4 py-1.5 rounded-full font-black text-lg shadow-sm">
                        <TrendingUp className="h-5 w-5" />
-                       {top3[0].referralsCount} Referrals
+                       {top3[0].paidReferralsCount} Paying / {top3[0].referralsCount} Total
                     </div>
                     <span className="text-xs text-amber-600 font-bold">{top3[0].salesCount} Total Subs</span>
                 </div>
@@ -115,7 +115,7 @@ function Podium({ top3, viewerRole }: { top3: LeaderboardEntry[], viewerRole: st
                 <h3 className="font-bold truncate px-2">{top3[2].name}</h3>
                 <p className="text-xs text-muted-foreground mb-2">{top3[2].ambassadorId}</p>
                 <div className="flex flex-col gap-1 items-center">
-                    <Badge variant="secondary" className="font-bold">{top3[2].referralsCount} Referrals</Badge>
+                    <Badge variant="secondary" className="font-bold">{top3[2].paidReferralsCount}/{top3[2].referralsCount} Paid Referrals</Badge>
                     <span className="text-[10px] text-orange-600 font-bold">{top3[2].salesCount} Total Subs</span>
                 </div>
                 {canViewProfile && (
@@ -206,7 +206,7 @@ export default function LeaderboardClient({ initialData, viewerRole }: Leaderboa
               <TableHead className="w-[80px] text-center pl-6">Rank</TableHead>
               <TableHead>Ambassador</TableHead>
               <TableHead>Role</TableHead>
-              <TableHead className="text-center">Referrals</TableHead>
+              <TableHead className="text-center" title="Paying / Total referrals">Referrals (Paid/Total)</TableHead>
               <TableHead className="text-center">Subscriptions</TableHead>
               {filteredData.some(d => d.revenue !== undefined) && (
                 <TableHead className="text-right">Revenue</TableHead>
@@ -256,9 +256,21 @@ export default function LeaderboardClient({ initialData, viewerRole }: Leaderboa
                     </Badge>
                   </TableCell>
                   <TableCell className="text-center">
-                       <span className="inline-flex items-center justify-center min-w-[32px] h-7 rounded-full bg-slate-100 font-black text-slate-900 text-[10px]">
-                        {entry.referralsCount}
-                       </span>
+                       <div className="inline-flex items-center gap-1">
+                         <span
+                           title="Paying referrals (have an active subscription)"
+                           className="inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-full bg-emerald-100 font-black text-emerald-700 text-[10px]"
+                         >
+                           {entry.paidReferralsCount}
+                         </span>
+                         <span className="text-stone-300 font-bold text-[10px]">/</span>
+                         <span
+                           title="Total referrals (paid + free-plan signups)"
+                           className="inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-full bg-slate-100 font-black text-slate-700 text-[10px]"
+                         >
+                           {entry.referralsCount}
+                         </span>
+                       </div>
                   </TableCell>
                   <TableCell className="text-center">
                        <div className="flex flex-col items-center gap-1">

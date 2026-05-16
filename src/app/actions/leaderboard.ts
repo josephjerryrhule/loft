@@ -12,7 +12,12 @@ export interface LeaderboardEntry {
   role: string;
   ambassadorId: string | null;
   salesCount: number;
+  // Total referred customers/parents, paid or free. Visible to everyone so
+  // ambassadors who recruit free-plan users still see their effort counted.
   referralsCount: number;
+  // Subset of referralsCount that have at least one paid subscription —
+  // used as a primary tiebreaker and shown as a separate badge.
+  paidReferralsCount: number;
   monthlySubs: number;
   quarterlySubs: number;
   semiAnnualSubs: number;
@@ -94,6 +99,11 @@ export async function getLeaderboardData(filters: {
     const salesCount = subscriptionSales + productSales;
 
     const referralsCount = user.referrals.length;
+    // A referral counts as "paid" if they hold at least one completed
+    // subscription. Free-plan signups still appear in referralsCount, but
+    // don't inflate this metric — so the leaderboard ordering can't be
+    // gamed by mass-creating no-revenue accounts.
+    const paidReferralsCount = user.referrals.filter(r => r.subscriptions.length > 0).length;
     let monthlySubs = 0;
     let quarterlySubs = 0;
     let semiAnnualSubs = 0;
@@ -121,7 +131,7 @@ export async function getLeaderboardData(filters: {
     // Earnings calculation
     const totalEarnings = user.commissions.reduce((sum, comm) => sum + Number(comm.amount), 0);
 
-    const entry: LeaderboardEntry = {
+    const entry: LeaderboardEntry & { _revenue: number } = {
       id: user.id,
       rank: 0, // Assigned later
       name: `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email,
@@ -130,6 +140,7 @@ export async function getLeaderboardData(filters: {
       ambassadorId: user.ambassadorId,
       salesCount,
       referralsCount,
+      paidReferralsCount,
       monthlySubs,
       quarterlySubs,
       semiAnnualSubs,
@@ -140,6 +151,7 @@ export async function getLeaderboardData(filters: {
       joinDate: user.createdAt,
       managerName: user.manager ? `${user.manager.firstName || ""} ${user.manager.lastName || ""}`.trim() : undefined,
       teamLeaderName: user.teamLeader ? `${user.teamLeader.firstName || ""} ${user.teamLeader.lastName || ""}`.trim() : undefined,
+      _revenue: totalRevenue, // private — used for tiebreaker sort, never serialized
     };
 
     // Apply visibility rules for revenue and earnings
@@ -167,9 +179,25 @@ export async function getLeaderboardData(filters: {
     return entry;
   });
 
-  // 3. Sort by sales count descending and assign ranks
-  leaderboard.sort((a, b) => b.salesCount - a.salesCount);
-  leaderboard = leaderboard.map((entry, index) => ({ ...entry, rank: index + 1 }));
+  // 3. Multi-key ranking. Primary signal is paid sales so free-plan
+  //    recruitment doesn't shove someone to the top. Tiebreakers cascade:
+  //    revenue → paid referrals → total referrals → earliest joinDate
+  //    (rewards tenure when two ambassadors are otherwise identical).
+  type Scored = LeaderboardEntry & { _revenue: number };
+  (leaderboard as Scored[]).sort((a, b) => {
+    if (b.salesCount !== a.salesCount) return b.salesCount - a.salesCount;
+    if (b._revenue !== a._revenue) return b._revenue - a._revenue;
+    if (b.paidReferralsCount !== a.paidReferralsCount) return b.paidReferralsCount - a.paidReferralsCount;
+    if (b.referralsCount !== a.referralsCount) return b.referralsCount - a.referralsCount;
+    return new Date(a.joinDate).getTime() - new Date(b.joinDate).getTime();
+  });
+
+  // Strip the private _revenue tiebreaker before returning so it never
+  // ships to a client where the viewer isn't permitted to see revenue.
+  leaderboard = (leaderboard as Scored[]).map(({ _revenue, ...entry }, index) => ({
+    ...entry,
+    rank: index + 1,
+  }));
 
   return leaderboard;
 }
@@ -221,9 +249,10 @@ export async function getAmbassadorPerformance(userId: string) {
     const isManagerOfUser = viewerRole === Role.MANAGER && user.managerId === viewerId;
     const isTeamLeaderOfUser = viewerRole === Role.TEAM_LEADER && user.teamLeaderId === viewerId;
 
-    // Financial visibility boolean
-    const canViewFinancials = isSelf || isOpsManager || isAdmin || isFinance;
-    const canViewRevenue = canViewFinancials || isManagerOfUser;
+    // Financial visibility: managers see earnings of their direct team so
+    // they can coach payouts — same scope they already see on /manager.
+    const canViewFinancials = isSelf || isOpsManager || isAdmin || isFinance || isManagerOfUser;
+    const canViewRevenue = canViewFinancials;
 
     // Calculate metrics
     const subscriptionSales = user.referrals.reduce((sum, referral) => sum + referral.subscriptions.length, 0);

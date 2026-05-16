@@ -85,7 +85,9 @@ export default async function AmbassadorProfilePage({ params }: { params: { id: 
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {data.metrics.totalRevenue !== null ? `GHS ${data.metrics.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : "N/A"}
+                {data.metrics.totalRevenue !== null
+                  ? `GHS ${data.metrics.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+                  : <span className="text-base font-medium text-slate-400">Restricted</span>}
               </div>
               <p className="text-xs text-muted-foreground">Total value of sales</p>
             </CardContent>
@@ -98,7 +100,9 @@ export default async function AmbassadorProfilePage({ params }: { params: { id: 
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {data.metrics.personalEarnings !== null ? `GHS ${data.metrics.personalEarnings.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : "N/A"}
+                {data.metrics.personalEarnings !== null
+                  ? `GHS ${data.metrics.personalEarnings.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+                  : <span className="text-base font-medium text-slate-400">Restricted</span>}
               </div>
               <p className="text-xs text-muted-foreground">Direct referral commissions</p>
             </CardContent>
@@ -111,7 +115,9 @@ export default async function AmbassadorProfilePage({ params }: { params: { id: 
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">
-                {data.metrics.overrideEarnings !== null ? `GHS ${data.metrics.overrideEarnings.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : "N/A"}
+                {data.metrics.overrideEarnings !== null
+                  ? `GHS ${data.metrics.overrideEarnings.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+                  : <span className="text-base font-medium text-slate-400">Restricted</span>}
               </div>
               <p className="text-xs text-muted-foreground">Team override commissions</p>
             </CardContent>

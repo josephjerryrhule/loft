@@ -319,7 +319,9 @@ export function SystemSettingsForm({ settings }: SystemSettingsFormProps) {
                         <CardContent className="p-8 space-y-10">
                             <div className="space-y-6">
                                 <div className="flex items-center gap-3">
-                                    <img src="/paystack-logo.png" alt="Paystack" className="h-6 opacity-80" />
+                                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0BA4DB]/10 text-[#0BA4DB] font-black text-[11px] uppercase tracking-widest">
+                                        <CreditCard size={12} /> Paystack
+                                    </span>
                                     <div className="h-[1px] flex-1 bg-stone-100" />
                                 </div>
                                 
