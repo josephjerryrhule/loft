@@ -175,11 +175,12 @@ model Category {
 
 model Flipbook {
   // ...existing fields preserved...
-  categoryId        String?         @map("category_id")
-  category          String?         // legacy; kept one release, then dropped
-  pagesManifest     Json?           @map("pages_manifest")
-  optimizedPdfUrl   String?         @map("optimized_pdf_url")
-  sourceType        FlipbookSource  @default(HEYZINE) @map("source_type")
+  categoryId           String?         @map("category_id")
+  category             String?         // legacy; kept one release, then dropped
+  pagesManifest        Json?           @map("pages_manifest")
+  optimizedPdfUrl      String?         @map("optimized_pdf_url")
+  sourceType           FlipbookSource  @default(HEYZINE) @map("source_type")
+  processingStartedAt  DateTime?       @map("processing_started_at")  // re-render guard; cleared on success/failure
 
   categoryRef       Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
@@ -206,7 +207,7 @@ enum FlipbookSource {
 **Migration steps**
 1. `CREATE TABLE categories` + indexes.
 2. Seed defaults: Sci-Fi, Fantasy, Drama, Business, Education, Geography, Adventure, Mystery, Picture Book.
-3. `ALTER TABLE flipbooks ADD COLUMN category_id, pages_manifest, optimized_pdf_url, source_type`.
+3. `ALTER TABLE flipbooks ADD COLUMN category_id, pages_manifest, optimized_pdf_url, source_type, processing_started_at`.
 4. For each `DISTINCT category` string on existing flipbooks: upsert into `categories`, update FK.
 5. `UPDATE flipbooks SET source_type='SELF_HOSTED' WHERE pdf_url IS NOT NULL AND iframe_content IS NULL AND heyzine_url IS NULL`.
 6. Keep `category String?` for one release; second migration drops it after viewer + admin UI exclusively use the FK.
