@@ -20,8 +20,10 @@ export async function saveFileLocally(
   // Define absolute path to upload directory
   // In some production environments (like Plesk), you might want to save directly to a served folder
   // Defaults to public/uploads if not specified
-  const baseUploadDir = process.env.UPLOAD_DIR_BASE || path.join(/*turbopackIgnore: true*/ process.cwd(), 'public', 'uploads');
-  const uploadDir = path.join(/*turbopackIgnore: true*/ baseUploadDir, folder);
+  const baseUploadDir = process.env.UPLOAD_DIR_BASE 
+    ? path.resolve(process.env.UPLOAD_DIR_BASE)
+    : path.resolve(/*turbopackIgnore: true*/ process.cwd(), 'public', 'uploads');
+  const uploadDir = path.join(baseUploadDir, folder);
   
   console.log(`[Upload] Saving file to: ${uploadDir}/${fileName}`);
 
@@ -49,8 +51,10 @@ export async function deleteFile(fileUrl: string): Promise<boolean> {
     if (!fileUrl.startsWith('/uploads/')) return false;
 
     const relativePath = fileUrl.replace('/uploads/', ''); 
-    const baseUploadDir = process.env.UPLOAD_DIR_BASE || path.join(/*turbopackIgnore: true*/ process.cwd(), 'public', 'uploads');
-    const fullPath = path.join(/*turbopackIgnore: true*/ baseUploadDir, relativePath);
+    const baseUploadDir = process.env.UPLOAD_DIR_BASE 
+        ? path.resolve(process.env.UPLOAD_DIR_BASE)
+        : path.resolve(/*turbopackIgnore: true*/ process.cwd(), 'public', 'uploads');
+    const fullPath = path.resolve(baseUploadDir, relativePath);
 
     console.log(`[Upload] Deleting file from: ${fullPath}`);
 
