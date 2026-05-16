@@ -216,13 +216,14 @@ export async function getAmbassadorPerformance(userId: string) {
     // Check visibility permission
     const isSelf = viewerId === userId;
     const isOpsManager = viewerRole === Role.OPERATIONS_MANAGER;
+    const isAdmin = viewerRole === Role.ADMIN;
+    const isFinance = viewerRole === Role.FINANCE;
     const isManagerOfUser = viewerRole === Role.MANAGER && user.managerId === viewerId;
     const isTeamLeaderOfUser = viewerRole === Role.TEAM_LEADER && user.teamLeaderId === viewerId;
 
-    // Anyone logged in can view the basic profile now, but financial metrics are still protected below
-    // if (!isSelf && !isOpsManager && !isManagerOfUser && !isTeamLeaderOfUser) {
-    //     throw new Error("Unauthorized to view this profile");
-    // }
+    // Financial visibility boolean
+    const canViewFinancials = isSelf || isOpsManager || isAdmin || isFinance;
+    const canViewRevenue = canViewFinancials || isManagerOfUser;
 
     // Calculate metrics
     const subscriptionSales = user.referrals.reduce((sum, referral) => sum + referral.subscriptions.length, 0);
@@ -262,10 +263,10 @@ export async function getAmbassadorPerformance(userId: string) {
             totalSales,
             subscriptionSales,
             productSales,
-            totalRevenue: (isOpsManager || isManagerOfUser || isSelf) ? totalRevenue : null,
-            personalEarnings: (isOpsManager || isSelf) ? personalEarnings : null,
-            overrideEarnings: (isOpsManager || isSelf) ? overrideEarnings : null,
-            totalEarnings: (isOpsManager || isSelf) ? (personalEarnings + overrideEarnings) : null,
+            totalRevenue: canViewRevenue ? totalRevenue : null,
+            personalEarnings: canViewFinancials ? personalEarnings : null,
+            overrideEarnings: canViewFinancials ? overrideEarnings : null,
+            totalEarnings: canViewFinancials ? (personalEarnings + overrideEarnings) : null,
         },
         monthlyStats,
         recentActivity: user.commissions.slice(0, 10).map(c => ({
