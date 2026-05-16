@@ -278,9 +278,8 @@ export default function PayoutRequestsPage() {
         </div>
       </div>
 
-      {/* Confirm Dialog */}
       <Dialog open={!!confirmDialog} onOpenChange={() => { setConfirmDialog(null); setNotes(""); }}>
-        <DialogContent className="sm:max-w-[32rem] border-none shadow-2xl p-0 rounded-[2rem] overflow-hidden bg-white">
+        <DialogContent className="sm:max-w-[32rem] border-none shadow-2xl p-0 rounded-[2rem] overflow-y-auto max-h-[95vh] bg-white">
             <div className={cn(
                 "p-8 relative border-b border-stone-100",
                 confirmDialog?.action === "reject" ? "bg-red-50 text-red-900" : "bg-[#FFFAF5] text-slate-900"

@@ -120,7 +120,7 @@ export default function AdminPlansPage() {
                                 <Plus size={20} /> Create Plan
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-[50rem] w-[95vw] border-none shadow-2xl p-0 rounded-[2.5rem] overflow-hidden">
+                        <DialogContent className="sm:max-w-[50rem] w-[95vw] border-none shadow-2xl p-0 rounded-[2.5rem] overflow-y-auto max-h-[95vh]">
                             <div className="bg-[#FFFAF5] p-10 border-b border-stone-100 relative">
                                 <div className="absolute top-0 right-0 p-10 opacity-5 rotate-12">
                                     <Crown size={140} className="text-stone-900" />

@@ -168,7 +168,7 @@ function ChildFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[40rem] p-0 border-none shadow-2xl rounded-[2.5rem] overflow-hidden">
+      <DialogContent className="sm:max-w-[40rem] p-0 border-none shadow-2xl rounded-[2.5rem] overflow-y-auto max-h-[95vh]">
         <div className="bg-[#FFFAF5] p-10 border-b border-stone-100 relative">
             <div className="absolute top-0 right-0 p-10 opacity-5 rotate-12">
                 <Baby size={140} />

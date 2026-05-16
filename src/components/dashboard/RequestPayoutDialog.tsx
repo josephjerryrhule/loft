@@ -65,7 +65,7 @@ export function RequestPayoutDialog({ availableBalance, minimumPayoutAmount = 50
                     <Wallet size={20} /> Request Payout
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto border-none shadow-2xl p-0 rounded-[2.5rem] overflow-hidden bg-white">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto border-none shadow-2xl p-0 rounded-[2.5rem] bg-white">
                 <div className="bg-[#FFFAF5] p-10 border-b border-stone-100 relative">
                     <div className="absolute top-0 right-0 p-10 opacity-5 rotate-12">
                         <Wallet size={140} className="text-stone-900" />

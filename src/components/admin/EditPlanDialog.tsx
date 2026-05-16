@@ -73,7 +73,7 @@ export function EditPlanDialog({ plan, onSuccess }: EditPlanDialogProps) {
           <Pencil className="h-5 w-5" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[50rem] w-[95vw] border-none shadow-2xl p-0 rounded-2xl sm:rounded-[2.5rem] overflow-hidden">
+      <DialogContent className="sm:max-w-[50rem] w-[95vw] border-none shadow-2xl p-0 rounded-2xl sm:rounded-[2.5rem] overflow-y-auto max-h-[95vh]">
         <div className="bg-[#FFFAF5] p-6 sm:p-10 border-b border-stone-100 relative">
             <div className="absolute top-0 right-0 p-6 sm:p-10 opacity-5 rotate-12">
                 <Settings2 size={140} className="w-24 h-24 sm:w-36 sm:h-36" />
