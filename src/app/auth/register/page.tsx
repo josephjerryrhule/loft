@@ -116,7 +116,8 @@ function RegisterForm() {
                         <FormControl>
                             <div className="relative">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
-                                <Input placeholder="john@example.com" className="pl-12 h-12 bg-stone-50 border-stone-100 rounded-xl font-medium focus-visible:ring-[#E87154] px-4" {...field} />
+                                <Input placeholder="john@example.com" className="pl-12 h-12 bg-stone-50 border-stone-100 rounded-xl font-medium focus-visible:ring-[#E87154]" {...field} />
+
                             </div>
                         </FormControl>
                         <FormMessage />
