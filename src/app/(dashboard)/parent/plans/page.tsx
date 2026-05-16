@@ -91,8 +91,67 @@ export default async function CustomerPlansPage() {
                             <CardTitle className="text-2xl font-black">Family Members</CardTitle>
                             <CardDescription className="text-sm font-medium">Manage and upgrade the reading access for everyone in your household.</CardDescription>
                         </CardHeader>
-                        <CardContent className="p-0">
-                            <div className="overflow-x-auto">
+                        <CardContent className="p-6 sm:p-0">
+                            {/* Mobile View: Card Layout */}
+                            <div className="grid gap-4 sm:hidden">
+                                {childProfiles.map((child) => {
+                                    const sub = getChildSubscription(child.id);
+                                    return (
+                                        <Card key={child.id} className="border border-stone-100 shadow-sm rounded-2xl overflow-hidden">
+                                            <div className="p-4 space-y-4">
+                                                <div className="flex items-center gap-4">
+                                                    <div 
+                                                        className="h-12 w-12 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-sm shrink-0"
+                                                        style={{ backgroundColor: child.avatarColor || "#E87154" }}
+                                                    >
+                                                        {child.name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <div className="flex flex-col flex-1 min-w-0">
+                                                        <span className="font-black text-slate-900 tracking-tight truncate">{child.name}</span>
+                                                        <div className="flex items-center justify-between">
+                                                            {sub ? (
+                                                                <span className="text-xs font-black text-[#E87154] truncate">{sub.plan.name}</span>
+                                                            ) : (
+                                                                <span className="text-stone-400 font-bold italic text-xs">Free Basic</span>
+                                                            )}
+                                                            {sub ? (
+                                                                <Badge className="bg-emerald-50 text-emerald-700 border-none text-[8px] font-black uppercase tracking-widest px-2 h-5">Verified</Badge>
+                                                            ) : (
+                                                                <Badge variant="outline" className="text-stone-300 border-stone-100 text-[8px] font-black uppercase tracking-widest px-2 h-5">Limited</Badge>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center justify-between pt-3 border-t border-stone-50">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[8px] font-black uppercase tracking-widest text-stone-400">Renewal Date</span>
+                                                        {sub ? (
+                                                            <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500">
+                                                                <Calendar size={10} />
+                                                                <span>{new Date(sub.endDate).toLocaleDateString()}</span>
+                                                            </div>
+                                                        ) : <span className="text-stone-200 text-xs">—</span>}
+                                                    </div>
+                                                    <SubscribePlanButton 
+                                                        allPlans={plans}
+                                                        userEmail={userEmail}
+                                                        userId={userId}
+                                                        userRole={(session?.user as any)?.role}
+                                                        childProfiles={childProfiles}
+                                                        initialChildId={child.id}
+                                                        label={sub ? "Change" : "Upgrade"}
+                                                        allowSelfProfile={false}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </Card>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Desktop View: Table Layout */}
+                            <div className="hidden sm:block overflow-x-auto">
                                 <Table>
                                     <TableHeader>
                                         <TableRow className="hover:bg-transparent border-none">
@@ -182,32 +241,53 @@ export default async function CustomerPlansPage() {
                                 <CardTitle className="text-2xl font-black">Link Your Plans</CardTitle>
                                 <CardDescription className="text-stone-600 font-medium italic">These plans are active but need to be linked to a member profile.</CardDescription>
                             </CardHeader>
-                            <CardContent className="p-0">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow className="hover:bg-transparent border-none">
-                                            <TableHead className="pl-10 text-stone-500">Plan Type</TableHead>
-                                            <TableHead className="text-stone-500 text-right">Price</TableHead>
-                                            <TableHead className="text-stone-500">Renewal Date</TableHead>
-                                            <TableHead className="text-right pr-10 text-stone-500">Assignment</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {unassignedSubscriptions.map((sub) => (
-                                            <TableRow key={sub.id} className="border-stone-100 transition-colors hover:bg-white/50">
-                                                <TableCell className="pl-10 py-6 font-black text-slate-900">{sub.plan.name}</TableCell>
-                                                <TableCell className="text-right font-black text-[#E87154]">GHS {Number(sub.plan.price).toFixed(2)}</TableCell>
-                                                <TableCell className="text-stone-600 font-medium">{new Date(sub.endDate).toLocaleDateString()}</TableCell>
-                                                <TableCell className="text-right pr-10">
-                                                    <AssignSubscriptionDialog 
-                                                        subscriptionId={sub.id} 
-                                                        childProfiles={childProfiles} 
-                                                    />
-                                                </TableCell>
+                            <CardContent className="p-6 sm:p-0">
+                                {/* Mobile view for unassigned */}
+                                <div className="grid gap-4 sm:hidden">
+                                    {unassignedSubscriptions.map((sub) => (
+                                        <Card key={sub.id} className="border border-amber-100 shadow-sm rounded-2xl overflow-hidden p-4 bg-white/50">
+                                            <div className="flex justify-between items-start mb-3">
+                                                <div className="flex flex-col">
+                                                    <span className="font-black text-slate-900 text-sm">{sub.plan.name}</span>
+                                                    <span className="text-[10px] text-amber-600 font-bold uppercase">{new Date(sub.endDate).toLocaleDateString()}</span>
+                                                </div>
+                                                <span className="font-black text-[#E87154] text-sm">GHS {Number(sub.plan.price).toFixed(2)}</span>
+                                            </div>
+                                            <AssignSubscriptionDialog 
+                                                subscriptionId={sub.id} 
+                                                childProfiles={childProfiles} 
+                                            />
+                                        </Card>
+                                    ))}
+                                </div>
+
+                                <div className="hidden sm:block overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow className="hover:bg-transparent border-none">
+                                                <TableHead className="pl-10 text-stone-500">Plan Type</TableHead>
+                                                <TableHead className="text-stone-500 text-right">Price</TableHead>
+                                                <TableHead className="text-stone-500">Renewal Date</TableHead>
+                                                <TableHead className="text-right pr-10 text-stone-500">Assignment</TableHead>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {unassignedSubscriptions.map((sub) => (
+                                                <TableRow key={sub.id} className="border-stone-100 transition-colors hover:bg-white/50">
+                                                    <TableCell className="pl-10 py-6 font-black text-slate-900">{sub.plan.name}</TableCell>
+                                                    <TableCell className="text-right font-black text-[#E87154]">GHS {Number(sub.plan.price).toFixed(2)}</TableCell>
+                                                    <TableCell className="text-stone-600 font-medium">{new Date(sub.endDate).toLocaleDateString()}</TableCell>
+                                                    <TableCell className="text-right pr-10">
+                                                        <AssignSubscriptionDialog 
+                                                            subscriptionId={sub.id} 
+                                                            childProfiles={childProfiles} 
+                                                        />
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
                             </CardContent>
                         </Card>
                     )}
@@ -226,8 +306,62 @@ export default async function CustomerPlansPage() {
                             <CardTitle className="text-2xl font-black">Membership Plans</CardTitle>
                             <CardDescription className="text-sm font-medium">Unlock the full library of interactive stories for your children.</CardDescription>
                         </CardHeader>
-                        <CardContent className="p-0">
-                            <div className="overflow-x-auto">
+                        <CardContent className="p-6 sm:p-0">
+                            {/* Mobile View: Card Layout */}
+                            <div className="grid gap-4 sm:hidden">
+                                {/* Free Plan Card */}
+                                <Card className="border border-stone-100 shadow-sm rounded-2xl overflow-hidden p-5 bg-stone-50/50">
+                                    <div className="flex justify-between items-start mb-3">
+                                        <div className="flex flex-col">
+                                            <span className="font-black text-slate-900 text-sm tracking-tight">LOFT BASIC</span>
+                                            <span className="text-[8px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Standard Entry</span>
+                                        </div>
+                                        <span className="text-xs font-black text-slate-300">GHS 0.00</span>
+                                    </div>
+                                    <div className="flex items-center justify-between mt-4">
+                                        <Badge variant="outline" className="flex items-center gap-1 font-black uppercase text-[8px] tracking-tighter bg-white border-none shadow-sm px-2">
+                                            <Check className="h-2.5 w-2.5 text-emerald-500" />
+                                            Public Stories
+                                        </Badge>
+                                        <Badge className="bg-stone-100 text-stone-400 border-none text-[8px] font-black uppercase tracking-widest px-2 h-5">Default</Badge>
+                                    </div>
+                                </Card>
+
+                                {/* Paid Plan Cards */}
+                                {plans.map((plan) => (
+                                    <Card key={plan.id} className="border border-stone-100 shadow-sm rounded-2xl overflow-hidden p-5 bg-white group">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div className="flex flex-col">
+                                                <span className="font-black text-slate-900 text-sm tracking-tight">{plan.name}</span>
+                                                <span className="text-[9px] text-stone-400 font-black uppercase tracking-tighter mt-0.5">{plan.durationDays} Days</span>
+                                            </div>
+                                            <span className="text-sm font-black text-[#E87154]">GHS {plan.price.toFixed(2)}</span>
+                                        </div>
+                                        <p className="text-[10px] text-slate-500 font-medium line-clamp-2 mb-4 italic">"{plan.description}"</p>
+                                        <div className="flex items-center justify-between gap-2 pt-3 border-t border-stone-50">
+                                            <div className="flex gap-1">
+                                                {plan.features?.split("\n").slice(0, 1).map((feature, i) => (
+                                                    <Badge key={i} className="flex items-center gap-1 font-black uppercase text-[8px] tracking-tighter bg-emerald-50 text-emerald-700 border-none px-2 h-5">
+                                                        <ShieldCheck className="h-2.5 w-2.5" />
+                                                        {feature.substring(0, 12)}...
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                            <SubscribePlanButton 
+                                                plan={plan}
+                                                userEmail={userEmail}
+                                                userId={userId}
+                                                userRole={(session?.user as any)?.role}
+                                                childProfiles={childProfiles}
+                                                allowSelfProfile={false}
+                                            />
+                                        </div>
+                                    </Card>
+                                ))}
+                            </div>
+
+                            {/* Desktop View: Table Layout */}
+                            <div className="hidden sm:block overflow-x-auto">
                                 <Table>
                                     <TableHeader>
                                         <TableRow className="hover:bg-transparent border-none">

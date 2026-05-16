@@ -80,7 +80,7 @@ export default function ParentDashboardPage() {
   const activePlansCount = childProfiles.filter((c) => c.activeSubscription).length;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500 pb-10">
       <PageHeader
         title=""
         showGreeting
@@ -90,19 +90,19 @@ export default function ParentDashboardPage() {
             variant="outline"
             onClick={handleRefresh}
             disabled={refreshing}
-            className="h-12 px-8 rounded-2xl font-black border-2 border-slate-100 dark:border-slate-800 hover:bg-slate-50 transition-all active:scale-95"
+            className="h-11 sm:h-12 px-4 sm:px-8 rounded-2xl font-black border-2 border-slate-100 dark:border-slate-800 hover:bg-slate-50 transition-all active:scale-95"
           >
-            <RefreshCw className={cn("h-5 w-5 mr-3", refreshing ? "animate-spin" : "")} />
-            Refresh Data
+            <RefreshCw className={cn("h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3", refreshing ? "animate-spin" : "")} />
+            <span className="text-sm sm:text-base">Refresh</span>
           </Button>
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <PremiumKPICard
           title="Books Read"
           value={totalBooksRead}
-          description="Total completed by children"
+          description="Total completed"
           icon={BookOpen}
           theme="primary"
           trend={{ value: "Learning", label: "Progress", type: "up" }}
@@ -110,22 +110,22 @@ export default function ParentDashboardPage() {
         <PremiumKPICard
           title="My Children"
           value={childProfiles.length}
-          description="Registered profiles"
+          description="Lofters"
           icon={Baby}
         />
         <PremiumKPICard
           title="Active Plans"
           value={activePlansCount}
-          description="Subscription coverage"
+          description="Coverage"
           icon={Sparkles}
           theme="success"
         />
         <PremiumKPICard
-          title="Manage Billing"
+          title="Billing"
           value="Plans"
           icon={CreditCard}
           className="cursor-pointer hover:border-[#E87154]/50 transition-colors"
-          description="Subscription settings"
+          description="Settings"
           trend={{ value: "Manage", label: "Payments", type: "neutral" }}
         />
       </div>
@@ -133,7 +133,7 @@ export default function ParentDashboardPage() {
       <div className="grid gap-6">
         {/* My Children Section */}
         <Card className="border-none shadow-md overflow-hidden bg-white dark:bg-slate-900 rounded-[2rem]">
-          <CardHeader className="flex flex-row items-center justify-between p-8 sm:p-10 border-b border-slate-50 dark:border-slate-800">
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between p-6 sm:p-10 border-b border-slate-50 dark:border-slate-800 gap-6">
             <div>
               <div className="flex items-center gap-3 mb-1">
                   <div className="h-6 w-6 rounded-lg bg-[#E87154]/20 flex items-center justify-center">
@@ -144,20 +144,20 @@ export default function ParentDashboardPage() {
               <CardTitle className="text-2xl font-black">My Children</CardTitle>
               <CardDescription className="text-sm font-medium">Reading progress and subscription status for your lofters</CardDescription>
             </div>
-            <div className="flex gap-3">
-                <Button asChild variant="outline" className="h-10 px-5 rounded-xl font-bold border-slate-200 dark:border-slate-800 hover:bg-slate-50 transition-all active:scale-95">
-                    <Link href="/parent/plans" className="flex items-center gap-2">
-                        <CreditCard className="h-4 w-4 text-[#E87154]" /> <span className="hidden sm:inline">View</span> Plans
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+                <Button asChild variant="outline" className="flex-1 sm:flex-none h-11 px-5 rounded-xl font-bold border-slate-200 dark:border-slate-800 hover:bg-slate-50 transition-all active:scale-95">
+                    <Link href="/parent/plans" className="flex items-center justify-center gap-2 text-xs sm:text-sm">
+                        <CreditCard className="h-4 w-4 text-[#E87154]" /> Plans
                     </Link>
                 </Button>
-                <Button asChild className="h-10 px-5 rounded-xl font-bold bg-[#E87154] hover:bg-[#D66144] shadow-lg shadow-[#E87154]/20 text-white transition-all active:scale-95">
-                    <Link href="/parent/children" className="flex items-center gap-2">
-                        <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Add</span> Profile
+                <Button asChild className="flex-1 sm:flex-none h-11 px-5 rounded-xl font-bold bg-[#E87154] hover:bg-[#D66144] shadow-lg shadow-[#E87154]/20 text-white transition-all active:scale-95">
+                    <Link href="/parent/children" className="flex items-center justify-center gap-2 text-xs sm:text-sm">
+                        <Plus className="h-4 w-4" /> Profile
                     </Link>
                 </Button>
             </div>
           </CardHeader>
-          <CardContent className="p-8 sm:p-10">
+          <CardContent className="p-6 sm:p-10">
             {childProfiles.length === 0 ? (
               <div className="text-center py-16 space-y-4">
                 <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -170,21 +170,21 @@ export default function ParentDashboardPage() {
                 </Button>
               </div>
             ) : (
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {childProfiles.map((child) => (
                   <div
                     key={child.id}
-                    className="group relative flex flex-col p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-2xl hover:border-[#E87154]/20 transition-all duration-500"
+                    className="group relative flex flex-col p-5 sm:p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-2xl hover:border-[#E87154]/20 transition-all duration-500"
                   >
                     <div className="flex items-center gap-4 mb-6">
                         <div
-                          className="w-16 h-16 rounded-[1.25rem] flex items-center justify-center text-white font-black text-2xl shadow-lg transform group-hover:rotate-6 transition-transform"
+                          className="w-14 h-14 sm:w-16 sm:h-16 rounded-[1.25rem] flex items-center justify-center text-white font-black text-xl sm:text-2xl shadow-lg transform group-hover:rotate-6 transition-transform"
                           style={{ backgroundColor: child.avatarColor || "#E87154" }}
                         >
                           {child.name.substring(0, 2).toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                          <h4 className="font-black text-xl truncate text-slate-900 dark:text-white tracking-tight">{child.name}</h4>
+                          <h4 className="font-black text-lg sm:text-xl truncate text-slate-900 dark:text-white tracking-tight">{child.name}</h4>
                           <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
                              <BookOpen size={14} /> {child.completedBooks} books read
                           </div>
@@ -217,13 +217,13 @@ export default function ParentDashboardPage() {
                          </Button>
                       )}
                     </div>
-                    </div>
-                    ))}
-                    </div>
-                    )}
-                    </CardContent>
-                    </Card>
-                    </div>
-                    </div>
-                    );
-                    }
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

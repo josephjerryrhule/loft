@@ -31,9 +31,9 @@ export function TablePagination({
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
-    <div className="flex items-center justify-between px-2 py-4">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-4">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span>Show</span>
+        <span className="hidden sm:inline">Show</span>
         <Select
           value={itemsPerPage.toString()}
           onValueChange={(value) => onItemsPerPageChange(Number(value))}
@@ -42,14 +42,16 @@ export function TablePagination({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="10">10</SelectItem>
             <SelectItem value="12">12</SelectItem>
             <SelectItem value="24">24</SelectItem>
             <SelectItem value="48">48</SelectItem>
             <SelectItem value="100">100</SelectItem>
           </SelectContent>
         </Select>
-        <span>
-          items per page · Showing {startItem} to {endItem} of {totalItems}
+        <span className="text-xs sm:text-sm">
+          <span className="hidden sm:inline">items per page · </span>
+          Showing {startItem} to {endItem} of {totalItems}
         </span>
       </div>
 
@@ -59,22 +61,24 @@ export function TablePagination({
           size="sm"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
+          className="h-8 px-2 sm:px-3"
         >
           <ChevronLeft className="h-4 w-4" />
-          Previous
+          <span className="hidden sm:inline ml-1">Previous</span>
         </Button>
         
         <div className="flex items-center gap-1">
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+          {Array.from({ length: Math.min(totalPages > 3 ? 3 : totalPages, totalPages) }, (_, i) => {
             let pageNum: number;
-            if (totalPages <= 5) {
+            // Simplified for mobile, show fewer pages if many
+            if (totalPages <= 3) {
               pageNum = i + 1;
-            } else if (currentPage <= 3) {
+            } else if (currentPage <= 2) {
               pageNum = i + 1;
-            } else if (currentPage >= totalPages - 2) {
-              pageNum = totalPages - 4 + i;
+            } else if (currentPage >= totalPages - 1) {
+              pageNum = totalPages - 2 + i;
             } else {
-              pageNum = currentPage - 2 + i;
+              pageNum = currentPage - 1 + i;
             }
 
             return (
@@ -96,8 +100,9 @@ export function TablePagination({
           size="sm"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
+          className="h-8 px-2 sm:px-3"
         >
-          Next
+          <span className="hidden sm:inline mr-1">Next</span>
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>

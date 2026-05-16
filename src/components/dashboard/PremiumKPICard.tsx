@@ -47,19 +47,19 @@ export function PremiumKPICard({
       {Icon && (
         <div
           className={cn(
-            "absolute top-0 right-0 p-6 opacity-10 transform translate-x-2 -translate-y-2 group-hover:scale-110 transition-transform",
+            "absolute top-0 right-0 p-4 sm:p-6 opacity-10 transform translate-x-2 -translate-y-2 group-hover:scale-110 transition-transform",
             theme === "primary" ? "text-[#E87154]" :
             theme === "success" ? "text-[#7C9070]" :
             theme === "warning" ? "text-amber-500" :
             "text-slate-500"
           )}
         >
-          <Icon size={80} />
+          <Icon size={64} className="sm:size-[80px]" />
         </div>
       )}
-      <CardHeader className="pb-3 pt-6 px-6">
+      <CardHeader className="pb-2 pt-5 sm:pb-3 sm:pt-6 px-4 sm:px-6">
         <CardTitle className={cn(
-            "text-[10px] font-black uppercase tracking-[0.2em]", 
+            "text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em]", 
             theme === "primary" ? "text-[#E87154]" :
             theme === "success" ? "text-[#7C9070]" :
             theme === "warning" ? "text-amber-600" :
@@ -68,23 +68,23 @@ export function PremiumKPICard({
           {title}
         </CardTitle>
       </CardHeader>
-      <CardContent className="px-6 pb-6 pt-0 relative z-10">
-        <div className="text-3xl font-black tracking-tighter text-slate-900">{value}</div>
+      <CardContent className="px-4 sm:px-6 pb-5 sm:pb-6 pt-0 relative z-10">
+        <div className="text-2xl sm:text-3xl font-black tracking-tighter text-slate-900">{value}</div>
         {description && (
-          <p className="text-[11px] mt-1.5 font-bold uppercase tracking-widest text-slate-500">
+          <p className="text-[10px] sm:text-[11px] mt-1 font-bold uppercase tracking-widest text-slate-500 truncate">
             {description}
           </p>
         )}
         {trend && (
           <div
             className={cn(
-              "mt-4 flex items-center text-[10px] font-black uppercase tracking-widest w-fit px-3 py-1.5 rounded-lg shadow-sm transition-all border",
+              "mt-3 sm:mt-4 flex items-center text-[9px] sm:text-[10px] font-black uppercase tracking-widest w-fit px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg shadow-sm transition-all border",
               theme === "primary" ? "bg-white text-[#E87154] border-[#E87154]/20" :
               theme === "success" ? "bg-white text-[#7C9070] border-[#7C9070]/20" :
               "bg-white text-slate-500 border-slate-200"
             )}
           >
-            <span className={cn("mr-1.5", trend.type === "up" ? "text-emerald-500" : trend.type === "down" ? "text-red-500" : "")}>{trend.value}</span>
+            <span className={cn("mr-1 sm:mr-1.5", trend.type === "up" ? "text-emerald-500" : trend.type === "down" ? "text-red-500" : "")}>{trend.value}</span>
             <span className="opacity-70">{trend.label}</span>
           </div>
         )}
