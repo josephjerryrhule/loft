@@ -65,29 +65,31 @@ export function RequestPayoutDialog({ availableBalance, minimumPayoutAmount = 50
                     <Wallet size={20} /> Request Payout
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto border-none shadow-2xl p-0 rounded-[2.5rem]">
-                <div className="bg-[#E87154] p-10 text-white relative">
-                    <div className="absolute top-0 right-0 p-10 opacity-10 rotate-12">
-                        <Wallet size={140} />
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto border-none shadow-2xl p-0 rounded-[2.5rem] overflow-hidden bg-white">
+                <div className="bg-[#FFFAF5] p-10 border-b border-stone-100 relative">
+                    <div className="absolute top-0 right-0 p-10 opacity-5 rotate-12">
+                        <Wallet size={140} className="text-stone-900" />
                     </div>
                     <DialogHeader>
-                        <DialogTitle className="text-3xl font-black text-white leading-none">Withdraw Funds</DialogTitle>
-                        <DialogDescription className="text-white/80 font-medium mt-3 text-base">
+                        <DialogTitle className="text-3xl font-black text-slate-900 leading-none">Withdraw Funds</DialogTitle>
+                        <DialogDescription className="text-slate-500 font-medium mt-3 text-base italic">
                             Transfer your earned commissions to your bank or mobile money account
                         </DialogDescription>
                     </DialogHeader>
-                    
-                    <div className="mt-8 bg-white/10 rounded-[2rem] p-6 backdrop-blur-md border border-white/20 shadow-inner">
-                        <p className="text-[10px] uppercase font-black tracking-[0.3em] text-white/60 mb-2">Available Balance</p>
-                        <p className="text-4xl font-black text-white">GHS {availableBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+
+                    <div className="mt-8 bg-white border border-stone-100 rounded-[2rem] p-6 shadow-sm">
+                        <p className="text-[10px] uppercase font-black tracking-[0.3em] text-stone-400 mb-1">Available Balance</p>
+                        <p className="text-4xl font-black text-[#E87154]">GHS {availableBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                     </div>
                 </div>
 
-                <form action={handleSubmit} className="p-10 space-y-8 bg-white dark:bg-slate-900">
+                <form action={handleSubmit} className="p-10 space-y-8 bg-white">
+                    {availableBalance < minimumPayoutAmount && (
                         <div className="flex items-start gap-4 p-5 bg-red-50 text-red-600 rounded-2xl border border-red-100 text-sm animate-in pulse duration-1000">
                             <Info size={20} className="shrink-0 mt-0.5" />
                             <p className="font-bold leading-relaxed text-sm">Minimum payout amount is GHS {minimumPayoutAmount.toFixed(2)}. You need GHS {(minimumPayoutAmount - availableBalance).toFixed(2)} more to request a payout.</p>
                         </div>
+                    )}
 
                     <div className="space-y-3">
                         <Label htmlFor="amount" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Amount to Withdraw</Label>
