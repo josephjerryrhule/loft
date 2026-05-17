@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,7 +24,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Plus, Globe, HardDrive, BookOpen, Save } from "lucide-react";
+import { Plus, Globe, HardDrive, BookOpen, Save, FileText, X, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { createFlipbook } from "@/app/actions/flipbooks";
@@ -49,6 +49,21 @@ export function CreateFlipbookDialog() {
   const [pending, startTransition] = useTransition();
   const [stage, setStage] = useState<UploadStage>({ kind: "idle" });
   const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const acceptDroppedFile = (f: File | undefined) => {
+    if (!f) return;
+    if (f.type !== "application/pdf") {
+      toast.error("Only PDF files are accepted");
+      return;
+    }
+    if (f.size > 50 * 1024 * 1024) {
+      toast.error("PDF too large (max 50 MB)");
+      return;
+    }
+    setPdfFile(f);
+  };
 
   const form = useForm<CreateFlipbookFormValues>({
     resolver: zodResolver(createFlipbookSchema),
@@ -244,22 +259,85 @@ export function CreateFlipbookDialog() {
               </TabsContent>
 
               <TabsContent value="pdf" className="space-y-3 pt-4">
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1 block mb-2">PDF File</label>
-                  <Input
-                    type="file"
-                    accept="application/pdf"
-                    className="h-11 sm:h-12 bg-slate-50 border-none rounded-xl font-bold focus-visible:ring-[#E87154] shadow-inner px-4"
-                    onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1 block mb-2">PDF Source</label>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="application/pdf"
+                  hidden
+                  onChange={(e) => acceptDroppedFile(e.target.files?.[0])}
+                  disabled={pending}
+                />
+
+                {pdfFile ? (
+                  <div className="flex items-center gap-4 p-4 sm:p-5 bg-slate-50 rounded-2xl border-2 border-emerald-200 shadow-inner">
+                    <div className="h-12 w-12 flex-none rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                      <FileText size={22} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-black text-slate-900 truncate">{pdfFile.name}</p>
+                      <p className="text-[11px] text-slate-500 font-bold">
+                        {(pdfFile.size / 1024 / 1024).toFixed(1)} MB · Ready to upload
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={pending}
+                        className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-[#E87154]"
+                      >
+                        Replace
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setPdfFile(null)}
+                        disabled={pending}
+                        className="h-8 w-8 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-500/10"
+                      >
+                        <X size={16} />
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                    onDragEnter={(e) => { e.preventDefault(); setDragActive(true); }}
+                    onDragLeave={(e) => { e.preventDefault(); setDragActive(false); }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setDragActive(false);
+                      acceptDroppedFile(e.dataTransfer.files?.[0]);
+                    }}
                     disabled={pending}
-                  />
-                </div>
-                {pdfFile && (
-                  <p className="text-xs text-slate-500 ml-1">
-                    {pdfFile.name} ({(pdfFile.size / 1024 / 1024).toFixed(1)} MB)
-                  </p>
+                    className={`w-full flex flex-col items-center justify-center gap-3 p-8 sm:p-10 rounded-2xl border-2 border-dashed transition-all shadow-inner ${
+                      dragActive
+                        ? "bg-[#E87154]/10 border-[#E87154]"
+                        : "bg-slate-50 border-slate-200 hover:border-[#E87154]/60 hover:bg-[#E87154]/5"
+                    } ${pending ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                  >
+                    <div className={`h-14 w-14 rounded-2xl flex items-center justify-center transition-colors ${
+                      dragActive ? "bg-[#E87154] text-white" : "bg-white text-[#E87154] shadow-sm"
+                    }`}>
+                      <UploadCloud size={26} />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-black text-slate-900">
+                        {dragActive ? "Drop the PDF here" : "Drag a PDF here, or click to pick one"}
+                      </p>
+                      <p className="text-[11px] text-slate-400 font-medium mt-1">
+                        Max 50 MB · Server compresses + renders pages in 10–60s
+                      </p>
+                    </div>
+                  </button>
                 )}
-                <p className="text-[11px] text-slate-400 ml-1">Max 50 MB. The server will compress + render pages — this may take 10-60 seconds.</p>
               </TabsContent>
             </Tabs>
 
