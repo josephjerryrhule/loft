@@ -31,6 +31,11 @@ const nextConfig: NextConfig = {
   // Experimental features for better performance
   experimental: {
     optimizePackageImports: ['lucide-react', 'recharts', 'pdfjs-dist'],
+    // Flipbook PDF uploads stream through createFlipbook server action.
+    // Cap matches MAX_SOURCE_PDF_MB in src/app/actions/flipbooks.ts (50 MB) with headroom.
+    serverActions: {
+      bodySizeLimit: '60mb',
+    },
   },
 
   // Headers for caching and security
