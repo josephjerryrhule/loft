@@ -36,6 +36,7 @@ export function AdminFlipbookLibraryClient({ initialGroups, categories }: Props)
           flipbook={editFlipbook}
           open={true}
           onOpenChange={(o) => { if (!o) setEditId(null); }}
+          categories={categories}
         />
       )}
     </>

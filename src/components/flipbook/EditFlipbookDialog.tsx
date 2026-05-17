@@ -6,7 +6,7 @@ import { z } from "zod";
 import { updateFlipbook } from "@/app/actions/flipbooks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea"; 
+import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
 import {
@@ -16,8 +16,14 @@ import {
   DialogTitle,
   DialogDescription
 } from "@/components/ui/dialog";
-import { useState } from "react";
-import { getAgeGroupLabel } from "@/lib/utils"; 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { getAgeGroupLabel } from "@/lib/utils";
 import { BookOpen, Save, Globe } from "lucide-react";
 
 const editFlipbookSchema = z.object({
@@ -26,15 +32,17 @@ const editFlipbookSchema = z.object({
   ageGroup: z.string().optional(),
   heyzineUrl: z.string().url("Must be a valid URL").optional(),
   isFree: z.boolean().optional(),
+  categoryId: z.string().nullable().optional(),
 });
 
 interface EditFlipbookDialogProps {
     flipbook: any;
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    categories?: { id: string; name: string }[];
 }
 
-export function EditFlipbookDialog({ flipbook, open, onOpenChange }: EditFlipbookDialogProps) {
+export function EditFlipbookDialog({ flipbook, open, onOpenChange, categories }: EditFlipbookDialogProps) {
   const form = useForm<z.infer<typeof editFlipbookSchema>>({
     resolver: zodResolver(editFlipbookSchema),
     defaultValues: {
@@ -43,6 +51,7 @@ export function EditFlipbookDialog({ flipbook, open, onOpenChange }: EditFlipboo
       ageGroup: flipbook.ageGroup || "",
       heyzineUrl: flipbook.heyzineUrl || "",
       isFree: flipbook.isFree || false,
+      categoryId: flipbook.categoryId ?? null,
     },
   });
 
@@ -108,6 +117,29 @@ export function EditFlipbookDialog({ flipbook, open, onOpenChange }: EditFlipboo
                   <FormItem>
                     <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Description</FormLabel>
                     <FormControl><Textarea className="min-h-[100px] bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-medium focus-visible:ring-[#E87154] shadow-inner p-4" placeholder="Summarize the content..." {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="categoryId" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Category</FormLabel>
+                    <Select
+                      onValueChange={(v) => field.onChange(v === "__none__" ? null : v)}
+                      value={field.value || "__none__"}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="h-11 sm:h-12 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold focus:ring-[#E87154] shadow-inner px-4">
+                          <SelectValue placeholder="Pick a category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="__none__">Uncategorized</SelectItem>
+                        {(categories || []).map((c) => (
+                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )} />
