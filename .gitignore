@@ -44,7 +44,6 @@ next-env.d.ts
 /public/uploads/misclogs/
 scratch/
 artifacts/
-tests/
 
 /.claude/
 /graphify-out
