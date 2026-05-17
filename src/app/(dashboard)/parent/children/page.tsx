@@ -415,11 +415,11 @@ export default function ChildrenPage() {
                             ) : (
                                 <Badge variant="outline" className="border-stone-100 text-stone-400 px-3 h-6 text-[10px] font-black uppercase tracking-widest">Free Basic</Badge>
                             )}
-                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <div className="flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300">
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 rounded-xl hover:bg-stone-50 text-stone-400 hover:text-slate-900"
+                                    className="h-9 w-9 rounded-xl bg-slate-100 sm:bg-transparent hover:bg-slate-200 text-slate-600 sm:text-stone-400 hover:text-slate-900 shadow-sm sm:shadow-none"
                                     onClick={() => {
                                         setEditChild(child);
                                         setDialogOpen(true);
@@ -430,7 +430,7 @@ export default function ChildrenPage() {
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 rounded-xl hover:bg-red-50 text-stone-300 hover:text-red-500"
+                                    className="h-9 w-9 rounded-xl bg-red-50 sm:bg-transparent hover:bg-red-100 text-red-500 sm:text-stone-300 hover:text-red-600 shadow-sm sm:shadow-none"
                                     onClick={() => setDeleteChildState(child)}
                                 >
                                     <Trash2 className="h-4 w-4" />
