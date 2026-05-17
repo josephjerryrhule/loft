@@ -161,7 +161,7 @@ export function SystemSettingsForm({ settings }: SystemSettingsFormProps) {
                                                     alt="Logo" 
                                                     className="object-contain p-4 w-full h-full"
                                                 />
-                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <div className="absolute inset-0 bg-black/40 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                     <Button
                                                         type="button"
                                                         variant="destructive"
@@ -222,7 +222,7 @@ export function SystemSettingsForm({ settings }: SystemSettingsFormProps) {
                                                     alt="Favicon" 
                                                     className="object-contain p-2 w-full h-full"
                                                 />
-                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <div className="absolute inset-0 bg-black/40 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                     <Button
                                                         type="button"
                                                         variant="destructive"
