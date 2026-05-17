@@ -62,6 +62,8 @@ export default function AdminFlipbooksPage() {
       console.log(`${key}:`, value);
     }
     
+    // TODO(Task 20): migrate to new CreateFlipbookInput union shape
+    // @ts-expect-error legacy FormData call — will be removed when page is rewritten
     const result = await createFlipbook(formData);
     
     if (result.error) {
