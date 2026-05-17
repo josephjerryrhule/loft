@@ -1,12 +1,5 @@
-import { promises as fs } from "node:fs";
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path from "node:path";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
 import sharp from "sharp";
-
-const exec = promisify(execFile);
+import { pdf } from "pdf-to-img";
 
 export class PdfProcessorError extends Error {
   readonly cause: unknown;
@@ -31,8 +24,18 @@ export interface ProcessedPdf {
 
 const MAX_LONG_EDGE = 1600;
 const WEBP_QUALITY = 80;
-const RENDER_DPI = 150;
+const RENDER_SCALE = 2; // ~150 DPI equivalent for typical letter-size PDFs
 
+/**
+ * Process a PDF buffer: rasterize each page to WebP via pdf-to-img + sharp.
+ * Pure Node — no system binaries (gs / poppler) required.
+ * Plesk deployment works with zero additional setup.
+ *
+ * Compression is intentionally a passthrough: the WebP page assets are the
+ * runtime artifact that matters; a Ghostscript-compressed source PDF would
+ * require a system binary not available across our environments. The raw
+ * source PDF is still stored separately so admin can re-render anytime.
+ */
 export async function processPdf(input: Buffer): Promise<ProcessedPdf> {
   if (!input || input.length === 0) {
     throw new PdfProcessorError("empty buffer");
@@ -41,57 +44,16 @@ export async function processPdf(input: Buffer): Promise<ProcessedPdf> {
     throw new PdfProcessorError("not a PDF (magic bytes missing)");
   }
 
-  const dir = await mkdtemp(path.join(tmpdir(), "loft-pdf-"));
-  const sourcePath = path.join(dir, "source.pdf");
-  const optimizedPath = path.join(dir, "optimized.pdf");
-  const pagesPrefix = path.join(dir, "page");
-
+  let document: Awaited<ReturnType<typeof pdf>>;
   try {
-    await fs.writeFile(sourcePath, input);
+    document = await pdf(input, { scale: RENDER_SCALE });
+  } catch (e) {
+    throw new PdfProcessorError("failed to load PDF (corrupt or encrypted)", e);
+  }
 
-    // 1. Compress with Ghostscript
-    try {
-      await exec("gs", [
-        "-sDEVICE=pdfwrite",
-        "-dCompatibilityLevel=1.4",
-        "-dPDFSETTINGS=/ebook",
-        "-dNOPAUSE",
-        "-dQUIET",
-        "-dBATCH",
-        `-sOutputFile=${optimizedPath}`,
-        sourcePath,
-      ]);
-    } catch (e: any) {
-      if (e.code === "ENOENT") {
-        // gs missing — fall back to passthrough
-        await fs.copyFile(sourcePath, optimizedPath);
-      } else {
-        throw new PdfProcessorError("ghostscript failed", e);
-      }
-    }
-
-    // 2. Render pages with pdftocairo → PNG
-    try {
-      await exec("pdftocairo", ["-png", "-r", String(RENDER_DPI), optimizedPath, pagesPrefix]);
-    } catch (e: any) {
-      if (e.code === "ENOENT") {
-        throw new PdfProcessorError("pdftocairo missing — install poppler-utils");
-      }
-      throw new PdfProcessorError("pdftocairo failed", e);
-    }
-
-    // 3. Collect generated PNGs and convert each to WebP via sharp
-    const files = (await fs.readdir(dir))
-      .filter((f) => f.startsWith("page-") && f.endsWith(".png"))
-      .sort();
-
-    if (files.length === 0) {
-      throw new PdfProcessorError("no pages rendered (0-page or corrupt PDF)");
-    }
-
-    const pages: ProcessedPage[] = [];
-    for (const f of files) {
-      const pngBuf = await fs.readFile(path.join(dir, f));
+  const pages: ProcessedPage[] = [];
+  try {
+    for await (const pngBuf of document) {
       const img = sharp(pngBuf).resize({
         width: MAX_LONG_EDGE,
         height: MAX_LONG_EDGE,
@@ -106,11 +68,14 @@ export async function processPdf(input: Buffer): Promise<ProcessedPdf> {
         height: meta.height ?? 0,
       });
     }
-
-    const optimizedPdf = await fs.readFile(optimizedPath);
-
-    return { optimizedPdf, pages, totalPages: pages.length };
-  } finally {
-    await rm(dir, { recursive: true, force: true });
+  } catch (e) {
+    throw new PdfProcessorError("failed to render page", e);
   }
+
+  if (pages.length === 0) {
+    throw new PdfProcessorError("no pages rendered (0-page PDF)");
+  }
+
+  // Passthrough: no Ghostscript-style compression. Source PDF stored as-is.
+  return { optimizedPdf: input, pages, totalPages: pages.length };
 }

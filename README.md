@@ -825,24 +825,13 @@ Built with:
 
 ---
 
-## Deployment Preconditions
+## Deployment
 
-The self-hosted flipbook pipeline requires two system binaries on the host:
+The self-hosted flipbook pipeline is pure Node — no system binaries required.
+PDF rasterization uses `pdf-to-img` (bundled with `@napi-rs/canvas`) and `sharp`
+for WebP encoding. Works on Plesk / Vercel / any Node 20+ host out of the box.
 
-- `ghostscript` — PDF compression (`gs -dPDFSETTINGS=/ebook`)
-- `poppler-utils` — PDF page rendering (`pdftocairo`)
-
-**Debian / Ubuntu / Plesk:**
-```bash
-sudo apt-get update && sudo apt-get install -y ghostscript poppler-utils
-```
-
-**RHEL / CentOS:**
-```bash
-sudo yum install -y ghostscript poppler-utils
-```
-
-If either binary is missing, PDF uploads fail with a clear error and admin can still publish via Heyzine.
+See `docs/DEPLOY_LIVE.md` for the full live-push checklist.
 
 ---
 

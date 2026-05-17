@@ -42,6 +42,7 @@
     "next-auth": "^5.0.0-beta.31",
     "next-themes": "^0.4.6",
     "nodemailer": "^7.0.7",
+    "pdf-to-img": "^6.1.0",
     "pdfjs-dist": "^5.4.530",
     "qrcode": "^1.5.4",
     "react": "19.2.3",

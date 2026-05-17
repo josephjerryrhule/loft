@@ -10,7 +10,6 @@ import { uploadBuffer, deleteFlipbookAssets } from "@/lib/upload";
 import { categorySlugForAgeGroup } from "@/lib/age-group-category";
 
 const MAX_SOURCE_PDF_MB = 50;
-const MAX_OPTIMIZED_PDF_MB = 25;
 
 async function assertAdminOrOpsForFlipbook() {
   const session = await auth();
@@ -125,16 +124,11 @@ export async function createFlipbook(input: CreateFlipbookInput) {
       const buf = Buffer.from(ab);
       const result = await processPdf(buf);
 
-      const optMb = result.optimizedPdf.length / (1024 * 1024);
-      if (optMb > MAX_OPTIMIZED_PDF_MB) {
-        throw new Error(
-          `PDF couldn't be compressed below ${MAX_OPTIMIZED_PDF_MB} MB (got ${optMb.toFixed(1)} MB). Try splitting into chapters.`
-        );
-      }
-
       const folder = `flipbooks/${created.id}`;
       const sourceUrl = await uploadBuffer(buf, "application/pdf", folder, "source.pdf");
-      const optimizedUrl = await uploadBuffer(result.optimizedPdf, "application/pdf", folder, "optimized.pdf");
+      // optimizedPdf is currently a passthrough of the source (no system compressor).
+      // Skip the extra write to avoid storing the same bytes twice.
+      const optimizedUrl = sourceUrl;
 
       const pages = [];
       for (let i = 0; i < result.pages.length; i++) {
