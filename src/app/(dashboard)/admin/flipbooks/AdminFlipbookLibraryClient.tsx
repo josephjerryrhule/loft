@@ -29,14 +29,13 @@ export function AdminFlipbookLibraryClient({ initialGroups, categories }: Props)
         groups={initialGroups}
         onEdit={(id) => setEditId(id)}
         onPublishToggle={onPublishToggle}
-        renderCreateButton={() => <CreateFlipbookDialog categories={categories} />}
+        renderCreateButton={() => <CreateFlipbookDialog />}
       />
       {editFlipbook && (
         <EditFlipbookDialog
           flipbook={editFlipbook}
           open={true}
           onOpenChange={(o) => { if (!o) setEditId(null); }}
-          categories={categories}
         />
       )}
     </>

@@ -7,6 +7,7 @@ import { z, ZodError } from "zod";
 import { canUseCustomerLibrary, canUseParentLibraryForChild } from "@/lib/access-control.mjs";
 import { processPdf, PdfProcessorError } from "@/lib/pdf-processor";
 import { uploadBuffer, deleteFlipbookAssets } from "@/lib/upload";
+import { categorySlugForAgeGroup } from "@/lib/age-group-category";
 
 const MAX_SOURCE_PDF_MB = 50;
 const MAX_OPTIMIZED_PDF_MB = 25;
@@ -52,7 +53,6 @@ type CreateFlipbookInput =
       sourceType: "HEYZINE";
       title: string;
       description?: string;
-      categoryId?: string | null;
       ageGroup?: string | null;
       isFree?: boolean;
       coverImageUrl?: string | null;
@@ -63,7 +63,6 @@ type CreateFlipbookInput =
       sourceType: "SELF_HOSTED";
       title: string;
       description?: string;
-      categoryId?: string | null;
       ageGroup?: string | null;
       isFree?: boolean;
       coverImageUrl?: string | null;
@@ -74,12 +73,17 @@ export async function createFlipbook(input: CreateFlipbookInput) {
   try {
     const userId = await assertAdminOrOpsForFlipbook();
 
+    // Auto-derive categoryId from ageGroup (single lookup, used by both branches)
+    const slug = categorySlugForAgeGroup(input.ageGroup);
+    const cat = await prisma.category.findUnique({ where: { slug }, select: { id: true } });
+    const derivedCategoryId = cat?.id ?? null;
+
     if (input.sourceType === "HEYZINE") {
       const fb = await prisma.flipbook.create({
         data: {
           title: input.title,
           description: input.description,
-          categoryId: input.categoryId ?? null,
+          categoryId: derivedCategoryId,
           ageGroup: input.ageGroup ?? null,
           isFree: input.isFree ?? false,
           coverImageUrl: input.coverImageUrl ?? null,
@@ -106,7 +110,7 @@ export async function createFlipbook(input: CreateFlipbookInput) {
       data: {
         title: input.title,
         description: input.description,
-        categoryId: input.categoryId ?? null,
+        categoryId: derivedCategoryId,
         ageGroup: input.ageGroup ?? null,
         isFree: input.isFree ?? false,
         coverImageUrl: input.coverImageUrl ?? null,
@@ -208,6 +212,13 @@ export async function updateFlipbook(flipbookId: string, data: {
              updateData.coverImageUrl = thumbnailUrl;
              // We don't remove old PDF/cover explicitly here as they might still be useful or managed differently.
              // If we want to clean up, we could do it, but for now let's focus on the switch.
+        }
+
+        // Auto-derive categoryId whenever ageGroup is provided
+        if ("ageGroup" in data) {
+            const slug = categorySlugForAgeGroup(updateData.ageGroup);
+            const cat = await prisma.category.findUnique({ where: { slug }, select: { id: true } });
+            (updateData as any).categoryId = cat?.id ?? null;
         }
 
         await prisma.flipbook.update({
