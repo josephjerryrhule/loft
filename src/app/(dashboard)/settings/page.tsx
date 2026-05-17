@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileSettingsForm } from "@/components/user/ProfileSettingsForm";
 import { getSystemSettings } from "@/app/actions/settings";
+import { listCategories } from "@/app/actions/categories";
 import { SystemSettingsForm } from "@/components/admin/SystemSettingsForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Role } from "@/lib/types";
@@ -31,9 +32,13 @@ export default async function SettingsPage() {
     const isOpsManager = user.role === "OPERATIONS_MANAGER" || user.role === Role.OPERATIONS_MANAGER;
     const canSeeSystemSettings = isAdmin || isOpsManager;
     
-    let systemSettings = {};
+    let systemSettings: Record<string, any> = {};
+    let categories: any[] = [];
     if (canSeeSystemSettings) {
-        systemSettings = await getSystemSettings();
+        [systemSettings, categories] = await Promise.all([
+            getSystemSettings(),
+            listCategories(),
+        ]);
     }
 
     return (
@@ -102,7 +107,7 @@ export default async function SettingsPage() {
 
                 {canSeeSystemSettings && (
                     <TabsContent value="system" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <SystemSettingsForm settings={systemSettings} />
+                        <SystemSettingsForm settings={systemSettings} categories={categories} />
                     </TabsContent>
                 )}
             </Tabs>

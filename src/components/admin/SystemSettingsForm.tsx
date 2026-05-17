@@ -10,14 +10,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { updateSystemSettings } from "@/app/actions/settings";
 import { toast } from "sonner";
 import { useState, useRef } from "react";
-import { Loader2, Copy, Check, Upload, X, Image as ImageIcon, Globe, Palette, Mail, CreditCard, PieChart, ShieldCheck, Percent } from "lucide-react";
+import { Loader2, Copy, Check, Upload, X, Image as ImageIcon, Globe, Palette, Mail, CreditCard, PieChart, ShieldCheck, Percent, FolderTree } from "lucide-react";
+import { CategoryManager } from "@/components/admin/CategoryManager";
 import { cn } from "@/lib/utils";
 
 interface SystemSettingsFormProps {
     settings: Record<string, any>;
+    categories?: { id: string; name: string; slug: string; displayOrder: number; _count?: { flipbooks: number } }[];
 }
 
-export function SystemSettingsForm({ settings }: SystemSettingsFormProps) {
+export function SystemSettingsForm({ settings, categories = [] }: SystemSettingsFormProps) {
     const [loading, setLoading] = useState(false);
     const [paystackMode, setPaystackMode] = useState<"test" | "live">(
         settings.paystackMode || "test"
@@ -100,6 +102,9 @@ export function SystemSettingsForm({ settings }: SystemSettingsFormProps) {
                     </TabsTrigger>
                     <TabsTrigger value="commissions" className="flex-1 rounded-lg py-2.5 font-bold data-[state=active]:bg-white data-[state=active]:text-[#E87154] data-[state=active]:shadow-sm transition-all gap-2">
                         <PieChart size={16} /> Rewards
+                    </TabsTrigger>
+                    <TabsTrigger value="categories" className="flex-1 rounded-lg py-2.5 font-bold data-[state=active]:bg-white data-[state=active]:text-[#E87154] data-[state=active]:shadow-sm transition-all gap-2">
+                        <FolderTree size={16} /> Categories
                     </TabsTrigger>
                 </TabsList>
 
@@ -542,6 +547,18 @@ export function SystemSettingsForm({ settings }: SystemSettingsFormProps) {
                                     <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest px-1">Smallest balance amount required before a withdrawal can be requested.</p>
                                 </div>
                             </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="categories" className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <Card className="border-none shadow-md overflow-hidden bg-white rounded-[2rem]">
+                        <CardHeader className="p-8 bg-stone-50 border-b border-stone-100">
+                            <CardTitle className="text-xl font-black">Flipbook Categories</CardTitle>
+                            <CardDescription className="text-sm font-medium">Add, rename, reorder, or remove categories used to group flipbooks.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="p-8">
+                            <CategoryManager initial={categories} />
                         </CardContent>
                     </Card>
                 </TabsContent>
