@@ -388,6 +388,7 @@ export async function getCustomerFlipbooks(childProfileId?: string) {
                 pdfUrl: fb.pdfUrl,
                 heyzineUrl: fb.heyzineUrl,
                 iframeContent: fb.iframeContent,
+                pagesManifest: fb.pagesManifest,
                 totalPages: fb.totalPages,
                 ageGroup: fb.ageGroup,
                 isPublished: fb.isPublished,
