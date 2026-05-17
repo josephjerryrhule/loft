@@ -5,6 +5,20 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { z, ZodError } from "zod";
 import { canUseCustomerLibrary, canUseParentLibraryForChild } from "@/lib/access-control.mjs";
+import { processPdf, PdfProcessorError } from "@/lib/pdf-processor";
+import { uploadBuffer, deleteFlipbookAssets } from "@/lib/upload";
+
+const MAX_SOURCE_PDF_MB = 50;
+const MAX_OPTIMIZED_PDF_MB = 25;
+
+async function assertAdminOrOpsForFlipbook() {
+  const session = await auth();
+  const role = (session?.user as any)?.role;
+  if (!session?.user?.id || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
+    throw new Error("Unauthorized");
+  }
+  return session!.user!.id;
+}
 
 const flipbookSchema = z.object({
   title: z.string().min(3),
@@ -33,66 +47,130 @@ async function fetchHeyzineData(url: string) {
   }
 }
 
-export async function createFlipbook(formData: FormData) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
+type CreateFlipbookInput =
+  | {
+      sourceType: "HEYZINE";
+      title: string;
+      description?: string;
+      categoryId?: string | null;
+      ageGroup?: string | null;
+      isFree?: boolean;
+      coverImageUrl?: string | null;
+      heyzineUrl?: string | null;
+      iframeContent?: string | null;
+    }
+  | {
+      sourceType: "SELF_HOSTED";
+      title: string;
+      description?: string;
+      categoryId?: string | null;
+      ageGroup?: string | null;
+      isFree?: boolean;
+      coverImageUrl?: string | null;
+      pdfFile: { name: string; type: string; size: number; arrayBuffer(): Promise<ArrayBuffer> };
+    };
 
-  const title = formData.get("title") as string;
-  const description = formData.get("description") as string;
-  const heyzineUrl = formData.get("heyzineUrl") as string;
-  const rawAgeGroup = formData.get("ageGroup") as string | null;
-  // Normalize age group: empty -> null, any variant containing "all" -> "all"
-  const ageGroup = rawAgeGroup && rawAgeGroup.trim() !== "" ? rawAgeGroup.trim() : null;
-  const normalizedAgeGroup = ageGroup && /all/i.test(ageGroup) ? "all" : ageGroup;
-  const isFree = formData.get("isFree") === "on";
-  const schedulePublish = formData.get("schedulePublish") === "on";
-  const publishedAt = formData.get("publishedAt") as string;
-
+export async function createFlipbook(input: CreateFlipbookInput) {
   try {
-    const validatedData = flipbookSchema.parse({ 
-      title, 
-      description, 
-      heyzineUrl,
-      ageGroup: normalizedAgeGroup,
-      isFree,
-      schedulePublish,
-      publishedAt
-    });
+    const userId = await assertAdminOrOpsForFlipbook();
 
-    // Fetch data from Heyzine
-    const { iframeContent, thumbnailUrl } = await fetchHeyzineData(validatedData.heyzineUrl);
+    if (input.sourceType === "HEYZINE") {
+      const fb = await prisma.flipbook.create({
+        data: {
+          title: input.title,
+          description: input.description,
+          categoryId: input.categoryId ?? null,
+          ageGroup: input.ageGroup ?? null,
+          isFree: input.isFree ?? false,
+          coverImageUrl: input.coverImageUrl ?? null,
+          heyzineUrl: input.heyzineUrl ?? null,
+          iframeContent: input.iframeContent ?? null,
+          sourceType: "HEYZINE",
+          createdById: userId,
+        },
+      });
+      revalidatePath("/admin/flipbooks");
+      return { success: true, id: fb.id };
+    }
 
-    const publishDate = schedulePublish && publishedAt ? new Date(publishedAt) : null;
-    const isPublishedNow = !schedulePublish || (publishDate ? publishDate <= new Date() : false);
+    // SELF_HOSTED path
+    const sizeMb = input.pdfFile.size / (1024 * 1024);
+    if (sizeMb > MAX_SOURCE_PDF_MB) {
+      return { error: `PDF too large (${sizeMb.toFixed(1)} MB). Max ${MAX_SOURCE_PDF_MB} MB.` };
+    }
+    if (input.pdfFile.type !== "application/pdf") {
+      return { error: "Only PDF files are accepted" };
+    }
 
-    await prisma.flipbook.create({
+    const created = await prisma.flipbook.create({
       data: {
-        title: validatedData.title,
-        description: validatedData.description,
-        heyzineUrl: validatedData.heyzineUrl,
-        iframeContent,
-        coverImageUrl: thumbnailUrl,
-        ageGroup: validatedData.ageGroup,
-        createdById: session.user.id,
-        isPublished: isPublishedNow,
-        isFree: validatedData.isFree || false,
-        publishedAt: publishDate,
+        title: input.title,
+        description: input.description,
+        categoryId: input.categoryId ?? null,
+        ageGroup: input.ageGroup ?? null,
+        isFree: input.isFree ?? false,
+        coverImageUrl: input.coverImageUrl ?? null,
+        sourceType: "SELF_HOSTED",
+        createdById: userId,
+        processingStartedAt: new Date(),
       },
     });
 
-    revalidatePath("/admin/flipbooks");
-    revalidatePath("/parent/flipbooks");
-    
-    return { success: true };
-  } catch (error) {
-    console.error("Failed to create flipbook:", error);
-    if (error instanceof ZodError) {
-      console.error("Validation errors:", error.issues);
-      return { error: `Validation failed: ${error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')}` };
+    try {
+      const ab = await input.pdfFile.arrayBuffer();
+      const buf = Buffer.from(ab);
+      const result = await processPdf(buf);
+
+      const optMb = result.optimizedPdf.length / (1024 * 1024);
+      if (optMb > MAX_OPTIMIZED_PDF_MB) {
+        throw new Error(
+          `PDF couldn't be compressed below ${MAX_OPTIMIZED_PDF_MB} MB (got ${optMb.toFixed(1)} MB). Try splitting into chapters.`
+        );
+      }
+
+      const folder = `flipbooks/${created.id}`;
+      const sourceUrl = await uploadBuffer(buf, "application/pdf", folder, "source.pdf");
+      const optimizedUrl = await uploadBuffer(result.optimizedPdf, "application/pdf", folder, "optimized.pdf");
+
+      const pages = [];
+      for (let i = 0; i < result.pages.length; i++) {
+        const name = `page-${String(i + 1).padStart(3, "0")}.webp`;
+        const url = await uploadBuffer(result.pages[i].buffer, "image/webp", folder, name);
+        pages.push({ url, width: result.pages[i].width, height: result.pages[i].height });
+      }
+
+      const manifest = {
+        totalPages: result.totalPages,
+        pages,
+        generatedAt: new Date().toISOString(),
+      };
+
+      await prisma.flipbook.update({
+        where: { id: created.id },
+        data: {
+          pdfUrl: sourceUrl,
+          optimizedPdfUrl: optimizedUrl,
+          pagesManifest: manifest as any,
+          totalPages: result.totalPages,
+          coverImageUrl: input.coverImageUrl ?? pages[0]?.url ?? null,
+          processingStartedAt: null,
+        },
+      });
+
+      revalidatePath("/admin/flipbooks");
+      return { success: true, id: created.id };
+    } catch (e: any) {
+      // Roll back DB row + wipe any partial assets
+      await deleteFlipbookAssets(created.id).catch(() => {});
+      await prisma.flipbook.delete({ where: { id: created.id } }).catch(() => {});
+      const msg =
+        e instanceof PdfProcessorError ? e.message : e?.message ?? "PDF processing failed";
+      return { error: msg };
     }
-    return { error: error instanceof Error ? error.message : "Failed to create flipbook" };
+  } catch (e: any) {
+    if (e.message === "Unauthorized") return { error: "Unauthorized" };
+    console.error("createFlipbook failed", e);
+    return { error: "Failed to create flipbook" };
   }
 }
 
@@ -154,6 +232,9 @@ export async function deleteFlipbook(flipbookId: string) {
             select: { pdfUrl: true, coverImageUrl: true }
         });
 
+        // Wipe all flipbook assets from storage before removing DB row
+        await deleteFlipbookAssets(flipbookId).catch((e) => console.error("Asset wipe failed for", flipbookId, e));
+
         // Delete related progress first if cascade isn't set
         await prisma.flipbookProgress.deleteMany({
             where: { flipbookId }
@@ -163,19 +244,6 @@ export async function deleteFlipbook(flipbookId: string) {
         await prisma.flipbook.delete({
             where: { id: flipbookId }
         });
-
-        // Delete files from storage after successful DB deletion
-        if (flipbook) {
-            const { deleteFromSupabase } = await import("@/lib/upload");
-            
-            if (flipbook.pdfUrl) {
-                await deleteFromSupabase(flipbook.pdfUrl);
-            }
-            
-            if (flipbook.coverImageUrl) {
-                await deleteFromSupabase(flipbook.coverImageUrl);
-            }
-        }
         
         revalidatePath("/admin/flipbooks");
         revalidatePath("/parent/flipbooks");
@@ -320,6 +388,7 @@ export async function getCustomerFlipbooks(childProfileId?: string) {
                 pdfUrl: fb.pdfUrl,
                 heyzineUrl: fb.heyzineUrl,
                 iframeContent: fb.iframeContent,
+                pagesManifest: fb.pagesManifest,
                 totalPages: fb.totalPages,
                 ageGroup: fb.ageGroup,
                 isPublished: fb.isPublished,
@@ -424,4 +493,106 @@ export async function updateFlipbookProgress(data: {
 
 export async function getAllCategories() {
     return [];
+}
+
+export async function reRenderFlipbook(id: string) {
+  try {
+    await assertAdminOrOpsForFlipbook();
+    const fb = await prisma.flipbook.findUnique({
+      where: { id },
+      select: { id: true, sourceType: true, pdfUrl: true, processingStartedAt: true },
+    });
+    if (!fb) return { error: "Flipbook not found" };
+    if (fb.sourceType !== "SELF_HOSTED") return { error: "Only self-hosted flipbooks can be re-rendered" };
+    if (!fb.pdfUrl) return { error: "No source PDF on record — re-upload required" };
+    if (fb.processingStartedAt && Date.now() - fb.processingStartedAt.getTime() < 10 * 60 * 1000) {
+      return { error: "Re-render already in progress" };
+    }
+
+    await prisma.flipbook.update({
+      where: { id },
+      data: { processingStartedAt: new Date() },
+    });
+
+    // Fetch the original PDF from storage (resolved as URL or local path)
+    let buf: Buffer;
+    if (fb.pdfUrl.startsWith("/uploads/")) {
+      const fsMod = await import("fs/promises");
+      const pathMod = await import("path");
+      const base = process.env.UPLOAD_DIR_BASE || pathMod.join(process.cwd(), "public", "uploads");
+      const relative = fb.pdfUrl.replace("/uploads/", "");
+      buf = await fsMod.readFile(pathMod.join(base, relative));
+    } else {
+      const res = await fetch(fb.pdfUrl);
+      if (!res.ok) throw new Error(`Cannot fetch source PDF: ${res.status}`);
+      buf = Buffer.from(await res.arrayBuffer());
+    }
+
+    const result = await processPdf(buf);
+
+    // Write new pages under flipbooks/<id>/v<timestamp>/ then atomic-swap
+    const ts = Date.now();
+    const folder = `flipbooks/${id}/v${ts}`;
+    const optimizedUrl = await uploadBuffer(result.optimizedPdf, "application/pdf", folder, "optimized.pdf");
+    const newPages = [];
+    for (let i = 0; i < result.pages.length; i++) {
+      const name = `page-${String(i + 1).padStart(3, "0")}.webp`;
+      const url = await uploadBuffer(result.pages[i].buffer, "image/webp", folder, name);
+      newPages.push({ url, width: result.pages[i].width, height: result.pages[i].height });
+    }
+
+    const manifest = {
+      totalPages: result.totalPages,
+      pages: newPages,
+      generatedAt: new Date().toISOString(),
+    };
+
+    await prisma.flipbook.update({
+      where: { id },
+      data: {
+        optimizedPdfUrl: optimizedUrl,
+        pagesManifest: manifest as any,
+        totalPages: result.totalPages,
+        processingStartedAt: null,
+      },
+    });
+
+    // Note: old page assets remain at flipbooks/<id>/page-*.webp.
+    // They become orphan but harmless. A maintenance pass can prune older v* folders.
+
+    revalidatePath("/admin/flipbooks");
+    return { success: true };
+  } catch (e: any) {
+    await prisma.flipbook.update({ where: { id }, data: { processingStartedAt: null } }).catch(() => {});
+    if (e.message === "Unauthorized") return { error: "Unauthorized" };
+    return { error: e?.message || "Re-render failed" };
+  }
+}
+
+export async function getFlipbooksGroupedByCategory() {
+  await assertAdminOrOpsForFlipbook();
+  const [categories, flipbooks] = await Promise.all([
+    prisma.category.findMany({
+      orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
+    }),
+    prisma.flipbook.findMany({
+      orderBy: { createdAt: "desc" },
+      include: { categoryRef: true },
+    }),
+  ]);
+
+  const uncategorized = flipbooks.filter((f) => !f.categoryId);
+  const groups = categories.map((c) => ({
+    category: c,
+    flipbooks: flipbooks.filter((f) => f.categoryId === c.id),
+  }));
+
+  if (uncategorized.length > 0) {
+    groups.push({
+      category: { id: "__uncategorized__", name: "Uncategorized", slug: "uncategorized", displayOrder: 9999, createdAt: new Date() } as any,
+      flipbooks: uncategorized,
+    });
+  }
+
+  return groups;
 }

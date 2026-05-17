@@ -15,7 +15,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
-const ReliableFlipbookViewer = dynamicImport(() => import("@/components/flipbook/ReliableFlipbookViewer").then(mod => ({ default: mod.ReliableFlipbookViewer })), { ssr: false });
+const LoftFlipbookViewer = dynamicImport(() => import("@/components/flipbook/LoftFlipbookViewer").then(mod => ({ default: mod.LoftFlipbookViewer })), { ssr: false });
 
 const PAGE_SIZE = 8;
 
@@ -279,8 +279,8 @@ export default function CustomerFlipbooksPage() {
 
       {/* Flipbook Viewer */}
       {viewerOpen && selectedFlipbook && (
-        <ReliableFlipbookViewer
-          pdfUrl={selectedFlipbook.pdfUrl}
+        <LoftFlipbookViewer
+          pages={selectedFlipbook.pagesManifest?.pages}
           iframeContent={selectedFlipbook.iframeContent}
           title={selectedFlipbook.title}
           initialPage={0}
