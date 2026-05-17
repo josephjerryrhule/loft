@@ -197,7 +197,7 @@ export async function deleteFlipbookAssets(flipbookId: string): Promise<void> {
     const prefix = `flipbooks/${flipbookId}/`;
     const { data: list, error: listErr } = await supabase.storage.from("uploads").list(prefix);
     if (listErr || !list) return;
-    const paths = list.map((f) => `${prefix}${f.name}`);
+    const paths = list.map((f: { name: string }) => `${prefix}${f.name}`);
     if (paths.length > 0) await supabase.storage.from("uploads").remove(paths);
     return;
   }
