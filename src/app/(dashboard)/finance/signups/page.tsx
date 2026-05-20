@@ -11,7 +11,7 @@ import { Loader2, Download, Users, UserCheck, CalendarDays, BarChart2, Filter, S
 import { toast } from "sonner";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
-import { cn } from "@/lib/utils";
+import { cn, formatStatusLabel } from "@/lib/utils";
 import {
   BarChart,
   Bar,
@@ -307,8 +307,8 @@ export default function DailySignupsPage() {
                                                 "bg-slate-700 text-white"
                                             )}
                                         >
-                                            {row.paymentStatus === "COMPLETED" ? <CheckCircle2 size={10} className="mr-1.5" /> : null}
-                                            {row.paymentStatus}
+                                             {row.paymentStatus === "COMPLETED" ? <CheckCircle2 size={10} className="mr-1.5" /> : null}
+                                             {formatStatusLabel(row.paymentStatus)}
                                         </Badge>
                                     </TableCell>
                                 </TableRow>

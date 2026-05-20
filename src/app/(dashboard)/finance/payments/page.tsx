@@ -12,7 +12,7 @@ import { Loader2, Download, DollarSign, TrendingUp, AlertTriangle, Calendar } fr
 import { toast } from "sonner";
 import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
 import { PageHeader } from "@/components/dashboard/PageHeader";
-import { cn } from "@/lib/utils";
+import { cn, formatStatusLabel } from "@/lib/utils";
 
 function exportToCSV(rows: any[]) {
   const headers = [
@@ -242,7 +242,7 @@ export default function PaymentTrackerPage() {
                         tx.paymentStatus === "PENDING" && "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-none"
                       )}
                     >
-                      {tx.paymentStatus}
+                      {formatStatusLabel(tx.paymentStatus)}
                     </Badge>
                   </TableCell>
                   <TableCell>

@@ -50,3 +50,25 @@ export function getAgeGroupLabel(ageGroup: string) {
   };
   return labels[normalized] || ageGroup.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
 }
+
+export function formatStatusLabel(status: string | null | undefined): string {
+  if (!status) return "—";
+  const mapping: Record<string, string> = {
+    COMPLETED: "Completed",
+    COMPLETED_FREE: "Completed (Free)",
+    PENDING: "Pending",
+    FAILED: "Failed",
+    CANCELLED: "Cancelled",
+    PAID: "Paid",
+    REFUNDED: "Refunded",
+    ACTIVE: "Active",
+    EXPIRED: "Expired",
+    PROCESSING: "Processing",
+    SHIPPED: "Shipped",
+    SUSPENDED: "Suspended",
+    BANNED: "Banned",
+  };
+  const key = status.toUpperCase();
+  return mapping[key] || status.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+}
+

@@ -15,7 +15,7 @@ import Link from "next/link";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { PageHeader } from "@/components/dashboard/PageHeader";
-import { cn } from "@/lib/utils";
+import { cn, formatStatusLabel } from "@/lib/utils";
 
 interface Order {
   id: string;
@@ -161,7 +161,7 @@ export default function CustomerOrdersPage() {
                                         order.paymentStatus === "PAID" ? "bg-emerald-500 text-white" : "bg-amber-500 text-white"
                                     )}
                                 >
-                                    {order.paymentStatus}
+                                    {formatStatusLabel(order.paymentStatus)}
                                 </Badge>
                             </div>
 
@@ -305,7 +305,7 @@ export default function CustomerOrdersPage() {
                                         order.paymentStatus === "PAID" ? "bg-emerald-500 text-white shadow-emerald-500/10" : "bg-amber-500 text-white shadow-amber-500/10"
                                     )}
                                 >
-                                    {order.paymentStatus}
+                                    {formatStatusLabel(order.paymentStatus)}
                                 </Badge>
                             </TableCell>
                             <TableCell>
@@ -319,7 +319,7 @@ export default function CustomerOrdersPage() {
                                 >
                                     {order.status === "COMPLETED" ? <CheckCircle2 size={10} className="mr-1.5" /> : 
                                     order.status === "PROCESSING" ? <Clock size={10} className="mr-1.5" /> : null}
-                                    {order.status}
+                                    {formatStatusLabel(order.status)}
                                 </Badge>
                             </TableCell>
                             <TableCell className="text-right pr-10">

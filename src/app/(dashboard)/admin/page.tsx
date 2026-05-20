@@ -31,6 +31,7 @@ import { getLeaderboardData } from "@/app/actions/leaderboard";
 import { getAffiliateStats } from "@/app/actions/affiliate";
 import { RequestPayoutDialog } from "@/components/dashboard/RequestPayoutDialog";
 import { Role } from "@/lib/types";
+import { formatStatusLabel } from "@/lib/utils";
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -371,7 +372,7 @@ export default async function AdminDashboardPage() {
                   <div className="text-right flex-shrink-0">
                     <p className="text-xs font-black text-emerald-600">+GHS {Number(order.totalAmount).toFixed(2)}</p>
                     <Badge variant="outline" className="text-[9px] h-3.5 px-1 bg-emerald-50 text-emerald-600 border-emerald-500/20">
-                      {order.paymentStatus}
+                      {formatStatusLabel(order.paymentStatus)}
                     </Badge>
                   </div>
                 </div>

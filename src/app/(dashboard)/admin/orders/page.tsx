@@ -13,7 +13,7 @@ import { getCurrencySymbol } from "@/lib/utils";
 import { ViewOrderDialog } from "@/components/order/ViewOrderDialog";
 import { EditOrderDialog } from "@/components/order/EditOrderDialog";
 import { PageHeader } from "@/components/dashboard/PageHeader";
-import { cn } from "@/lib/utils";
+import { cn, formatStatusLabel } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
@@ -162,7 +162,7 @@ export default function AdminOrdersPage() {
                     >
                         {order.status === "COMPLETED" ? <CheckCircle2 size={10} className="mr-1.5" /> : 
                         order.status === "PROCESSING" ? <Clock size={10} className="mr-1.5" /> : null}
-                        {order.status}
+                        {formatStatusLabel(order.status)}
                     </Badge>
                     </TableCell>
                     <TableCell>
@@ -173,7 +173,7 @@ export default function AdminOrdersPage() {
                             order.paymentStatus === "PAID" || order.paymentStatus === "COMPLETED" ? "text-emerald-600 bg-emerald-50" : "text-slate-400 bg-slate-50"
                         )}
                     >
-                        {order.paymentStatus}
+                        {formatStatusLabel(order.paymentStatus)}
                     </Badge>
                     </TableCell>
                     <TableCell className="text-right">

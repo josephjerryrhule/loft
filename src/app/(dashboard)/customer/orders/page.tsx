@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Loader2, Package, ShoppingCart, Eye, Download } from "lucide-react";
 import { getCustomerOrders } from "@/app/actions/user";
 import { getSystemSettings } from "@/app/actions/settings";
-import { getCurrencySymbol } from "@/lib/utils";
+import { getCurrencySymbol, formatStatusLabel } from "@/lib/utils";
 import { ViewOrderDialog } from "@/components/order/ViewOrderDialog";
 import Image from "next/image";
 import { Pagination } from "@/components/ui/pagination";
@@ -223,12 +223,12 @@ export default function CustomerOrdersPage() {
                       </TableCell>
                       <TableCell>
                         <Badge variant={getPaymentStatusColor(order.paymentStatus)}>
-                          {order.paymentStatus}
+                          {formatStatusLabel(order.paymentStatus)}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge variant={getStatusColor(order.status)}>
-                          {order.status}
+                          {formatStatusLabel(order.status)}
                         </Badge>
                       </TableCell>
                       <TableCell>

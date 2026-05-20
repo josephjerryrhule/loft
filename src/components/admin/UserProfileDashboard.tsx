@@ -28,7 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatRole } from "@/lib/format-utils";
-import { cn, getCurrencySymbol } from "@/lib/utils";
+import { cn, getCurrencySymbol, formatStatusLabel } from "@/lib/utils";
 
 interface UserProfileDashboardProps {
   user: any;
@@ -609,7 +609,7 @@ export function UserProfileDashboard({ user, currency = "GHS" }: UserProfileDash
                                 sub.status === "EXPIRED" && "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                               )}
                             >
-                              {sub.status}
+                              {formatStatusLabel(sub.status)}
                             </Badge>
                           </TableCell>
                           <TableCell className="font-semibold text-slate-500 text-xs uppercase">{sub.gateway || "STRIPE"}</TableCell>
@@ -676,7 +676,7 @@ export function UserProfileDashboard({ user, currency = "GHS" }: UserProfileDash
                                 ["FAILED", "REFUNDED"].includes(order.paymentStatus) && "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                               )}
                             >
-                              {order.paymentStatus}
+                              {formatStatusLabel(order.paymentStatus)}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-xs text-slate-550 font-semibold">{new Date(order.createdAt).toLocaleDateString()}</TableCell>
