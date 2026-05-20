@@ -181,7 +181,8 @@ export async function subscribeToPlan(planId: string) {
                 status: "ACTIVE",
                 startDate,
                 endDate,
-                autoRenew: false
+                autoRenew: false,
+                paymentStatus: Number(plan.price) === 0 ? "COMPLETED" : "PENDING"
             }
         });
 

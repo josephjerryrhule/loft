@@ -133,7 +133,19 @@ export async function getPaymentTrackerData(filters?: {
 
   const where: any = {};
 
-  if (filters?.status && filters.status !== "all") where.paymentStatus = filters.status;
+  if (filters?.status && filters.status !== "all") {
+    if (filters.status === "COMPLETED") {
+      where.OR = [
+        { paymentStatus: "COMPLETED" },
+        { plan: { price: 0 } }
+      ];
+    } else if (filters.status === "PENDING") {
+      where.paymentStatus = "PENDING";
+      where.plan = { price: { gt: 0 } };
+    } else {
+      where.paymentStatus = filters.status;
+    }
+  }
   if (filters?.gateway && filters.gateway !== "all") where.gateway = filters.gateway;
   if (filters?.currency && filters.currency !== "all") where.currency = filters.currency;
   if (filters?.planId && filters.planId !== "all") where.planId = filters.planId;
@@ -193,7 +205,7 @@ export async function getPaymentTrackerData(filters?: {
       amount: Number(s.plan.price),
       currency: (s as any).currency || "GHS",
       gateway: (s as any).gateway || "PAYSTACK",
-      paymentStatus: s.paymentStatus,
+      paymentStatus: Number(s.plan.price) === 0 ? "COMPLETED" : s.paymentStatus,
       paymentReference: s.paymentReference,
       isRecurring: s.autoRenew,
     })),
@@ -235,7 +247,7 @@ export async function getDailySignupData(filters?: {
       subscriptions: {
         orderBy: { createdAt: "desc" },
         take: 1,
-        include: { plan: { select: { name: true } } },
+        include: { plan: { select: { name: true, price: true } } },
       },
     },
     orderBy: { createdAt: "desc" },
@@ -286,7 +298,9 @@ export async function getDailySignupData(filters?: {
         ? `${u.referredBy.firstName || ""} ${u.referredBy.lastName || ""}`.trim() || u.referredBy.email
         : "—",
       plan: u.subscriptions[0]?.plan?.name || "No plan",
-      paymentStatus: u.subscriptions[0]?.paymentStatus || "—",
+      paymentStatus: u.subscriptions[0]
+        ? (Number(u.subscriptions[0].plan?.price) === 0 ? "COMPLETED" : u.subscriptions[0].paymentStatus)
+        : "—",
     })),
     chartData,
     ambassadors,

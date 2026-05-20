@@ -2,15 +2,15 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
+  const plans = await prisma.subscriptionPlan.findMany();
+  console.log('PLANS:', JSON.stringify(plans, null, 2));
+
   const subs = await prisma.subscription.findMany({
-    where: { status: 'ACTIVE' },
-    orderBy: { createdAt: 'desc' },
-    take: 5,
     include: {
-        plan: true
+      plan: true
     }
   });
-  console.log(JSON.stringify(subs, null, 2));
+  console.log('SUBSCRIPTIONS:', JSON.stringify(subs, null, 2));
 }
 
 main()

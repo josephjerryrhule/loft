@@ -168,7 +168,7 @@ export function UserProfileDashboard({ user, currency = "GHS" }: UserProfileDash
     } else {
       user.flipbookProgress.forEach((prog: any) => {
         csvContent += `${escapeCSV(prog.flipbook?.title)},`;
-        csvContent += `${escapeCSV(prog.childProfile?.firstName || 'Main Profile')},`;
+        csvContent += `${escapeCSV(prog.childProfile?.name || 'Main Profile')},`;
         csvContent += `${escapeCSV(prog.lastPageRead)},`;
         csvContent += `${escapeCSV(new Date(prog.lastAccessedAt).toLocaleDateString())}\n`;
       });
@@ -594,7 +594,7 @@ export function UserProfileDashboard({ user, currency = "GHS" }: UserProfileDash
                           <TableCell className="font-semibold text-slate-500">
                             {sub.childProfile ? (
                               <Badge variant="secondary" className="font-bold">
-                                {sub.childProfile.firstName}
+                                {sub.childProfile.name}{sub.childProfile.username ? ` (@${sub.childProfile.username})` : ""}
                               </Badge>
                             ) : (
                               <span className="text-xs italic">Account Level</span>
@@ -716,12 +716,12 @@ export function UserProfileDashboard({ user, currency = "GHS" }: UserProfileDash
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10 border border-white dark:border-slate-800 shadow-sm">
                           <AvatarFallback className="bg-[#E87154]/10 text-[#E87154] font-black text-sm">
-                            {child.firstName?.[0] || "K"}
+                            {child.name?.[0] || "K"}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
-                          <span className="font-bold text-sm text-slate-850 dark:text-white">{child.firstName}</span>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">PIN: {child.pinCode || "None"}</span>
+                          <span className="font-bold text-sm text-slate-850 dark:text-white">{child.name}</span>
+                          <span className="text-[10px] text-slate-400 font-bold tracking-wider">{child.username ? `@${child.username}` : "No username"}</span>
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-1">
@@ -772,7 +772,7 @@ export function UserProfileDashboard({ user, currency = "GHS" }: UserProfileDash
                             </TableCell>
                             <TableCell className="font-bold text-slate-600">
                               <Badge variant="outline" className="font-black bg-indigo-50/50 text-indigo-650 dark:bg-indigo-950/20 border-none">
-                                {prog.childProfile?.firstName || "Parent Account"}
+                                {prog.childProfile?.name || "Parent Account"}
                               </Badge>
                             </TableCell>
                             <TableCell className="py-4">
