@@ -386,14 +386,54 @@ export async function getAllUsers() {
     }
 }
 
+function maskEmail(email: string) {
+    const [local, domain] = email.split('@');
+    if (!local || !domain) return '***@***.***';
+    if (local.length <= 2) return `${local[0]}***@${domain}`;
+    return `${local[0]}***${local[local.length - 1]}@${domain}`;
+}
+
+function maskPhoneNumber(phone: string) {
+    if (phone.length <= 5) return '*****';
+    return `${phone.substring(0, 3)}***${phone.substring(phone.length - 2)}`;
+}
+
 export async function getUserFullProfile(userId: string) {
     const session = await auth();
-    const role = (session?.user as any)?.role;
-    if (!session?.user?.id || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
+    if (!session?.user?.id) {
         throw new Error("Unauthorized");
     }
+    const viewerId = session.user.id;
+    const viewerRole = (session.user as any).role;
 
     try {
+        const targetUser = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                role: true,
+                managerId: true,
+                teamLeaderId: true
+            }
+        });
+        if (!targetUser) return null;
+
+        const isSelf = viewerId === userId;
+        const isAdmin = viewerRole === "ADMIN";
+        const isOpsManager = viewerRole === "OPERATIONS_MANAGER";
+        const isManagerOfUser = targetUser.managerId === viewerId;
+        const isTeamLeaderOfUser = targetUser.teamLeaderId === viewerId;
+        const isViewerAmbassador = ["ADMIN", "OPERATIONS_MANAGER", "MANAGER", "TEAM_LEADER", "AFFILIATE"].includes(viewerRole);
+        const isTargetAmbassador = ["ADMIN", "OPERATIONS_MANAGER", "MANAGER", "TEAM_LEADER", "AFFILIATE"].includes(targetUser.role);
+
+        // Security check
+        const canViewFull = isAdmin || isOpsManager || isSelf || isManagerOfUser || isTeamLeaderOfUser;
+        const canViewSanitized = isViewerAmbassador && isTargetAmbassador;
+
+        if (!canViewFull && !canViewSanitized) {
+            throw new Error("Unauthorized");
+        }
+
         const user = await prisma.user.findUnique({
             where: { id: userId },
             include: {
@@ -417,6 +457,18 @@ export async function getUserFullProfile(userId: string) {
                         role: true,
                         status: true,
                         createdAt: true,
+                        subscriptions: {
+                            where: { status: "ACTIVE" },
+                            select: {
+                                paymentStatus: true,
+                                plan: {
+                                    select: {
+                                        price: true,
+                                        name: true
+                                    }
+                                }
+                            }
+                        }
                     }
                 },
                 subscriptions: {
@@ -482,8 +534,178 @@ export async function getUserFullProfile(userId: string) {
 
         if (!user) return null;
 
-        // Serialize Decimals to Numbers to avoid serialization errors in Next.js
-        return {
+        // Fetch hierarchy based on user role
+        let managedHierarchy: any = null;
+
+        if (user.role === "TEAM_LEADER") {
+            const members = await prisma.user.findMany({
+                where: { teamLeaderId: userId },
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                    status: true,
+                    role: true,
+                    createdAt: true,
+                    profilePictureUrl: true,
+                    subscriptions: {
+                        where: { status: "ACTIVE" },
+                        select: {
+                            paymentStatus: true,
+                            plan: {
+                                select: {
+                                    price: true,
+                                    name: true
+                                }
+                            }
+                        }
+                    }
+                },
+                orderBy: { createdAt: "desc" }
+            });
+
+            managedHierarchy = {
+                type: "TEAM_LEADER",
+                members: members.map(m => ({
+                    ...m,
+                    name: `${m.firstName || ""} ${m.lastName || ""}`.trim() || m.email,
+                    subscriptions: m.subscriptions.map(sub => ({
+                        ...sub,
+                        plan: {
+                            ...sub.plan,
+                            price: Number(sub.plan.price)
+                        }
+                    }))
+                }))
+            };
+        } else if (user.role === "MANAGER") {
+            const affiliates = await prisma.user.findMany({
+                where: { managerId: userId },
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                    status: true,
+                    role: true,
+                    createdAt: true,
+                    profilePictureUrl: true,
+                    subscriptions: {
+                        where: { status: "ACTIVE" },
+                        select: {
+                            paymentStatus: true,
+                            plan: {
+                                select: {
+                                    price: true,
+                                    name: true
+                                }
+                            }
+                        }
+                    },
+                    teamMembers: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                            email: true,
+                            status: true,
+                            role: true,
+                            createdAt: true,
+                            profilePictureUrl: true,
+                            subscriptions: {
+                                where: { status: "ACTIVE" },
+                                select: {
+                                    paymentStatus: true,
+                                    plan: {
+                                        select: {
+                                            price: true,
+                                            name: true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                orderBy: { createdAt: "desc" }
+            });
+
+            managedHierarchy = {
+                type: "MANAGER",
+                affiliates: affiliates.map(aff => ({
+                    ...aff,
+                    name: `${aff.firstName || ""} ${aff.lastName || ""}`.trim() || aff.email,
+                    subscriptions: aff.subscriptions.map(sub => ({
+                        ...sub,
+                        plan: {
+                            ...sub.plan,
+                            price: Number(sub.plan.price)
+                        }
+                    })),
+                    teamMembers: aff.teamMembers.map(m => ({
+                        ...m,
+                        name: `${m.firstName || ""} ${m.lastName || ""}`.trim() || m.email,
+                        subscriptions: m.subscriptions.map(sub => ({
+                            ...sub,
+                            plan: {
+                                ...sub.plan,
+                                price: Number(sub.plan.price)
+                            }
+                        }))
+                    }))
+                }))
+            };
+        } else if (user.role === "OPERATIONS_MANAGER") {
+            const staff = await prisma.user.findMany({
+                where: {
+                    role: { in: ["MANAGER", "TEAM_LEADER", "AFFILIATE"] }
+                },
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                    status: true,
+                    role: true,
+                    createdAt: true,
+                    managerId: true,
+                    teamLeaderId: true,
+                    profilePictureUrl: true,
+                    subscriptions: {
+                        where: { status: "ACTIVE" },
+                        select: {
+                            paymentStatus: true,
+                            plan: {
+                                select: {
+                                    price: true,
+                                    name: true
+                                }
+                            }
+                        }
+                    }
+                },
+                orderBy: { createdAt: "desc" }
+            });
+
+            managedHierarchy = {
+                type: "OPERATIONS_MANAGER",
+                staff: staff.map(s => ({
+                    ...s,
+                    name: `${s.firstName || ""} ${s.lastName || ""}`.trim() || s.email,
+                    subscriptions: s.subscriptions.map(sub => ({
+                        ...sub,
+                        plan: {
+                            ...sub.plan,
+                            price: Number(sub.plan.price)
+                        }
+                    }))
+                }))
+            };
+        }
+
+        // Serialize Decimals and format data
+        const serialized = {
             ...user,
             subscriptions: user.subscriptions.map(sub => ({
                 ...sub,
@@ -511,6 +733,16 @@ export async function getUserFullProfile(userId: string) {
                 ...req,
                 amount: Number(req.amount),
             })),
+            referrals: user.referrals.map(ref => ({
+                ...ref,
+                subscriptions: ref.subscriptions.map(sub => ({
+                    ...sub,
+                    plan: {
+                        ...sub.plan,
+                        price: Number(sub.plan.price)
+                    }
+                }))
+            })),
             childProfiles: user.childProfiles.map(child => ({
                 ...child,
                 subscriptions: child.subscriptions.map(sub => ({
@@ -521,6 +753,50 @@ export async function getUserFullProfile(userId: string) {
                     }
                 }))
             }))
+        };
+
+        // If not full authorization, sanitize the response to protect user privacy
+        if (!canViewFull) {
+            serialized.email = maskEmail(serialized.email);
+            serialized.phoneNumber = serialized.phoneNumber ? maskPhoneNumber(serialized.phoneNumber) : null;
+            serialized.subscriptions = [];
+            serialized.orders = [];
+            serialized.referredOrders = [];
+            serialized.commissions = [];
+            serialized.payoutRequests = [];
+            serialized.activityLogs = [];
+            serialized.childProfiles = [];
+            serialized.flipbookProgress = [];
+            serialized.referrals = [];
+
+            if (managedHierarchy) {
+                if (managedHierarchy.type === "TEAM_LEADER") {
+                    managedHierarchy.members = managedHierarchy.members.map((m: any) => ({
+                        ...m,
+                        email: maskEmail(m.email)
+                    }));
+                } else if (managedHierarchy.type === "MANAGER") {
+                    managedHierarchy.affiliates = managedHierarchy.affiliates.map((aff: any) => ({
+                        ...aff,
+                        email: maskEmail(aff.email),
+                        teamMembers: aff.teamMembers.map((m: any) => ({
+                            ...m,
+                            email: maskEmail(m.email)
+                        }))
+                    }));
+                } else if (managedHierarchy.type === "OPERATIONS_MANAGER") {
+                    managedHierarchy.staff = managedHierarchy.staff.map((s: any) => ({
+                        ...s,
+                        email: maskEmail(s.email)
+                    }));
+                }
+            }
+        }
+
+        return {
+            ...serialized,
+            canViewFull,
+            managedHierarchy
         };
     } catch (error) {
         console.error("Failed to get user full profile:", error);

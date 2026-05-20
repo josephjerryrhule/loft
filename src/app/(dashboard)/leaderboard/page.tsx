@@ -32,7 +32,11 @@ export default async function LeaderboardPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <LeaderboardClient initialData={initialData} viewerRole={(session.user as any).role} />
+      <LeaderboardClient 
+        initialData={initialData} 
+        viewerRole={(session.user as any).role} 
+        viewerId={session.user.id}
+      />
     </div>
   );
 }

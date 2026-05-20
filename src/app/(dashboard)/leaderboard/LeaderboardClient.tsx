@@ -37,10 +37,13 @@ import { Users } from "lucide-react";
 interface LeaderboardClientProps {
   initialData: LeaderboardEntry[];
   viewerRole: string;
+  viewerId?: string;
 }
 
-function Podium({ top3, viewerRole }: { top3: LeaderboardEntry[], viewerRole: string }) {
-  const canViewProfile = !["AFFILIATE", "TEAM_LEADER"].includes(viewerRole);
+function Podium({ top3, viewerRole, viewerId }: { top3: LeaderboardEntry[], viewerRole: string, viewerId?: string }) {
+  const isAllowedToView = (entryUserId: string) => {
+    return ["OPERATIONS_MANAGER", "MANAGER", "TEAM_LEADER"].includes(viewerRole) || entryUserId === viewerId;
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -60,7 +63,7 @@ function Podium({ top3, viewerRole }: { top3: LeaderboardEntry[], viewerRole: st
                     <Badge variant="secondary" className="font-bold">{top3[1].paidReferralsCount}/{top3[1].referralsCount} Paid Referrals</Badge>
                     <span className="text-[10px] text-stone-500 font-bold">{top3[1].salesCount} Total Subs</span>
                 </div>
-                {canViewProfile && (
+                {isAllowedToView(top3[1].id) && (
                   <div className="mt-4">
                      <Link href={`/leaderboard/${top3[1].id}`} className="text-xs font-semibold text-[#E87154] hover:underline">View Profile</Link>
                   </div>
@@ -92,7 +95,7 @@ function Podium({ top3, viewerRole }: { top3: LeaderboardEntry[], viewerRole: st
                     </div>
                     <span className="text-xs text-amber-600 font-bold">{top3[0].salesCount} Total Subs</span>
                 </div>
-                {canViewProfile && (
+                {isAllowedToView(top3[0].id) && (
                   <div className="mt-6">
                      <Link href={`/leaderboard/${top3[0].id}`} className="inline-block bg-[#E87154] text-white px-6 py-2 rounded-lg text-sm font-bold hover:bg-[#E87154]/90 transition-colors shadow-sm">View Champion Profile</Link>
                   </div>
@@ -118,7 +121,7 @@ function Podium({ top3, viewerRole }: { top3: LeaderboardEntry[], viewerRole: st
                     <Badge variant="secondary" className="font-bold">{top3[2].paidReferralsCount}/{top3[2].referralsCount} Paid Referrals</Badge>
                     <span className="text-[10px] text-orange-600 font-bold">{top3[2].salesCount} Total Subs</span>
                 </div>
-                {canViewProfile && (
+                {isAllowedToView(top3[2].id) && (
                   <div className="mt-4">
                      <Link href={`/leaderboard/${top3[2].id}`} className="text-xs font-semibold text-[#E87154] hover:underline">View Profile</Link>
                   </div>
@@ -132,7 +135,7 @@ function Podium({ top3, viewerRole }: { top3: LeaderboardEntry[], viewerRole: st
 }
 
 
-export default function LeaderboardClient({ initialData, viewerRole }: LeaderboardClientProps) {
+export default function LeaderboardClient({ initialData, viewerRole, viewerId }: LeaderboardClientProps) {
   const [data, setData] = useState(initialData);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
@@ -170,7 +173,7 @@ export default function LeaderboardClient({ initialData, viewerRole }: Leaderboa
       />
 
       {!search && roleFilter === "ALL" && filteredData.length >= 1 && (
-        <Podium top3={top3} viewerRole={viewerRole} />
+        <Podium top3={top3} viewerRole={viewerRole} viewerId={viewerId} />
       )}
 
       <Card className="border-none shadow-sm bg-white">
@@ -215,9 +218,7 @@ export default function LeaderboardClient({ initialData, viewerRole }: Leaderboa
                 <TableHead className="text-right">Earnings</TableHead>
               )}
               <TableHead>Status</TableHead>
-              {!["AFFILIATE", "TEAM_LEADER"].includes(viewerRole) && (
-                <TableHead className="text-right pr-6">Action</TableHead>
-              )}
+              <TableHead className="text-right pr-6">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -310,15 +311,20 @@ export default function LeaderboardClient({ initialData, viewerRole }: Leaderboa
                       {entry.status}
                     </Badge>
                   </TableCell>
-                  {!["AFFILIATE", "TEAM_LEADER"].includes(viewerRole) && (
-                    <TableCell className="text-right pr-6">
-                      <Button variant="ghost" size="sm" asChild className="text-[#E87154] font-black hover:text-[#E87154] hover:bg-[#E87154]/10 rounded-full h-8 px-4 transition-all">
-                        <Link href={`/leaderboard/${entry.id}`}>
-                          View Profile
-                        </Link>
-                      </Button>
-                    </TableCell>
-                  )}
+                  <TableCell className="text-right pr-6">
+                    {(() => {
+                      const isAllowed = ["OPERATIONS_MANAGER", "MANAGER", "TEAM_LEADER"].includes(viewerRole) || entry.id === viewerId;
+                      return isAllowed ? (
+                        <Button variant="ghost" size="sm" asChild className="text-[#E87154] font-black hover:text-[#E87154] hover:bg-[#E87154]/10 rounded-full h-8 px-4 transition-all">
+                          <Link href={`/leaderboard/${entry.id}`}>
+                            View Profile
+                          </Link>
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-slate-300">-</span>
+                      );
+                    })()}
+                  </TableCell>
                 </TableRow>
               ))
             )}

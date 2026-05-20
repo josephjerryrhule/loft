@@ -33,14 +33,27 @@ import { cn, getCurrencySymbol, formatStatusLabel } from "@/lib/utils";
 interface UserProfileDashboardProps {
   user: any;
   currency?: string;
+  backUrl?: string;
+  backLabel?: string;
+  viewerId?: string;
+  viewerRole?: string;
 }
 
-export function UserProfileDashboard({ user, currency = "GHS" }: UserProfileDashboardProps) {
+export function UserProfileDashboard({ 
+  user, 
+  currency = "GHS",
+  backUrl = "/admin/users",
+  backLabel = "Back to User CRM Table",
+  viewerId,
+  viewerRole
+}: UserProfileDashboardProps) {
   const router = useRouter();
   const currencySymbol = getCurrencySymbol(currency);
-  const [activeTab, setActiveTab] = useState<"overview" | "billing" | "library" | "referrals" | "commissions" | "activity">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "billing" | "library" | "referrals" | "commissions" | "activity" | "hierarchy">("overview");
 
   const isAmbassador = ["AFFILIATE", "TEAM_LEADER", "MANAGER", "OPERATIONS_MANAGER"].includes(user.role);
+  const canViewFull = user.canViewFull !== undefined ? user.canViewFull : true;
+  const hasHierarchy = ["OPERATIONS_MANAGER", "MANAGER", "TEAM_LEADER"].includes(user.role);
 
   // Compute stats for overview cards
   const stats = useMemo(() => {
@@ -188,9 +201,9 @@ export function UserProfileDashboard({ user, currency = "GHS" }: UserProfileDash
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Back Button & Actions */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-        <Link href="/admin/users" className="inline-flex items-center text-sm font-bold text-slate-500 hover:text-[#E87154] transition-colors gap-2">
+        <Link href={backUrl} className="inline-flex items-center text-sm font-bold text-slate-500 hover:text-[#E87154] transition-colors gap-2">
           <ArrowLeft className="h-4 w-4" />
-          Back to User CRM Table
+          {backLabel}
         </Link>
         <Button
           variant="outline"
@@ -357,33 +370,37 @@ export function UserProfileDashboard({ user, currency = "GHS" }: UserProfileDash
           Overview
         </button>
 
-        <button
-          onClick={() => setActiveTab("billing")}
-          className={cn(
-            "text-sm font-bold pb-4 border-b-2 transition-all flex items-center gap-2 whitespace-nowrap",
-            activeTab === "billing" 
-              ? "border-[#E87154] text-[#E87154]" 
-              : "border-transparent text-slate-400 hover:text-slate-600"
-          )}
-        >
-          <CreditCard className="h-4 w-4" />
-          Billing & Purchases
-        </button>
+        {canViewFull && (
+          <button
+            onClick={() => setActiveTab("billing")}
+            className={cn(
+              "text-sm font-bold pb-4 border-b-2 transition-all flex items-center gap-2 whitespace-nowrap",
+              activeTab === "billing" 
+                ? "border-[#E87154] text-[#E87154]" 
+                : "border-transparent text-slate-400 hover:text-slate-600"
+            )}
+          >
+            <CreditCard className="h-4 w-4" />
+            Billing & Purchases
+          </button>
+        )}
 
-        <button
-          onClick={() => setActiveTab("library")}
-          className={cn(
-            "text-sm font-bold pb-4 border-b-2 transition-all flex items-center gap-2 whitespace-nowrap",
-            activeTab === "library" 
-              ? "border-[#E87154] text-[#E87154]" 
-              : "border-transparent text-slate-400 hover:text-slate-600"
-          )}
-        >
-          <BookOpen className="h-4 w-4" />
-          Library & Kids
-        </button>
+        {canViewFull && (
+          <button
+            onClick={() => setActiveTab("library")}
+            className={cn(
+              "text-sm font-bold pb-4 border-b-2 transition-all flex items-center gap-2 whitespace-nowrap",
+              activeTab === "library" 
+                ? "border-[#E87154] text-[#E87154]" 
+                : "border-transparent text-slate-400 hover:text-slate-600"
+            )}
+          >
+            <BookOpen className="h-4 w-4" />
+            Library & Kids
+          </button>
+        )}
 
-        {isAmbassador && (
+        {isAmbassador && canViewFull && (
           <>
             <button
               onClick={() => setActiveTab("referrals")}
@@ -413,18 +430,35 @@ export function UserProfileDashboard({ user, currency = "GHS" }: UserProfileDash
           </>
         )}
 
-        <button
-          onClick={() => setActiveTab("activity")}
-          className={cn(
-            "text-sm font-bold pb-4 border-b-2 transition-all flex items-center gap-2 whitespace-nowrap",
-            activeTab === "activity" 
-              ? "border-[#E87154] text-[#E87154]" 
-              : "border-transparent text-slate-400 hover:text-slate-600"
-          )}
-        >
-          <History className="h-4 w-4" />
-          Audit Logs
-        </button>
+        {hasHierarchy && (
+          <button
+            onClick={() => setActiveTab("hierarchy")}
+            className={cn(
+              "text-sm font-bold pb-4 border-b-2 transition-all flex items-center gap-2 whitespace-nowrap",
+              activeTab === "hierarchy"
+                ? "border-[#E87154] text-[#E87154]" 
+                : "border-transparent text-slate-400 hover:text-slate-600"
+            )}
+          >
+            <Shield className="h-4 w-4 text-[#E87154]" />
+            {user.role === "OPERATIONS_MANAGER" ? "Org Hierarchy" : "Managed Team"}
+          </button>
+        )}
+
+        {canViewFull && (
+          <button
+            onClick={() => setActiveTab("activity")}
+            className={cn(
+              "text-sm font-bold pb-4 border-b-2 transition-all flex items-center gap-2 whitespace-nowrap",
+              activeTab === "activity" 
+                ? "border-[#E87154] text-[#E87154]" 
+                : "border-transparent text-slate-400 hover:text-slate-600"
+            )}
+          >
+            <History className="h-4 w-4" />
+            Audit Logs
+          </button>
+        )}
       </div>
 
       {/* Tabs Content */}
@@ -825,47 +859,61 @@ export function UserProfileDashboard({ user, currency = "GHS" }: UserProfileDash
                       <TableHead className="font-bold text-slate-500">Email</TableHead>
                       <TableHead className="font-bold text-slate-500">Role</TableHead>
                       <TableHead className="font-bold text-slate-500">Status</TableHead>
+                      <TableHead className="font-bold text-slate-500">Billing Tier</TableHead>
                       <TableHead className="font-bold text-slate-500">Joined Date</TableHead>
                       <TableHead className="text-right pr-6 font-bold text-slate-500">Details</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {user.referrals.map((ref: any) => (
-                      <TableRow key={ref.id} className="border-slate-50 dark:border-slate-850">
-                        <TableCell className="pl-6 font-bold text-slate-850 dark:text-slate-200">
-                          {ref.firstName ? `${ref.firstName} ${ref.lastName || ''}`.trim() : "No Name"}
-                        </TableCell>
-                        <TableCell className="font-semibold text-slate-500">{ref.email}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider border-none bg-slate-50 dark:bg-slate-850">
-                            {formatRole(ref.role)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge 
-                            className={cn(
-                              "text-[10px] font-bold uppercase tracking-wider border-none px-2 py-0.5",
-                              ref.status === "ACTIVE" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-                              ref.status === "SUSPENDED" && "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-                              ref.status === "BANNED" && "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                            )}
-                          >
-                            {ref.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-xs text-slate-500 font-semibold">{new Date(ref.createdAt).toLocaleDateString()}</TableCell>
-                        <TableCell className="text-right pr-6">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="font-bold text-xs text-[#E87154] hover:text-[#E87154]/80 p-0 h-auto"
-                            onClick={() => router.push(`/admin/users/${ref.id}`)}
-                          >
-                            CRM Profile
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {user.referrals.map((ref: any) => {
+                      const activeSub = ref.subscriptions?.find((sub: any) => sub.paymentStatus === "COMPLETED" && Number(sub.plan.price) > 0);
+                      const activeFreeSub = ref.subscriptions?.find((sub: any) => sub.paymentStatus === "COMPLETED_FREE" || Number(sub.plan.price) === 0);
+
+                      let subBadge = <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider border-none bg-slate-100 text-slate-500 px-2 py-0.5">Free</Badge>;
+                      if (activeSub) {
+                        subBadge = <Badge className="text-[10px] font-bold uppercase tracking-wider border-none px-2 py-0.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">Paying ({activeSub.plan.name})</Badge>;
+                      } else if (activeFreeSub) {
+                        subBadge = <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider border-none bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5">Free ({activeFreeSub.plan.name})</Badge>;
+                      }
+
+                      return (
+                        <TableRow key={ref.id} className="border-slate-50 dark:border-slate-850">
+                          <TableCell className="pl-6 font-bold text-slate-850 dark:text-slate-200">
+                            {ref.firstName ? `${ref.firstName} ${ref.lastName || ''}`.trim() : "No Name"}
+                          </TableCell>
+                          <TableCell className="font-semibold text-slate-500">{ref.email}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider border-none bg-slate-50 dark:bg-slate-850">
+                              {formatRole(ref.role)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge 
+                              className={cn(
+                                "text-[10px] font-bold uppercase tracking-wider border-none px-2 py-0.5",
+                                ref.status === "ACTIVE" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+                                ref.status === "SUSPENDED" && "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+                                ref.status === "BANNED" && "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                              )}
+                            >
+                              {ref.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{subBadge}</TableCell>
+                          <TableCell className="text-xs text-slate-500 font-semibold">{new Date(ref.createdAt).toLocaleDateString()}</TableCell>
+                          <TableCell className="text-right pr-6">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="font-bold text-xs text-[#E87154] hover:text-[#E87154]/80 p-0 h-auto"
+                              onClick={() => router.push(`/admin/users/${ref.id}`)}
+                            >
+                              CRM Profile
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               )}
@@ -1037,7 +1085,393 @@ export function UserProfileDashboard({ user, currency = "GHS" }: UserProfileDash
           </Card>
         )}
 
+        {/* Tab: Hierarchy */}
+        {activeTab === "hierarchy" && hasHierarchy && user.managedHierarchy && (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            {user.managedHierarchy.type === "TEAM_LEADER" && (
+              <TeamLeaderHierarchy members={user.managedHierarchy.members} />
+            )}
+            {user.managedHierarchy.type === "MANAGER" && (
+              <ManagerHierarchy affiliates={user.managedHierarchy.affiliates} />
+            )}
+            {user.managedHierarchy.type === "OPERATIONS_MANAGER" && (
+              <OperationsManagerHierarchy staff={user.managedHierarchy.staff} />
+            )}
+          </div>
+        )}
+
       </div>
+    </div>
+  );
+}
+
+function TeamLeaderHierarchy({ members }: { members: any[] }) {
+  const router = useRouter();
+  return (
+    <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+      <CardHeader className="border-b border-slate-50 dark:border-slate-800 pb-4">
+        <CardTitle className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+          <Users className="h-4 w-4 text-[#E87154]" />
+          Team Members ({members.length})
+        </CardTitle>
+        <CardDescription>Affiliates in this team leader's team.</CardDescription>
+      </CardHeader>
+      <CardContent className="p-0">
+        {members.length === 0 ? (
+          <div className="text-center py-12 text-slate-400">
+            No team members found.
+          </div>
+        ) : (
+          <Table>
+            <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
+              <TableRow className="border-none">
+                <TableHead className="pl-6 font-bold">Name</TableHead>
+                <TableHead className="font-bold">Email</TableHead>
+                <TableHead className="font-bold">Status</TableHead>
+                <TableHead className="font-bold">Billing Status</TableHead>
+                <TableHead className="text-right pr-6 font-bold">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {members.map((m: any) => {
+                const activeSub = m.subscriptions?.find((sub: any) => sub.paymentStatus === "COMPLETED" && Number(sub.plan.price) > 0);
+                const activeFreeSub = m.subscriptions?.find((sub: any) => sub.paymentStatus === "COMPLETED_FREE" || Number(sub.plan.price) === 0);
+
+                let subBadge = <Badge variant="outline" className="bg-slate-50 text-slate-500 border-none font-bold">Free</Badge>;
+                if (activeSub) {
+                  subBadge = <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-none font-bold">Paying ({activeSub.plan.name})</Badge>;
+                } else if (activeFreeSub) {
+                  subBadge = <Badge variant="outline" className="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border-none font-bold">Free ({activeFreeSub.plan.name})</Badge>;
+                }
+
+                return (
+                  <TableRow key={m.id} className="border-slate-50 dark:border-slate-850">
+                    <TableCell className="pl-6 font-bold">{m.name}</TableCell>
+                    <TableCell className="font-semibold text-slate-500">{m.email}</TableCell>
+                    <TableCell>
+                      <Badge className={cn("text-[10px] font-bold uppercase border-none px-2 py-0.5", m.status === "ACTIVE" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30" : "bg-slate-100 text-slate-500")}>
+                        {m.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{subBadge}</TableCell>
+                    <TableCell className="text-right pr-6">
+                      <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(`/admin/users/${m.id}`)}>
+                        CRM Profile
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ManagerHierarchy({ affiliates }: { affiliates: any[] }) {
+  const router = useRouter();
+  
+  // Group affiliates by role
+  const teamLeaders = affiliates.filter((a: any) => a.role === "TEAM_LEADER");
+  const directAffiliates = affiliates.filter((a: any) => a.role === "AFFILIATE");
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Team Leaders and their teams */}
+      {teamLeaders.map((tl: any) => (
+        <Card key={tl.id} className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+          <CardHeader className="border-b border-slate-50 dark:border-slate-800 pb-4 bg-slate-50/30 dark:bg-slate-800/10">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+              <div>
+                <CardTitle className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-blue-500" />
+                  Team: {tl.name} <span className="text-xs text-slate-400 font-normal">({tl.email})</span>
+                </CardTitle>
+                <CardDescription>Managed Team Leader | {tl.teamMembers.length} members</CardDescription>
+              </div>
+              <Button variant="outline" size="sm" className="rounded-xl font-bold self-start sm:self-auto" onClick={() => router.push(`/admin/users/${tl.id}`)}>
+                View Leader Profile
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {tl.teamMembers.length === 0 ? (
+              <div className="text-center py-8 text-slate-400 italic text-sm">
+                No members in this team leader's team yet.
+              </div>
+            ) : (
+              <Table>
+                <TableHeader className="bg-slate-50/30 dark:bg-slate-800/20">
+                  <TableRow className="border-none">
+                    <TableHead className="pl-6 font-bold text-xs">Member Name</TableHead>
+                    <TableHead className="font-bold text-xs">Email</TableHead>
+                    <TableHead className="font-bold text-xs">Status</TableHead>
+                    <TableHead className="font-bold text-xs">Billing Status</TableHead>
+                    <TableHead className="text-right pr-6 font-bold text-xs">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {tl.teamMembers.map((m: any) => {
+                    const activeSub = m.subscriptions?.find((sub: any) => sub.paymentStatus === "COMPLETED" && Number(sub.plan.price) > 0);
+                    const activeFreeSub = m.subscriptions?.find((sub: any) => sub.paymentStatus === "COMPLETED_FREE" || Number(sub.plan.price) === 0);
+
+                    let subBadge = <Badge variant="outline" className="bg-slate-50 text-slate-500 border-none font-bold scale-90">Free</Badge>;
+                    if (activeSub) {
+                      subBadge = <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-none font-bold scale-90">Paying</Badge>;
+                    } else if (activeFreeSub) {
+                      subBadge = <Badge variant="outline" className="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border-none font-bold scale-90">Free ({activeFreeSub.plan.name})</Badge>;
+                    }
+
+                    return (
+                      <TableRow key={m.id} className="border-slate-50 dark:border-slate-850">
+                        <TableCell className="pl-6 font-bold text-sm">{m.name}</TableCell>
+                        <TableCell className="font-semibold text-xs text-slate-500">{m.email}</TableCell>
+                        <TableCell>
+                          <Badge className={cn("text-[9px] font-bold uppercase border-none px-1.5 py-0.5", m.status === "ACTIVE" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30" : "bg-slate-100 text-slate-500")}>
+                            {m.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{subBadge}</TableCell>
+                        <TableCell className="text-right pr-6">
+                          <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(`/admin/users/${m.id}`)}>
+                            CRM Profile
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      ))}
+
+      {/* Direct Affiliates Card */}
+      <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
+        <CardHeader className="border-b border-slate-50 dark:border-slate-800 pb-4">
+          <CardTitle className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
+            <Users className="h-4 w-4 text-emerald-500" />
+            Direct Affiliates ({directAffiliates.length})
+          </CardTitle>
+          <CardDescription>Affiliates under this manager not assigned to a team leader.</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          {directAffiliates.length === 0 ? (
+            <div className="text-center py-8 text-slate-400 italic text-sm">
+              No direct affiliates.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader className="bg-slate-50/50 dark:bg-slate-800/40">
+                <TableRow className="border-none">
+                  <TableHead className="pl-6 font-bold text-xs">Affiliate Name</TableHead>
+                  <TableHead className="font-bold text-xs">Email</TableHead>
+                  <TableHead className="font-bold text-xs">Status</TableHead>
+                  <TableHead className="font-bold text-xs">Billing Status</TableHead>
+                  <TableHead className="text-right pr-6 font-bold text-xs">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {directAffiliates.map((m: any) => {
+                  const activeSub = m.subscriptions?.find((sub: any) => sub.paymentStatus === "COMPLETED" && Number(sub.plan.price) > 0);
+                  const activeFreeSub = m.subscriptions?.find((sub: any) => sub.paymentStatus === "COMPLETED_FREE" || Number(sub.plan.price) === 0);
+
+                  let subBadge = <Badge variant="outline" className="bg-slate-50 text-slate-500 border-none font-bold scale-90">Free</Badge>;
+                  if (activeSub) {
+                    subBadge = <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-none font-bold scale-90">Paying</Badge>;
+                  } else if (activeFreeSub) {
+                    subBadge = <Badge variant="outline" className="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border-none font-bold scale-90">Free ({activeFreeSub.plan.name})</Badge>;
+                  }
+
+                  return (
+                    <TableRow key={m.id} className="border-slate-50 dark:border-slate-850">
+                      <TableCell className="pl-6 font-bold text-sm">{m.name}</TableCell>
+                      <TableCell className="font-semibold text-xs text-slate-500">{m.email}</TableCell>
+                      <TableCell>
+                        <Badge className={cn("text-[9px] font-bold uppercase border-none px-1.5 py-0.5", m.status === "ACTIVE" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30" : "bg-slate-100 text-slate-500")}>
+                          {m.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{subBadge}</TableCell>
+                      <TableCell className="text-right pr-6">
+                        <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(`/admin/users/${m.id}`)}>
+                          CRM Profile
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function OperationsManagerHierarchy({ staff }: { staff: any[] }) {
+  const router = useRouter();
+  
+  // Organize staff
+  const managers = staff.filter((s: any) => s.role === "MANAGER");
+  
+  // Find team leaders and affiliates under each manager
+  const getManagerAffiliates = (managerId: string) => {
+    return staff.filter((s: any) => s.managerId === managerId);
+  };
+  
+  const getTeamMembers = (teamLeaderId: string) => {
+    return staff.filter((s: any) => s.teamLeaderId === teamLeaderId);
+  };
+
+  // Find unassigned staff
+  const unassignedTeamLeaders = staff.filter((s: any) => s.role === "TEAM_LEADER" && !s.managerId);
+  const unassignedAffiliates = staff.filter((s: any) => s.role === "AFFILIATE" && !s.managerId && !s.teamLeaderId);
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-300">
+      <div className="grid grid-cols-1 gap-6">
+        {managers.map((mgr: any) => {
+          const managerStaff = getManagerAffiliates(mgr.id);
+          const teamLeaders = managerStaff.filter((s: any) => s.role === "TEAM_LEADER");
+          const directAffs = managerStaff.filter((s: any) => s.role === "AFFILIATE");
+
+          return (
+            <Card key={mgr.id} className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-3xl overflow-hidden">
+              <CardHeader className="bg-indigo-50/40 dark:bg-slate-800/20 border-b border-slate-100 dark:border-slate-800 pb-4">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                  <div>
+                    <CardTitle className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                      <Crown className="h-5 w-5 text-indigo-500" />
+                      Manager: {mgr.name}
+                    </CardTitle>
+                    <CardDescription className="font-semibold text-xs text-indigo-600 dark:text-indigo-400 mt-1">{mgr.email} | {managerStaff.length} direct reports</CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" className="rounded-xl font-bold self-start sm:self-auto" onClick={() => router.push(`/admin/users/${mgr.id}`)}>
+                    View Manager
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
+                {/* Team leaders under this manager */}
+                {teamLeaders.map((tl: any) => {
+                  const members = getTeamMembers(tl.id);
+                  return (
+                    <div key={tl.id} className="border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden bg-slate-50/20 dark:bg-slate-950/10">
+                      <div className="flex justify-between items-center p-4 bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800">
+                        <span className="font-bold text-sm flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-blue-500" />
+                          Team: {tl.name} <span className="text-xs text-slate-400 font-normal">({tl.email})</span>
+                        </span>
+                        <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(`/admin/users/${tl.id}`)}>
+                          View Leader
+                        </Button>
+                      </div>
+                      <div className="p-0">
+                        {members.length === 0 ? (
+                          <div className="p-4 text-center text-xs text-slate-400 italic">No team members assigned.</div>
+                        ) : (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4">
+                            {members.map((m: any) => (
+                              <div key={m.id} className="flex justify-between items-center p-3 rounded-xl bg-white dark:bg-slate-900 shadow-sm border border-slate-50 dark:border-slate-855">
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-bold text-slate-850 dark:text-white">{m.name}</span>
+                                  <span className="text-[10px] text-slate-500 font-medium">{m.email}</span>
+                                </div>
+                                <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(`/admin/users/${m.id}`)}>
+                                  View CRM
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Direct Affiliates under this manager */}
+                {directAffs.length > 0 && (
+                  <div className="border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden">
+                    <div className="p-3 bg-slate-50/30 dark:bg-slate-800/10 border-b border-slate-100 dark:border-slate-800">
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Direct Affiliates ({directAffs.length})</span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4">
+                      {directAffs.map((m: any) => (
+                        <div key={m.id} className="flex justify-between items-center p-3 rounded-xl bg-white dark:bg-slate-900 shadow-sm border border-slate-50 dark:border-slate-855">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-bold text-slate-850 dark:text-white">{m.name}</span>
+                            <span className="text-[10px] text-slate-500 font-medium">{m.email}</span>
+                          </div>
+                          <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(`/admin/users/${m.id}`)}>
+                            View CRM
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Unassigned / Floating Staff */}
+      {(unassignedTeamLeaders.length > 0 || unassignedAffiliates.length > 0) && (
+        <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-3xl overflow-hidden">
+          <CardHeader className="bg-slate-100/50 dark:bg-slate-800/10 border-b border-slate-100 dark:border-slate-800 pb-4">
+            <CardTitle className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
+              <Users className="h-4 w-4 text-stone-500" />
+              Unassigned Staff / Ambassadors
+            </CardTitle>
+            <CardDescription>Ambassadors not assigned under any manager.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-6 space-y-6">
+            {unassignedTeamLeaders.length > 0 && (
+              <div className="space-y-3">
+                <span className="text-xs font-bold text-stone-500 uppercase tracking-wider block">Team Leaders</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {unassignedTeamLeaders.map((m: any) => (
+                    <div key={m.id} className="flex justify-between items-center p-3 rounded-xl bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-slate-850 dark:text-white">{m.name}</span>
+                        <span className="text-[10px] text-slate-500 font-medium">{m.email}</span>
+                      </div>
+                      <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(`/admin/users/${m.id}`)}>
+                        View CRM
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {unassignedAffiliates.length > 0 && (
+              <div className="space-y-3">
+                <span className="text-xs font-bold text-stone-500 uppercase tracking-wider block">Affiliates</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {unassignedAffiliates.map((m: any) => (
+                    <div key={m.id} className="flex justify-between items-center p-3 rounded-xl bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-slate-850 dark:text-white">{m.name}</span>
+                        <span className="text-[10px] text-slate-500 font-medium">{m.email}</span>
+                      </div>
+                      <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(`/admin/users/${m.id}`)}>
+                        View CRM
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
