@@ -18,6 +18,7 @@ export async function updateUser(userId: string, data: {
     profilePictureUrl?: string | null;
     managerId?: string | null;
     teamLeaderId?: string | null;
+    referredById?: string | null;
 }) {
     try {
         const session = await auth();
@@ -40,7 +41,8 @@ export async function updateUser(userId: string, data: {
                 role: true, 
                 ambassadorId: true,
                 managerId: true,
-                teamLeaderId: true
+                teamLeaderId: true,
+                referredById: true,
             },
         });
         
@@ -57,6 +59,13 @@ export async function updateUser(userId: string, data: {
             }
             if (data.role !== "TEAM_LEADER" && data.role !== "AFFILIATE" && data.role !== currentUser.role) {
                 return { error: "Managers can only promote to Team Leader or Affiliate" };
+            }
+        }
+
+        // Check referredById update permissions
+        if (currentUser.referredById !== data.referredById) {
+            if (viewerRole !== "ADMIN" && viewerRole !== "OPERATIONS_MANAGER") {
+                return { error: "Unauthorized: Only Admins and Operations Managers can modify linked ambassadors." };
             }
         }
         
@@ -103,6 +112,7 @@ export async function updateUser(userId: string, data: {
                 profilePictureUrl: data.profilePictureUrl,
                 managerId: data.managerId,
                 teamLeaderId: data.teamLeaderId,
+                referredById: data.referredById,
             }
         });
         

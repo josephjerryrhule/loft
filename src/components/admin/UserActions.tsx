@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, QrCode, MoreHorizontal, Users, Crown } from "lucide-react";
+import { Pencil, Trash2, QrCode, MoreHorizontal, Users, Crown, User } from "lucide-react";
 import { useState } from "react";
 import { EditUserDialog } from "./EditUserDialog";
 import { deleteUser } from "@/app/actions/user";
@@ -33,9 +33,10 @@ interface UserActionsProps {
     managers?: { id: string, name: string }[];
     teamLeaders?: { id: string, name: string }[];
     operationsManagers?: { id: string, name: string }[];
+    ambassadors?: { id: string, name: string, ambassadorId: string | null }[];
 }
 
-export function UserActions({ user, managers = [], teamLeaders = [], operationsManagers = [] }: UserActionsProps) {
+export function UserActions({ user, managers = [], teamLeaders = [], operationsManagers = [], ambassadors = [] }: UserActionsProps) {
     const router = useRouter();
     const [editOpen, setEditOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
@@ -110,6 +111,10 @@ export function UserActions({ user, managers = [], teamLeaders = [], operationsM
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => router.push(`/admin/users/${user.id}`)}>
+                            <User className="mr-2 h-4 w-4" />
+                            View Profile
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setEditOpen(true)}>
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit User
@@ -138,6 +143,7 @@ export function UserActions({ user, managers = [], teamLeaders = [], operationsM
                 managers={managers}
                 teamLeaders={teamLeaders}
                 operationsManagers={operationsManagers}
+                ambassadors={ambassadors}
             />
 
             <AdminViewChildrenDialog

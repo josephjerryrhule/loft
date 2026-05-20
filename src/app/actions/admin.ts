@@ -287,14 +287,247 @@ export async function getAllUsers() {
                 createdAt: true,
                 managerId: true,
                 teamLeaderId: true,
+                referredById: true,
+                referredBy: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true,
+                        ambassadorId: true,
+                    }
+                },
+                orders: {
+                    select: {
+                        totalAmount: true,
+                        paymentStatus: true,
+                    }
+                },
+                subscriptions: {
+                    include: {
+                        plan: true
+                    }
+                },
+                commissions: {
+                    select: {
+                        amount: true,
+                        status: true,
+                    }
+                },
+                referrals: {
+                    select: {
+                        id: true
+                    }
+                },
+                activityLogs: {
+                    orderBy: { createdAt: "desc" },
+                    take: 1,
+                    select: {
+                        createdAt: true,
+                        actionType: true,
+                    }
+                }
             }
         });
-        return users;
+        
+        // Map the results to serialize Decimal objects and compute CRM KPIs
+        return users.map(user => {
+            // Subscription status and active plan name
+            const activeSub = user.subscriptions.find(sub => sub.status === "ACTIVE" && new Date(sub.endDate) >= new Date());
+            const subscriptionStatus = activeSub ? activeSub.plan.name : "Inactive";
+            
+            // Total spent (paid orders + active subscription plan price)
+            const paidOrdersSum = user.orders
+                .filter(o => ["PAID", "COMPLETED"].includes(o.paymentStatus))
+                .reduce((sum, o) => sum + Number(o.totalAmount), 0);
+            
+            const activeSubSum = user.subscriptions
+                .filter(sub => ["ACTIVE", "PAID"].includes(sub.status) || sub.paymentStatus === "COMPLETED")
+                .reduce((sum, sub) => sum + Number(sub.plan.price), 0);
+                
+            const totalSpent = paidOrdersSum + activeSubSum;
+            const numPurchases = user.orders.filter(o => ["PAID", "COMPLETED"].includes(o.paymentStatus)).length + user.subscriptions.length;
+            
+            // Commission earned
+            const commissionEarned = user.commissions
+                .filter(c => ["PAID", "APPROVED"].includes(c.status))
+                .reduce((sum, c) => sum + Number(c.amount), 0);
+                
+            const referralsCount = user.referrals.length;
+            const lastActivity = user.activityLogs[0]?.createdAt || user.createdAt;
+            
+            return {
+                id: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                phoneNumber: user.phoneNumber,
+                role: user.role,
+                status: user.status,
+                profilePictureUrl: user.profilePictureUrl,
+                ambassadorId: user.ambassadorId,
+                ambassadorExpiry: user.ambassadorExpiry,
+                createdAt: user.createdAt,
+                managerId: user.managerId,
+                teamLeaderId: user.teamLeaderId,
+                referredById: user.referredById,
+                referredBy: user.referredBy,
+                subscriptionStatus,
+                totalSpent,
+                numPurchases,
+                commissionEarned,
+                referralsCount,
+                lastActivity,
+            };
+        });
     } catch (error) {
         console.error("Failed to get all users:", error);
         throw error;
     }
 }
+
+export async function getUserFullProfile(userId: string) {
+    const session = await auth();
+    const role = (session?.user as any)?.role;
+    if (!session?.user?.id || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
+        throw new Error("Unauthorized");
+    }
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: {
+                referredBy: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true,
+                        ambassadorId: true,
+                    }
+                },
+                referrals: {
+                    orderBy: { createdAt: "desc" },
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true,
+                        phoneNumber: true,
+                        role: true,
+                        status: true,
+                        createdAt: true,
+                    }
+                },
+                subscriptions: {
+                    orderBy: { createdAt: "desc" },
+                    include: {
+                        plan: true,
+                        childProfile: true,
+                    }
+                },
+                orders: {
+                    orderBy: { createdAt: "desc" },
+                    include: {
+                        product: true,
+                    }
+                },
+                referredOrders: {
+                    orderBy: { createdAt: "desc" },
+                    include: {
+                        product: true,
+                        customer: {
+                            select: {
+                                id: true,
+                                firstName: true,
+                                lastName: true,
+                                email: true,
+                            }
+                        }
+                    }
+                },
+                commissions: {
+                    orderBy: { createdAt: "desc" },
+                },
+                payoutRequests: {
+                    orderBy: { requestedAt: "desc" },
+                },
+                activityLogs: {
+                    orderBy: { createdAt: "desc" },
+                    take: 100,
+                },
+                flipbookProgress: {
+                    orderBy: { lastAccessedAt: "desc" },
+                    include: {
+                        flipbook: true,
+                        childProfile: true,
+                    }
+                },
+                childProfiles: {
+                    include: {
+                        subscriptions: {
+                            include: {
+                                plan: true
+                            }
+                        },
+                        flipbookProgress: {
+                            include: {
+                                flipbook: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        if (!user) return null;
+
+        // Serialize Decimals to Numbers to avoid serialization errors in Next.js
+        return {
+            ...user,
+            subscriptions: user.subscriptions.map(sub => ({
+                ...sub,
+                plan: {
+                    ...sub.plan,
+                    price: Number(sub.plan.price),
+                    affiliateCommissionPercentage: sub.plan.affiliateCommissionPercentage ? Number(sub.plan.affiliateCommissionPercentage) : null,
+                }
+            })),
+            orders: user.orders.map(order => ({
+                ...order,
+                unitPrice: Number(order.unitPrice),
+                totalAmount: Number(order.totalAmount),
+            })),
+            referredOrders: user.referredOrders.map(order => ({
+                ...order,
+                unitPrice: Number(order.unitPrice),
+                totalAmount: Number(order.totalAmount),
+            })),
+            commissions: user.commissions.map(comm => ({
+                ...comm,
+                amount: Number(comm.amount),
+            })),
+            payoutRequests: user.payoutRequests.map(req => ({
+                ...req,
+                amount: Number(req.amount),
+            })),
+            childProfiles: user.childProfiles.map(child => ({
+                ...child,
+                subscriptions: child.subscriptions.map(sub => ({
+                    ...sub,
+                    plan: {
+                        ...sub.plan,
+                        price: Number(sub.plan.price),
+                    }
+                }))
+            }))
+        };
+    } catch (error) {
+        console.error("Failed to get user full profile:", error);
+        throw error;
+    }
+}
+
 
 export async function getAdminUserChildren(userId: string) {
     const session = await auth();

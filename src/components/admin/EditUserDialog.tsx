@@ -35,6 +35,7 @@ const editUserSchema = z.object({
   profilePictureUrl: z.string().optional().nullable(),
   managerId: z.string().optional().nullable(),
   teamLeaderId: z.string().optional().nullable(),
+  referredById: z.string().optional().nullable(),
 });
 
 interface EditUserDialogProps {
@@ -44,9 +45,10 @@ interface EditUserDialogProps {
     managers?: { id: string, name: string }[];
     teamLeaders?: { id: string, name: string }[];
     operationsManagers?: { id: string, name: string }[];
+    ambassadors?: { id: string, name: string, ambassadorId: string | null }[];
 }
 
-export function EditUserDialog({ user, open, onOpenChange, managers = [], teamLeaders = [], operationsManagers = [] }: EditUserDialogProps) {
+export function EditUserDialog({ user, open, onOpenChange, managers = [], teamLeaders = [], operationsManagers = [], ambassadors = [] }: EditUserDialogProps) {
   const router = useRouter();
   const form = useForm<z.infer<typeof editUserSchema>>({
     resolver: zodResolver(editUserSchema),
@@ -62,6 +64,7 @@ export function EditUserDialog({ user, open, onOpenChange, managers = [], teamLe
       profilePictureUrl: user.profilePictureUrl || "",
       managerId: user.managerId || "none",
       teamLeaderId: user.teamLeaderId || "none",
+      referredById: user.referredById || "none",
     },
   });
 
@@ -80,6 +83,7 @@ export function EditUserDialog({ user, open, onOpenChange, managers = [], teamLe
         profilePictureUrl: user.profilePictureUrl || "",
         managerId: user.managerId || "none",
         teamLeaderId: user.teamLeaderId || "none",
+        referredById: user.referredById || "none",
       });
     }
   }, [user, open, form]);
@@ -90,6 +94,7 @@ export function EditUserDialog({ user, open, onOpenChange, managers = [], teamLe
       ambassadorExpiry: values.ambassadorExpiry ? new Date(values.ambassadorExpiry) : null,
       managerId: values.managerId === "none" ? null : values.managerId,
       teamLeaderId: values.teamLeaderId === "none" ? null : values.teamLeaderId,
+      referredById: values.referredById === "none" ? null : values.referredById,
     };
     const result = await updateUser(user.id, formattedValues as any);
     if (result && result.error) {
@@ -201,6 +206,34 @@ export function EditUserDialog({ user, open, onOpenChange, managers = [], teamLe
                     </FormItem>
                 )} />
               </div>
+
+              {/* Linked Ambassador field for CUSTOMER and PARENT roles */}
+              {["CUSTOMER", "PARENT"].includes(form.watch("role")) && (
+                <FormField control={form.control} name="referredById" render={({ field }) => (
+                    <FormItem className="animate-in slide-in-from-top-2 duration-300">
+                    <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Linked Ambassador / Affiliate</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || "none"}>
+                        <FormControl>
+                        <SelectTrigger className="h-11 sm:h-12 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold focus:ring-[#E87154] shadow-inner px-4 text-sm sm:text-base">
+                            <SelectValue placeholder="Select Ambassador" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-2xl border-none shadow-2xl p-2">
+                        <SelectItem value="none" className="italic opacity-70 py-2 sm:py-3 rounded-xl">No Ambassador (Organic)</SelectItem>
+                        {ambassadors.map(amb => (
+                            <SelectItem key={amb.id} value={amb.id} className="font-bold py-2 sm:py-3 rounded-xl">
+                            {amb.name} {amb.ambassadorId ? `(${amb.ambassadorId})` : ""}
+                            </SelectItem>
+                        ))}
+                        </SelectContent>
+                    </Select>
+                    <FormDescription className="text-[10px] font-bold text-slate-400 ml-1">
+                        Assign this customer to an ambassador to track their referrals and commissions.
+                    </FormDescription>
+                    <FormMessage />
+                    </FormItem>
+                )} />
+              )}
 
               {[Role.MANAGER, Role.AFFILIATE, Role.TEAM_LEADER, Role.OPERATIONS_MANAGER].includes(form.watch("role") as Role) && (
                 <div className="space-y-6 border-t pt-8 mt-4 animate-in fade-in slide-in-from-top-4 duration-500">
