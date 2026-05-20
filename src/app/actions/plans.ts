@@ -182,7 +182,7 @@ export async function subscribeToPlan(planId: string) {
                 startDate,
                 endDate,
                 autoRenew: false,
-                paymentStatus: Number(plan.price) === 0 ? "COMPLETED" : "PENDING"
+                paymentStatus: Number(plan.price) === 0 ? "COMPLETED_FREE" : "PENDING"
             }
         });
 

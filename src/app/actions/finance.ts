@@ -135,13 +135,7 @@ export async function getPaymentTrackerData(filters?: {
 
   if (filters?.status && filters.status !== "all") {
     if (filters.status === "COMPLETED") {
-      where.OR = [
-        { paymentStatus: "COMPLETED" },
-        { plan: { price: 0 } }
-      ];
-    } else if (filters.status === "PENDING") {
-      where.paymentStatus = "PENDING";
-      where.plan = { price: { gt: 0 } };
+      where.paymentStatus = { in: ["COMPLETED", "COMPLETED_FREE"] };
     } else {
       where.paymentStatus = filters.status;
     }
@@ -182,7 +176,7 @@ export async function getPaymentTrackerData(filters?: {
   const startOfWeek = new Date(now);
   startOfWeek.setDate(now.getDate() - now.getDay());
 
-  const completed = subscriptions.filter((s) => s.paymentStatus === "COMPLETED");
+  const completed = subscriptions.filter((s) => s.paymentStatus === "COMPLETED" || s.paymentStatus === "COMPLETED_FREE");
   const totalRevenue = completed.reduce((s, sub) => s + Number(sub.plan.price), 0);
   const revenueThisMonth = completed
     .filter((s) => new Date(s.createdAt) >= startOfMonth)
@@ -205,7 +199,7 @@ export async function getPaymentTrackerData(filters?: {
       amount: Number(s.plan.price),
       currency: (s as any).currency || "GHS",
       gateway: (s as any).gateway || "PAYSTACK",
-      paymentStatus: Number(s.plan.price) === 0 ? "COMPLETED" : s.paymentStatus,
+      paymentStatus: s.paymentStatus === "COMPLETED_FREE" ? "COMPLETED" : s.paymentStatus,
       paymentReference: s.paymentReference,
       isRecurring: s.autoRenew,
     })),
@@ -299,7 +293,7 @@ export async function getDailySignupData(filters?: {
         : "—",
       plan: u.subscriptions[0]?.plan?.name || "No plan",
       paymentStatus: u.subscriptions[0]
-        ? (Number(u.subscriptions[0].plan?.price) === 0 ? "COMPLETED" : u.subscriptions[0].paymentStatus)
+        ? (u.subscriptions[0].paymentStatus === "COMPLETED_FREE" ? "COMPLETED" : u.subscriptions[0].paymentStatus)
         : "—",
     })),
     chartData,

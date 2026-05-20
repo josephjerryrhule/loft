@@ -119,7 +119,7 @@ export async function GET(request: NextRequest) {
                 startDate: freeStartDate,
                 endDate: freeEndDate,
                 autoRenew: false,
-                paymentStatus: "COMPLETED"
+                paymentStatus: "COMPLETED_FREE"
               }
             });
 

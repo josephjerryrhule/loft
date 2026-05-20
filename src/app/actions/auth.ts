@@ -143,7 +143,7 @@ export async function registerUser(formData: z.infer<typeof registerSchema>) {
           startDate: freeStartDate,
           endDate: freeEndDate,
           autoRenew: false,
-          paymentStatus: "COMPLETED"
+          paymentStatus: "COMPLETED_FREE"
         }
       });
     }
