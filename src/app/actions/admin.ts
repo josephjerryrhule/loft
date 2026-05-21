@@ -447,6 +447,24 @@ export async function getUserFullProfile(userId: string) {
                         ambassadorId: true,
                     }
                 },
+                manager: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true,
+                        ambassadorId: true,
+                    }
+                },
+                teamLeader: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true,
+                        ambassadorId: true,
+                    }
+                },
                 referrals: {
                     orderBy: { createdAt: "desc" },
                     select: {

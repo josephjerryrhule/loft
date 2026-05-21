@@ -48,6 +48,8 @@ export function UserProfileDashboard({
   viewerRole
 }: UserProfileDashboardProps) {
   const router = useRouter();
+  const isStaff = ["ADMIN", "OPERATIONS_MANAGER", "FINANCE"].includes(viewerRole || "");
+  const getProfileUrl = (id: string) => `${isStaff ? "/admin/users" : "/leaderboard"}/${id}`;
   const currencySymbol = getCurrencySymbol(currency);
   const [activeTab, setActiveTab] = useState<"overview" | "billing" | "library" | "referrals" | "commissions" | "activity" | "hierarchy">("overview");
 
@@ -528,12 +530,12 @@ export function UserProfileDashboard({
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-6">
-                {/* Ambassador Connection */}
+                 {/* Ambassador Connection */}
                 <div>
                   <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Linked Ambassador / Promoter</span>
                   {user.referredBy ? (
                     <Link 
-                      href={`/admin/users/${user.referredBy.id}`} 
+                      href={getProfileUrl(user.referredBy.id)} 
                       className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-850 dark:hover:bg-slate-800 transition-colors border border-slate-100/50 dark:border-slate-800"
                     >
                       <Avatar className="h-9 w-9">
@@ -560,18 +562,58 @@ export function UserProfileDashboard({
                 {user.managerId && (
                   <div>
                     <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Team Manager</span>
-                    <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 p-3 bg-slate-50 dark:bg-slate-850 rounded-xl">
-                      Manager ID: <span className="font-mono">{user.managerId}</span>
-                    </div>
+                    {user.manager ? (
+                      <Link 
+                        href={getProfileUrl(user.manager.id)} 
+                        className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-850 dark:hover:bg-slate-800 transition-colors border border-slate-100/50 dark:border-slate-800"
+                      >
+                        <Avatar className="h-9 w-9">
+                          <AvatarFallback className="bg-indigo-100 text-indigo-600 text-xs font-bold">
+                            {user.manager.firstName?.[0] || user.manager.email[0].toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className="text-xs font-bold text-slate-800 dark:text-white truncate flex items-center gap-1">
+                            {`${user.manager.firstName || ''} ${user.manager.lastName || ''}`.trim() || user.manager.email}
+                            <ExternalLink className="h-3 w-3 text-slate-400" />
+                          </span>
+                          <span className="text-[10px] font-mono text-slate-400 font-semibold">{user.manager.ambassadorId || "No Code"}</span>
+                        </div>
+                      </Link>
+                    ) : (
+                      <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 p-3 bg-slate-50 dark:bg-slate-850 rounded-xl">
+                        Manager ID: <span className="font-mono">{user.managerId}</span>
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {user.teamLeaderId && (
                   <div>
                     <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Team Leader</span>
-                    <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 p-3 bg-slate-50 dark:bg-slate-850 rounded-xl">
-                      Team Leader ID: <span className="font-mono">{user.teamLeaderId}</span>
-                    </div>
+                    {user.teamLeader ? (
+                      <Link 
+                        href={getProfileUrl(user.teamLeader.id)} 
+                        className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-850 dark:hover:bg-slate-800 transition-colors border border-slate-100/50 dark:border-slate-800"
+                      >
+                        <Avatar className="h-9 w-9">
+                          <AvatarFallback className="bg-indigo-100 text-indigo-600 text-xs font-bold">
+                            {user.teamLeader.firstName?.[0] || user.teamLeader.email[0].toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className="text-xs font-bold text-slate-800 dark:text-white truncate flex items-center gap-1">
+                            {`${user.teamLeader.firstName || ''} ${user.teamLeader.lastName || ''}`.trim() || user.teamLeader.email}
+                            <ExternalLink className="h-3 w-3 text-slate-400" />
+                          </span>
+                          <span className="text-[10px] font-mono text-slate-400 font-semibold">{user.teamLeader.ambassadorId || "No Code"}</span>
+                        </div>
+                      </Link>
+                    ) : (
+                      <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 p-3 bg-slate-50 dark:bg-slate-850 rounded-xl">
+                        Team Leader ID: <span className="font-mono">{user.teamLeaderId}</span>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -906,7 +948,7 @@ export function UserProfileDashboard({
                               variant="ghost" 
                               size="sm" 
                               className="font-bold text-xs text-[#E87154] hover:text-[#E87154]/80 p-0 h-auto"
-                              onClick={() => router.push(`/admin/users/${ref.id}`)}
+                              onClick={() => router.push(getProfileUrl(ref.id))}
                             >
                               CRM Profile
                             </Button>
@@ -1089,13 +1131,13 @@ export function UserProfileDashboard({
         {activeTab === "hierarchy" && hasHierarchy && user.managedHierarchy && (
           <div className="space-y-8 animate-in fade-in duration-300">
             {user.managedHierarchy.type === "TEAM_LEADER" && (
-              <TeamLeaderHierarchy members={user.managedHierarchy.members} />
+              <TeamLeaderHierarchy members={user.managedHierarchy.members} getProfileUrl={getProfileUrl} />
             )}
             {user.managedHierarchy.type === "MANAGER" && (
-              <ManagerHierarchy affiliates={user.managedHierarchy.affiliates} />
+              <ManagerHierarchy affiliates={user.managedHierarchy.affiliates} getProfileUrl={getProfileUrl} />
             )}
             {user.managedHierarchy.type === "OPERATIONS_MANAGER" && (
-              <OperationsManagerHierarchy staff={user.managedHierarchy.staff} />
+              <OperationsManagerHierarchy staff={user.managedHierarchy.staff} getProfileUrl={getProfileUrl} />
             )}
           </div>
         )}
@@ -1105,7 +1147,7 @@ export function UserProfileDashboard({
   );
 }
 
-function TeamLeaderHierarchy({ members }: { members: any[] }) {
+function TeamLeaderHierarchy({ members, getProfileUrl }: { members: any[], getProfileUrl: (id: string) => string }) {
   const router = useRouter();
   return (
     <Card className="border-none shadow-sm bg-white dark:bg-slate-900 rounded-2xl overflow-hidden">
@@ -1155,7 +1197,7 @@ function TeamLeaderHierarchy({ members }: { members: any[] }) {
                     </TableCell>
                     <TableCell>{subBadge}</TableCell>
                     <TableCell className="text-right pr-6">
-                      <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(`/admin/users/${m.id}`)}>
+                      <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(getProfileUrl(m.id))}>
                         CRM Profile
                       </Button>
                     </TableCell>
@@ -1170,7 +1212,7 @@ function TeamLeaderHierarchy({ members }: { members: any[] }) {
   );
 }
 
-function ManagerHierarchy({ affiliates }: { affiliates: any[] }) {
+function ManagerHierarchy({ affiliates, getProfileUrl }: { affiliates: any[], getProfileUrl: (id: string) => string }) {
   const router = useRouter();
   
   // Group affiliates by role
@@ -1191,7 +1233,7 @@ function ManagerHierarchy({ affiliates }: { affiliates: any[] }) {
                 </CardTitle>
                 <CardDescription>Managed Team Leader | {tl.teamMembers.length} members</CardDescription>
               </div>
-              <Button variant="outline" size="sm" className="rounded-xl font-bold self-start sm:self-auto" onClick={() => router.push(`/admin/users/${tl.id}`)}>
+              <Button variant="outline" size="sm" className="rounded-xl font-bold self-start sm:self-auto" onClick={() => router.push(getProfileUrl(tl.id))}>
                 View Leader Profile
               </Button>
             </div>
@@ -1235,7 +1277,7 @@ function ManagerHierarchy({ affiliates }: { affiliates: any[] }) {
                         </TableCell>
                         <TableCell>{subBadge}</TableCell>
                         <TableCell className="text-right pr-6">
-                          <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(`/admin/users/${m.id}`)}>
+                          <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(getProfileUrl(m.id))}>
                             CRM Profile
                           </Button>
                         </TableCell>
@@ -1297,7 +1339,7 @@ function ManagerHierarchy({ affiliates }: { affiliates: any[] }) {
                       </TableCell>
                       <TableCell>{subBadge}</TableCell>
                       <TableCell className="text-right pr-6">
-                        <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(`/admin/users/${m.id}`)}>
+                        <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(getProfileUrl(m.id))}>
                           CRM Profile
                         </Button>
                       </TableCell>
@@ -1313,7 +1355,7 @@ function ManagerHierarchy({ affiliates }: { affiliates: any[] }) {
   );
 }
 
-function OperationsManagerHierarchy({ staff }: { staff: any[] }) {
+function OperationsManagerHierarchy({ staff, getProfileUrl }: { staff: any[], getProfileUrl: (id: string) => string }) {
   const router = useRouter();
   
   // Organize staff
@@ -1351,7 +1393,7 @@ function OperationsManagerHierarchy({ staff }: { staff: any[] }) {
                     </CardTitle>
                     <CardDescription className="font-semibold text-xs text-indigo-600 dark:text-indigo-400 mt-1">{mgr.email} | {managerStaff.length} direct reports</CardDescription>
                   </div>
-                  <Button variant="outline" size="sm" className="rounded-xl font-bold self-start sm:self-auto" onClick={() => router.push(`/admin/users/${mgr.id}`)}>
+                  <Button variant="outline" size="sm" className="rounded-xl font-bold self-start sm:self-auto" onClick={() => router.push(getProfileUrl(mgr.id))}>
                     View Manager
                   </Button>
                 </div>
@@ -1367,7 +1409,7 @@ function OperationsManagerHierarchy({ staff }: { staff: any[] }) {
                           <Shield className="h-4 w-4 text-blue-500" />
                           Team: {tl.name} <span className="text-xs text-slate-400 font-normal">({tl.email})</span>
                         </span>
-                        <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(`/admin/users/${tl.id}`)}>
+                        <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(getProfileUrl(tl.id))}>
                           View Leader
                         </Button>
                       </div>
@@ -1382,7 +1424,7 @@ function OperationsManagerHierarchy({ staff }: { staff: any[] }) {
                                   <span className="text-sm font-bold text-slate-850 dark:text-white">{m.name}</span>
                                   <span className="text-[10px] text-slate-500 font-medium">{m.email}</span>
                                 </div>
-                                <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(`/admin/users/${m.id}`)}>
+                                <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(getProfileUrl(m.id))}>
                                   View CRM
                                 </Button>
                               </div>
@@ -1407,7 +1449,7 @@ function OperationsManagerHierarchy({ staff }: { staff: any[] }) {
                             <span className="text-sm font-bold text-slate-850 dark:text-white">{m.name}</span>
                             <span className="text-[10px] text-slate-500 font-medium">{m.email}</span>
                           </div>
-                          <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(`/admin/users/${m.id}`)}>
+                          <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(getProfileUrl(m.id))}>
                             View CRM
                           </Button>
                         </div>
@@ -1442,7 +1484,7 @@ function OperationsManagerHierarchy({ staff }: { staff: any[] }) {
                         <span className="text-sm font-bold text-slate-850 dark:text-white">{m.name}</span>
                         <span className="text-[10px] text-slate-500 font-medium">{m.email}</span>
                       </div>
-                      <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(`/admin/users/${m.id}`)}>
+                      <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(getProfileUrl(m.id))}>
                         View CRM
                       </Button>
                     </div>
@@ -1461,7 +1503,7 @@ function OperationsManagerHierarchy({ staff }: { staff: any[] }) {
                         <span className="text-sm font-bold text-slate-850 dark:text-white">{m.name}</span>
                         <span className="text-[10px] text-slate-500 font-medium">{m.email}</span>
                       </div>
-                      <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(`/admin/users/${m.id}`)}>
+                      <Button variant="ghost" size="sm" className="text-[#E87154] font-bold text-xs p-0 h-auto" onClick={() => router.push(getProfileUrl(m.id))}>
                         View CRM
                       </Button>
                     </div>
