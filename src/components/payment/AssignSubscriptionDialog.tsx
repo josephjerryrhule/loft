@@ -19,7 +19,8 @@ import { Loader2, UserPlus } from "lucide-react";
 interface ChildProfile {
   id: string;
   name: string;
-  avatarColor?: string;
+  avatarColor?: string | null;
+  ageGroup?: string | null;
 }
 
 interface AssignSubscriptionDialogProps {

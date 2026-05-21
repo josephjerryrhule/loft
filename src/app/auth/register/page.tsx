@@ -20,6 +20,7 @@ import { Role } from "@/lib/types";
 import { Suspense, useState } from "react";
 import { registrationSchema } from "@/lib/validations";
 import { cn } from "@/lib/utils";
+import { SORTED_COUNTRIES } from "@/lib/countries";
 
 function RegisterForm() {
   const router = useRouter();
@@ -224,7 +225,20 @@ function RegisterForm() {
                   <FormField control={form.control} name="country" render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500 ml-1">Country</FormLabel>
-                      <FormControl><Input placeholder="Ghana" className="h-12 bg-stone-50 border-stone-100 rounded-xl font-medium focus-visible:ring-[#E87154] px-4" {...field} /></FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value || "Ghana"}>
+                        <FormControl>
+                          <SelectTrigger className="h-12 w-full bg-stone-50 border-stone-100 rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-[#E87154]/50 focus:border-[#E87154] px-4 flex items-center justify-between text-left">
+                            <SelectValue placeholder="Select Country" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="max-h-60 bg-white border border-stone-100 shadow-lg rounded-xl z-[100]">
+                          {SORTED_COUNTRIES.map((c) => (
+                            <SelectItem key={c.code} value={c.name}>
+                              {c.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )} />

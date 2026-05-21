@@ -10,6 +10,8 @@ import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { Loader2 } from "lucide-react";
 import { FileUpload } from "@/components/ui/file-upload";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SORTED_COUNTRIES } from "@/lib/countries";
 
 interface ProfileSettingsFormProps {
     user: {
@@ -125,9 +127,20 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
                         <Label htmlFor="postalCode">Postal Code</Label>
                         <Input id="postalCode" name="postalCode" defaultValue={user.postalCode || ""} placeholder="00233" />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 flex flex-col justify-end">
                         <Label htmlFor="country">Country</Label>
-                        <Input id="country" name="country" defaultValue={user.country || "Ghana"} placeholder="Ghana" />
+                        <Select name="country" defaultValue={user.country || "Ghana"}>
+                            <SelectTrigger id="country" className="w-full h-9 border bg-transparent px-3 py-2 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-[#E87154]/50 focus:border-[#E87154] text-left">
+                                <SelectValue placeholder="Select Country" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-60 bg-white border border-stone-100 shadow-lg rounded-xl z-[100]">
+                                {SORTED_COUNTRIES.map((c) => (
+                                    <SelectItem key={c.code} value={c.name}>
+                                        {c.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
             </div>

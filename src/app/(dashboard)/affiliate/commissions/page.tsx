@@ -26,6 +26,7 @@ interface Commission {
     sourceType: string;
     amount: number;
     status: string;
+    currency?: string;
 }
 
 interface Stats {
@@ -33,6 +34,7 @@ interface Stats {
     approvedBalance: number;
     pendingBalance: number;
     monthEarnings: number;
+    currency?: string;
 }
 
 
@@ -64,7 +66,7 @@ export default function AffiliateCommissionsPage() {
             ]);
             setStats(statsData);
             setMinimumPayout(minPayout);
-            setCurrency(settings.currency || "GHS");
+            setCurrency(statsData?.currency || settings.currency || "GHS");
         } catch (error) {
             console.error("Failed to load initial data:", error);
         }
@@ -104,6 +106,7 @@ export default function AffiliateCommissionsPage() {
                         <RequestPayoutDialog 
                           availableBalance={stats.approvedBalance} 
                           minimumPayoutAmount={minimumPayout}
+                          currency={currency}
                         />
                     )
                 }
@@ -187,7 +190,7 @@ export default function AffiliateCommissionsPage() {
                                         </TableCell>
                                         <TableCell>
                                             <span className="text-base font-black text-slate-900 dark:text-white whitespace-nowrap group-hover:text-[#E87154] transition-colors">
-                                                <span className="text-[10px] text-slate-400 mr-1 font-bold uppercase">{currencySymbol}</span>
+                                                <span className="text-[10px] text-slate-400 mr-1 font-bold uppercase">{getCurrencySymbol(comm.currency || currency)}</span>
                                                 {comm.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                             </span>
                                         </TableCell>

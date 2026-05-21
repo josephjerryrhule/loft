@@ -26,12 +26,14 @@ interface Commission {
     sourceType: string;
     amount: number | { toString: () => string };
     status: string;
+    currency?: string;
 }
 
 interface Stats {
     totalEarnings: number;
     approvedBalance: number;
     pendingBalance: number;
+    currency?: string;
 }
 
 
@@ -63,7 +65,7 @@ export default function ManagerCommissionsPage() {
             ]);
             setStats(statsData);
             setMinimumPayout(minPayout);
-            setCurrency(settings.currency || "GHS");
+            setCurrency(statsData?.currency || settings.currency || "GHS");
         } catch (error) {
             console.error("Failed to load initial data:", error);
         }
@@ -103,6 +105,7 @@ export default function ManagerCommissionsPage() {
                         <RequestPayoutDialog 
                           availableBalance={stats.approvedBalance} 
                           minimumPayoutAmount={minimumPayout}
+                          currency={currency}
                         />
                     )
                 }
@@ -179,12 +182,12 @@ export default function ManagerCommissionsPage() {
                                                 {comm.sourceType}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell>
+                                         <TableCell>
                                             <span className="text-base font-black text-slate-900 dark:text-white whitespace-nowrap group-hover:text-[#E87154] transition-colors">
-                                                <span className="text-[10px] text-slate-400 mr-1 font-bold uppercase">{currencySymbol}</span>
+                                                <span className="text-[10px] text-slate-400 mr-1 font-bold uppercase">{getCurrencySymbol(comm.currency || currency)}</span>
                                                 {Number(comm.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                             </span>
-                                        </TableCell>
+                                         </TableCell>
                                         <TableCell className="text-right pr-10">
                                             <Badge 
                                                 className={cn(

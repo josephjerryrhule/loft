@@ -19,15 +19,19 @@ import { Loader2, Wallet, Info, CheckCircle2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
+import { getCurrencySymbol } from "@/lib/utils";
+
 interface RequestPayoutDialogProps {
     availableBalance: number;
     minimumPayoutAmount?: number;
+    currency?: string;
 }
 
-export function RequestPayoutDialog({ availableBalance, minimumPayoutAmount = 50 }: RequestPayoutDialogProps) {
+export function RequestPayoutDialog({ availableBalance, minimumPayoutAmount = 50, currency = "GHS" }: RequestPayoutDialogProps) {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
 
+    const currencySymbol = getCurrencySymbol(currency);
     const canRequestPayout = availableBalance > 0 && availableBalance >= minimumPayoutAmount;
 
     const handleSubmit = async (formData: FormData) => {
@@ -79,7 +83,7 @@ export function RequestPayoutDialog({ availableBalance, minimumPayoutAmount = 50
 
                     <div className="mt-8 bg-white border border-stone-100 rounded-[2rem] p-6 shadow-sm">
                         <p className="text-[10px] uppercase font-black tracking-[0.3em] text-stone-400 mb-1">Available Balance</p>
-                        <p className="text-4xl font-black text-[#E87154]">GHS {availableBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                        <p className="text-4xl font-black text-[#E87154]">{currencySymbol} {availableBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                     </div>
                 </div>
 
@@ -87,14 +91,14 @@ export function RequestPayoutDialog({ availableBalance, minimumPayoutAmount = 50
                     {availableBalance < minimumPayoutAmount && (
                         <div className="flex items-start gap-4 p-5 bg-red-50 text-red-600 rounded-2xl border border-red-100 text-sm animate-in pulse duration-1000">
                             <Info size={20} className="shrink-0 mt-0.5" />
-                            <p className="font-bold leading-relaxed text-sm">Minimum payout amount is GHS {minimumPayoutAmount.toFixed(2)}. You need GHS {(minimumPayoutAmount - availableBalance).toFixed(2)} more to request a payout.</p>
+                            <p className="font-bold leading-relaxed text-sm">Minimum payout amount is {currencySymbol} {minimumPayoutAmount.toFixed(2)}. You need {currencySymbol} {(minimumPayoutAmount - availableBalance).toFixed(2)} more to request a payout.</p>
                         </div>
                     )}
 
                     <div className="space-y-3">
                         <Label htmlFor="amount" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Amount to Withdraw</Label>
                         <div className="relative">
-                            <span className="absolute left-5 top-1/2 -translate-y-1/2 font-black text-slate-300 text-lg">GHS</span>
+                            <span className="absolute left-5 top-1/2 -translate-y-1/2 font-black text-slate-300 text-lg">{currency}</span>
                             <Input 
                                 id="amount" 
                                 name="amount" 

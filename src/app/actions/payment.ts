@@ -417,8 +417,12 @@ export async function initializePayment(data: {
   callbackUrl: string;
   userId?: string; // Optional userId for direct initialization (e.g. from registration)
   childProfileId?: string; // Optional childProfileId for child subscriptions
+  gateway?: string; // "PAYSTACK" | "STRIPE" | "PAYPAL"
+  currency?: string; // "GHS" | "USD" | "EUR" | "GBP"
 }) {
   let userId = data.userId;
+  const gateway = data.gateway || "PAYSTACK";
+  const currency = data.currency || "GHS";
   
   if (!userId) {
       const session = await auth();
@@ -428,6 +432,10 @@ export async function initializePayment(data: {
   if (!userId) return { error: "Unauthorized" };
 
   try {
+    const plan = await prisma.subscriptionPlan.findUnique({
+      where: { id: data.itemId },
+    });
+
     if (data.type === "subscription") {
       const user = await prisma.user.findUnique({
         where: { id: userId },
@@ -448,6 +456,65 @@ export async function initializePayment(data: {
       }
     }
 
+    if (gateway === "STRIPE") {
+      if (!plan) return { error: "Plan not found" };
+      const { getStripeInstance } = await import("@/lib/stripe");
+      const stripe = await getStripeInstance();
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: currency.toLowerCase(),
+              product_data: {
+                name: plan.name,
+                description: plan.description || undefined,
+              },
+              unit_amount: Math.round(data.amount * 100),
+            },
+            quantity: 1,
+          },
+        ],
+        mode: "payment",
+        success_url: `${data.callbackUrl}?gateway=stripe&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${data.callbackUrl.replace("/payment/callback", "/parent/plans")}?error=cancelled`,
+        metadata: {
+          type: "subscription",
+          userId: userId,
+          itemId: plan.id,
+          childProfileId: data.childProfileId && data.childProfileId.trim() !== "" ? data.childProfileId : null,
+        },
+      });
+      return { success: true, authorizationUrl: session.url };
+    }
+
+    if (gateway === "PAYPAL") {
+      if (!plan) return { error: "Plan not found" };
+      const { createPaypalOrder } = await import("@/lib/paypal");
+      const customId = JSON.stringify({
+        userId,
+        planId: plan.id,
+        childProfileId: data.childProfileId && data.childProfileId.trim() !== "" ? data.childProfileId : undefined,
+      });
+
+      const order = await createPaypalOrder({
+        amount: data.amount,
+        currency: currency,
+        reference: data.reference,
+        customId: customId,
+        returnUrl: `${data.callbackUrl}?gateway=paypal`,
+        cancelUrl: `${data.callbackUrl.replace("/payment/callback", "/parent/plans")}?error=cancelled`,
+      });
+
+      const approveUrl = order.links?.find((l: any) => l.rel === "approve" || l.rel === "payer-action")?.href;
+      if (!approveUrl) {
+        return { error: "PayPal approval link not found" };
+      }
+
+      return { success: true, authorizationUrl: approveUrl };
+    }
+
+    // Default to Paystack
     const { initializePaystackTransaction } = await import("@/lib/paystack");
     
     const result = await initializePaystackTransaction({
@@ -474,5 +541,255 @@ export async function initializePayment(data: {
   } catch (error) {
     console.error("Payment initialization error:", error);
     return { error: "Failed to initialize payment" };
+  }
+}
+
+export async function processStripeSubscriptionPayment(sessionId: string) {
+  try {
+    const { getStripeInstance } = await import("@/lib/stripe");
+    const stripe = await getStripeInstance();
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    if (session.payment_status !== "paid") {
+      return { error: "Stripe payment not completed" };
+    }
+
+    const metadata = session.metadata || {};
+    const type = metadata.type;
+    const planId = metadata.itemId || metadata.planId;
+    const customerId = metadata.userId;
+    const childProfileId = metadata.childProfileId && metadata.childProfileId.trim() !== "" ? metadata.childProfileId : null;
+
+    if (type !== "subscription" || !planId || !customerId) {
+      return { error: "Invalid Stripe metadata" };
+    }
+
+    const existingSubscription = await prisma.subscription.findFirst({
+      where: { paymentReference: sessionId },
+      include: { customer: true }
+    });
+
+    if (existingSubscription) {
+      return { success: true, subscription: existingSubscription };
+    }
+
+    const plan = await prisma.subscriptionPlan.findUnique({
+      where: { id: planId },
+    });
+
+    if (!plan) return { error: "Plan not found" };
+
+    const startDate = new Date();
+    const endDate = new Date(startDate.getTime());
+    endDate.setDate(endDate.getDate() + plan.durationDays);
+
+    await prisma.subscription.updateMany({
+      where: {
+        customerId: customerId,
+        childProfileId: childProfileId,
+        status: "ACTIVE",
+      },
+      data: { status: "CANCELLED" },
+    });
+
+    const currency = (session.currency || "USD").toUpperCase();
+    const amountPaid = (session.amount_total || 0) / 100;
+
+    const subscription = await prisma.subscription.create({
+      data: {
+        customerId,
+        childProfileId,
+        planId,
+        status: "ACTIVE",
+        paymentStatus: "COMPLETED",
+        paymentReference: sessionId,
+        gateway: "STRIPE",
+        currency,
+        startDate,
+        endDate,
+        autoRenew: false,
+      },
+      include: { customer: true }
+    });
+
+    await prisma.user.update({
+      where: { id: customerId },
+      data: { isEmailVerified: true }
+    });
+
+    await processSubscriptionCommission(
+      subscription.id,
+      customerId,
+      amountPaid
+    );
+
+    await prisma.activityLog.create({
+      data: {
+        userId: customerId,
+        actionType: "SUBSCRIPTION",
+        actionDetails: JSON.stringify({
+          planName: plan.name,
+          amount: amountPaid,
+          currency: currency,
+          reference: sessionId,
+          subscriptionId: subscription.id,
+          gateway: "STRIPE"
+        }),
+      },
+    });
+
+    if (subscription.customer) {
+      const userName = `${subscription.customer.firstName || ""} ${subscription.customer.lastName || ""}`.trim() || "Customer";
+      const symbol = currency === "EUR" ? "€" : currency === "GBP" ? "£" : "$";
+      
+      sendSubscriptionConfirmationEmail({
+        userEmail: subscription.customer.email,
+        userName,
+        planName: plan.name,
+        amount: `${symbol}${amountPaid.toFixed(2)}` as any,
+        startDate,
+        endDate,
+      }).catch(console.error);
+      
+      sendSubscriptionReceiptEmail({
+        userEmail: subscription.customer.email,
+        userName,
+        planName: plan.name,
+        amount: `${symbol}${amountPaid.toFixed(2)}` as any,
+        transactionId: sessionId,
+        billingPeriod: `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`,
+      }).catch(console.error);
+    }
+
+    return { success: true, subscription };
+  } catch (error) {
+    console.error("Stripe payment processing error:", error);
+    return { error: "Failed to process Stripe subscription payment" };
+  }
+}
+
+export async function processPaypalSubscriptionPayment(orderId: string) {
+  try {
+    const { capturePaypalOrder } = await import("@/lib/paypal");
+    const captureResult = await capturePaypalOrder(orderId);
+
+    if (captureResult.status !== "COMPLETED") {
+      return { error: "PayPal payment is not completed" };
+    }
+
+    const purchaseUnit = captureResult.purchase_units?.[0];
+    const customId = purchaseUnit?.custom_id;
+
+    if (!customId) {
+      return { error: "Missing customId in PayPal payment" };
+    }
+
+    const { userId, planId, childProfileId } = JSON.parse(customId);
+
+    if (!userId || !planId) {
+      return { error: "Invalid metadata in PayPal payment" };
+    }
+
+    const existingSubscription = await prisma.subscription.findFirst({
+      where: { paymentReference: orderId },
+      include: { customer: true }
+    });
+
+    if (existingSubscription) {
+      return { success: true, subscription: existingSubscription };
+    }
+
+    const plan = await prisma.subscriptionPlan.findUnique({
+      where: { id: planId },
+    });
+
+    if (!plan) return { error: "Plan not found" };
+
+    const startDate = new Date();
+    const endDate = new Date(startDate.getTime());
+    endDate.setDate(endDate.getDate() + plan.durationDays);
+
+    await prisma.subscription.updateMany({
+      where: {
+        customerId: userId,
+        childProfileId: childProfileId || null,
+        status: "ACTIVE",
+      },
+      data: { status: "CANCELLED" },
+    });
+
+    const amountPaid = parseFloat(purchaseUnit?.payments?.captures?.[0]?.amount?.value || "0");
+    const currency = (purchaseUnit?.payments?.captures?.[0]?.amount?.currency_code || "USD").toUpperCase();
+
+    const subscription = await prisma.subscription.create({
+      data: {
+        customerId: userId,
+        childProfileId: childProfileId || null,
+        planId: planId,
+        status: "ACTIVE",
+        paymentStatus: "COMPLETED",
+        paymentReference: orderId,
+        gateway: "PAYPAL",
+        currency,
+        startDate,
+        endDate,
+        autoRenew: false,
+      },
+      include: { customer: true }
+    });
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { isEmailVerified: true }
+    });
+
+    await processSubscriptionCommission(
+      subscription.id,
+      userId,
+      amountPaid
+    );
+
+    await prisma.activityLog.create({
+      data: {
+        userId,
+        actionType: "SUBSCRIPTION",
+        actionDetails: JSON.stringify({
+          planName: plan.name,
+          amount: amountPaid,
+          currency: currency,
+          reference: orderId,
+          subscriptionId: subscription.id,
+          gateway: "PAYPAL"
+        }),
+      },
+    });
+
+    if (subscription.customer) {
+      const userName = `${subscription.customer.firstName || ""} ${subscription.customer.lastName || ""}`.trim() || "Customer";
+      const symbol = currency === "EUR" ? "€" : currency === "GBP" ? "£" : "$";
+      
+      sendSubscriptionConfirmationEmail({
+        userEmail: subscription.customer.email,
+        userName,
+        planName: plan.name,
+        amount: `${symbol}${amountPaid.toFixed(2)}` as any,
+        startDate,
+        endDate,
+      }).catch(console.error);
+      
+      sendSubscriptionReceiptEmail({
+        userEmail: subscription.customer.email,
+        userName,
+        planName: plan.name,
+        amount: `${symbol}${amountPaid.toFixed(2)}` as any,
+        transactionId: orderId,
+        billingPeriod: `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`,
+      }).catch(console.error);
+    }
+
+    return { success: true, subscription };
+  } catch (error) {
+    console.error("PayPal payment processing error:", error);
+    return { error: "Failed to process PayPal subscription payment" };
   }
 }

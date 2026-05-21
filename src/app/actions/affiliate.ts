@@ -4,12 +4,21 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getAppUrl } from "@/lib/utils";
 import { Role } from "@/lib/types";
+import { isOutsideAfrica } from "@/lib/countries";
 
 export async function getAffiliateStats() {
   const session = await auth();
   if (!session?.user?.id) return null;
 
   const userId = session.user.id;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { country: true }
+  });
+
+  const isIntl = user?.country ? isOutsideAfrica(user.country) : false;
+  const currency = isIntl ? "USD" : "GHS";
 
   // Total Referrals
   const referralsCount = await prisma.user.count({
@@ -52,6 +61,7 @@ export async function getAffiliateStats() {
     pendingBalance: Number(pendingBalance._sum.amount) || 0,
     approvedBalance: Number(approvedBalance._sum.amount) || 0,
     monthEarnings: Number(monthEarnings._sum.amount) || 0,
+    currency,
   };
 }
 

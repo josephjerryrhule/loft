@@ -13,23 +13,26 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { AlertCircle, User } from "lucide-react";
+import { AlertCircle, User, Loader2 } from "lucide-react";
 import { getAgeGroupLabel } from "@/lib/utils";
 import Link from "next/link";
 import { Role } from "@/lib/types";
+import { initializePayment } from "@/app/actions/payment";
+import { toast } from "sonner";
 
 interface Plan {
   id: string;
   name: string;
   price: number;
+  currencySymbol?: string;
   description?: string | null;
 }
 
 interface ChildProfile {
   id: string;
   name: string;
-  ageGroup?: string;
-  avatarColor?: string;
+  avatarColor?: string | null;
+  ageGroup?: string | null;
 }
 
 interface SubscribePlanButtonProps {
@@ -42,6 +45,8 @@ interface SubscribePlanButtonProps {
   initialChildId?: string; // Pre-select a specific child (lock to that child)
   allowSelfProfile?: boolean;
   label?: string;
+  isInternational?: boolean;
+  selectedCurrency?: string;
 }
 
 export function SubscribePlanButton({
@@ -54,9 +59,13 @@ export function SubscribePlanButton({
   initialChildId,
   allowSelfProfile = false,
   label,
+  isInternational = false,
+  selectedCurrency = "GHS",
 }: SubscribePlanButtonProps) {
   const [open, setOpen] = useState(false);
   const [reference, setReference] = useState(() => `SUB-${userId}-${Date.now()}`);
+  const [gateway, setGateway] = useState<"STRIPE" | "PAYPAL">("STRIPE");
+  const [loading, setLoading] = useState(false);
 
   // Profile selection — locked if initialChildId is provided
   const defaultChildId = initialChildId ?? (allowSelfProfile ? "" : childProfiles[0]?.id ?? "");
@@ -73,6 +82,47 @@ export function SubscribePlanButton({
   // Whether this button is locked to a specific child profile
   const isChildLocked = Boolean(initialChildId);
 
+  const selectedCurrencySymbol = selectedPlan?.currencySymbol || (selectedCurrency === "EUR" ? "€" : selectedCurrency === "GBP" ? "£" : selectedCurrency === "GHS" ? "GH₵" : "$");
+
+  const handleInternationalPayment = async () => {
+    if (!selectedPlan) {
+      toast.error("Please select a plan");
+      return;
+    }
+    setLoading(true);
+    try {
+      const callbackUrl = `${window.location.origin}/payment/callback`;
+      const result = await initializePayment({
+        type: "subscription",
+        email: userEmail,
+        amount: amount,
+        reference: reference,
+        itemId: selectedPlan.id,
+        callbackUrl: callbackUrl,
+        childProfileId: selectedChildId || undefined,
+        gateway: gateway,
+        currency: selectedCurrency,
+      });
+
+      if (result.error) {
+        toast.error(result.error);
+        setLoading(false);
+        return;
+      }
+
+      if (result.authorizationUrl) {
+        window.location.href = result.authorizationUrl;
+      } else {
+        toast.error("Failed to retrieve payment link");
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error("Payment initialization error:", err);
+      toast.error("Failed to initialize payment");
+      setLoading(false);
+    }
+  };
+
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
     if (isOpen) {
@@ -80,6 +130,8 @@ export function SubscribePlanButton({
       setReference(`SUB-${userId}-${Date.now()}`);
       setSelectedChildId(initialChildId ?? (allowSelfProfile ? "" : childProfiles[0]?.id ?? ""));
       setSelectedPlanId(plan?.id || allPlans?.[0]?.id || "");
+      setGateway("STRIPE");
+      setLoading(false);
     }
   };
 
@@ -231,7 +283,7 @@ export function SubscribePlanButton({
                           {p.name}
                         </Label>
                         <span className="text-xs text-primary font-bold">
-                          GHS {Number(p.price).toFixed(2)}
+                          {p.currencySymbol || "GHS"} {Number(p.price).toFixed(2)}
                         </span>
                         {p.description && (
                           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
@@ -246,29 +298,88 @@ export function SubscribePlanButton({
             </div>
           )}
 
+          {/* ── Payment Gateway Selection (only when international) ── */}
+          {isInternational && (
+            <div className="space-y-3">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-[10px] uppercase">
+                  <span className="bg-background px-2 text-muted-foreground font-black tracking-widest">
+                    Payment Gateway
+                  </span>
+                </div>
+              </div>
+              <RadioGroup value={gateway} onValueChange={(val) => setGateway(val as "STRIPE" | "PAYPAL")}>
+                <div className="grid grid-cols-2 gap-3">
+                  <div
+                    className={`flex items-center gap-2 rounded-xl border p-4 cursor-pointer transition-all hover:bg-stone-50 ${
+                      gateway === "STRIPE" ? "border-primary bg-primary/5" : "border-stone-100"
+                    }`}
+                    onClick={() => setGateway("STRIPE")}
+                  >
+                    <RadioGroupItem value="STRIPE" id="gateway-stripe" />
+                    <Label htmlFor="gateway-stripe" className="font-bold text-xs text-stone-700 cursor-pointer">
+                      Stripe (Card)
+                    </Label>
+                  </div>
+                  <div
+                    className={`flex items-center gap-2 rounded-xl border p-4 cursor-pointer transition-all hover:bg-stone-50 ${
+                      gateway === "PAYPAL" ? "border-primary bg-primary/5" : "border-stone-100"
+                    }`}
+                    onClick={() => setGateway("PAYPAL")}
+                  >
+                    <RadioGroupItem value="PAYPAL" id="gateway-paypal" />
+                    <Label htmlFor="gateway-paypal" className="font-bold text-xs text-stone-700 cursor-pointer">
+                      PayPal
+                    </Label>
+                  </div>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
+
           {/* ── Footer ── */}
-          <div className="flex justify-end gap-2 pt-2 border-t">
-            <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
+          <div className="flex justify-end gap-2 pt-4 border-t border-stone-100">
+            <Button variant="ghost" size="sm" onClick={() => setOpen(false)} className="font-bold text-xs rounded-xl cursor-pointer">
               Cancel
             </Button>
-            <PaystackButton
-              email={userEmail}
-              amount={amount}
-              reference={reference}
-              metadata={{
-                type: "subscription",
-                planId: selectedPlan?.id || "",
-                userId: userId,
-                childProfileId: selectedChildId || null,
-              }}
-              disabled={!selectedPlan || amount <= 0 || (!allowSelfProfile && !selectedChildId)}
-            >
-              {!selectedPlan || amount <= 0
-                ? "Select a Plan"
-                : !allowSelfProfile && !selectedChildId
-                ? "Select a Child"
-                : `Pay GHS ${amount.toFixed(2)}`}
-            </PaystackButton>
+            {isInternational ? (
+              <Button
+                disabled={!selectedPlan || amount <= 0 || (!allowSelfProfile && !selectedChildId) || loading}
+                onClick={handleInternationalPayment}
+                size="sm"
+                className="font-bold text-xs rounded-xl cursor-pointer bg-[#E87154] hover:bg-[#E87154]/90 text-white"
+              >
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {!selectedPlan || amount <= 0
+                  ? "Select a Plan"
+                  : !allowSelfProfile && !selectedChildId
+                  ? "Select a Child"
+                  : `Pay ${selectedCurrencySymbol} ${amount.toFixed(2)}`}
+              </Button>
+            ) : (
+              <PaystackButton
+                email={userEmail}
+                amount={amount}
+                reference={reference}
+                metadata={{
+                  type: "subscription",
+                  planId: selectedPlan?.id || "",
+                  userId: userId,
+                  childProfileId: selectedChildId || null,
+                }}
+                disabled={!selectedPlan || amount <= 0 || (!allowSelfProfile && !selectedChildId)}
+                className="font-bold text-xs rounded-xl cursor-pointer bg-[#E87154] hover:bg-[#E87154]/90 text-white"
+              >
+                {!selectedPlan || amount <= 0
+                  ? "Select a Plan"
+                  : !allowSelfProfile && !selectedChildId
+                  ? "Select a Child"
+                  : `Pay GHS ${amount.toFixed(2)}`}
+              </PaystackButton>
+            )}
           </div>
         </div>
       </DialogContent>

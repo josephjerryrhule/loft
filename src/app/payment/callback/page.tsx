@@ -1,12 +1,16 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { processSubscriptionPayment, processProductPayment } from "@/app/actions/payment";
+import { 
+  processSubscriptionPayment, 
+  processProductPayment,
+  processStripeSubscriptionPayment,
+  processPaypalSubscriptionPayment
+} from "@/app/actions/payment";
 import { getPaystackSecretKey } from "@/lib/paystack";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-
 
 interface PaymentVerificationResult {
   success: boolean;
@@ -14,7 +18,45 @@ interface PaymentVerificationResult {
   message: string;
 }
 
-async function verifyAndProcessPayment(reference: string): Promise<PaymentVerificationResult> {
+async function verifyAndProcessPayment(params: {
+  reference?: string;
+  gateway?: string;
+  session_id?: string;
+  token?: string;
+}): Promise<PaymentVerificationResult> {
+  const { reference, gateway, session_id, token } = params;
+
+  if (gateway === "stripe" && session_id) {
+    try {
+      const result = await processStripeSubscriptionPayment(session_id);
+      if (result.error) {
+        return { success: false, type: "subscription", message: result.error };
+      }
+      return { success: true, type: "subscription", message: "Subscription activated successfully via Stripe!" };
+    } catch (err) {
+      console.error("Stripe callback processing error:", err);
+      return { success: false, type: "subscription", message: "Failed to process Stripe payment" };
+    }
+  }
+
+  if (gateway === "paypal" && token) {
+    try {
+      const result = await processPaypalSubscriptionPayment(token);
+      if (result.error) {
+        return { success: false, type: "subscription", message: result.error };
+      }
+      return { success: true, type: "subscription", message: "Subscription activated successfully via PayPal!" };
+    } catch (err) {
+      console.error("PayPal callback processing error:", err);
+      return { success: false, type: "subscription", message: "Failed to process PayPal payment" };
+    }
+  }
+
+  // Default to Paystack
+  if (!reference) {
+    return { success: false, type: "subscription", message: "Missing payment reference" };
+  }
+
   try {
     const secretKey = await getPaystackSecretKey();
     
@@ -78,10 +120,12 @@ async function verifyAndProcessPayment(reference: string): Promise<PaymentVerifi
   }
 }
 
-async function PaymentResult({ reference }: { reference: string }) {
-  const result = await verifyAndProcessPayment(reference);
-
-
+async function PaymentResult({ 
+  params 
+}: { 
+  params: { reference?: string; gateway?: string; session_id?: string; token?: string } 
+}) {
+  const result = await verifyAndProcessPayment(params);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
@@ -151,18 +195,21 @@ function LoadingState() {
 export default async function PaymentCallbackPage({
   searchParams,
 }: {
-  searchParams: Promise<{ reference?: string; trxref?: string }>;
+  searchParams: Promise<{ reference?: string; trxref?: string; gateway?: string; session_id?: string; token?: string }>;
 }) {
   const params = await searchParams;
   const reference = params.reference || params.trxref;
+  const gateway = params.gateway;
+  const session_id = params.session_id;
+  const token = params.token;
 
-  if (!reference) {
+  if (!reference && !session_id && !token) {
     redirect("/products");
   }
 
   return (
     <Suspense fallback={<LoadingState />}>
-      <PaymentResult reference={reference} />
+      <PaymentResult params={{ reference, gateway, session_id, token }} />
     </Suspense>
   );
 }

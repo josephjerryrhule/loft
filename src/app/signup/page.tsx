@@ -17,6 +17,7 @@ import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { Suspense, useState } from "react";
 import { ChevronLeft, Loader2 } from "lucide-react";
+import { SORTED_COUNTRIES } from "@/lib/countries";
 
 const registerSchema = z.object({
   firstName: z.string().min(2, "First name is too short"),
@@ -213,9 +214,22 @@ function SignupForm() {
                         )} />
                         
                         <FormField control={form.control} name="country" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Country</FormLabel>
-                            <FormControl><Input placeholder="Ghana" {...field} /></FormControl>
+                        <FormItem className="flex flex-col justify-end">
+                            <FormLabel className="mb-2">Country</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value || "Ghana"}>
+                                <FormControl>
+                                    <SelectTrigger className="w-full h-10 border bg-transparent px-3 py-2 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-[#E87154]/50 focus:border-[#E87154] text-left">
+                                        <SelectValue placeholder="Select Country" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent className="max-h-60 bg-white border border-stone-100 shadow-lg rounded-xl z-[100]">
+                                    {SORTED_COUNTRIES.map((c) => (
+                                        <SelectItem key={c.code} value={c.name}>
+                                            {c.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                             <FormMessage />
                         </FormItem>
                         )} />

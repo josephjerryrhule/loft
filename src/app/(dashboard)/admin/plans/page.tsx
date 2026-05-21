@@ -159,12 +159,19 @@ export default function AdminPlansPage() {
                                     <Textarea id="description" name="description" placeholder="A short, catchy description seen by parents during checkout..." className="min-h-[100px] bg-slate-50 border-none rounded-2xl font-medium focus-visible:ring-[#E87154] shadow-inner p-4" />
                                 </div>
 
-                                <div className="grid gap-8 grid-cols-1 md:grid-cols-2">
+                                <div className="grid gap-8 grid-cols-1 md:grid-cols-3">
                                     <div className="space-y-3">
                                         <Label htmlFor="price" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Enrollment Fee (GHS)</Label>
                                         <div className="relative">
                                             <span className="absolute left-5 top-1/2 -translate-y-1/2 font-black text-slate-300 text-lg tracking-tighter">GHS</span>
                                             <Input id="price" name="price" type="number" step="0.01" placeholder="49.99" required className="pl-16 h-14 bg-slate-50 border-none rounded-2xl font-black text-xl focus-visible:ring-[#E87154] shadow-inner" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <Label htmlFor="priceUSD" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Enrollment Fee (USD, optional)</Label>
+                                        <div className="relative">
+                                            <span className="absolute left-5 top-1/2 -translate-y-1/2 font-black text-slate-300 text-lg tracking-tighter">USD</span>
+                                            <Input id="priceUSD" name="priceUSD" type="number" step="0.01" placeholder="19.99" className="pl-16 h-14 bg-slate-50 border-none rounded-2xl font-black text-xl focus-visible:ring-[#E87154] shadow-inner" />
                                         </div>
                                     </div>
                                     <div className="space-y-3">
@@ -184,7 +191,6 @@ export default function AdminPlansPage() {
                                         </div>
                                     </div>
                                 </div>
-
                                 <div className="space-y-3">
                                     <Label htmlFor="features" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Core Features (One per line)</Label>
                                     <Textarea id="features" name="features" placeholder="Unlimited monthly gazettes&#10;Access to little lofters library&#10;Interactive storytelling" className="min-h-[140px] bg-slate-50 border-none rounded-2xl font-medium focus-visible:ring-[#E87154] shadow-inner p-5 leading-relaxed" />
@@ -282,6 +288,12 @@ export default function AdminPlansPage() {
                                                         <span className="text-[10px] text-slate-400 mr-1 font-bold tracking-normal italic uppercase">GHS</span>
                                                         {Number(plan.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                                     </span>
+                                                    {plan.priceUSD && (
+                                                        <span className="text-xs text-slate-500 mt-1 font-bold whitespace-nowrap">
+                                                            <span className="text-[9px] text-slate-400 mr-1 font-bold tracking-normal italic uppercase">USD</span>
+                                                            {Number(plan.priceUSD).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                        </span>
+                                                    )}
                                                     <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1 italic">Verified Pricing</span>
                                                 </div>
                                             </TableCell>

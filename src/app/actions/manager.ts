@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { Role } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 import { sendHierarchyChangeEmail } from "@/lib/email";
+import { isOutsideAfrica } from "@/lib/countries";
 
 export async function getManagerStats() {
   const session = await auth();
@@ -13,6 +14,14 @@ export async function getManagerStats() {
   }
 
   const userId = session.user.id;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { country: true }
+  });
+
+  const isIntl = user?.country ? isOutsideAfrica(user.country) : false;
+  const currency = isIntl ? "USD" : "GHS";
 
   // Total Team Members (Affiliates managed by this user)
   const teamCount = await prisma.user.count({
@@ -76,6 +85,7 @@ export async function getManagerStats() {
     pendingBalance: Number(pendingBalance._sum.amount) || 0,
     monthEarnings: Number(monthEarnings._sum.amount) || 0,
     teamEarnings: Number(teamEarnings._sum.amount) || 0,
+    currency,
   };
 }
 

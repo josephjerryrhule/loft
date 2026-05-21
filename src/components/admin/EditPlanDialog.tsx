@@ -33,6 +33,7 @@ interface EditPlanDialogProps {
     name: string;
     description: string | null;
     price: number | string;
+    priceUSD?: number | string | null;
     durationDays: number;
     features: string | null;
     affiliateCommissionPercentage?: number | string | null;
@@ -133,7 +134,7 @@ export function EditPlanDialog({ plan, onSuccess }: EditPlanDialogProps) {
             />
           </div>
 
-          <div className="grid gap-6 sm:gap-8 grid-cols-1 md:grid-cols-2">
+          <div className="grid gap-6 sm:gap-8 grid-cols-1 md:grid-cols-3">
             <div className="space-y-3">
               <Label htmlFor="edit-price" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Price (GHS)</Label>
               <div className="relative">
@@ -146,6 +147,21 @@ export function EditPlanDialog({ plan, onSuccess }: EditPlanDialogProps) {
                   defaultValue={Number(plan.price).toFixed(2)}
                   placeholder="49.99" 
                   required 
+                  className="pl-16 h-14 bg-stone-50 border-stone-100 rounded-2xl font-black text-xl focus-visible:ring-[#E87154] shadow-sm"
+                />
+              </div>
+            </div>
+            <div className="space-y-3">
+              <Label htmlFor="edit-priceUSD" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Price (USD, optional)</Label>
+              <div className="relative">
+                <span className="absolute left-5 top-1/2 -translate-y-1/2 font-black text-stone-300 text-lg tracking-tighter">USD</span>
+                <Input 
+                  id="edit-priceUSD" 
+                  name="priceUSD" 
+                  type="number" 
+                  step="0.01" 
+                  defaultValue={plan.priceUSD ? Number(plan.priceUSD).toFixed(2) : ""}
+                  placeholder="19.99" 
                   className="pl-16 h-14 bg-stone-50 border-stone-100 rounded-2xl font-black text-xl focus-visible:ring-[#E87154] shadow-sm"
                 />
               </div>

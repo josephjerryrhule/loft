@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { updateSystemSettings } from "@/app/actions/settings";
 import { toast } from "sonner";
 import { useState, useRef } from "react";
-import { Loader2, Copy, Check, Upload, X, Image as ImageIcon, Globe, Palette, Mail, CreditCard, PieChart, ShieldCheck, Percent } from "lucide-react";
+import { Loader2, Copy, Check, Upload, X, Image as ImageIcon, Globe, Palette, Mail, CreditCard, PieChart, ShieldCheck, Percent, DollarSign, ArrowLeftRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SystemSettingsFormProps {
@@ -22,7 +22,15 @@ export function SystemSettingsForm({ settings }: SystemSettingsFormProps) {
     const [paystackMode, setPaystackMode] = useState<"test" | "live">(
         settings.paystackMode || "test"
     );
+    const [stripeMode, setStripeMode] = useState<"test" | "live">(
+        settings.stripeMode || "test"
+    );
+    const [paypalMode, setPaypalMode] = useState<"test" | "live">(
+        settings.paypalMode || "test"
+    );
     const [copied, setCopied] = useState(false);
+    const [copiedStripe, setCopiedStripe] = useState(false);
+    const [copiedPaypal, setCopiedPaypal] = useState(false);
     const [logoUrl, setLogoUrl] = useState(settings.logoUrl || "");
     const [faviconUrl, setFaviconUrl] = useState(settings.faviconUrl || "");
     const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -97,6 +105,9 @@ export function SystemSettingsForm({ settings }: SystemSettingsFormProps) {
                     </TabsTrigger>
                     <TabsTrigger value="payment" className="flex-1 rounded-lg py-2.5 font-bold data-[state=active]:bg-white data-[state=active]:text-[#E87154] data-[state=active]:shadow-sm transition-all gap-2">
                         <CreditCard size={16} /> Payments
+                    </TabsTrigger>
+                    <TabsTrigger value="exchange-rates" className="flex-1 rounded-lg py-2.5 font-bold data-[state=active]:bg-white data-[state=active]:text-[#E87154] data-[state=active]:shadow-sm transition-all gap-2">
+                        <ArrowLeftRight size={16} /> Exchange Rates
                     </TabsTrigger>
                     <TabsTrigger value="commissions" className="flex-1 rounded-lg py-2.5 font-bold data-[state=active]:bg-white data-[state=active]:text-[#E87154] data-[state=active]:shadow-sm transition-all gap-2">
                         <PieChart size={16} /> Rewards
@@ -314,112 +325,425 @@ export function SystemSettingsForm({ settings }: SystemSettingsFormProps) {
                     <Card className="border-none shadow-md overflow-hidden bg-white rounded-[2rem]">
                         <CardHeader className="p-8 bg-stone-50 border-b border-stone-100">
                             <CardTitle className="text-xl font-black">Payment Settings</CardTitle>
-                            <CardDescription className="text-sm font-medium">Connect your payment account to accept membership fees.</CardDescription>
+                            <CardDescription className="text-sm font-medium">Configure payment gateways to accept fees inside and outside Africa.</CardDescription>
                         </CardHeader>
-                        <CardContent className="p-8 space-y-10">
-                            <div className="space-y-6">
-                                <div className="flex items-center gap-3">
-                                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0BA4DB]/10 text-[#0BA4DB] font-black text-[11px] uppercase tracking-widest">
-                                        <CreditCard size={12} /> Paystack
-                                    </span>
-                                    <div className="h-[1px] flex-1 bg-stone-100" />
-                                </div>
-                                
-                                {/* Mode Toggle */}
-                                <div className="space-y-4">
-                                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Payment Mode</Label>
-                                    <div className="flex bg-stone-100 p-1.5 rounded-2xl w-fit shadow-inner">
-                                        <button
-                                            type="button"
-                                            onClick={() => setPaystackMode("test")}
-                                            className={cn(
-                                                "px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition-all",
-                                                paystackMode === "test" ? "bg-white text-slate-900 shadow-md" : "text-slate-400 hover:text-slate-600"
-                                            )}
-                                        >
-                                            Sandbox / Testing
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setPaystackMode("live")}
-                                            className={cn(
-                                                "px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition-all",
-                                                paystackMode === "live" ? "bg-[#E87154] text-white shadow-lg shadow-[#E87154]/20" : "text-slate-400 hover:text-slate-600"
-                                            )}
-                                        >
-                                            Live / Production
-                                        </button>
+                        <CardContent className="p-8">
+                            <Tabs defaultValue="paystack" className="w-full">
+                                <TabsList className="bg-stone-100 p-1 rounded-xl mb-8 border-none w-fit h-auto flex shadow-inner gap-1">
+                                    <TabsTrigger value="paystack" className="rounded-lg px-6 py-2 font-bold data-[state=active]:bg-white data-[state=active]:text-[#E87154] data-[state=active]:shadow-sm transition-all">
+                                        Paystack
+                                    </TabsTrigger>
+                                    <TabsTrigger value="stripe" className="rounded-lg px-6 py-2 font-bold data-[state=active]:bg-white data-[state=active]:text-[#E87154] data-[state=active]:shadow-sm transition-all">
+                                        Stripe
+                                    </TabsTrigger>
+                                    <TabsTrigger value="paypal" className="rounded-lg px-6 py-2 font-bold data-[state=active]:bg-white data-[state=active]:text-[#E87154] data-[state=active]:shadow-sm transition-all">
+                                        PayPal
+                                    </TabsTrigger>
+                                </TabsList>
+
+                                <TabsContent value="paystack" className="space-y-6 pt-2">
+                                    <div className="flex items-center gap-3">
+                                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0BA4DB]/10 text-[#0BA4DB] font-black text-[11px] uppercase tracking-widest">
+                                            <CreditCard size={12} /> Paystack (Africa / GHS)
+                                        </span>
+                                        <div className="h-[1px] flex-1 bg-stone-100" />
                                     </div>
-                                    <input type="hidden" name="paystackMode" value={paystackMode} />
-                                    <div className={cn(
-                                        "p-4 rounded-2xl border-2 animate-in pulse duration-1000",
-                                        paystackMode === "test" ? "bg-blue-50 border-blue-100 text-blue-700" : "bg-red-50 border-red-100 text-red-700"
-                                    )}>
-                                        <p className="text-sm font-bold flex items-center gap-2">
-                                            <ShieldCheck size={18} />
-                                            {paystackMode === "test" 
-                                                ? "System is in testing mode. No real money will be charged."
-                                                : "ATTENTION: Live mode is active. Real transactions will be processed."
-                                            }
+                                    
+                                    {/* Mode Toggle */}
+                                    <div className="space-y-4">
+                                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Payment Mode</Label>
+                                        <div className="flex bg-stone-100 p-1.5 rounded-2xl w-fit shadow-inner">
+                                            <button
+                                                type="button"
+                                                onClick={() => setPaystackMode("test")}
+                                                className={cn(
+                                                    "px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition-all",
+                                                    paystackMode === "test" ? "bg-white text-slate-900 shadow-md" : "text-slate-400 hover:text-slate-600"
+                                                )}
+                                            >
+                                                Sandbox / Testing
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPaystackMode("live")}
+                                                className={cn(
+                                                    "px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition-all",
+                                                    paystackMode === "live" ? "bg-[#E87154] text-white shadow-lg shadow-[#E87154]/20" : "text-slate-400 hover:text-slate-600"
+                                                )}
+                                            >
+                                                Live / Production
+                                            </button>
+                                        </div>
+                                        <input type="hidden" name="paystackMode" value={paystackMode} />
+                                        <div className={cn(
+                                            "p-4 rounded-2xl border-2 animate-in pulse duration-1000",
+                                            paystackMode === "test" ? "bg-blue-50 border-blue-100 text-blue-700" : "bg-red-50 border-red-100 text-red-700"
+                                        )}>
+                                            <p className="text-sm font-bold flex items-center gap-2">
+                                                <ShieldCheck size={18} />
+                                                {paystackMode === "test" 
+                                                    ? "Paystack is in testing mode. No real money will be charged."
+                                                    : "ATTENTION: Live mode is active. Real transactions will be processed."
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Dynamic Keys Section */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                                        {paystackMode === "test" ? (
+                                            <>
+                                                <div className="space-y-3">
+                                                    <Label htmlFor="paystackTestPublicKey" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Test Public Key</Label>
+                                                    <Input id="paystackTestPublicKey" name="paystackTestPublicKey" defaultValue={settings.paystackTestPublicKey || ""} placeholder="pk_test_..." className="h-12 bg-stone-50 border-none rounded-xl font-mono text-sm focus-visible:ring-[#E87154] shadow-inner px-4" />
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <Label htmlFor="paystackTestSecretKey" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Test Secret Key</Label>
+                                                    <PasswordInput id="paystackTestSecretKey" name="paystackTestSecretKey" defaultValue={settings.paystackTestSecretKey || ""} placeholder="sk_test_..." className="h-12 bg-stone-50 border-none rounded-xl font-mono text-sm focus-visible:ring-[#E87154] shadow-inner px-4" />
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="space-y-3">
+                                                    <Label htmlFor="paystackLivePublicKey" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Live Public Key</Label>
+                                                    <Input id="paystackLivePublicKey" name="paystackLivePublicKey" defaultValue={settings.paystackLivePublicKey || ""} placeholder="pk_live_..." className="h-12 bg-stone-50 border-none rounded-xl font-mono text-sm focus-visible:ring-red-500 shadow-inner px-4" />
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <Label htmlFor="paystackLiveSecretKey" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Live Secret Key</Label>
+                                                    <PasswordInput id="paystackLiveSecretKey" name="paystackLiveSecretKey" defaultValue={settings.paystackLiveSecretKey || ""} placeholder="sk_live_..." className="h-12 bg-stone-50 border-none rounded-xl font-mono text-sm focus-visible:ring-red-500 shadow-inner px-4" />
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {/* Webhook Configuration */}
+                                    <div className="space-y-4 border-t pt-8">
+                                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Order Sync URL (Webhook)</Label>
+                                        <div className="flex flex-col sm:flex-row gap-4">
+                                            <div className="relative flex-1 group">
+                                                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-300 group-hover:text-[#E87154] transition-colors" />
+                                                <Input 
+                                                    value={webhookUrl} 
+                                                    readOnly 
+                                                    className="pl-12 h-14 bg-stone-50 border-none rounded-2xl font-mono text-xs text-stone-400 shadow-inner overflow-hidden"
+                                                />
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                onClick={copyWebhookUrl}
+                                                className="h-14 px-8 rounded-2xl bg-slate-900 text-white font-black hover:bg-black transition-all active:scale-95 gap-3 shrink-0"
+                                            >
+                                                {copied ? (
+                                                    <Check className="h-5 w-5" />
+                                                ) : (
+                                                    <Copy className="h-5 w-5" />
+                                                )}
+                                                {copied ? "Link Copied" : "Copy Link"}
+                                            </Button>
+                                        </div>
+                                        <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest px-1">
+                                            Paste this URL into your Paystack settings to automatically track order payments.
                                         </p>
                                     </div>
-                                </div>
+                                </TabsContent>
 
-                                {/* Dynamic Keys Section */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-                                    {paystackMode === "test" ? (
-                                        <>
-                                            <div className="space-y-3">
-                                                <Label htmlFor="paystackTestPublicKey" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Test Public Key</Label>
-                                                <Input id="paystackTestPublicKey" name="paystackTestPublicKey" defaultValue={settings.paystackTestPublicKey || ""} placeholder="pk_test_..." className="h-12 bg-stone-50 border-none rounded-xl font-mono text-sm focus-visible:ring-[#E87154] shadow-inner px-4" />
-                                            </div>
-                                            <div className="space-y-3">
-                                                <Label htmlFor="paystackTestSecretKey" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Test Secret Key</Label>
-                                                <PasswordInput id="paystackTestSecretKey" name="paystackTestSecretKey" defaultValue={settings.paystackTestSecretKey || ""} placeholder="sk_test_..." className="h-12 bg-stone-50 border-none rounded-xl font-mono text-sm focus-visible:ring-[#E87154] shadow-inner px-4" />
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <div className="space-y-3">
-                                                <Label htmlFor="paystackLivePublicKey" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Live Public Key</Label>
-                                                <Input id="paystackLivePublicKey" name="paystackLivePublicKey" defaultValue={settings.paystackLivePublicKey || ""} placeholder="pk_live_..." className="h-12 bg-stone-50 border-none rounded-xl font-mono text-sm focus-visible:ring-red-500 shadow-inner px-4" />
-                                            </div>
-                                            <div className="space-y-3">
-                                                <Label htmlFor="paystackLiveSecretKey" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Live Secret Key</Label>
-                                                <PasswordInput id="paystackLiveSecretKey" name="paystackLiveSecretKey" defaultValue={settings.paystackLiveSecretKey || ""} placeholder="sk_live_..." className="h-12 bg-stone-50 border-none rounded-xl font-mono text-sm focus-visible:ring-red-500 shadow-inner px-4" />
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-
-                                {/* Webhook Configuration */}
-                                <div className="space-y-4 border-t pt-8">
-                                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Order Sync URL (Webhook)</Label>
-                                    <div className="flex flex-col sm:flex-row gap-4">
-                                        <div className="relative flex-1 group">
-                                            <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-300 group-hover:text-[#E87154] transition-colors" />
-                                            <Input 
-                                                value={webhookUrl} 
-                                                readOnly 
-                                                className="pl-12 h-14 bg-stone-50 border-none rounded-2xl font-mono text-xs text-stone-400 shadow-inner overflow-hidden"
-                                            />
-                                        </div>
-                                        <Button
-                                            type="button"
-                                            onClick={copyWebhookUrl}
-                                            className="h-14 px-8 rounded-2xl bg-slate-900 text-white font-black hover:bg-black transition-all active:scale-95 gap-3 shrink-0"
-                                        >
-                                            {copied ? (
-                                                <Check className="h-5 w-5" />
-                                            ) : (
-                                                <Copy className="h-5 w-5" />
-                                            )}
-                                            {copied ? "Link Copied" : "Copy Link"}
-                                        </Button>
+                                <TabsContent value="stripe" className="space-y-6 pt-2">
+                                    <div className="flex items-center gap-3">
+                                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 font-black text-[11px] uppercase tracking-widest">
+                                            <CreditCard size={12} /> Stripe (International Card / USD/EUR/GBP)
+                                        </span>
+                                        <div className="h-[1px] flex-1 bg-stone-100" />
                                     </div>
-                                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest px-1">
-                                        Paste this URL into your Paystack settings to automatically track order payments.
-                                    </p>
+                                    
+                                    <div className="space-y-4">
+                                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Stripe Payment Mode</Label>
+                                        <div className="flex bg-stone-100 p-1.5 rounded-2xl w-fit shadow-inner">
+                                            <button
+                                                type="button"
+                                                onClick={() => setStripeMode("test")}
+                                                className={cn(
+                                                    "px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition-all",
+                                                    stripeMode === "test" ? "bg-white text-slate-900 shadow-md" : "text-slate-400 hover:text-slate-600"
+                                                )}
+                                            >
+                                                Sandbox / Testing
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setStripeMode("live")}
+                                                className={cn(
+                                                    "px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition-all",
+                                                    stripeMode === "live" ? "bg-[#E87154] text-white shadow-lg shadow-[#E87154]/20" : "text-slate-400 hover:text-slate-600"
+                                                )}
+                                            >
+                                                Live / Production
+                                            </button>
+                                        </div>
+                                        <input type="hidden" name="stripeMode" value={stripeMode} />
+                                        <div className={cn(
+                                            "p-4 rounded-2xl border-2 animate-in pulse duration-1000",
+                                            stripeMode === "test" ? "bg-blue-50 border-blue-100 text-blue-700" : "bg-red-50 border-red-100 text-red-700"
+                                        )}>
+                                            <p className="text-sm font-bold flex items-center gap-2">
+                                                <ShieldCheck size={18} />
+                                                {stripeMode === "test" 
+                                                    ? "Stripe is in sandbox mode. Use Stripe test cards to simulate checkout."
+                                                    : "ATTENTION: Stripe live mode is active. Real credit/debit card transactions will be charged."
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                                        {stripeMode === "test" ? (
+                                            <>
+                                                <div className="space-y-3">
+                                                    <Label htmlFor="stripeTestPublicKey" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Test Publishable Key</Label>
+                                                    <Input id="stripeTestPublicKey" name="stripeTestPublicKey" defaultValue={settings.stripeTestPublicKey || ""} placeholder="pk_test_..." className="h-12 bg-stone-50 border-none rounded-xl font-mono text-sm focus-visible:ring-[#E87154] shadow-inner px-4" />
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <Label htmlFor="stripeTestSecretKey" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Test Secret Key</Label>
+                                                    <PasswordInput id="stripeTestSecretKey" name="stripeTestSecretKey" defaultValue={settings.stripeTestSecretKey || ""} placeholder="sk_test_..." className="h-12 bg-stone-50 border-none rounded-xl font-mono text-sm focus-visible:ring-[#E87154] shadow-inner px-4" />
+                                                </div>
+                                                <div className="space-y-3 md:col-span-2">
+                                                    <Label htmlFor="stripeTestWebhookSecret" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Test Webhook Signing Secret</Label>
+                                                    <PasswordInput id="stripeTestWebhookSecret" name="stripeTestWebhookSecret" defaultValue={settings.stripeTestWebhookSecret || ""} placeholder="whsec_..." className="h-12 bg-stone-50 border-none rounded-xl font-mono text-sm focus-visible:ring-[#E87154] shadow-inner px-4" />
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="space-y-3">
+                                                    <Label htmlFor="stripeLivePublicKey" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Live Publishable Key</Label>
+                                                    <Input id="stripeLivePublicKey" name="stripeLivePublicKey" defaultValue={settings.stripeLivePublicKey || ""} placeholder="pk_live_..." className="h-12 bg-stone-50 border-none rounded-xl font-mono text-sm focus-visible:ring-red-500 shadow-inner px-4" />
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <Label htmlFor="stripeLiveSecretKey" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Live Secret Key</Label>
+                                                    <PasswordInput id="stripeLiveSecretKey" name="stripeLiveSecretKey" defaultValue={settings.stripeLiveSecretKey || ""} placeholder="sk_live_..." className="h-12 bg-stone-50 border-none rounded-xl font-mono text-sm focus-visible:ring-red-500 shadow-inner px-4" />
+                                                </div>
+                                                <div className="space-y-3 md:col-span-2">
+                                                    <Label htmlFor="stripeLiveWebhookSecret" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Live Webhook Signing Secret</Label>
+                                                    <PasswordInput id="stripeLiveWebhookSecret" name="stripeLiveWebhookSecret" defaultValue={settings.stripeLiveWebhookSecret || ""} placeholder="whsec_..." className="h-12 bg-stone-50 border-none rounded-xl font-mono text-sm focus-visible:ring-red-500 shadow-inner px-4" />
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-4 border-t pt-8">
+                                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Stripe Webhook URL</Label>
+                                        <div className="flex flex-col sm:flex-row gap-4">
+                                            <div className="relative flex-1 group">
+                                                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-300 group-hover:text-[#E87154] transition-colors" />
+                                                <Input 
+                                                    value={typeof window !== "undefined" ? `${window.location.origin}/api/webhooks/stripe` : ""} 
+                                                    readOnly 
+                                                    className="pl-12 h-14 bg-stone-50 border-none rounded-2xl font-mono text-xs text-stone-400 shadow-inner overflow-hidden"
+                                                />
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                onClick={() => {
+                                                    const url = typeof window !== "undefined" ? `${window.location.origin}/api/webhooks/stripe` : "";
+                                                    navigator.clipboard.writeText(url);
+                                                    setCopiedStripe(true);
+                                                    toast.success("Stripe Webhook URL copied");
+                                                    setTimeout(() => setCopiedStripe(false), 2000);
+                                                }}
+                                                className="h-14 px-8 rounded-2xl bg-slate-900 text-white font-black hover:bg-black transition-all active:scale-95 gap-3 shrink-0"
+                                            >
+                                                {copiedStripe ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
+                                                {copiedStripe ? "Link Copied" : "Copy Link"}
+                                            </Button>
+                                        </div>
+                                        <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest px-1">
+                                            Configure this webhook URL in your Stripe Dashboard to handle full subscription fulfillment.
+                                        </p>
+                                    </div>
+                                </TabsContent>
+
+                                <TabsContent value="paypal" className="space-y-6 pt-2">
+                                    <div className="flex items-center gap-3">
+                                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 text-amber-600 font-black text-[11px] uppercase tracking-widest">
+                                            <CreditCard size={12} /> PayPal (International Checkouts)
+                                        </span>
+                                        <div className="h-[1px] flex-1 bg-stone-100" />
+                                    </div>
+                                    
+                                    <div className="space-y-4">
+                                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">PayPal Mode</Label>
+                                        <div className="flex bg-stone-100 p-1.5 rounded-2xl w-fit shadow-inner">
+                                            <button
+                                                type="button"
+                                                onClick={() => setPaypalMode("test")}
+                                                className={cn(
+                                                    "px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition-all",
+                                                    paypalMode === "test" ? "bg-white text-slate-900 shadow-md" : "text-slate-400 hover:text-slate-600"
+                                                )}
+                                            >
+                                                Sandbox / Testing
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPaypalMode("live")}
+                                                className={cn(
+                                                    "px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition-all",
+                                                    paypalMode === "live" ? "bg-[#E87154] text-white shadow-lg shadow-[#E87154]/20" : "text-slate-400 hover:text-slate-600"
+                                                )}
+                                            >
+                                                Live / Production
+                                            </button>
+                                        </div>
+                                        <input type="hidden" name="paypalMode" value={paypalMode} />
+                                        <div className={cn(
+                                            "p-4 rounded-2xl border-2 animate-in pulse duration-1000",
+                                            paypalMode === "test" ? "bg-blue-50 border-blue-100 text-blue-700" : "bg-red-50 border-red-100 text-red-700"
+                                        )}>
+                                            <p className="text-sm font-bold flex items-center gap-2">
+                                                <ShieldCheck size={18} />
+                                                {paypalMode === "test" 
+                                                    ? "PayPal is in sandbox/testing mode. Use developer accounts to verify."
+                                                    : "ATTENTION: PayPal live mode is active. Real transactions will be processed."
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                                        {paypalMode === "test" ? (
+                                            <>
+                                                <div className="space-y-3">
+                                                    <Label htmlFor="paypalTestClientId" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Sandbox Client ID</Label>
+                                                    <Input id="paypalTestClientId" name="paypalTestClientId" defaultValue={settings.paypalTestClientId || ""} placeholder="Client ID..." className="h-12 bg-stone-50 border-none rounded-xl font-mono text-sm focus-visible:ring-[#E87154] shadow-inner px-4" />
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <Label htmlFor="paypalTestClientSecret" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Sandbox Client Secret</Label>
+                                                    <PasswordInput id="paypalTestClientSecret" name="paypalTestClientSecret" defaultValue={settings.paypalTestClientSecret || ""} placeholder="Client Secret..." className="h-12 bg-stone-50 border-none rounded-xl font-mono text-sm focus-visible:ring-[#E87154] shadow-inner px-4" />
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="space-y-3">
+                                                    <Label htmlFor="paypalLiveClientId" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Live Client ID</Label>
+                                                    <Input id="paypalLiveClientId" name="paypalLiveClientId" defaultValue={settings.paypalLiveClientId || ""} placeholder="Client ID..." className="h-12 bg-stone-50 border-none rounded-xl font-mono text-sm focus-visible:ring-red-500 shadow-inner px-4" />
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <Label htmlFor="paypalLiveClientSecret" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Live Client Secret</Label>
+                                                    <PasswordInput id="paypalLiveClientSecret" name="paypalLiveClientSecret" defaultValue={settings.paypalLiveClientSecret || ""} placeholder="Client Secret..." className="h-12 bg-stone-50 border-none rounded-xl font-mono text-sm focus-visible:ring-red-500 shadow-inner px-4" />
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-4 border-t pt-8">
+                                        <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">PayPal Webhook URL</Label>
+                                        <div className="flex flex-col sm:flex-row gap-4">
+                                            <div className="relative flex-1 group">
+                                                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-300 group-hover:text-[#E87154] transition-colors" />
+                                                <Input 
+                                                    value={typeof window !== "undefined" ? `${window.location.origin}/api/webhooks/paypal` : ""} 
+                                                    readOnly 
+                                                    className="pl-12 h-14 bg-stone-50 border-none rounded-2xl font-mono text-xs text-stone-400 shadow-inner overflow-hidden"
+                                                />
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                onClick={() => {
+                                                    const url = typeof window !== "undefined" ? `${window.location.origin}/api/webhooks/paypal` : "";
+                                                    navigator.clipboard.writeText(url);
+                                                    setCopiedPaypal(true);
+                                                    toast.success("PayPal Webhook URL copied");
+                                                    setTimeout(() => setCopiedPaypal(false), 2000);
+                                                }}
+                                                className="h-14 px-8 rounded-2xl bg-slate-900 text-white font-black hover:bg-black transition-all active:scale-95 gap-3 shrink-0"
+                                            >
+                                                {copiedPaypal ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
+                                                {copiedPaypal ? "Link Copied" : "Copy Link"}
+                                            </Button>
+                                        </div>
+                                        <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest px-1">
+                                            Paste this webhook URL in your PayPal Developer Dashboard to capture transactions dynamically.
+                                        </p>
+                                    </div>
+                                </TabsContent>
+                            </Tabs>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="exchange-rates" className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <Card className="border-none shadow-md overflow-hidden bg-white rounded-[2rem]">
+                        <CardHeader className="p-8 bg-stone-50 border-b border-stone-100">
+                            <CardTitle className="text-xl font-black">Exchange Rate Settings</CardTitle>
+                            <CardDescription className="text-sm font-medium">Configure global conversion rates used for dynamic plans display and affiliate commissions.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="p-8 space-y-8">
+                            <div>
+                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#E87154] mb-4">Commissions Conversion (To GHS)</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="space-y-3">
+                                        <Label htmlFor="usdToGhsRate" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">USD to GHS</Label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-stone-400">GH₵</span>
+                                            <Input type="number" step="0.01" id="usdToGhsRate" name="usdToGhsRate" defaultValue={settings.usdToGhsRate || "15.0"} className="pl-12 h-12 bg-stone-50 border-none rounded-xl font-bold focus-visible:ring-[#E87154] shadow-inner" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <Label htmlFor="eurToGhsRate" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">EUR to GHS</Label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-stone-400">GH₵</span>
+                                            <Input type="number" step="0.01" id="eurToGhsRate" name="eurToGhsRate" defaultValue={settings.eurToGhsRate || "16.0"} className="pl-12 h-12 bg-stone-50 border-none rounded-xl font-bold focus-visible:ring-[#E87154] shadow-inner font-bold" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <Label htmlFor="gbpToGhsRate" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">GBP to GHS</Label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-stone-400">GH₵</span>
+                                            <Input type="number" step="0.01" id="gbpToGhsRate" name="gbpToGhsRate" defaultValue={settings.gbpToGhsRate || "19.0"} className="pl-12 h-12 bg-stone-50 border-none rounded-xl font-bold focus-visible:ring-[#E87154] shadow-inner" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr className="border-stone-100" />
+
+                            <div>
+                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#E87154] mb-4">Display Conversions (From USD)</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-3">
+                                        <Label htmlFor="usdToEurRate" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">USD to EUR ($1 = €X)</Label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-stone-400">€</span>
+                                            <Input type="number" step="0.001" id="usdToEurRate" name="usdToEurRate" defaultValue={settings.usdToEurRate || "0.92"} className="pl-12 h-12 bg-stone-50 border-none rounded-xl font-bold focus-visible:ring-[#E87154] shadow-inner" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <Label htmlFor="usdToGbpRate" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">USD to GBP ($1 = £X)</Label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-stone-400">£</span>
+                                            <Input type="number" step="0.001" id="usdToGbpRate" name="usdToGbpRate" defaultValue={settings.usdToGbpRate || "0.79"} className="pl-12 h-12 bg-stone-50 border-none rounded-xl font-bold focus-visible:ring-[#E87154] shadow-inner" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr className="border-stone-100" />
+
+                            <div>
+                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#E87154] mb-4">Commissions Standardization (To USD for international referrers)</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-3">
+                                        <Label htmlFor="eurToUsdRate" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">EUR to USD (€1 = $X)</Label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-stone-400">$</span>
+                                            <Input type="number" step="0.001" id="eurToUsdRate" name="eurToUsdRate" defaultValue={settings.eurToUsdRate || "1.08"} className="pl-12 h-12 bg-stone-50 border-none rounded-xl font-bold focus-visible:ring-[#E87154] shadow-inner" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <Label htmlFor="gbpToUsdRate" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">GBP to USD (£1 = $X)</Label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-stone-400">$</span>
+                                            <Input type="number" step="0.001" id="gbpToUsdRate" name="gbpToUsdRate" defaultValue={settings.gbpToUsdRate || "1.27"} className="pl-12 h-12 bg-stone-50 border-none rounded-xl font-bold focus-visible:ring-[#E87154] shadow-inner" />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </CardContent>

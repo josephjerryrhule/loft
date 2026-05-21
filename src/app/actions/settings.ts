@@ -24,6 +24,19 @@ const PUBLIC_SETTING_KEYS = new Set([
     "managerOverrideRate",
     "teamLeaderOverrideRate",
     "managerCommissionPercentage",
+    "stripeMode",
+    "stripeTestPublicKey",
+    "stripeLivePublicKey",
+    "paypalMode",
+    "paypalTestClientId",
+    "paypalLiveClientId",
+    "usdToGhsRate",
+    "eurToGhsRate",
+    "gbpToGhsRate",
+    "usdToEurRate",
+    "usdToGbpRate",
+    "eurToUsdRate",
+    "gbpToUsdRate",
 ]);
 
 async function fetchSettingsMap(): Promise<Record<string, any>> {
@@ -99,6 +112,12 @@ const SECRET_SETTING_KEYS = new Set([
     "smtpPass",
     "paystackTestSecretKey",
     "paystackLiveSecretKey",
+    "stripeTestSecretKey",
+    "stripeLiveSecretKey",
+    "stripeTestWebhookSecret",
+    "stripeLiveWebhookSecret",
+    "paypalTestClientSecret",
+    "paypalLiveClientSecret",
 ]);
 
 export async function updateSystemSettings(formData: FormData) {

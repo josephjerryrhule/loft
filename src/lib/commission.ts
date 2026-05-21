@@ -107,6 +107,87 @@ export async function processOrderCommission(orderId: string) {
   });
 }
 
+async function getExchangeRates(): Promise<Record<string, number>> {
+  const keys = [
+    "usdToGhsRate",
+    "eurToGhsRate",
+    "gbpToGhsRate",
+    "usdToEurRate",
+    "usdToGbpRate",
+    "eurToUsdRate",
+    "gbpToUsdRate"
+  ];
+
+  const rates: Record<string, number> = {
+    usdToGhsRate: 15.0,
+    eurToGhsRate: 16.0,
+    gbpToGhsRate: 19.0,
+    usdToEurRate: 0.92,
+    usdToGbpRate: 0.79,
+    eurToUsdRate: 1.08,
+    gbpToUsdRate: 1.27
+  };
+
+  try {
+    const settings = await prisma.systemSettings.findMany({
+      where: { key: { in: keys } }
+    });
+
+    settings.forEach(s => {
+      try {
+        const parsed = JSON.parse(s.value);
+        rates[s.key] = Number(parsed);
+      } catch {
+        rates[s.key] = Number(s.value);
+      }
+    });
+  } catch (e) {
+    console.error("Failed to load exchange rates:", e);
+  }
+
+  return rates;
+}
+
+function convertCommission(
+  amount: number,
+  fromCurrency: string,
+  toCountry: string | null | undefined,
+  rates: Record<string, number>
+): { amount: number; currency: string } {
+  const currency = fromCurrency.toUpperCase();
+  const isGhanaian = toCountry?.trim().toLowerCase() === "ghana";
+
+  if (isGhanaian) {
+    // Target is GHS
+    if (currency === "GHS") {
+      return { amount, currency: "GHS" };
+    }
+    let converted = amount;
+    if (currency === "USD") {
+      converted = amount * rates.usdToGhsRate;
+    } else if (currency === "EUR") {
+      converted = amount * rates.eurToGhsRate;
+    } else if (currency === "GBP") {
+      converted = amount * rates.gbpToGhsRate;
+    }
+    return { amount: converted, currency: "GHS" };
+  } else {
+    // Target is USD
+    if (currency === "USD") {
+      return { amount, currency: "USD" };
+    }
+    let converted = amount;
+    if (currency === "GHS") {
+      converted = amount / rates.usdToGhsRate;
+    } else if (currency === "EUR") {
+      converted = amount * rates.eurToUsdRate;
+    } else if (currency === "GBP") {
+      converted = amount * rates.gbpToUsdRate;
+    }
+    return { amount: converted, currency: "USD" };
+  }
+}
+
 export async function processSubscriptionCommission(subscriptionId: string, customerId: string, planPrice: number) {
     if (planPrice === 0) {
         console.log(`Skipping commission for free plan (subscription ${subscriptionId})`);
@@ -127,6 +208,7 @@ export async function processSubscriptionCommission(subscriptionId: string, cust
 
     if (!subscription) return;
 
+    const currency = subscription.currency || "GHS";
     const referrer = customer.referredBy;
     const rates = await getCommissionRates();
     
@@ -137,7 +219,15 @@ export async function processSubscriptionCommission(subscriptionId: string, cust
         referralRate = Number(subscription.plan.affiliateCommissionPercentage) / 100;
     }
 
-    const directCommissionAmount = planPrice * referralRate;
+    const directCommissionBase = planPrice * referralRate;
+    const exchangeRates = await getExchangeRates();
+    
+    const { amount: directCommissionAmount, currency: commissionCurrency } = convertCommission(
+      directCommissionBase,
+      currency,
+      referrer.country,
+      exchangeRates
+    );
 
     await prisma.commission.create({
         data: {
@@ -145,6 +235,7 @@ export async function processSubscriptionCommission(subscriptionId: string, cust
             sourceType: "SUBSCRIPTION",
             sourceId: subscriptionId,
             amount: directCommissionAmount,
+            currency: commissionCurrency,
             status: "PENDING"
         }
     });
@@ -162,7 +253,8 @@ export async function processSubscriptionCommission(subscriptionId: string, cust
       sourceType: "SUBSCRIPTION",
       sourceId: subscriptionId,
       amount: planPrice,
-      referrer
+      referrer,
+      currency
     });
 
     // Log activity
@@ -179,29 +271,41 @@ async function processOverrides({
   sourceType,
   sourceId,
   amount,
-  referrer
+  referrer,
+  currency = "GHS"
 }: {
   sourceType: string;
   sourceId: string;
   amount: number;
   referrer: any;
+  currency?: string;
 }) {
   const rates = await getCommissionRates();
+  const exchangeRates = await getExchangeRates();
 
   // 1. Team Leader Override (2%)
   if (referrer.teamLeaderId) {
-    const tlOverride = amount * rates.teamLeaderOverrideRate;
+    const tlOverrideBase = amount * rates.teamLeaderOverrideRate;
+    const teamLeader = await prisma.user.findUnique({ where: { id: referrer.teamLeaderId } });
+    
+    const { amount: tlOverride, currency: tlCurrency } = convertCommission(
+      tlOverrideBase,
+      currency,
+      teamLeader?.country,
+      exchangeRates
+    );
+
     await prisma.commission.create({
       data: {
         userId: referrer.teamLeaderId,
         sourceType,
         sourceId,
         amount: tlOverride,
+        currency: tlCurrency,
         status: "PENDING"
       }
     });
 
-    const teamLeader = await prisma.user.findUnique({ where: { id: referrer.teamLeaderId } });
     if (teamLeader) {
       sendCommissionEarnedEmail({
         recipientEmail: teamLeader.email,
@@ -221,13 +325,22 @@ async function processOverrides({
     // Only apply manager override if the assigned manager is NOT an Operations Manager.
     // Operations Managers only earn from the global ops override.
     if (manager && manager.role !== Role.OPERATIONS_MANAGER) {
-      const managerOverride = amount * rates.managerOverrideRate;
+      const managerOverrideBase = amount * rates.managerOverrideRate;
+      
+      const { amount: managerOverride, currency: managerCurrency } = convertCommission(
+        managerOverrideBase,
+        currency,
+        manager.country,
+        exchangeRates
+      );
+
       await prisma.commission.create({
         data: {
           userId: referrer.managerId,
           sourceType,
           sourceId,
           amount: managerOverride,
+          currency: managerCurrency,
           status: "PENDING"
         }
       });
@@ -249,13 +362,22 @@ async function processOverrides({
   });
 
   if (opsManager) {
-    const omOverride = amount * rates.operationsManagerOverrideRate;
+    const omOverrideBase = amount * rates.operationsManagerOverrideRate;
+    
+    const { amount: omOverride, currency: omCurrency } = convertCommission(
+      omOverrideBase,
+      currency,
+      opsManager.country,
+      exchangeRates
+    );
+
     await prisma.commission.create({
       data: {
         userId: opsManager.id,
         sourceType,
         sourceId,
         amount: omOverride,
+        currency: omCurrency,
         status: "PENDING"
       }
     });

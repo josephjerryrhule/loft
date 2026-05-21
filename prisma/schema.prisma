@@ -115,6 +115,7 @@ model SubscriptionPlan {
   name                          String
   description                   String?
   price                         Decimal
+  priceUSD                      Decimal?       @map("price_usd")
   durationDays                  Int            @map("duration_days")
   features                      String?        @map("features")
   isActive                      Boolean        @default(true) @map("is_active")
@@ -234,6 +235,7 @@ model Commission {
   sourceType String    @map("source_type")
   sourceId   String    @map("source_id")
   amount     Decimal
+  currency   String    @default("GHS")
   status     String    @default("PENDING")
   createdAt  DateTime  @default(now()) @map("created_at")
   paidAt     DateTime? @map("paid_at")

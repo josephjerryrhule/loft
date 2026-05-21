@@ -26,10 +26,20 @@ export async function createPlan(formData: FormData) {
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
     const price = parseFloat(formData.get("price") as string);
+    const priceUSDStr = formData.get("priceUSD") as string;
     const durationDays = parseInt(formData.get("durationDays") as string);
     const features = formData.get("features") as string;
     const affiliateCommissionPercentageStr = formData.get("affiliateCommissionPercentage") as string;
     
+    // Parse priceUSD (optional field)
+    let priceUSD = null;
+    if (priceUSDStr && priceUSDStr.trim() !== "") {
+        const parsed = parseFloat(priceUSDStr);
+        if (!isNaN(parsed) && parsed >= 0) {
+            priceUSD = parsed;
+        }
+    }
+
     // Parse affiliate commission percentage (optional field)
     let affiliateCommissionPercentage = null;
     if (affiliateCommissionPercentageStr && affiliateCommissionPercentageStr.trim() !== "") {
@@ -45,6 +55,7 @@ export async function createPlan(formData: FormData) {
                 name,
                 description,
                 price,
+                priceUSD,
                 durationDays,
                 features,
                 affiliateCommissionPercentage,
@@ -66,11 +77,21 @@ export async function updatePlan(id: string, formData: FormData) {
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
     const price = parseFloat(formData.get("price") as string);
+    const priceUSDStr = formData.get("priceUSD") as string;
     const durationDays = parseInt(formData.get("durationDays") as string);
     const features = formData.get("features") as string;
     const isActive = formData.get("isActive") === "true";
     const affiliateCommissionPercentageStr = formData.get("affiliateCommissionPercentage") as string;
     
+    // Parse priceUSD (optional field)
+    let priceUSD = null;
+    if (priceUSDStr && priceUSDStr.trim() !== "") {
+        const parsed = parseFloat(priceUSDStr);
+        if (!isNaN(parsed) && parsed >= 0) {
+            priceUSD = parsed;
+        }
+    }
+
     // Parse affiliate commission percentage (optional field)
     let affiliateCommissionPercentage = null;
     if (affiliateCommissionPercentageStr && affiliateCommissionPercentageStr.trim() !== "") {
@@ -87,6 +108,7 @@ export async function updatePlan(id: string, formData: FormData) {
                 name,
                 description,
                 price,
+                priceUSD,
                 durationDays,
                 features,
                 affiliateCommissionPercentage,
