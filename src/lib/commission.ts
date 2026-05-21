@@ -148,14 +148,17 @@ async function getExchangeRates(): Promise<Record<string, number>> {
   return rates;
 }
 
-function convertCommission(
+export function convertCommission(
   amount: number,
   fromCurrency: string,
   toCountry: string | null | undefined,
   rates: Record<string, number>
 ): { amount: number; currency: string } {
   const currency = fromCurrency.toUpperCase();
-  const isGhanaian = toCountry?.trim().toLowerCase() === "ghana";
+  const isGhanaian = !toCountry || 
+    toCountry.trim() === "" || 
+    toCountry.trim().toLowerCase() === "ghana" || 
+    toCountry.trim().toLowerCase() === "gh";
 
   if (isGhanaian) {
     // Target is GHS
