@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import { getAmbassadorTrackingData } from "@/app/actions/finance";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -201,7 +202,9 @@ export default function AmbassadorTrackingPage() {
                 {rows.map((row: any) => (
                   <TableRow key={row.id} className="group transition-colors">
                     <TableCell className="pl-6">
-                      <div className="font-bold text-sm text-slate-900 dark:text-white">{row.name}</div>
+                      <Link href={`/admin/users/${row.id}`} className="font-bold text-sm text-slate-900 dark:text-white hover:text-[#E87154] transition-colors">
+                        {row.name}
+                      </Link>
                       <div className="text-[10px] text-slate-500 font-medium">{row.email}</div>
                     </TableCell>
                     <TableCell>
@@ -212,7 +215,15 @@ export default function AmbassadorTrackingPage() {
                         {row.role}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-slate-500 text-[11px] font-medium">{row.manager || "-"}</TableCell>
+                    <TableCell className="text-slate-500 text-[11px] font-medium">
+                      {row.managerId ? (
+                        <Link href={`/admin/users/${row.managerId}`} className="hover:text-[#E87154] transition-colors font-bold">
+                          {row.manager}
+                        </Link>
+                      ) : (
+                        row.manager || "—"
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Badge 
                         variant={row.status === "ACTIVE" ? "default" : "secondary"}

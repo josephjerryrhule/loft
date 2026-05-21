@@ -141,7 +141,7 @@ export default async function ManagerDashboardPage() {
                     <h4 className="font-bold text-sm mb-1 text-slate-900 dark:text-white">Active Affiliates</h4>
                     <p className="text-2xl font-black text-indigo-600 mb-2">{stats.teamCount}</p>
                     <Button asChild variant="outline" size="sm" className="w-full text-xs h-8">
-                        <Link href="/manager/affiliates">Manage Team</Link>
+                        <Link href="/manager/team">Manage Team</Link>
                     </Button>
                 </div>
                 <div className="p-4 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-emerald-500/20 transition-all">

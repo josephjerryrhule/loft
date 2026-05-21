@@ -161,7 +161,7 @@ export async function getPaymentTrackerData(filters?: {
   const subscriptions = await prisma.subscription.findMany({
     where,
     include: {
-      customer: { select: { firstName: true, lastName: true, email: true } },
+      customer: { select: { id: true, firstName: true, lastName: true, email: true } },
       childProfile: { select: { name: true } },
       plan: { select: { name: true, price: true } },
     },
@@ -192,6 +192,7 @@ export async function getPaymentTrackerData(filters?: {
     transactions: subscriptions.map((s) => ({
       id: s.id,
       date: s.createdAt,
+      parentId: s.customer.id,
       parentName: `${s.customer.firstName || ""} ${s.customer.lastName || ""}`.trim() || s.customer.email,
       childName: s.childProfile?.name || "—",
       plan: s.plan.name,
@@ -288,6 +289,7 @@ export async function getDailySignupData(filters?: {
       date: u.createdAt,
       parentName: `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email,
       source: u.referredById ? "Referred" : "Organic",
+      ambassadorId: u.referredById,
       ambassador: u.referredBy
         ? `${u.referredBy.firstName || ""} ${u.referredBy.lastName || ""}`.trim() || u.referredBy.email
         : "—",

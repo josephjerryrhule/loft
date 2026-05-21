@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -134,12 +135,16 @@ export default function AdminOrdersPage() {
                     </TableCell>
                     <TableCell>
                     <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9 sm:h-10 sm:w-10 border-2 border-white shadow-sm ring-2 ring-slate-50">
-                        <AvatarImage src={order.customer.profilePictureUrl || ""} />
-                        <AvatarFallback className="bg-slate-100 text-[10px] font-black">{order.customer.email[0].toUpperCase()}</AvatarFallback>
-                        </Avatar>
+                        <Link href={`/admin/users/${order.customer.id}`} className="hover:opacity-80 transition-opacity">
+                          <Avatar className="h-9 w-9 sm:h-10 sm:w-10 border-2 border-white shadow-sm ring-2 ring-slate-50">
+                            <AvatarImage src={order.customer.profilePictureUrl || ""} />
+                            <AvatarFallback className="bg-slate-100 text-[10px] font-black">{order.customer.email[0].toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                        </Link>
                         <div className="flex flex-col min-w-0">
-                            <span className="text-xs font-black text-slate-900 truncate max-w-[120px]">{order.customer.email}</span>
+                            <Link href={`/admin/users/${order.customer.id}`} className="text-xs font-black text-slate-900 truncate max-w-[120px] hover:text-[#E87154] transition-colors">
+                              {order.customer.email}
+                            </Link>
                             <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Client Portal</span>
                         </div>
                     </div>

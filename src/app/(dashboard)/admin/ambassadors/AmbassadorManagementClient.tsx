@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -184,16 +185,16 @@ export default function AmbassadorManagementClient({
                 return (
                   <TableRow key={user.id} className="group transition-colors">
                     <TableCell className="pl-6">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
+                      <Link href={`/admin/users/${user.id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                        <Avatar className="h-10 w-10 border-2 border-white shadow-sm cursor-pointer">
                           <AvatarImage src={user.profilePictureUrl || ""} />
                           <AvatarFallback className="bg-slate-100 font-bold text-slate-500">{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
-                            <span className="font-bold text-sm text-slate-900">{user.name}</span>
+                            <span className="font-bold text-sm text-slate-900 hover:underline cursor-pointer">{user.name}</span>
                             <span className="text-[11px] text-slate-500">{user.email}</span>
                         </div>
-                      </div>
+                      </Link>
                     </TableCell>
                     <TableCell>
                        <span className="font-mono text-[10px] font-black px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">
@@ -210,13 +211,17 @@ export default function AmbassadorManagementClient({
                             {user.role === "MANAGER" && superior && (
                                 <div className="flex items-center gap-1.5">
                                     <Shield className="h-3 w-3 text-[#E87154]" />
-                                    <span className="text-[11px] font-bold text-slate-700">{superior.name}</span>
+                                    <Link href={`/admin/users/${superior.id}`} className="text-[11px] font-bold text-slate-700 hover:underline hover:text-[#E87154] transition-colors cursor-pointer">
+                                        {superior.name}
+                                    </Link>
                                 </div>
                             )}
                             {user.role === "TEAM_LEADER" && superior && (
                                 <div className="flex items-center gap-1.5">
                                     <UserCheck className="h-3 w-3 text-[#E87154]" />
-                                    <span className="text-[11px] font-bold text-slate-700">{superior.name}</span>
+                                    <Link href={`/admin/users/${superior.id}`} className="text-[11px] font-bold text-slate-700 hover:underline hover:text-[#E87154] transition-colors cursor-pointer">
+                                        {superior.name}
+                                    </Link>
                                 </div>
                             )}
                             {user.role === "AFFILIATE" && (
@@ -224,13 +229,17 @@ export default function AmbassadorManagementClient({
                                     {superior && (
                                         <div className="flex items-center gap-1.5">
                                             <UserCheck className="h-3 w-3 text-purple-500" />
-                                            <span className="text-[11px] font-medium">{superior.name}</span>
+                                            <Link href={`/admin/users/${superior.id}`} className="text-[11px] font-medium text-slate-700 hover:underline hover:text-purple-600 transition-colors cursor-pointer">
+                                                {superior.name}
+                                            </Link>
                                         </div>
                                     )}
                                     {teamLeader && (
                                         <div className="flex items-center gap-1.5">
                                             <UserPlus className="h-3 w-3 text-indigo-500" />
-                                            <span className="text-[11px] font-medium text-slate-700">{teamLeader.name}</span>
+                                            <Link href={`/admin/users/${teamLeader.id}`} className="text-[11px] font-medium text-slate-700 hover:underline hover:text-indigo-600 transition-colors cursor-pointer">
+                                                {teamLeader.name}
+                                            </Link>
                                         </div>
                                     )}
                                     {!superior && !teamLeader && <span className="text-[11px] text-slate-400">—</span>}

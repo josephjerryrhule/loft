@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import { getPaymentTrackerData } from "@/app/actions/finance";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -219,7 +220,9 @@ export default function PaymentTrackerPage() {
                     {new Date(tx.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                   </TableCell>
                   <TableCell>
-                    <div className="font-bold text-sm text-slate-900 dark:text-white">{tx.parentName}</div>
+                    <Link href={`/admin/users/${tx.parentId}`} className="font-bold text-sm text-slate-900 dark:text-white hover:text-[#E87154] transition-colors">
+                      {tx.parentName}
+                    </Link>
                   </TableCell>
                   <TableCell className="text-sm text-slate-500">{tx.childName || "—"}</TableCell>
                   <TableCell className="text-sm font-medium">{tx.plan}</TableCell>

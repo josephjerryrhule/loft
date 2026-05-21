@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import { getDailySignupData } from "@/app/actions/finance";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -268,15 +269,15 @@ export default function DailySignupsPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 flex items-center justify-center font-black text-slate-400 text-xs">
+                                        <Link href={`/admin/users/${row.id}`} className="flex items-center gap-3 hover:opacity-85 transition-opacity">
+                                            <div className="h-10 w-10 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 flex items-center justify-center font-black text-slate-400 text-xs cursor-pointer">
                                                 {row.parentName ? row.parentName.substring(0, 2).toUpperCase() : "?"}
                                             </div>
                                             <div className="flex flex-col min-w-0">
-                                                <span className="font-black text-sm text-slate-900 dark:text-white truncate max-w-[180px] tracking-tight">{row.parentName || "Anonymous User"}</span>
+                                                <span className="font-black text-sm text-slate-900 dark:text-white truncate max-w-[180px] tracking-tight hover:underline cursor-pointer">{row.parentName || "Anonymous User"}</span>
                                                 <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Parent Account</span>
                                             </div>
-                                        </div>
+                                        </Link>
                                     </TableCell>
                                     <TableCell>
                                         <Badge 
@@ -290,7 +291,13 @@ export default function DailySignupsPage() {
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-sm font-bold text-slate-600 dark:text-slate-400">
-                                        {row.ambassador || "Direct/Organic"}
+                                        {row.ambassadorId ? (
+                                            <Link href={`/admin/users/${row.ambassadorId}`} className="hover:underline hover:text-[#E87154] transition-colors cursor-pointer">
+                                                {row.ambassador}
+                                            </Link>
+                                        ) : (
+                                            row.ambassador || "Direct/Organic"
+                                        )}
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">

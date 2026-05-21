@@ -421,13 +421,14 @@ export async function getUserFullProfile(userId: string) {
         const isSelf = viewerId === userId;
         const isAdmin = viewerRole === "ADMIN";
         const isOpsManager = viewerRole === "OPERATIONS_MANAGER";
+        const isFinance = viewerRole === "FINANCE";
         const isManagerOfUser = targetUser.managerId === viewerId;
         const isTeamLeaderOfUser = targetUser.teamLeaderId === viewerId;
         const isViewerAmbassador = ["ADMIN", "OPERATIONS_MANAGER", "MANAGER", "TEAM_LEADER", "AFFILIATE"].includes(viewerRole);
         const isTargetAmbassador = ["ADMIN", "OPERATIONS_MANAGER", "MANAGER", "TEAM_LEADER", "AFFILIATE"].includes(targetUser.role);
 
         // Security check
-        const canViewFull = isAdmin || isOpsManager || isSelf || isManagerOfUser || isTeamLeaderOfUser;
+        const canViewFull = isAdmin || isOpsManager || isFinance || isSelf || isManagerOfUser || isTeamLeaderOfUser;
         const canViewSanitized = isViewerAmbassador && isTargetAmbassador;
 
         if (!canViewFull && !canViewSanitized) {

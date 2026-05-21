@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { TablePagination } from "@/components/ui/table-pagination";
@@ -13,6 +14,7 @@ interface ActivityLog {
   actionDetails: string | null;
   createdAt: Date;
   user?: {
+    id: string;
     email: string;
   } | null;
 }
@@ -57,7 +59,13 @@ export function RecentActivityTable({ activities }: RecentActivityTableProps) {
             {paginatedActivities.map((log) => (
               <TableRow key={log.id} className="group transition-colors">
                 <TableCell className="pl-6 font-bold text-sm text-slate-900 dark:text-white">
-                    {log.user?.email || "System"}
+                    {log.user ? (
+                      <Link href={`/admin/users/${log.user.id}`} className="hover:underline cursor-pointer">
+                        {log.user.email}
+                      </Link>
+                    ) : (
+                      "System"
+                    )}
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-800 border-none">

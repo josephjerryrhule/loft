@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import { getFinancePayoutRequests, financeApprovePayout, financeMarkPayoutPaid, financeRejectPayout } from "@/app/actions/finance";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -188,7 +189,9 @@ export default function PayoutRequestsPage() {
                   <TableRow key={req.id} className="group transition-all duration-300">
                     <TableCell className="pl-10 py-6">
                       <div className="flex flex-col">
-                        <span className="font-black text-slate-900 dark:text-white tracking-tight group-hover:text-[#E87154] transition-colors">{req.user.firstName || ""} {req.user.lastName || "Staff Account"}</span>
+                        <Link href={`/admin/users/${req.user.id}`} className="font-black text-slate-900 dark:text-white tracking-tight hover:text-[#E87154] transition-colors">
+                          {req.user.firstName || ""} {req.user.lastName || "Staff Account"}
+                        </Link>
                         <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{req.user.email}</span>
                       </div>
                     </TableCell>

@@ -23,6 +23,7 @@ export default async function AdminActivityPage() {
         include: { 
             user: { 
                 select: { 
+                    id: true,
                     email: true, 
                     firstName: true, 
                     lastName: true, 
