@@ -10,7 +10,5 @@ export async function getStripeInstance() {
     throw new Error("Stripe secret key is not configured.");
   }
 
-  return new Stripe(secretKey, {
-    apiVersion: "2025-02-18-preview" as any,
-  });
+  return new Stripe(secretKey);
 }
