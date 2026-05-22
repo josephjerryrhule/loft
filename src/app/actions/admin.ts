@@ -150,6 +150,167 @@ export async function bulkApproveCommissions() {
     }
 }
 
+export async function bulkApproveUserCommissions(targetUserId: string) {
+    const session = await auth();
+    const role = (session?.user as any)?.role;
+    if (!session?.user?.id || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
+        return { error: "Unauthorized" };
+    }
+
+    try {
+        // Get all pending commissions for this specific user
+        const pendingCommissions = await prisma.commission.findMany({
+            where: { 
+                userId: targetUserId,
+                status: "PENDING" 
+            },
+            include: { user: true }
+        });
+
+        if (pendingCommissions.length === 0) {
+            return { error: "No pending commissions to approve for this user" };
+        }
+
+        const totalAmount = pendingCommissions.reduce((sum, c) => sum + Number(c.amount), 0);
+
+        await prisma.$transaction(async (tx) => {
+            // Update user's pending commissions to APPROVED
+            await tx.commission.updateMany({
+                where: { 
+                    userId: targetUserId,
+                    status: "PENDING" 
+                },
+                data: { status: "APPROVED" }
+            });
+
+            // Log activity for the user
+            await tx.activityLog.create({
+                data: {
+                    userId: targetUserId,
+                    actionType: "COMMISSION_APPROVED",
+                    actionDetails: JSON.stringify({
+                        bulkApproval: true,
+                        count: pendingCommissions.length,
+                        totalAmount: totalAmount
+                    })
+                }
+            });
+
+            // Log activity for admin
+            await tx.activityLog.create({
+                data: {
+                    userId: session.user!.id,
+                    actionType: "ADMIN_USER_BULK_APPROVE_COMMISSIONS",
+                    actionDetails: JSON.stringify({
+                        targetUserId,
+                        targetUserEmail: pendingCommissions[0].user.email,
+                        count: pendingCommissions.length,
+                        totalAmount: totalAmount
+                    })
+                }
+            });
+        });
+
+        revalidatePath("/admin/finance");
+        revalidatePath("/admin");
+        revalidatePath("/affiliate/commissions");
+        revalidatePath("/manager/commissions");
+
+        return { success: true, approvedCount: pendingCommissions.length, totalAmount };
+    } catch (e) {
+        console.error("Failed to approve user commissions:", e);
+        return { error: "Failed to approve user commissions" };
+    }
+}
+
+export async function bulkApproveSelectedCommissions(commissionIds: string[]) {
+    const session = await auth();
+    const role = (session?.user as any)?.role;
+    if (!session?.user?.id || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
+        return { error: "Unauthorized" };
+    }
+
+    if (!commissionIds || commissionIds.length === 0) {
+        return { error: "No commissions selected" };
+    }
+
+    try {
+        // Get the pending commissions that match the selection
+        const pendingCommissions = await prisma.commission.findMany({
+            where: {
+                id: { in: commissionIds },
+                status: "PENDING"
+            },
+            include: { user: true }
+        });
+
+        if (pendingCommissions.length === 0) {
+            return { error: "No pending commissions found for the selected IDs" };
+        }
+
+        const totalAmount = pendingCommissions.reduce((sum, c) => sum + Number(c.amount), 0);
+
+        await prisma.$transaction(async (tx) => {
+            // Update selected commissions to APPROVED
+            await tx.commission.updateMany({
+                where: {
+                    id: { in: pendingCommissions.map(c => c.id) },
+                    status: "PENDING"
+                },
+                data: { status: "APPROVED" }
+            });
+
+            // Group by user to write activity logs
+            const userCommissions = new Map<string, { count: number; total: number }>();
+            pendingCommissions.forEach(comm => {
+                const existing = userCommissions.get(comm.userId) || { count: 0, total: 0 };
+                userCommissions.set(comm.userId, {
+                    count: existing.count + 1,
+                    total: existing.total + Number(comm.amount)
+                });
+            });
+
+            // Create activity logs for each user's commissions
+            for (const [userId, data] of userCommissions.entries()) {
+                await tx.activityLog.create({
+                    data: {
+                        userId: userId,
+                        actionType: "COMMISSION_APPROVED",
+                        actionDetails: JSON.stringify({
+                            bulkApproval: true,
+                            count: data.count,
+                            totalAmount: data.total
+                        })
+                    }
+                });
+            }
+
+            // Log activity for admin
+            await tx.activityLog.create({
+                data: {
+                    userId: session.user!.id,
+                    actionType: "ADMIN_SELECTED_BULK_APPROVE_COMMISSIONS",
+                    actionDetails: JSON.stringify({
+                        count: pendingCommissions.length,
+                        totalAmount: totalAmount,
+                        userCount: userCommissions.size
+                    })
+                }
+            });
+        });
+
+        revalidatePath("/admin/finance");
+        revalidatePath("/admin");
+        revalidatePath("/affiliate/commissions");
+        revalidatePath("/manager/commissions");
+
+        return { success: true, approvedCount: pendingCommissions.length, totalAmount };
+    } catch (e) {
+        console.error("Failed to approve selected commissions:", e);
+        return { error: "Failed to approve selected commissions" };
+    }
+}
+
 export async function approvePayoutRequest(requestId: string) {
     const session = await auth();
     const role = (session?.user as any)?.role;
