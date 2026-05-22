@@ -48,7 +48,8 @@ async function getStats() {
         totalFlipbooks,
         totalSubscriptions,
         orderRevenue,
-        subscriptions,
+        activeSubscriptions,
+        completedSubscriptions,
         pendingCommissions
     ] = await Promise.all([
         prisma.user.count(),
@@ -63,18 +64,22 @@ async function getStats() {
             where: { status: "ACTIVE" },
             include: { plan: true }
         }),
+        prisma.subscription.findMany({
+            where: { paymentStatus: { in: ["COMPLETED", "COMPLETED_FREE"] } },
+            include: { plan: true }
+        }),
         prisma.commission.aggregate({
             _sum: { amount: true },
             where: { status: "PENDING" }
         })
     ]);
     
-    const subscriptionRevenue = subscriptions.reduce((sum: number, sub: any) => sum + Number(sub.plan.price), 0);
+    const subscriptionRevenue = completedSubscriptions.reduce((sum: number, sub: any) => sum + Number(sub.plan.price), 0);
     const totalRevenue = (orderRevenue._sum.totalAmount?.toNumber() || 0) + subscriptionRevenue;
     const pendingPayout = pendingCommissions._sum.amount?.toNumber() || 0;
 
-    const paidSubscriptions = subscriptions.filter((sub: any) => Number(sub.plan.price) > 0).length;
-    const freeSubscriptions = subscriptions.length - paidSubscriptions;
+    const paidSubscriptions = activeSubscriptions.filter((sub: any) => Number(sub.plan.price) > 0).length;
+    const freeSubscriptions = activeSubscriptions.length - paidSubscriptions;
 
     const stats = { totalUsers, totalOrders, totalFlipbooks, totalRevenue, totalSubscriptions, paidSubscriptions, freeSubscriptions, pendingPayout };
     cache.set(cacheKey, stats, 300000);
@@ -106,7 +111,7 @@ async function getMonthlyRevenueData() {
                 }),
                 prisma.subscription.findMany({
                     where: {
-                        status: "ACTIVE",
+                        paymentStatus: { in: ["COMPLETED", "COMPLETED_FREE"] },
                         createdAt: { gte: date, lte: endDate }
                     },
                     include: { plan: true }

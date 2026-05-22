@@ -1076,6 +1076,7 @@ export async function getFinanceData() {
 
         // Total revenue from subscriptions
         const subscriptions = await prisma.subscription.findMany({
+            where: { paymentStatus: { in: ["COMPLETED", "COMPLETED_FREE"] } },
             include: { plan: true }
         });
         const subscriptionRevenue = subscriptions.reduce((sum: number, sub: any) => sum + Number(sub.plan.price), 0);
