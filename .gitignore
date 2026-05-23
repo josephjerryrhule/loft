@@ -49,3 +49,7 @@ tests/
 /.claude/
 /graphify-out
 /logs
+
+# scripts outputs
+/scripts/audits/
+/scripts/backups/

@@ -9,7 +9,8 @@
     "lint": "eslint",
     "postinstall": "prisma generate",
     "analyze": "node scripts/analyze-performance.js",
-    "optimize-db": "./scripts/optimize-performance.sh"
+    "optimize-db": "./scripts/optimize-performance.sh",
+    "recalculate-commissions": "npx tsx scripts/recalculate-commissions.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

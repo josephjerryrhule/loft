@@ -20,7 +20,8 @@ import {
   DollarSign, 
   Wallet, 
   TrendingUp, 
-  Clock 
+  Clock,
+  Download
 } from "lucide-react";
 import { 
   getFinanceData, 
@@ -165,6 +166,122 @@ export default function AdminFinancePage() {
     } finally {
       setWeeklyApproving(prev => ({ ...prev, [weekKey]: false }));
     }
+  };
+
+  const exportToCSV = () => {
+    // 1. Group by user and then by week start
+    const userWeekGroups: Record<string, {
+      userName: string;
+      userEmail: string;
+      userRole: string;
+      weekLabel: string;
+      pending: Record<string, number>;
+      approved: Record<string, number>;
+      paid: Record<string, number>;
+      total: Record<string, number>;
+      count: number;
+    }> = {};
+
+    filteredCommissions.forEach((comm: any) => {
+      const userId = comm.userId || "unknown";
+      const userName = `${comm.user?.firstName || ""} ${comm.user?.lastName || ""}`.trim() || "Ambassador";
+      const userEmail = comm.user?.email || "Unknown";
+      const userRole = comm.user?.role || "AFFILIATE";
+      
+      // Calculate Monday start date for the week
+      const date = new Date(comm.createdAt);
+      const day = date.getDay();
+      const diff = date.getDate() - (day === 0 ? 6 : day - 1);
+      const startOfWeek = new Date(date.setDate(diff));
+      startOfWeek.setHours(0, 0, 0, 0);
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      
+      const weekStartStr = startOfWeek.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      const weekEndStr = endOfWeek.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      const weekLabel = `${weekStartStr} - ${weekEndStr}`;
+      
+      // Composite key: userId + weekKey
+      const key = `${userId}_${startOfWeek.toISOString()}`;
+      
+      if (!userWeekGroups[key]) {
+        userWeekGroups[key] = {
+          userName,
+          userEmail,
+          userRole,
+          weekLabel,
+          pending: {},
+          approved: {},
+          paid: {},
+          total: {},
+          count: 0
+        };
+      }
+      
+      const curr = comm.currency || "GHS";
+      const amount = Number(comm.amount);
+      
+      if (comm.status === "PENDING") {
+        userWeekGroups[key].pending[curr] = (userWeekGroups[key].pending[curr] || 0) + amount;
+      } else if (comm.status === "APPROVED") {
+        userWeekGroups[key].approved[curr] = (userWeekGroups[key].approved[curr] || 0) + amount;
+      } else if (comm.status === "PAID") {
+        userWeekGroups[key].paid[curr] = (userWeekGroups[key].paid[curr] || 0) + amount;
+      }
+      
+      userWeekGroups[key].total[curr] = (userWeekGroups[key].total[curr] || 0) + amount;
+      userWeekGroups[key].count += 1;
+    });
+
+    // 2. Define CSV Headers
+    const headers = [
+      "User Name",
+      "User Email",
+      "User Role",
+      "Week (Mon-Sun)",
+      "Pending GHS",
+      "Pending USD",
+      "Approved GHS",
+      "Approved USD",
+      "Paid GHS",
+      "Paid USD",
+      "Total GHS",
+      "Total USD",
+      "Transaction Count"
+    ];
+
+    // 3. Build CSV rows
+    const rows = Object.values(userWeekGroups).map(group => {
+      return [
+        `"${group.userName.replace(/"/g, '""')}"`,
+        `"${group.userEmail.replace(/"/g, '""')}"`,
+        `"${group.userRole}"`,
+        `"${group.weekLabel}"`,
+        (group.pending["GHS"] || 0).toFixed(2),
+        (group.pending["USD"] || 0).toFixed(2),
+        (group.approved["GHS"] || 0).toFixed(2),
+        (group.approved["USD"] || 0).toFixed(2),
+        (group.paid["GHS"] || 0).toFixed(2),
+        (group.paid["USD"] || 0).toFixed(2),
+        (group.total["GHS"] || 0).toFixed(2),
+        (group.total["USD"] || 0).toFixed(2),
+        group.count
+      ];
+    });
+
+    // 4. Combine headers and rows
+    const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+
+    // 5. Trigger download
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `weekly-commissions-report-${new Date().toISOString().slice(0, 10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Filter raw commissions
@@ -492,6 +609,15 @@ export default function AdminFinancePage() {
               </div>
 
               <div className="flex items-center gap-3 self-end sm:self-center">
+                <Button
+                  onClick={exportToCSV}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 border-slate-200 text-slate-700 hover:bg-slate-50 font-bold"
+                >
+                  <Download className="h-4 w-4" />
+                  Export CSV
+                </Button>
                 {recentCommissions.some(c => c.status === "PENDING") && (
                   <Button 
                     onClick={handleBulkApprove}
