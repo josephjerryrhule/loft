@@ -233,6 +233,12 @@ async function run() {
         continue;
       }
 
+      if (comm.userId !== referrer.id) {
+        details = `Override commission skipped for non-affiliate user ${targetUser.email} (Referrer: ${referrer.email})`;
+        auditReport.push({ id: comm.id, sourceType: comm.sourceType, currentAmount, currency: curr, recalculatedAmount: currentAmount, status: "SKIPPED_OVERRIDE", details });
+        continue;
+      }
+
       // Reconstruct checkout amountPaid in checkout currency
       const subCurrency = sub.currency || "GHS";
       let planPrice = 0;
@@ -252,40 +258,12 @@ async function run() {
         referralRate = Number(sub.plan.affiliateCommissionPercentage) / 100;
       }
 
-      // 2. Determine if recipient is direct referrer vs override
-      if (comm.userId === referrer.id) {
-        // Direct referral
-        const directBase = planPrice * referralRate;
-        const converted = convertCommission(directBase, subCurrency, referrer.country, exchangeRates);
-        recalculatedAmount = converted.amount;
-        recalculatedCurrency = converted.currency;
-        details = `Direct Subscription Referral (Plan: ${sub.plan.name}, Price: ${planPrice} ${subCurrency}, Rate: ${referralRate * 100}%)`;
-      } else if (comm.userId === referrer.teamLeaderId) {
-        // TL Override (2%)
-        const tlOverrideBase = planPrice * rates.teamLeaderOverrideRate;
-        const converted = convertCommission(tlOverrideBase, subCurrency, targetUser.country, exchangeRates);
-        recalculatedAmount = converted.amount;
-        recalculatedCurrency = converted.currency;
-        details = `Team Leader Override (Plan: ${sub.plan.name}, Price: ${planPrice} ${subCurrency}, Rate: ${rates.teamLeaderOverrideRate * 100}%)`;
-      } else if (comm.userId === referrer.managerId) {
-        // Manager Override (3%)
-        const managerOverrideBase = planPrice * rates.managerOverrideRate;
-        const converted = convertCommission(managerOverrideBase, subCurrency, targetUser.country, exchangeRates);
-        recalculatedAmount = converted.amount;
-        recalculatedCurrency = converted.currency;
-        details = `Manager Override (Plan: ${sub.plan.name}, Price: ${planPrice} ${subCurrency}, Rate: ${rates.managerOverrideRate * 100}%)`;
-      } else if (targetUser.role === "OPERATIONS_MANAGER") {
-        // OM Override (5%)
-        const omOverrideBase = planPrice * rates.operationsManagerOverrideRate;
-        const converted = convertCommission(omOverrideBase, subCurrency, targetUser.country, exchangeRates);
-        recalculatedAmount = converted.amount;
-        recalculatedCurrency = converted.currency;
-        details = `Operations Manager Override (Plan: ${sub.plan.name}, Price: ${planPrice} ${subCurrency}, Rate: ${rates.operationsManagerOverrideRate * 100}%)`;
-      } else {
-        details = `Commission recipient ${targetUser.email} has unknown relationship to customer referrer ${referrer.email}`;
-        auditReport.push({ id: comm.id, sourceType: comm.sourceType, currentAmount, currency: curr, recalculatedAmount: currentAmount, status: "SKIPPED_UNIDENTIFIED_RECIPIENT", details });
-        continue;
-      }
+      // Direct referral
+      const directBase = planPrice * referralRate;
+      const converted = convertCommission(directBase, subCurrency, referrer.country, exchangeRates);
+      recalculatedAmount = converted.amount;
+      recalculatedCurrency = converted.currency;
+      details = `Direct Subscription Referral (Plan: ${sub.plan.name}, Price: ${planPrice} ${subCurrency}, Rate: ${referralRate * 100}%)`;
 
     } else if (comm.sourceType === "PRODUCT") {
       const order = await prisma.order.findUnique({
@@ -309,36 +287,16 @@ async function run() {
         continue;
       }
 
-      const orderTotal = Number(order.totalAmount);
-
-      // Direct product referral is a fixed value
-      if (comm.userId === referrer.id) {
-        recalculatedAmount = Number(order.product.affiliateCommissionAmount);
-        recalculatedCurrency = "GHS"; // direct products are domestically GHS
-        details = `Direct Product Referral (Product: ${order.product.title}, Fixed amount: ${recalculatedAmount})`;
-      } else if (comm.userId === referrer.teamLeaderId) {
-        const tlOverrideBase = orderTotal * rates.teamLeaderOverrideRate;
-        const converted = convertCommission(tlOverrideBase, "GHS", targetUser.country, exchangeRates);
-        recalculatedAmount = converted.amount;
-        recalculatedCurrency = converted.currency;
-        details = `Team Leader Override on Product Sale (Order Total: ${orderTotal} GHS, Rate: ${rates.teamLeaderOverrideRate * 100}%)`;
-      } else if (comm.userId === referrer.managerId) {
-        const managerOverrideBase = orderTotal * rates.managerOverrideRate;
-        const converted = convertCommission(managerOverrideBase, "GHS", targetUser.country, exchangeRates);
-        recalculatedAmount = converted.amount;
-        recalculatedCurrency = converted.currency;
-        details = `Manager Override on Product Sale (Order Total: ${orderTotal} GHS, Rate: ${rates.managerOverrideRate * 100}%)`;
-      } else if (targetUser.role === "OPERATIONS_MANAGER") {
-        const omOverrideBase = orderTotal * rates.operationsManagerOverrideRate;
-        const converted = convertCommission(omOverrideBase, "GHS", targetUser.country, exchangeRates);
-        recalculatedAmount = converted.amount;
-        recalculatedCurrency = converted.currency;
-        details = `Operations Manager Override on Product Sale (Order Total: ${orderTotal} GHS, Rate: ${rates.operationsManagerOverrideRate * 100}%)`;
-      } else {
-        details = `Commission recipient ${targetUser.email} has unknown relationship to customer referrer ${referrer.email}`;
-        auditReport.push({ id: comm.id, sourceType: comm.sourceType, currentAmount, currency: curr, recalculatedAmount: currentAmount, status: "SKIPPED_UNIDENTIFIED_RECIPIENT", details });
+      if (comm.userId !== referrer.id) {
+        details = `Override commission skipped for non-affiliate user ${targetUser.email} (Referrer: ${referrer.email})`;
+        auditReport.push({ id: comm.id, sourceType: comm.sourceType, currentAmount, currency: curr, recalculatedAmount: currentAmount, status: "SKIPPED_OVERRIDE", details });
         continue;
       }
+
+      // Direct product referral is a fixed value
+      recalculatedAmount = Number(order.product.affiliateCommissionAmount);
+      recalculatedCurrency = "GHS"; // direct products are domestically GHS
+      details = `Direct Product Referral (Product: ${order.product.title}, Fixed amount: ${recalculatedAmount})`;
     } else {
       details = `Skipping non-eligible sourceType: ${comm.sourceType}`;
       auditReport.push({ id: comm.id, sourceType: comm.sourceType, currentAmount, currency: curr, recalculatedAmount: currentAmount, status: "SKIPPED_INELIGIBLE_TYPE", details });
@@ -487,7 +445,7 @@ async function run() {
       // 3. Log main recalculation activity for admin auditor
       await tx.activityLog.create({
         data: {
-          userId: "system", // recalculation run by script
+          userId: null, // recalculation run by script (system)
           actionType: "COMMISSIONS_RECALCULATED_MIGRATION",
           actionDetails: JSON.stringify({
             timestamp: new Date().toISOString(),
