@@ -51,6 +51,7 @@ export default function AdminFinancePage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [selectedCommissionIds, setSelectedCommissionIds] = useState<string[]>([]);
   const [expandedUsers, setExpandedUsers] = useState<Record<string, boolean>>({});
+  const [weeklyApproving, setWeeklyApproving] = useState<Record<string, boolean>>({});
 
   const loadFinanceData = async () => {
     try {
@@ -140,6 +141,29 @@ export default function AdminFinancePage() {
       toast.error("Failed to approve selected commissions");
     } finally {
       setBulkApproving(false);
+    }
+  };
+
+  const handleApproveWeekly = async (weekKey: string, ids: string[], label: string) => {
+    if (ids.length === 0) return;
+    
+    if (!confirm(`Are you sure you want to approve ${ids.length} pending commissions for ${label}?`)) {
+      return;
+    }
+
+    setWeeklyApproving(prev => ({ ...prev, [weekKey]: true }));
+    try {
+      const result = await bulkApproveSelectedCommissions(ids);
+      if ("error" in result) {
+        toast.error(result.error);
+      } else {
+        toast.success(`Successfully approved ${result.approvedCount} commissions for ${label}!`);
+        await loadFinanceData();
+      }
+    } catch (error) {
+      toast.error("Failed to approve weekly commissions");
+    } finally {
+      setWeeklyApproving(prev => ({ ...prev, [weekKey]: false }));
     }
   };
 
@@ -665,10 +689,31 @@ export default function AdminFinancePage() {
                                         <TableRow className="bg-slate-50/70 hover:bg-slate-50/70 border-b border-slate-100">
                                           <TableCell colSpan={5} className="py-1.5 pl-4">
                                             <div className="flex items-center justify-between">
-                                              <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.1em]">{group.label}</span>
-                                              <Badge variant="outline" className="bg-slate-200/60 text-slate-600 border-none text-[9px] font-bold py-0 h-4">
-                                                {group.commissions.length} {group.commissions.length === 1 ? 'txn' : 'txns'}
-                                              </Badge>
+                                              <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.1em]">{group.label}</span>
+                                                <Badge variant="outline" className="bg-slate-200/60 text-slate-600 border-none text-[9px] font-bold py-0 h-4">
+                                                  {group.commissions.length} {group.commissions.length === 1 ? 'txn' : 'txns'}
+                                                </Badge>
+                                              </div>
+                                              {group.commissions.some((c: any) => c.status === "PENDING") && (
+                                                <Button
+                                                  size="sm"
+                                                  onClick={() => handleApproveWeekly(
+                                                    group.weekKey, 
+                                                    group.commissions.filter((c: any) => c.status === "PENDING").map((c: any) => c.id),
+                                                    group.label
+                                                  )}
+                                                  disabled={weeklyApproving[group.weekKey] || bulkApproving}
+                                                  className="h-5 bg-[#E87154]/10 hover:bg-[#E87154]/20 text-[#E87154] text-[9px] font-extrabold rounded px-2 border border-[#E87154]/20 flex items-center justify-center gap-1 shadow-sm mr-2"
+                                                >
+                                                  {weeklyApproving[group.weekKey] ? (
+                                                    <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                                                  ) : (
+                                                    <CheckCircle2 className="h-2.5 w-2.5" />
+                                                  )}
+                                                  Approve Week
+                                                </Button>
+                                              )}
                                             </div>
                                           </TableCell>
                                         </TableRow>
