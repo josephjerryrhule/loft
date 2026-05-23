@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -208,6 +208,40 @@ export default function AdminFinancePage() {
         return `${symbol}${val.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
       });
     return parts.length > 0 ? parts.join(" + ") : "₵0.00";
+  };
+
+  // Group commissions by week start (Sunday)
+  const groupCommissionsByWeek = (commissions: any[]) => {
+    const groups: Record<string, any[]> = {};
+    
+    commissions.forEach(comm => {
+      const date = new Date(comm.createdAt);
+      const day = date.getDay();
+      const diff = date.getDate() - day;
+      const startOfWeek = new Date(date.setDate(diff));
+      startOfWeek.setHours(0, 0, 0, 0);
+      const weekKey = startOfWeek.toISOString();
+      
+      if (!groups[weekKey]) {
+        groups[weekKey] = [];
+      }
+      groups[weekKey].push(comm);
+    });
+    
+    return Object.entries(groups)
+      .sort((a, b) => b[0].localeCompare(a[0])) // sort descending (most recent first)
+      .map(([weekKey, comms]) => {
+        const start = new Date(weekKey);
+        const end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        
+        const label = `Week of ${start.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`;
+        return {
+          weekKey,
+          label,
+          commissions: comms
+        };
+      });
   };
 
   // Selection Checkbox Handlers
@@ -625,39 +659,55 @@ export default function AdminFinancePage() {
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
-                                    {row.commissions.map((comm: any) => (
-                                      <TableRow key={comm.id} className="hover:bg-slate-50/30 border-b border-slate-50 last:border-0">
-                                        <TableCell className="py-2 text-sm font-medium">
-                                          <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-wider bg-slate-50 border-none text-slate-600">
-                                            {comm.sourceType === "SIGNUP" ? "Signup Bonus" : 
-                                             comm.sourceType === "SUBSCRIPTION" ? "Subscription" : 
-                                             comm.sourceType === "PRODUCT" ? "Sale" : comm.sourceType}
-                                          </Badge>
-                                        </TableCell>
-                                        <TableCell className="py-2 font-bold text-emerald-600 text-sm">
-                                          <span className="text-[9px] opacity-75 mr-0.5">{comm.currency || "GHS"}</span>
-                                          {Number(comm.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                        </TableCell>
-                                        <TableCell className="py-2">
-                                          <Badge 
-                                            variant="outline" 
-                                            className={cn(
-                                                "text-[9px] font-bold uppercase tracking-wider",
-                                                comm.status === "PAID" && "bg-emerald-100 text-emerald-700 border-none",
-                                                comm.status === "APPROVED" && "bg-blue-100 text-blue-700 border-none",
-                                                comm.status === "PENDING" && "bg-amber-100 text-amber-700 border-none"
-                                            )}
-                                          >
-                                            {comm.status}
-                                          </Badge>
-                                        </TableCell>
-                                        <TableCell className="py-2 text-xs text-slate-500">
-                                          {new Date(comm.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                                        </TableCell>
-                                        <TableCell className="py-2 text-right">
-                                          <AdminCommissionActions id={comm.id} status={comm.status} onSuccess={loadFinanceData} />
-                                        </TableCell>
-                                      </TableRow>
+                                    {groupCommissionsByWeek(row.commissions).map((group: any) => (
+                                      <Fragment key={group.weekKey}>
+                                        {/* Week Header Row */}
+                                        <TableRow className="bg-slate-50/70 hover:bg-slate-50/70 border-b border-slate-100">
+                                          <TableCell colSpan={5} className="py-1.5 pl-4">
+                                            <div className="flex items-center justify-between">
+                                              <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.1em]">{group.label}</span>
+                                              <Badge variant="outline" className="bg-slate-200/60 text-slate-600 border-none text-[9px] font-bold py-0 h-4">
+                                                {group.commissions.length} {group.commissions.length === 1 ? 'txn' : 'txns'}
+                                              </Badge>
+                                            </div>
+                                          </TableCell>
+                                        </TableRow>
+                                        {/* Commissions in this week */}
+                                        {group.commissions.map((comm: any) => (
+                                          <TableRow key={comm.id} className="hover:bg-slate-50/30 border-b border-slate-50 last:border-0">
+                                            <TableCell className="py-2 text-sm font-medium">
+                                              <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-wider bg-slate-50 border-none text-slate-600">
+                                                {comm.sourceType === "SIGNUP" ? "Signup Bonus" : 
+                                                 comm.sourceType === "SUBSCRIPTION" ? "Subscription" : 
+                                                 comm.sourceType === "PRODUCT" ? "Sale" : comm.sourceType}
+                                              </Badge>
+                                            </TableCell>
+                                            <TableCell className="py-2 font-bold text-emerald-600 text-sm">
+                                              <span className="text-[9px] opacity-75 mr-0.5">{comm.currency || "GHS"}</span>
+                                              {Number(comm.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                            </TableCell>
+                                            <TableCell className="py-2">
+                                              <Badge 
+                                                variant="outline" 
+                                                className={cn(
+                                                    "text-[9px] font-bold uppercase tracking-wider",
+                                                    comm.status === "PAID" && "bg-emerald-100 text-emerald-700 border-none",
+                                                    comm.status === "APPROVED" && "bg-blue-100 text-blue-700 border-none",
+                                                    comm.status === "PENDING" && "bg-amber-100 text-amber-700 border-none"
+                                                )}
+                                              >
+                                                {comm.status}
+                                              </Badge>
+                                            </TableCell>
+                                            <TableCell className="py-2 text-xs text-slate-500">
+                                              {new Date(comm.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                            </TableCell>
+                                            <TableCell className="py-2 text-right">
+                                              <AdminCommissionActions id={comm.id} status={comm.status} onSuccess={loadFinanceData} />
+                                            </TableCell>
+                                          </TableRow>
+                                        ))}
+                                      </Fragment>
                                     ))}
                                   </TableBody>
                                 </Table>
