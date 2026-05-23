@@ -234,14 +234,15 @@ export default function AdminFinancePage() {
     return parts.length > 0 ? parts.join(" + ") : "₵0.00";
   };
 
-  // Group commissions by week start (Sunday)
+  // Group commissions by week start (Monday)
   const groupCommissionsByWeek = (commissions: any[]) => {
     const groups: Record<string, any[]> = {};
     
     commissions.forEach(comm => {
       const date = new Date(comm.createdAt);
-      const day = date.getDay();
-      const diff = date.getDate() - day;
+      const day = date.getDay(); // 0 is Sunday, 1 is Monday, etc.
+      // Adjust Sunday (0) to 6 (so we subtract 6 days), and Monday-Saturday (1-6) to subtract (day - 1) days.
+      const diff = date.getDate() - (day === 0 ? 6 : day - 1);
       const startOfWeek = new Date(date.setDate(diff));
       startOfWeek.setHours(0, 0, 0, 0);
       const weekKey = startOfWeek.toISOString();
