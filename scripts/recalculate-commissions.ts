@@ -370,7 +370,7 @@ async function run() {
   if (updatesToApply.length > 0) {
     console.log("\nDetailed changes details:");
     auditReport.filter(r => r.action === "RECALCULATED").forEach(r => {
-      console.log(`- [${r.sourceType}] ${r.userEmail}: ${r.oldAmount} ${r.currency} ➡️  ${r.newAmount} ${r.currency} (Diff: ${r.difference.toFixed(2)} ${r.currency}) [Status: ${r.status}]`);
+      console.log(`- [${r.sourceType}] ${r.userEmail}: ${r.oldAmount} ${r.currency} ➡️  ${r.newAmount} ${r.currency} (Diff: ${r.difference.toFixed(2)} ${r.currency}) [Status: ${r.status}] - Details: ${r.details}`);
     });
   }
 
