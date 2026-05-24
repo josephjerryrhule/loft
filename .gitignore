@@ -53,3 +53,4 @@ tests/
 # scripts outputs
 /scripts/audits/
 /scripts/backups/
+/backups/
