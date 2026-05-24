@@ -35,7 +35,7 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
     const [loading, setLoading] = useState(false);
     const [phoneNumber, setPhoneNumber] = useState<string | undefined>(user.phoneNumber || undefined);
     
-    const isAmbassador = user.role === "MANAGER" || user.role === "AFFILIATE";
+    const isAmbassador = ["AFFILIATE", "MANAGER", "OPERATIONS_MANAGER", "TEAM_LEADER"].includes(user.role);
 
     const handleSubmit = async (formData: FormData) => {
         setLoading(true);
