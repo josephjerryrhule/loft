@@ -163,6 +163,26 @@ async function runCleanup(commit: boolean = false) {
 async function runTest() {
   console.log("=== STARTING INTEGRATION TEST FOR SIGNUP CLEANUP ===");
 
+  // Pre-cleanup of any previous stray test data in case a run failed mid-execution
+  await prisma.commission.deleteMany({
+    where: { user: { email: { in: ["test-cleanup-ambassador@example.com", "test-cleanup-cust-a@example.com", "test-cleanup-cust-b@example.com"] } } }
+  });
+  await prisma.payout.deleteMany({
+    where: { user: { email: { in: ["test-cleanup-ambassador@example.com", "test-cleanup-cust-a@example.com", "test-cleanup-cust-b@example.com"] } } }
+  });
+  await prisma.subscription.deleteMany({
+    where: { customer: { email: { in: ["test-cleanup-cust-a@example.com", "test-cleanup-cust-b@example.com"] } } }
+  });
+  await prisma.subscriptionPlan.deleteMany({
+    where: { name: "Cleanup Test Plan" }
+  });
+  await prisma.product.deleteMany({
+    where: { title: "Test Product Payout" }
+  });
+  await prisma.user.deleteMany({
+    where: { email: { in: ["test-cleanup-ambassador@example.com", "test-cleanup-cust-a@example.com", "test-cleanup-cust-b@example.com"] } }
+  });
+
   // 1. Create a test Ambassador
   const ambassador = await prisma.user.create({
     data: {
