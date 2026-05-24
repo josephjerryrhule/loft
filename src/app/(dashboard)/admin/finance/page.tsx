@@ -29,6 +29,7 @@ import {
   bulkApproveUserCommissions,
   bulkApproveSelectedCommissions
 } from "@/app/actions/admin";
+import { getAdminPayoutQueue } from "@/app/actions/payout";
 import { toast } from "sonner";
 import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
 import { PageHeader } from "@/components/dashboard/PageHeader";
@@ -57,10 +58,15 @@ export default function AdminFinancePage() {
   const loadFinanceData = async () => {
     try {
       setLoading(true);
-      const data = await getFinanceData();
-      setStats(data.stats);
-      setPayoutRequests(data.payoutRequests);
-      setRecentCommissions(data.recentCommissions);
+      const [financeData, payoutQueueData] = await Promise.all([
+        getFinanceData(),
+        getAdminPayoutQueue()
+      ]);
+      setStats(financeData.stats);
+      setRecentCommissions(financeData.recentCommissions);
+      if (payoutQueueData && !payoutQueueData.error) {
+        setPayoutRequests(payoutQueueData.payouts || []);
+      }
     } catch (error) {
       console.error("Failed to load finance data:", error);
     } finally {
@@ -492,8 +498,8 @@ export default function AdminFinancePage() {
           <CardHeader className="border-b border-slate-50 pb-4">
             <div className="flex items-center justify-between">
                 <div>
-                    <CardTitle className="text-lg font-bold">Payout Requests</CardTitle>
-                    <CardDescription>Withdrawal requests from ambassadors</CardDescription>
+                    <CardTitle className="text-lg font-bold">Weekly Payout Queue</CardTitle>
+                    <CardDescription>Automatic matured statements for review and payment</CardDescription>
                 </div>
                 <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
                     <Wallet size={20} />
@@ -506,9 +512,9 @@ export default function AdminFinancePage() {
                 <TableRow className="hover:bg-transparent border-none">
                   <TableHead className="pl-6">Ambassador</TableHead>
                   <TableHead>Role</TableHead>
+                  <TableHead>Period</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Requested</TableHead>
                   <TableHead className="text-right pr-6">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -516,43 +522,53 @@ export default function AdminFinancePage() {
                 {paginatedPayouts.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-12 text-slate-400">
-                      No pending payout requests.
+                      No payouts in queue.
                     </TableCell>
                   </TableRow>
                 )}
-                {paginatedPayouts.map((req: any) => (
-                  <TableRow key={req.id} className="group transition-colors">
-                    <TableCell className="pl-6 font-bold text-slate-900">{req.user.email}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50 border-none">
-                        {formatRole(req.user.role)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-black text-slate-900">
-                      <span className="text-[10px] text-slate-400 mr-1">GHS</span>
-                      {Number(req.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={req.status === "PAID" ? "default" : req.status === "APPROVED" ? "secondary" : "outline"}
-                        className={cn(
-                            "text-[10px] font-bold uppercase tracking-wider",
-                            req.status === "PAID" && "bg-emerald-100 text-emerald-700 border-none",
-                            req.status === "APPROVED" && "bg-blue-100 text-blue-700 border-none",
-                            req.status === "PENDING" && "bg-amber-100 text-amber-700 border-none"
+                {paginatedPayouts.map((req: any) => {
+                  const startStr = new Date(req.weekStart).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+                  const endStr = new Date(req.weekEnd).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+                  
+                  return (
+                    <TableRow key={req.id} className="group transition-colors">
+                      <TableCell className="pl-6 font-bold text-slate-900">{req.user.email}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50 border-none">
+                          {formatRole(req.user.role)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm font-semibold text-slate-700">
+                        {startStr} - {endStr}
+                      </TableCell>
+                      <TableCell className="font-black text-slate-900">
+                        {req.amountGHS > 0 && (
+                          <div className="text-sm font-black text-slate-900">₵{req.amountGHS.toFixed(2)}</div>
                         )}
-                      >
-                        {req.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-slate-500">
-                        {new Date(req.requestedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </TableCell>
-                    <TableCell className="text-right pr-6">
-                      <AdminPayoutActions payout={req} onSuccess={loadFinanceData} />
-                    </TableCell>
-                  </TableRow>
-                ))}
+                        {req.amountUSD > 0 && (
+                          <div className="text-sm font-black text-slate-900">${req.amountUSD.toFixed(2)}</div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          className={cn(
+                              "text-[10px] font-bold uppercase tracking-wider border-none",
+                              req.status === "PAID" && "bg-emerald-100 text-emerald-700",
+                              req.status === "APPROVED" && "bg-blue-100 text-blue-700 animate-pulse",
+                              req.status === "SIGNED" && "bg-purple-100 text-purple-700",
+                              req.status === "REVIEW_NEEDED" && "bg-red-100 text-red-700 animate-bounce",
+                              req.status === "PAYABLE" && "bg-amber-100 text-amber-700"
+                          )}
+                        >
+                          {req.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right pr-6">
+                        <AdminPayoutActions payout={req} onSuccess={loadFinanceData} />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
             <div className="p-4 border-t border-slate-50">

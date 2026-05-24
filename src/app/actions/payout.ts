@@ -3,109 +3,383 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { sendPayoutRequestToSupport, sendPayoutApprovalEmail } from "@/lib/email";
+import { checkAndGeneratePayablePayouts, checkAndGenerateAllMaturedPayouts } from "@/lib/payout-utils";
 
-async function getMinimumPayoutAmount(): Promise<number> {
-    try {
-        const setting = await prisma.systemSettings.findUnique({
-            where: { key: "minimumPayoutAmount" }
-        });
-        if (setting) {
-            return Number(JSON.parse(setting.value));
-        }
-    } catch (e) {
-        console.error("Failed to fetch minimum payout amount:", e);
-    }
-    return 50; // Default minimum
-}
-
-export async function requestPayout(amount: number, method: any) {
+export async function getAmbassadorPayouts(page: number = 1, limit: number = 10) {
     const session = await auth();
     if (!session?.user?.id) return { error: "Unauthorized" };
 
     const userId = session.user.id;
 
-    // Get minimum payout amount from settings
-    const minimumPayoutAmount = await getMinimumPayoutAmount();
-    
-    if (amount < minimumPayoutAmount) {
-        return { error: `Amount must be at least GHS ${minimumPayoutAmount.toFixed(2)}` };
-    }
+    try {
+        // 1. Generate any matured payable payouts first on the fly
+        await checkAndGeneratePayablePayouts(userId);
 
-    // Validate balance - Only APPROVED commissions can be requested for payout
-    const approvedBalance = await prisma.commission.aggregate({
-        where: { userId: userId, status: "APPROVED" },
-        _sum: { amount: true }
-    });
-    
-    const balance = Number(approvedBalance._sum.amount) || 0;
-    
-    if (balance < amount) {
-        return { error: `Insufficient approved balance. Available: GHS ${balance.toFixed(2)}` };
+        // Fetch user name
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { firstName: true, lastName: true }
+        });
+        const userName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Ambassador";
+
+        // 2. Fetch payouts with pagination
+        const skip = (page - 1) * limit;
+        const [payouts, total] = await Promise.all([
+            prisma.payout.findMany({
+                where: { userId },
+                orderBy: { weekStart: "desc" },
+                skip,
+                take: limit
+            }),
+            prisma.payout.count({
+                where: { userId }
+            })
+        ]);
+
+        return {
+            userName,
+            payouts: payouts.map(p => ({
+                ...p,
+                amountGHS: Number(p.amountGHS),
+                amountUSD: Number(p.amountUSD),
+                weekStart: p.weekStart.toISOString(),
+                weekEnd: p.weekEnd.toISOString(),
+                createdAt: p.createdAt.toISOString(),
+                updatedAt: p.updatedAt.toISOString(),
+                approvedAt: p.approvedAt?.toISOString() || null,
+                signedAt: p.signedAt?.toISOString() || null,
+                paidAt: p.paidAt?.toISOString() || null,
+            })),
+            total,
+            totalPages: Math.ceil(total / limit)
+        };
+    } catch (e) {
+        console.error("Failed to fetch payouts:", e);
+        return { error: "Failed to fetch payouts" };
     }
-    
-    if (balance < minimumPayoutAmount) {
-        return { error: `Your approved balance is below the minimum payout amount of GHS ${minimumPayoutAmount.toFixed(2)}` };
-    }
+}
+
+export async function signPayoutSlip(payoutId: string, typedName: string, clientIp?: string) {
+    const session = await auth();
+    if (!session?.user?.id) return { error: "Unauthorized" };
 
     try {
+        const payout = await prisma.payout.findUnique({
+            where: { id: payoutId },
+            include: { user: true }
+        });
+
+        if (!payout) return { error: "Payout statement not found" };
+        if (payout.userId !== session.user.id) return { error: "Unauthorized" };
+        if (payout.status !== "APPROVED") return { error: "Payout must be in APPROVED status to be signed" };
+
+        if (!typedName.trim()) {
+            return { error: "A typed signature is required" };
+        }
+
         await prisma.$transaction(async (tx) => {
-            // Create payout request
-            await tx.payoutRequest.create({
+            // Update payout status to SIGNED
+            await tx.payout.update({
+                where: { id: payoutId },
                 data: {
-                    userId: userId,
-                    amount,
-                    paymentMethod: JSON.stringify(method),
-                    status: "PENDING",
-                    requestedAt: new Date()
+                    status: "SIGNED",
+                    signedAt: new Date(),
+                    signatureName: typedName.trim(),
+                    signatureIp: clientIp || "Unknown"
                 }
             });
 
-            // Log activity for the user who requested the payout
+            // Log activity
             await tx.activityLog.create({
                 data: {
-                    userId: userId,
-                    actionType: "PAYOUT_REQUESTED",
+                    userId: session.user.id,
+                    actionType: "PAYOUT_SIGNED",
                     actionDetails: JSON.stringify({
-                        amount: amount,
-                        paymentMethod: method.type,
-                        approvedBalance: balance
+                        payoutId,
+                        weekStart: payout.weekStart.toISOString(),
+                        weekEnd: payout.weekEnd.toISOString(),
+                        amountGHS: Number(payout.amountGHS),
+                        amountUSD: Number(payout.amountUSD),
+                        signatureName: typedName.trim()
                     })
                 }
             });
         });
 
-        // Send email notification to support
-        const user = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { email: true, firstName: true, lastName: true },
+        // Revalidate cache
+        revalidatePath("/settings");
+        revalidatePath("/admin/finance");
+        revalidatePath("/affiliate/commissions");
+        revalidatePath("/manager/commissions");
+
+        return { success: true };
+    } catch (e) {
+        console.error("Failed to sign payout slip:", e);
+        return { error: "Failed to sign payout statement" };
+    }
+}
+
+export async function getAdminPayoutQueue() {
+    const session = await auth();
+    const role = (session?.user as any)?.role;
+    if (!session?.user?.id || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
+        return { error: "Unauthorized" };
+    }
+
+    try {
+        // 1. Generate payouts on the fly for all matured commissions
+        await checkAndGenerateAllMaturedPayouts();
+
+        // 2. Fetch all payouts with their user info
+        const payouts = await prisma.payout.findMany({
+            include: {
+                user: {
+                    select: {
+                        firstName: true,
+                        lastName: true,
+                        email: true,
+                        role: true,
+                        payoutMethodType: true,
+                        payoutDetails: true
+                    }
+                }
+            },
+            orderBy: { weekStart: "desc" }
         });
-        
-        if (user) {
-          sendPayoutRequestToSupport({
-            userName: `${user.firstName || ""} ${user.lastName || ""}`.trim() || "User",
-            userEmail: user.email,
-            amount,
-            bankName: method.bankName || method.type || "Unknown",
-            accountNumber: method.details || method.accountNumber || "N/A",
-            payoutId: userId,
-          }).catch(console.error);
+
+        return {
+            payouts: payouts.map(p => ({
+                ...p,
+                amountGHS: Number(p.amountGHS),
+                amountUSD: Number(p.amountUSD),
+                weekStart: p.weekStart.toISOString(),
+                weekEnd: p.weekEnd.toISOString(),
+                createdAt: p.createdAt.toISOString(),
+                updatedAt: p.updatedAt.toISOString(),
+                approvedAt: p.approvedAt?.toISOString() || null,
+                signedAt: p.signedAt?.toISOString() || null,
+                paidAt: p.paidAt?.toISOString() || null,
+            }))
+        };
+    } catch (e) {
+        console.error("Failed to fetch admin payout queue:", e);
+        return { error: "Failed to fetch payout queue" };
+    }
+}
+
+export async function approvePayoutStatement(payoutId: string) {
+    const session = await auth();
+    const role = (session?.user as any)?.role;
+    if (!session?.user?.id || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
+        return { error: "Unauthorized" };
+    }
+
+    try {
+        const payout = await prisma.payout.findUnique({
+            where: { id: payoutId },
+            include: { commissions: true }
+        });
+
+        if (!payout) return { error: "Payout statement not found" };
+        if (payout.status !== "PAYABLE") return { error: "Payout must be in PAYABLE status to be approved" };
+
+        const adminIdentifier = session.user.email || session.user.id;
+
+        await prisma.$transaction(async (tx) => {
+            // Update payout status to APPROVED
+            await tx.payout.update({
+                where: { id: payoutId },
+                data: {
+                    status: "APPROVED",
+                    approvedAt: new Date(),
+                    approvedBy: adminIdentifier
+                }
+            });
+
+            // Update associated commissions to APPROVED
+            await tx.commission.updateMany({
+                where: { payoutId },
+                data: { status: "APPROVED" }
+            });
+
+            // Log activity
+            await tx.activityLog.create({
+                data: {
+                    userId: payout.userId,
+                    actionType: "PAYOUT_APPROVED",
+                    actionDetails: JSON.stringify({
+                        payoutId,
+                        approvedBy: adminIdentifier,
+                        amountGHS: Number(payout.amountGHS),
+                        amountUSD: Number(payout.amountUSD),
+                    })
+                }
+            });
+        });
+
+        revalidatePath("/admin/finance");
+        revalidatePath("/affiliate/commissions");
+        revalidatePath("/manager/commissions");
+
+        return { success: true };
+    } catch (e) {
+        console.error("Failed to approve payout:", e);
+        return { error: "Failed to approve payout statement" };
+    }
+}
+
+export async function markPayoutAsPaid(
+    payoutId: string, 
+    data: { 
+        paymentMethod: string; 
+        paymentRef: string; 
+        amountPaid: number; 
+        recipientAcc: string; 
+        proofUrl: string; 
+        paidAtStr: string;
+    }
+) {
+    const session = await auth();
+    const role = (session?.user as any)?.role;
+    if (!session?.user?.id || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
+        return { error: "Unauthorized" };
+    }
+
+    try {
+        const payout = await prisma.payout.findUnique({
+            where: { id: payoutId },
+            include: { user: true }
+        });
+
+        if (!payout) return { error: "Payout statement not found" };
+        if (payout.status !== "SIGNED" && payout.status !== "REVIEW_NEEDED") {
+            return { error: "Payout statement must be signed by the user or flagged for review before marking as paid" };
         }
 
-        // Revalidate based on role
-        if ((session.user as any).role === "MANAGER") {
-            revalidatePath("/manager/commissions");
-        } else if ((session.user as any).role === "AFFILIATE") {
-            revalidatePath("/affiliate/commissions");
+        // Validate amount matching (either GHS or USD must match the paid amount)
+        const payoutGHS = Number(payout.amountGHS);
+        const payoutUSD = Number(payout.amountUSD);
+        const amt = Number(data.amountPaid);
+
+        let currencyMatch = false;
+        if (payoutGHS > 0 && Math.abs(payoutGHS - amt) < 0.01) {
+            currencyMatch = true;
+        } else if (payoutUSD > 0 && Math.abs(payoutUSD - amt) < 0.01) {
+            currencyMatch = true;
         }
+
+        if (!currencyMatch) {
+            // Mismatch occurs: update status to REVIEW_NEEDED
+            await prisma.payout.update({
+                where: { id: payoutId },
+                data: {
+                    status: "REVIEW_NEEDED",
+                    paymentMethod: data.paymentMethod,
+                    paymentRef: data.paymentRef,
+                    recipientAcc: data.recipientAcc,
+                    proofUrl: data.proofUrl,
+                    paidAt: new Date(data.paidAtStr)
+                }
+            });
+
+            await prisma.activityLog.create({
+                data: {
+                    userId: payout.userId,
+                    actionType: "PAYOUT_PAYMENT_MISMATCH",
+                    actionDetails: JSON.stringify({
+                        payoutId,
+                        expectedGHS: payoutGHS,
+                        expectedUSD: payoutUSD,
+                        amountPaid: amt,
+                        error: "Amount paid does not match payout statement amount"
+                    })
+                }
+            });
+
+            revalidatePath("/admin/finance");
+            return { error: "Payment mismatch flagged! Payout marked for review.", reviewNeeded: true };
+        }
+
+        // Validate recipient account matching
+        const normalizedRecipient = data.recipientAcc.trim().replace(/\s+/g, "");
+        const normalizedDetails = payout.user.payoutDetails?.trim().replace(/\s+/g, "") || "";
         
-        // Always revalidate admin finance
+        // Mismatch check (if user details are empty or mismatch)
+        if (!normalizedRecipient || !normalizedDetails.includes(normalizedRecipient)) {
+             // Let's flag for review
+             await prisma.payout.update({
+                where: { id: payoutId },
+                data: {
+                    status: "REVIEW_NEEDED",
+                    paymentMethod: data.paymentMethod,
+                    paymentRef: data.paymentRef,
+                    recipientAcc: data.recipientAcc,
+                    proofUrl: data.proofUrl,
+                    paidAt: new Date(data.paidAtStr)
+                }
+             });
+
+             await prisma.activityLog.create({
+                data: {
+                    userId: payout.userId,
+                    actionType: "PAYOUT_RECIPIENT_MISMATCH",
+                    actionDetails: JSON.stringify({
+                        payoutId,
+                        expectedDetails: payout.user.payoutDetails,
+                        providedRecipient: data.recipientAcc,
+                        error: "Provided recipient account does not match user registered payout details"
+                    })
+                }
+             });
+
+             revalidatePath("/admin/finance");
+             return { error: "Recipient mismatch flagged! Payout marked for review.", reviewNeeded: true };
+        }
+
+        // Perfect match: transition to PAID
+        await prisma.$transaction(async (tx) => {
+            await tx.payout.update({
+                where: { id: payoutId },
+                data: {
+                    status: "PAID",
+                    paymentMethod: data.paymentMethod,
+                    paymentRef: data.paymentRef,
+                    recipientAcc: data.recipientAcc,
+                    proofUrl: data.proofUrl,
+                    paidAt: new Date(data.paidAtStr)
+                }
+            });
+
+            // Update commissions to PAID
+            await tx.commission.updateMany({
+                where: { payoutId },
+                data: { 
+                    status: "PAID",
+                    paidAt: new Date(data.paidAtStr)
+                }
+            });
+
+            // Log activity
+            await tx.activityLog.create({
+                data: {
+                    userId: payout.userId,
+                    actionType: "PAYOUT_COMPLETED",
+                    actionDetails: JSON.stringify({
+                        payoutId,
+                        amountPaid: amt,
+                        paymentRef: data.paymentRef
+                    })
+                }
+            });
+        });
+
         revalidatePath("/admin/finance");
-        revalidatePath("/admin");
-        
+        revalidatePath("/affiliate/commissions");
+        revalidatePath("/manager/commissions");
+
         return { success: true };
-    } catch(e) {
-        console.error("Payout request failed:", e);
-        return { error: "Failed to request payout" };
+    } catch (e) {
+        console.error("Failed to complete payout payment:", e);
+        return { error: "Failed to mark payout as paid" };
     }
 }

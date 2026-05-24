@@ -29,7 +29,6 @@ import { DashboardTable } from "@/components/dashboard/DashboardTable";
 import { getOperationsDashboardStats } from "@/app/actions/operations";
 import { getLeaderboardData } from "@/app/actions/leaderboard";
 import { getAffiliateStats } from "@/app/actions/affiliate";
-import { RequestPayoutDialog } from "@/components/dashboard/RequestPayoutDialog";
 import { Role } from "@/lib/types";
 import { formatStatusLabel } from "@/lib/utils";
 
@@ -216,9 +215,11 @@ export default async function AdminDashboardPage() {
         actions={
           <>
             {isOpsManager && myStats && (
-                <RequestPayoutDialog 
-                    availableBalance={myStats.approvedBalance} 
-                />
+                <Button asChild className="bg-[#E87154] hover:bg-[#D66144] shadow-lg shadow-[#E87154]/20 h-12 px-8 rounded-2xl font-black transition-all active:scale-95">
+                  <Link href="/affiliate/commissions" className="flex items-center gap-3">
+                    <Wallet size={20} /> Payout Statements
+                  </Link>
+                </Button>
             )}
             {!isOpsManager && (
                 <Button asChild className="bg-[#E87154] hover:bg-[#D66144] shadow-lg shadow-[#E87154]/20 h-12 px-8 rounded-2xl font-black transition-all active:scale-95">

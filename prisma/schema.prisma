@@ -54,6 +54,9 @@ model User {
   referrals               User[]                   @relation("Referrals")
   teamLeader              User?                    @relation("TeamLeaderAffiliates", fields: [teamLeaderId], references: [id])
   teamMembers             User[]                   @relation("TeamLeaderAffiliates")
+  payoutMethodType        String?                  @map("payout_method_type")
+  payoutDetails           String?                  @map("payout_details")
+  payouts                 Payout[]
 
   @@index([email])
   @@index([role])
@@ -240,12 +243,42 @@ model Commission {
   createdAt  DateTime  @default(now()) @map("created_at")
   paidAt     DateTime? @map("paid_at")
   user       User      @relation(fields: [userId], references: [id])
+  payoutId   String?   @map("payout_id")
+  payout     Payout?   @relation(fields: [payoutId], references: [id])
 
   @@index([userId])
   @@index([status])
   @@index([sourceType])
   @@index([createdAt])
   @@map("commissions")
+}
+
+model Payout {
+  id              String       @id @default(uuid())
+  userId          String       @map("user_id")
+  user            User         @relation(fields: [userId], references: [id])
+  weekStart       DateTime     @map("week_start")
+  weekEnd         DateTime     @map("week_end")
+  amountGHS       Decimal      @default(0) @map("amount_ghs")
+  amountUSD       Decimal      @default(0) @map("amount_usd")
+  status          String       @default("PAYABLE") // "PAYABLE", "APPROVED", "SIGNED", "PAID"
+  approvedAt      DateTime?    @map("approved_at")
+  approvedBy      String?      @map("approved_by") // admin email/id
+  signedAt        DateTime?    @map("signed_at")
+  signatureName   String?      @map("signature_name")
+  signatureIp     String?      @map("signature_ip")
+  paidAt          DateTime?    @map("paid_at")
+  paymentMethod   String?      @map("payment_method") // "MOMO" | "BANK"
+  paymentRef      String?      @unique @map("payment_ref")
+  recipientAcc    String?      @map("recipient_acc")  // Account number paid
+  proofUrl        String?      @map("proof_url")      // Uploaded screenshot file path
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+  commissions     Commission[]
+
+  @@unique([userId, weekStart, weekEnd])
+  @@index([status])
+  @@map("payouts")
 }
 
 model PayoutRequest {

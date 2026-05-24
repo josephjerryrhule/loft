@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { getManagerStats, getManagerCommissions } from "@/app/actions/manager";
 import { getMinimumPayoutAmount, getSystemSettings } from "@/app/actions/settings";
-import { RequestPayoutDialog } from "@/components/dashboard/RequestPayoutDialog";
 import {
   Table,
   TableBody,
@@ -100,15 +99,7 @@ export default function AdminCommissionsPage() {
              <PageHeader 
                 title="Earnings Overview"
                 subtitle="High-level oversight of override distributions and secure disbursement queue"
-                actions={
-                    stats && (
-                        <RequestPayoutDialog 
-                          availableBalance={stats.approvedBalance} 
-                          minimumPayoutAmount={minimumPayout}
-                          currency={currency}
-                        />
-                    )
-                }
+
              />
 
             <div className="grid gap-4 md:grid-cols-3">

@@ -26,6 +26,8 @@ interface ProfileSettingsFormProps {
         country: string | null;
         role: string;
         profilePictureUrl: string | null;
+        payoutMethodType: string | null;
+        payoutDetails: string | null;
     };
 }
 
@@ -144,6 +146,37 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
                     </div>
                 </div>
             </div>
+
+            {isAmbassador && (
+                <div className="space-y-4 border-t pt-4 mt-4">
+                    <h3 className="text-sm font-medium">Payout Account Configuration</h3>
+                    <p className="text-xs text-muted-foreground">Configure the account where you want to receive your commissions automatically.</p>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="payoutMethodType">Payout Method</Label>
+                            <Select name="payoutMethodType" defaultValue={user.payoutMethodType || "momo"}>
+                                <SelectTrigger id="payoutMethodType" className="w-full h-9 border bg-transparent px-3 py-2 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-[#E87154]/50 focus:border-[#E87154] text-left">
+                                    <SelectValue placeholder="Select payout method" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white border border-stone-100 shadow-lg rounded-xl z-[100]">
+                                    <SelectItem value="momo">Mobile Money (MTN/Telecel/AT)</SelectItem>
+                                    <SelectItem value="bank">Local Bank Transfer</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="payoutDetails">Account / Wallet Details</Label>
+                            <Input 
+                                id="payoutDetails" 
+                                name="payoutDetails" 
+                                defaultValue={user.payoutDetails || ""} 
+                                placeholder="e.g. 0541234567 (MTN), or Bank details" 
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="pt-4">
                 <Button type="submit" disabled={loading}>

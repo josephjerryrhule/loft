@@ -5,7 +5,6 @@ import { getMinimumPayoutAmount } from "@/app/actions/settings";
 import { EarningsChart } from "@/components/dashboard/EarningsChart";
 import { ActivityTable } from "@/components/dashboard/ActivityTable";
 import { CopyInviteLinkButton } from "@/components/affiliate/CopyInviteLinkButton";
-import { RequestPayoutDialog } from "@/components/dashboard/RequestPayoutDialog";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
@@ -33,7 +32,7 @@ export default async function AffiliateDashboardPage() {
   
   const user = await prisma.user.findUnique({
     where: { id: session?.user?.id },
-    select: { inviteCode: true, firstName: true }
+    select: { inviteCode: true, firstName: true, payoutMethodType: true, payoutDetails: true }
   });
   
   const stats = await getAffiliateStats();
@@ -119,22 +118,37 @@ export default async function AffiliateDashboardPage() {
 
       <div className="grid gap-6">
         <div className="grid gap-6 lg:grid-cols-3">
-            {/* Approved Balance Action Card */}
+            {/* Payout Settings & Statements Card */}
             <Card className="border-none shadow-md bg-white dark:bg-slate-900 overflow-hidden flex flex-col justify-center">
                 <CardHeader className="pb-2">
-                    <CardTitle className="text-lg font-bold">Payout Request</CardTitle>
-                    <CardDescription>Withdraw your approved earnings</CardDescription>
+                    <CardTitle className="text-lg font-bold">Automatic Payouts</CardTitle>
+                    <CardDescription>Earnings are processed weekly in-hand</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <div className="bg-emerald-50 dark:bg-emerald-900/10 p-4 rounded-xl mb-4 border border-emerald-100 dark:border-emerald-800/50">
-                        <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider mb-1">Available for withdrawal</p>
-                        <p className="text-3xl font-black text-emerald-700 dark:text-emerald-300">GHS {stats.approvedBalance.toFixed(2)}</p>
+                <CardContent className="space-y-4">
+                    {user?.payoutDetails ? (
+                        <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Registered Payout Method</p>
+                            <p className="text-sm font-black text-slate-800 dark:text-stone-200 capitalize">{user.payoutMethodType === "momo" ? "Mobile Money" : "Bank Transfer"}</p>
+                            <p className="text-xs text-slate-500 font-mono mt-1">{user.payoutDetails}</p>
+                        </div>
+                    ) : (
+                        <div className="bg-amber-50 dark:bg-amber-950/20 p-4 rounded-xl border border-amber-100 dark:border-amber-900/50">
+                            <p className="text-xs text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider mb-1">Configuration Needed</p>
+                            <p className="text-xs text-amber-700 dark:text-amber-300 leading-normal">Configure your Mobile Money or Bank details in settings to receive payouts.</p>
+                        </div>
+                    )}
+                    <div className="flex gap-2">
+                        <Link href="/affiliate/commissions" className="flex-1">
+                            <Button className="w-full bg-[#E87154] hover:bg-[#D66144] font-bold text-xs text-white rounded-xl h-10 shadow-md transition-all active:scale-95">
+                                Payout Statements
+                            </Button>
+                        </Link>
+                        <Link href="/settings">
+                            <Button variant="outline" className="border-slate-200 hover:bg-slate-50 font-bold text-xs rounded-xl h-10 px-3">
+                                Edit Settings
+                            </Button>
+                        </Link>
                     </div>
-                    <RequestPayoutDialog 
-                        availableBalance={stats.approvedBalance} 
-                        minimumPayoutAmount={minimumPayoutAmount}
-                    />
-                    <p className="text-[10px] text-slate-400 mt-3 text-center italic">Minimum payout amount: GHS {minimumPayoutAmount}</p>
                 </CardContent>
             </Card>
 

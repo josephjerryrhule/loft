@@ -269,6 +269,8 @@ const profileSchema = z.object({
     postalCode: z.string().optional(),
     country: z.string().optional(),
     profilePictureUrl: z.string().optional().nullable(),
+    payoutMethodType: z.string().optional().nullable(),
+    payoutDetails: z.string().optional().nullable(),
 });
 
 export async function updateProfile(formData: FormData) {
@@ -287,6 +289,8 @@ export async function updateProfile(formData: FormData) {
         postalCode: formData.get("postalCode"),
         country: formData.get("country"),
         profilePictureUrl: formData.get("profilePictureUrl"),
+        payoutMethodType: formData.get("payoutMethodType"),
+        payoutDetails: formData.get("payoutDetails"),
     };
 
     const validatedData = profileSchema.safeParse(rawData);
@@ -295,7 +299,19 @@ export async function updateProfile(formData: FormData) {
         return { error: "Invalid input: " + validatedData.error.issues.map(e => e.message).join(", ") };
     }
 
-    const { firstName, lastName, phoneNumber, address, city, state, postalCode, country, profilePictureUrl } = validatedData.data;
+    const { 
+        firstName, 
+        lastName, 
+        phoneNumber, 
+        address, 
+        city, 
+        state, 
+        postalCode, 
+        country, 
+        profilePictureUrl,
+        payoutMethodType,
+        payoutDetails
+    } = validatedData.data;
     
     try {
         await prisma.user.update({
@@ -310,6 +326,8 @@ export async function updateProfile(formData: FormData) {
                 postalCode: postalCode || null,
                 country: country || null,
                 profilePictureUrl: profilePictureUrl || null,
+                payoutMethodType: payoutMethodType || null,
+                payoutDetails: payoutDetails || null,
             }
         });
         revalidatePath("/settings");
