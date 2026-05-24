@@ -2,38 +2,53 @@ import { prisma } from "@/lib/prisma";
 
 export function getMondayStartOfWeek(d: Date | string): Date {
   const date = new Date(d);
-  const day = date.getDay(); // 0 is Sunday, 1 is Monday, ...
+  const day = date.getUTCDay(); // 0 is Sunday, 1 is Monday, ...
   // If day is Sunday (0), go back 6 days. Otherwise go back (day - 1) days.
-  const diff = date.getDate() - (day === 0 ? 6 : day - 1);
-  const start = new Date(date.setDate(diff));
-  start.setHours(0, 0, 0, 0);
+  const diff = date.getUTCDate() - (day === 0 ? 6 : day - 1);
+  const start = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), diff, 0, 0, 0, 0));
   return start;
 }
 
 export function getSundayEndOfWeek(d: Date | string): Date {
   const start = getMondayStartOfWeek(d);
-  const end = new Date(start);
-  end.setDate(start.getDate() + 6);
-  end.setHours(23, 59, 59, 999);
+  const end = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate() + 6, 23, 59, 59, 999));
   return end;
 }
 
-export async function checkAndGeneratePayablePayouts(userId: string) {
-  // 1. Get the current week's Monday start. All commissions before this date are matured.
-  const currentWeekMonday = getMondayStartOfWeek(new Date());
+export function getMaturedCutoffDate(now: Date): Date {
+  const currentMon = getMondayStartOfWeek(now);
+  const day = now.getUTCDay(); // 0 is Sunday, 1 is Monday, ...
+  
+  // If today is Friday (5), Saturday (6), or Sunday (0)
+  if (day === 5 || day === 6 || day === 0) {
+    return currentMon;
+  } else {
+    // If today is Mon, Tue, Wed, Thu, the previous week is not yet matured (matures on Friday).
+    // Go back one more week (7 days).
+    const cutoff = new Date(currentMon);
+    cutoff.setUTCDate(currentMon.getUTCDate() - 7);
+    return cutoff;
+  }
+}
 
-  // 2. Fetch all matured commissions for this user that are NOT associated with any payout yet
+export async function checkAndGeneratePayablePayouts(userId: string) {
+  // Get the matured cutoff date.
+  // E.g. If today is Friday 22 May (or later), commissions before Monday 18 May (up to Sun 17 May) are matured.
+  // E.g. If today is Thursday 21 May (or earlier), commissions before Monday 11 May (up to Sun 10 May) are matured.
+  const maturedCutoff = getMaturedCutoffDate(new Date());
+
+  // Fetch all matured commissions for this user that are NOT associated with any payout yet
   const commissions = await prisma.commission.findMany({
     where: {
       userId,
       payoutId: null,
-      createdAt: { lt: currentWeekMonday }
+      createdAt: { lt: maturedCutoff }
     }
   });
 
   if (commissions.length === 0) return;
 
-  // 3. Group by week start date
+  // Group by week start date
   const groupedByWeek: Record<string, typeof commissions> = {};
   commissions.forEach(c => {
     const start = getMondayStartOfWeek(c.createdAt).toISOString();
@@ -43,7 +58,7 @@ export async function checkAndGeneratePayablePayouts(userId: string) {
     groupedByWeek[start].push(c);
   });
 
-  // 4. Create Payout records for each week
+  // Create Payout records for each week
   for (const [weekKey, weekComms] of Object.entries(groupedByWeek)) {
     const weekStart = new Date(weekKey);
     const weekEnd = getSundayEndOfWeek(weekStart);
@@ -95,7 +110,6 @@ export async function checkAndGeneratePayablePayouts(userId: string) {
           });
         } else {
           // If the payout is already APPROVED, SIGNED, or PAID, we cannot edit it.
-          // Commissions created retroactively for that week cannot be added.
           return;
         }
       }
@@ -111,13 +125,13 @@ export async function checkAndGeneratePayablePayouts(userId: string) {
 
 export async function checkAndGenerateAllMaturedPayouts() {
   // Generate payouts for all users who have matured, unpayouted commissions
-  const currentWeekMonday = getMondayStartOfWeek(new Date());
+  const maturedCutoff = getMaturedCutoffDate(new Date());
   
   // Find distinct userIds with unpayouted matured commissions
   const unpayoutedUsers = await prisma.commission.findMany({
     where: {
       payoutId: null,
-      createdAt: { lt: currentWeekMonday }
+      createdAt: { lt: maturedCutoff }
     },
     select: {
       userId: true

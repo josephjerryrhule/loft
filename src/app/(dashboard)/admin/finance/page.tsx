@@ -33,7 +33,7 @@ import { getAdminPayoutQueue } from "@/app/actions/payout";
 import { toast } from "sonner";
 import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
 import { PageHeader } from "@/components/dashboard/PageHeader";
-import { formatRole } from "@/lib/format-utils";
+import { formatRole, formatUTCDate, formatUTCDateShort } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 
 export default function AdminFinancePage() {
@@ -194,17 +194,15 @@ export default function AdminFinancePage() {
       const userEmail = comm.user?.email || "Unknown";
       const userRole = comm.user?.role || "AFFILIATE";
       
-      // Calculate Monday start date for the week
+      // Calculate Monday start date for the week in UTC
       const date = new Date(comm.createdAt);
-      const day = date.getDay();
-      const diff = date.getDate() - (day === 0 ? 6 : day - 1);
-      const startOfWeek = new Date(date.setDate(diff));
-      startOfWeek.setHours(0, 0, 0, 0);
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      const day = date.getUTCDay();
+      const diff = date.getUTCDate() - (day === 0 ? 6 : day - 1);
+      const startOfWeek = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), diff, 0, 0, 0, 0));
+      const endOfWeek = new Date(Date.UTC(startOfWeek.getUTCFullYear(), startOfWeek.getUTCMonth(), startOfWeek.getUTCDate() + 6, 23, 59, 59, 999));
       
-      const weekStartStr = startOfWeek.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-      const weekEndStr = endOfWeek.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      const weekStartStr = formatUTCDate(startOfWeek);
+      const weekEndStr = formatUTCDate(endOfWeek);
       const weekLabel = `${weekStartStr} - ${weekEndStr}`;
       
       // Composite key: userId + weekKey
@@ -380,10 +378,9 @@ export default function AdminFinancePage() {
       .sort((a, b) => b[0].localeCompare(a[0])) // sort descending (most recent first)
       .map(([weekKey, comms]) => {
         const start = new Date(weekKey);
-        const end = new Date(start);
-        end.setDate(start.getDate() + 6);
+        const end = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate() + 6, 23, 59, 59, 999));
         
-        const label = `Week of ${start.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`;
+        const label = `Week of ${formatUTCDateShort(start)} - ${formatUTCDate(end)}`;
         return {
           weekKey,
           label,
@@ -527,8 +524,8 @@ export default function AdminFinancePage() {
                   </TableRow>
                 )}
                 {paginatedPayouts.map((req: any) => {
-                  const startStr = new Date(req.weekStart).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-                  const endStr = new Date(req.weekEnd).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+                  const startStr = formatUTCDateShort(req.weekStart);
+                  const endStr = formatUTCDate(req.weekEnd);
                   
                   return (
                     <TableRow key={req.id} className="group transition-colors">

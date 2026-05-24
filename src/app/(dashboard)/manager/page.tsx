@@ -125,7 +125,7 @@ export default async function ManagerDashboardPage() {
                     </div>
                 )}
                 <div className="flex gap-2">
-                    <Link href="/manager/commissions" className="flex-1">
+                    <Link href="/manager/commissions?tab=payouts" className="flex-1">
                         <Button className="w-full bg-[#E87154] hover:bg-[#D66144] font-bold text-xs text-white rounded-xl h-10 shadow-md transition-all active:scale-95">
                             Payout Statements
                         </Button>

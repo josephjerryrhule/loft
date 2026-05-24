@@ -216,7 +216,7 @@ export default async function AdminDashboardPage() {
           <>
             {isOpsManager && myStats && (
                 <Button asChild className="bg-[#E87154] hover:bg-[#D66144] shadow-lg shadow-[#E87154]/20 h-12 px-8 rounded-2xl font-black transition-all active:scale-95">
-                  <Link href="/affiliate/commissions" className="flex items-center gap-3">
+                  <Link href="/admin/commissions?tab=payouts" className="flex items-center gap-3">
                     <Wallet size={20} /> Payout Statements
                   </Link>
                 </Button>

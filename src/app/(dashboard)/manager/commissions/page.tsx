@@ -21,6 +21,7 @@ import { getCurrencySymbol, cn } from "@/lib/utils";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
 import { CardTitle, CardDescription } from "@/components/ui/card";
+import { formatUTCDate, formatUTCDateShort } from "@/lib/format-utils";
 
 interface Commission {
     id: string;
@@ -52,6 +53,18 @@ export default function ManagerCommissionsPage() {
     const [payoutsTotalPages, setPayoutsTotalPages] = useState(1);
     const [payoutsTotal, setPayoutsTotal] = useState(0);
     const [currency, setCurrency] = useState("GHS");
+    const [activeTab, setActiveTab] = useState("ledger");
+
+    // Read ?tab=payouts from URL on mount/hydration
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const params = new URLSearchParams(window.location.search);
+            const tab = params.get("tab");
+            if (tab === "payouts") {
+                setActiveTab("payouts");
+            }
+        }
+    }, []);
 
     useEffect(() => {
         loadInitialData();
@@ -151,7 +164,7 @@ export default function ManagerCommissionsPage() {
                 />
             </div>
 
-            <Tabs defaultValue="ledger" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mb-6 border-none w-fit h-auto flex gap-1 shadow-inner">
                     <TabsTrigger value="ledger" className="rounded-lg px-6 py-2.5 font-bold data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:text-[#E87154] data-[state=active]:shadow-sm transition-all text-sm">
                         Earnings Log
@@ -281,8 +294,8 @@ export default function ManagerCommissionsPage() {
                                         </TableRow>
                                     ) : (
                                         payouts.map((p) => {
-                                            const startStr = new Date(p.weekStart).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-                                            const endStr = new Date(p.weekEnd).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+                                            const startStr = formatUTCDateShort(p.weekStart);
+                                            const endStr = formatUTCDate(p.weekEnd);
                                             
                                             return (
                                                 <TableRow key={p.id} className="group transition-all duration-300">

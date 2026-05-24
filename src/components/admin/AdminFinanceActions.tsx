@@ -21,7 +21,7 @@ import { useState } from "react";
 import { Loader2, CheckCircle, Eye, Wallet, User as UserIcon, CreditCard, Clock, CheckCircle2, DollarSign, AlertCircle, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { formatRole } from "@/lib/format-utils";
+import { formatRole, formatUTCDate, formatUTCDateShort } from "@/lib/format-utils";
 
 export function AdminCommissionActions({ id, status, onSuccess }: { id: string, status: string, onSuccess?: () => void }) {
     const [loading, setLoading] = useState(false);
@@ -164,8 +164,8 @@ export function AdminPayoutActions({ payout, onSuccess }: { payout: Payout, onSu
         }
     };
 
-    const startDateStr = new Date(payout.weekStart).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-    const endDateStr = new Date(payout.weekEnd).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+    const startDateStr = formatUTCDateShort(payout.weekStart);
+    const endDateStr = formatUTCDate(payout.weekEnd);
 
     const totalAmount = payout.amountGHS > 0 ? payout.amountGHS : payout.amountUSD;
     const currencyLabel = payout.amountGHS > 0 ? "GHS" : "USD";

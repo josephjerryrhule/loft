@@ -9,7 +9,8 @@ import { isOutsideAfrica } from "@/lib/countries";
 
 export async function getManagerStats() {
   const session = await auth();
-  if (!session?.user?.id || (session.user as any).role !== Role.MANAGER) {
+  const role = (session?.user as any)?.role;
+  if (!session?.user?.id || (role !== Role.MANAGER && role !== Role.OPERATIONS_MANAGER)) {
     return null;
   }
 
