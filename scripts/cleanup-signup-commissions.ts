@@ -47,20 +47,9 @@ async function runCleanup(commit: boolean = false) {
 
   console.log(`Found ${signupCommissions.length} total SIGNUP commissions in the database.`);
 
-  const toDelete: typeof signupCommissions = [];
-  const toKeep: typeof signupCommissions = [];
+  const toDelete = signupCommissions;
 
-  for (const c of signupCommissions) {
-    const isSubscribed = await checkIsSubscribedOrPaying(c.sourceId);
-    if (!isSubscribed) {
-      toDelete.push(c);
-    } else {
-      toKeep.push(c);
-    }
-  }
-
-  console.log(`- To Delete (non-paying/non-subscribed signups): ${toDelete.length}`);
-  console.log(`- To Keep (paying/subscribed signups): ${toKeep.length}`);
+  console.log(`- To Delete (all signup commissions): ${toDelete.length}`);
 
   if (toDelete.length === 0) {
     console.log("No commissions need to be cleaned up.");
@@ -308,21 +297,21 @@ async function runTest() {
   // 4. Assertions
   const commAFresh = await prisma.commission.findUnique({ where: { id: commA.id } });
   if (commAFresh !== null) {
-    throw new Error("Expected plain signup commission A to be deleted, but it still exists.");
+    throw new Error("Expected signup commission A to be deleted, but it still exists.");
   }
-  console.log("✅ SUCCESS: Plain signup commission A successfully deleted.");
+  console.log("✅ SUCCESS: Signup commission A successfully deleted.");
 
   const commBFresh = await prisma.commission.findUnique({ where: { id: commB.id } });
-  if (commBFresh === null) {
-    throw new Error("Expected paying signup commission B to remain intact, but it was deleted.");
+  if (commBFresh !== null) {
+    throw new Error("Expected signup commission B to be deleted, but it still exists.");
   }
-  console.log("✅ SUCCESS: Paying signup commission B remains intact.");
+  console.log("✅ SUCCESS: Signup commission B successfully deleted.");
 
   const payoutFresh = await prisma.payout.findUnique({ where: { id: payout.id } });
-  if (!payoutFresh || Number(payoutFresh.amountGHS) !== 5.0) {
-    throw new Error(`Expected payout amount to adjust to GHS 5.00, got ${payoutFresh?.amountGHS}`);
+  if (payoutFresh !== null) {
+    throw new Error("Expected empty payout statement to be deleted, but it still exists.");
   }
-  console.log("✅ SUCCESS: Payout statement total correctly recalculated (adjusted to GHS 5.00).");
+  console.log("✅ SUCCESS: Empty payout statement successfully deleted.");
 
   // 5. Cleanup
   console.log("\nCleaning up test entities...");
