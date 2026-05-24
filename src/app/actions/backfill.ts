@@ -14,57 +14,9 @@ export async function backfillSignupCommissions() {
     const session = await auth();
     if (!session?.user) return { error: "Unauthorized" };
 
-    // Find all customers who have a referrer
-    const customersWithReferrers = await prisma.user.findMany({
-        where: {
-            role: Role.PARENT,
-            referredById: { not: null }
-        },
-        select: {
-            id: true,
-            referredById: true,
-            firstName: true,
-            lastName: true,
-            createdAt: true
-        }
-    });
-
-    let createdCount = 0;
-    let skippedCount = 0;
-
-    for (const customer of customersWithReferrers) {
-        if (!customer.referredById) continue;
-
-        // Check if commission already exists for this signup
-        const existingCommission = await prisma.commission.findFirst({
-            where: {
-                userId: customer.referredById,
-                sourceType: "SIGNUP",
-                sourceId: customer.id
-            }
-        });
-
-        if (existingCommission) {
-            skippedCount++;
-            continue;
-        }
-
-        // Create the commission
-        await prisma.commission.create({
-            data: {
-                userId: customer.referredById,
-                sourceType: "SIGNUP",
-                sourceId: customer.id,
-                amount: SIGNUP_BONUS,
-                status: "PENDING"
-            }
-        });
-        createdCount++;
-    }
-
     return {
         success: true,
-        message: `Backfill complete. Created ${createdCount} commissions, skipped ${skippedCount} (already existed).`
+        message: "Signup commissions backfill is disabled (signup bonus is GHS 0)."
     };
 }
 
