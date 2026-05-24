@@ -14,7 +14,7 @@ export default async function CustomerPlansPage() {
     const session = await auth();
     const allPlans = await getPlans();
     
-    const plans = allPlans.map(plan => ({
+    const plans = (allPlans as any[]).map((plan: any) => ({
         ...plan,
         price: Number(plan.price),
     }));
@@ -109,7 +109,7 @@ export default async function CustomerPlansPage() {
                                         </TableCell>
                                         <TableCell className="py-8">
                                             <div className="flex flex-wrap gap-2 max-w-sm">
-                                                {plan.features?.split("\n").map((feature, i) => (
+                                                {plan.features?.split("\n").map((feature: string, i: number) => (
                                                     <div key={i} className="flex items-center gap-1.5 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
                                                         <Check size={12} className="text-emerald-500" />
                                                         <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">{feature}</span>

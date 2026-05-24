@@ -153,7 +153,7 @@ async function runTest() {
   // 4. Simulating admin approval
   console.log("\nSimulating admin approval...");
   console.log("Mocking admin approval transaction directly...");
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: any) => {
     await tx.payout.update({
       where: { id: payout.id },
       data: {
@@ -242,7 +242,7 @@ async function runTest() {
   console.log("\nTesting payment verification - Perfect match validation...");
   const correctRecipient = "0559998888";
   
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: any) => {
     await tx.payout.update({
       where: { id: payout.id },
       data: {
@@ -280,6 +280,90 @@ async function runTest() {
   }
   console.log("✅ SUCCESS: Payout and associated commissions successfully finalized as PAID.");
 
+  // 7.5 Testing unpay database behavior
+  console.log("\nTesting unpay DB logic...");
+  await prisma.$transaction(async (tx: any) => {
+    // Revert payout status to SIGNED and clear payment details
+    await tx.payout.update({
+        where: { id: payout.id },
+        data: {
+            status: "SIGNED",
+            paymentMethod: null,
+            paymentRef: null,
+            recipientAcc: null,
+            proofUrl: null,
+            paidAt: null
+        }
+    });
+
+    // Revert commissions status to APPROVED and clear paidAt
+    await tx.commission.updateMany({
+        where: { payoutId: payout.id },
+        data: { 
+            status: "APPROVED",
+            paidAt: null 
+        }
+    });
+  });
+
+  const payoutUnpaid = await prisma.payout.findUnique({
+    where: { id: payout.id },
+    include: { commissions: true }
+  });
+  console.log(`Unpaid payout status: ${payoutUnpaid?.status}, proofUrl: ${payoutUnpaid?.proofUrl}`);
+  if (payoutUnpaid?.status !== "SIGNED" || payoutUnpaid?.proofUrl !== null || payoutUnpaid?.paymentRef !== null) {
+     throw new Error("Failed to unpay payout statement in DB");
+  }
+  for (const c of payoutUnpaid.commissions) {
+    if (c.status !== "APPROVED" || c.paidAt !== null) {
+      throw new Error("Commissions were not reverted to APPROVED correctly during unpay simulation");
+    }
+  }
+  console.log("✅ SUCCESS: Unpay DB logic verified.");
+
+  // 7.6 Testing unapprove database behavior
+  console.log("\nTesting unapprove DB logic...");
+  await prisma.$transaction(async (tx: any) => {
+    // Update payout status back to PAYABLE and clear details
+    await tx.payout.update({
+        where: { id: payout.id },
+        data: {
+            status: "PAYABLE",
+            approvedAt: null,
+            approvedBy: null,
+            signedAt: null,
+            signatureName: null,
+            signatureIp: null,
+            paymentMethod: null,
+            paymentRef: null,
+            recipientAcc: null,
+            proofUrl: null,
+            paidAt: null
+        }
+    });
+
+    // Revert commissions status to PENDING
+    await tx.commission.updateMany({
+        where: { payoutId: payout.id },
+        data: { status: "PENDING" }
+    });
+  });
+
+  const payoutUnapproved = await prisma.payout.findUnique({
+    where: { id: payout.id },
+    include: { commissions: true }
+  });
+  console.log(`Unapproved payout status: ${payoutUnapproved?.status}, signature: ${payoutUnapproved?.signatureName}`);
+  if (payoutUnapproved?.status !== "PAYABLE" || payoutUnapproved?.signatureName !== null || payoutUnapproved?.approvedBy !== null) {
+     throw new Error("Failed to unapprove payout statement in DB");
+  }
+  for (const c of payoutUnapproved.commissions) {
+    if (c.status !== "PENDING") {
+      throw new Error("Commissions were not reverted to PENDING correctly during unapprove simulation");
+    }
+  }
+  console.log("✅ SUCCESS: Unapprove DB logic verified.");
+
   // 8. Cleanup
   console.log("\nCleaning up test data from database...");
   await prisma.commission.deleteMany({
@@ -305,7 +389,7 @@ async function runTest() {
 }
 
 runTest()
-  .catch(err => {
+  .catch((err: any) => {
     console.error("Test failed:", err);
     process.exit(1);
   });

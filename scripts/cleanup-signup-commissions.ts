@@ -57,7 +57,7 @@ async function runCleanup(commit: boolean = false) {
   }
 
   // Collect affected payout IDs
-  const affectedPayoutIds = Array.from(new Set(toDelete.map(c => c.payoutId).filter(Boolean))) as string[];
+  const affectedPayoutIds = Array.from(new Set(toDelete.map((c: any) => c.payoutId).filter(Boolean))) as string[];
 
   console.log(`\nAffected Payout Statements: ${affectedPayoutIds.length}`);
 
@@ -82,11 +82,11 @@ async function runCleanup(commit: boolean = false) {
   }
 
   // Apply changes in a transaction
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: any) => {
     // Delete the commissions
     const deleteResult = await tx.commission.deleteMany({
       where: {
-        id: { in: toDelete.map(c => c.id) }
+        id: { in: toDelete.map((c: any) => c.id) }
       }
     });
     console.log(`Deleted ${deleteResult.count} commission records.`);
@@ -101,7 +101,7 @@ async function runCleanup(commit: boolean = false) {
       let newAmountGHS = 0;
       let newAmountUSD = 0;
 
-      remainingCommissions.forEach(c => {
+      remainingCommissions.forEach((c: any) => {
         const amt = Number(c.amount);
         if (c.currency === "USD") newAmountUSD += amt;
         else newAmountGHS += amt;
@@ -343,12 +343,12 @@ const isTest = args.includes("--test");
 const isCommit = args.includes("--commit");
 
 if (isTest) {
-  runTest().catch(err => {
+  runTest().catch((err: any) => {
     console.error("Test failed:", err);
     process.exit(1);
   });
 } else {
-  runCleanup(isCommit).catch(err => {
+  runCleanup(isCommit).catch((err: any) => {
     console.error("Cleanup failed:", err);
     process.exit(1);
   });

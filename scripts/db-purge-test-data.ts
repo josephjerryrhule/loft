@@ -19,7 +19,7 @@ async function main() {
     where: {
       OR: [
         { user: { email: { in: testEmails } } },
-        { sourceId: { in: await prisma.user.findMany({ where: { email: { in: testEmails } }, select: { id: true } }).then(users => users.map(u => u.id)) } }
+        { sourceId: { in: await prisma.user.findMany({ where: { email: { in: testEmails } }, select: { id: true } }).then((users: any[]) => users.map((u: any) => u.id)) } }
       ]
     }
   });

@@ -35,7 +35,7 @@ async function getManagerTeamMembers(managerId: string) {
         orderBy: { createdAt: "desc" }
     });
 
-    return members.map(m => ({
+    return members.map((m: any) => ({
         ...m,
         name: `${m.firstName || ""} ${m.lastName || ""}`.trim() || m.email,
         salesCount: m._count.referrals + m._count.referredOrders
@@ -89,7 +89,7 @@ export default async function ManagerTeamPage() {
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            teamMembers.map((member) => (
+                            teamMembers.map((member: any) => (
                                 <TableRow key={member.id}>
                                     <TableCell>
                                         <Link href={`/leaderboard/${member.id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">

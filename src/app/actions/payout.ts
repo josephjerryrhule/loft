@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { checkAndGeneratePayablePayouts, checkAndGenerateAllMaturedPayouts } from "@/lib/payout-utils";
+import { headers } from "next/headers";
 
 export async function getAmbassadorPayouts(page: number = 1, limit: number = 10) {
     const session = await auth();
@@ -77,6 +78,25 @@ export async function signPayoutSlip(payoutId: string, typedName: string, client
             return { error: "A typed signature is required" };
         }
 
+        let resolvedIp = clientIp;
+        try {
+            const headersList = await headers();
+            const forwardedFor = headersList.get("x-forwarded-for");
+            if (forwardedFor) {
+                resolvedIp = forwardedFor.split(',')[0].trim();
+            } else {
+                const realIp = headersList.get("x-real-ip");
+                if (realIp) {
+                    resolvedIp = realIp.trim();
+                }
+            }
+        } catch (e) {
+            // fallback
+        }
+        if (!resolvedIp || resolvedIp === "127.0.0.1" || resolvedIp === "::1" || resolvedIp === "localhost") {
+            resolvedIp = clientIp || "Unknown";
+        }
+
         await prisma.$transaction(async (tx) => {
             // Update payout status to SIGNED
             await tx.payout.update({
@@ -85,7 +105,7 @@ export async function signPayoutSlip(payoutId: string, typedName: string, client
                     status: "SIGNED",
                     signedAt: new Date(),
                     signatureName: typedName.trim(),
-                    signatureIp: clientIp || "Unknown"
+                    signatureIp: resolvedIp
                 }
             });
 
@@ -381,5 +401,158 @@ export async function markPayoutAsPaid(
     } catch (e) {
         console.error("Failed to complete payout payment:", e);
         return { error: "Failed to mark payout as paid" };
+    }
+}
+
+export async function unapprovePayoutStatement(payoutId: string) {
+    const session = await auth();
+    const role = (session?.user as any)?.role;
+    if (!session?.user?.id || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
+        return { error: "Unauthorized" };
+    }
+
+    try {
+        const payout = await prisma.payout.findUnique({
+            where: { id: payoutId },
+            include: { commissions: true }
+        });
+
+        if (!payout) return { error: "Payout statement not found" };
+        if (!["APPROVED", "SIGNED", "REVIEW_NEEDED"].includes(payout.status)) {
+            return { error: "Payout must be in APPROVED, SIGNED, or REVIEW_NEEDED status to be unapproved" };
+        }
+
+        // Delete proof URL if it exists
+        if (payout.proofUrl) {
+            const { deleteFromSupabase } = await import("@/lib/upload");
+            await deleteFromSupabase(payout.proofUrl);
+        }
+
+        const adminIdentifier = session.user.email || session.user.id;
+
+        await prisma.$transaction(async (tx: any) => {
+            // Update payout status back to PAYABLE and clear details
+            await tx.payout.update({
+                where: { id: payoutId },
+                data: {
+                    status: "PAYABLE",
+                    approvedAt: null,
+                    approvedBy: null,
+                    signedAt: null,
+                    signatureName: null,
+                    signatureIp: null,
+                    paymentMethod: null,
+                    paymentRef: null,
+                    recipientAcc: null,
+                    proofUrl: null,
+                    paidAt: null
+                }
+            });
+
+            // Revert commissions status to PENDING
+            await tx.commission.updateMany({
+                where: { payoutId },
+                data: { status: "PENDING" }
+            });
+
+            // Log activity
+            await tx.activityLog.create({
+                data: {
+                    userId: payout.userId,
+                    actionType: "PAYOUT_UNAPPROVED",
+                    actionDetails: JSON.stringify({
+                        payoutId,
+                        unapprovedBy: adminIdentifier,
+                        amountGHS: Number(payout.amountGHS),
+                        amountUSD: Number(payout.amountUSD),
+                        previousStatus: payout.status
+                    })
+                }
+            });
+        });
+
+        revalidatePath("/admin/finance");
+        revalidatePath("/affiliate/commissions");
+        revalidatePath("/manager/commissions");
+
+        return { success: true };
+    } catch (e) {
+        console.error("Failed to unapprove payout:", e);
+        return { error: "Failed to unapprove payout statement" };
+    }
+}
+
+export async function unpayPayoutStatement(payoutId: string) {
+    const session = await auth();
+    const role = (session?.user as any)?.role;
+    if (!session?.user?.id || (role !== "ADMIN" && role !== "OPERATIONS_MANAGER")) {
+        return { error: "Unauthorized" };
+    }
+
+    try {
+        const payout = await prisma.payout.findUnique({
+            where: { id: payoutId }
+        });
+
+        if (!payout) return { error: "Payout statement not found" };
+        if (payout.status !== "PAID") {
+            return { error: "Payout must be in PAID status to be unpaid" };
+        }
+
+        // Delete proof URL if it exists
+        if (payout.proofUrl) {
+            const { deleteFromSupabase } = await import("@/lib/upload");
+            await deleteFromSupabase(payout.proofUrl);
+        }
+
+        const adminIdentifier = session.user.email || session.user.id;
+
+        await prisma.$transaction(async (tx: any) => {
+            // Revert payout status to SIGNED and clear payment details (keep signature details)
+            await tx.payout.update({
+                where: { id: payoutId },
+                data: {
+                    status: "SIGNED",
+                    paymentMethod: null,
+                    paymentRef: null,
+                    recipientAcc: null,
+                    proofUrl: null,
+                    paidAt: null
+                }
+            });
+
+            // Revert commissions status to APPROVED and clear paidAt
+            await tx.commission.updateMany({
+                where: { payoutId },
+                data: { 
+                    status: "APPROVED",
+                    paidAt: null 
+                }
+            });
+
+            // Log activity
+            await tx.activityLog.create({
+                data: {
+                    userId: payout.userId,
+                    actionType: "PAYOUT_UNPAID",
+                    actionDetails: JSON.stringify({
+                        payoutId,
+                        unpaidBy: adminIdentifier,
+                        amountGHS: Number(payout.amountGHS),
+                        amountUSD: Number(payout.amountUSD),
+                        previousRef: payout.paymentRef
+                    })
+                }
+            });
+        });
+
+        revalidatePath("/admin/finance");
+        revalidatePath("/affiliate/commissions");
+        revalidatePath("/manager/commissions");
+
+        return { success: true };
+    } catch (e) {
+        console.error("Failed to unpay payout:", e);
+        return { error: "Failed to unpay payout statement" };
     }
 }

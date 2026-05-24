@@ -12,7 +12,7 @@ async function getBrandingSettings() {
       }
     });
     const settingsMap: Record<string, string> = {};
-    settings.forEach(s => {
+    settings.forEach((s: any) => {
       try {
         settingsMap[s.key] = JSON.parse(s.value);
       } catch {

@@ -18,12 +18,12 @@ async function main() {
 
   const backupData = {
     timestamp: new Date().toISOString(),
-    payouts: payouts.map(p => ({
+    payouts: payouts.map((p: any) => ({
       ...p,
       amountGHS: p.amountGHS.toString(),
       amountUSD: p.amountUSD.toString()
     })),
-    commissions: commissions.map(c => ({
+    commissions: commissions.map((c: any) => ({
       ...c,
       amount: c.amount.toString()
     }))

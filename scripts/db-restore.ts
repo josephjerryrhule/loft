@@ -5,7 +5,7 @@ import * as path from "path";
 
 async function main() {
   const args = process.argv.slice(2);
-  const backupFile = args.find(a => !a.startsWith("--"));
+  const backupFile = args.find((a: string) => !a.startsWith("--"));
 
   if (!backupFile) {
     console.error("Error: Please provide the path to the backup JSON file.");
@@ -36,7 +36,7 @@ async function main() {
   }
 
   // Restore in a transaction
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: any) => {
     // 1. Delete all current commissions and payouts
     console.log("Deleting current commission records...");
     await tx.commission.deleteMany();

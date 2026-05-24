@@ -56,7 +56,7 @@ export default async function TeamLeaderTeamPage() {
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            teamMembers.map((member) => (
+                            (teamMembers as any[]).map((member: any) => (
                                 <TableRow key={member.id}>
                                     <TableCell>
                                         <Link href={`/leaderboard/${member.id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">

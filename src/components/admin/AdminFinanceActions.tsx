@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/ui/file-upload";
 import { approveCommission } from "@/app/actions/admin";
-import { approvePayoutStatement, markPayoutAsPaid } from "@/app/actions/payout";
+import { approvePayoutStatement, markPayoutAsPaid, unapprovePayoutStatement, unpayPayoutStatement } from "@/app/actions/payout";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Loader2, CheckCircle, Eye, Wallet, User as UserIcon, CreditCard, Clock, CheckCircle2, DollarSign, AlertCircle, FileText } from "lucide-react";
@@ -89,6 +89,34 @@ export function AdminPayoutActions({ payout, onSuccess }: { payout: Payout, onSu
             onSuccess?.();
         } else {
             toast.error(res.error || "Failed to approve statement");
+        }
+    };
+
+    const handleUnapprove = async () => {
+        if (!confirm("Are you sure you want to unapprove this statement? This will revert it to PAYABLE status, clear signatures, and reset all linked commissions back to PENDING.")) return;
+        setLoading(true);
+        const res = await unapprovePayoutStatement(payout.id);
+        setLoading(false);
+        if (res.success) {
+            toast.success("Payout statement unapproved and reverted successfully!");
+            setViewOpen(false);
+            onSuccess?.();
+        } else {
+            toast.error(res.error || "Failed to unapprove statement");
+        }
+    };
+
+    const handleUnpay = async () => {
+        if (!confirm("Are you sure you want to unpay this statement? This will delete the uploaded payment proof screenshot, clear payment reference details, revert payout status to SIGNED, and reset all commissions back to APPROVED.")) return;
+        setLoading(true);
+        const res = await unpayPayoutStatement(payout.id);
+        setLoading(false);
+        if (res.success) {
+            toast.success("Payout statement unpaid successfully!");
+            setViewOpen(false);
+            onSuccess?.();
+        } else {
+            toast.error(res.error || "Failed to unpay statement");
         }
     };
 
@@ -404,6 +432,46 @@ export function AdminPayoutActions({ payout, onSuccess }: { payout: Payout, onSu
                                     </Button>
                                 </div>
                             </form>
+                        )}
+
+                        {/* Unapprove option for APPROVED, SIGNED, REVIEW_NEEDED status */}
+                        {["APPROVED", "SIGNED", "REVIEW_NEEDED"].includes(payout.status) && (
+                            <div className="pt-4 border-t border-stone-100">
+                                <Button 
+                                    variant="outline"
+                                    type="button"
+                                    className="w-full h-12 rounded-xl border-red-200 hover:bg-red-50 text-red-600 hover:text-red-700 font-bold transition-all active:scale-95 gap-2" 
+                                    onClick={handleUnapprove} 
+                                    disabled={loading}
+                                >
+                                    {loading ? (
+                                        <Loader2 size={18} className="animate-spin" />
+                                    ) : (
+                                        <AlertCircle size={18} />
+                                    )}
+                                    Unapprove & Revert Statement
+                                </Button>
+                            </div>
+                        )}
+
+                        {/* Unpay option for PAID status */}
+                        {payout.status === "PAID" && (
+                            <div className="pt-4 border-t border-stone-100">
+                                <Button 
+                                    variant="outline"
+                                    type="button"
+                                    className="w-full h-12 rounded-xl border-red-200 hover:bg-red-50 text-red-600 hover:text-red-700 font-bold transition-all active:scale-95 gap-2" 
+                                    onClick={handleUnpay} 
+                                    disabled={loading}
+                                >
+                                    {loading ? (
+                                        <Loader2 size={18} className="animate-spin" />
+                                    ) : (
+                                        <AlertCircle size={18} />
+                                    )}
+                                    Unpay Statement (Delete Receipt)
+                                </Button>
+                            </div>
                         )}
                     </div>
                 </DialogContent>
