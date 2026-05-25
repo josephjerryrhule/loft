@@ -1,19 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Package, ShoppingCart, Eye, Download, Check, AlertCircle, Sparkles } from "lucide-react";
+import { Loader2, Package, ShoppingCart, Eye, Download, CheckCircle2, Clock, Trash2, ArrowUpRight, Hash, Sparkles } from "lucide-react";
 import { getCustomerOrders } from "@/app/actions/user";
 import { getSystemSettings } from "@/app/actions/settings";
-import { getCurrencySymbol, formatStatusLabel } from "@/lib/utils";
+import { getCurrencySymbol } from "@/lib/utils";
 import { ViewOrderDialog } from "@/components/order/ViewOrderDialog";
 import Image from "next/image";
-import { Pagination } from "@/components/ui/pagination";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import Link from "next/link";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { cn, formatStatusLabel } from "@/lib/utils";
 
 interface Order {
   id: string;
@@ -53,15 +55,15 @@ export default function CustomerOrdersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const pageSize = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
     loadSettings();
   }, []);
 
   useEffect(() => {
-    loadOrders(currentPage);
-  }, [currentPage]);
+    loadOrders(currentPage, itemsPerPage);
+  }, [currentPage, itemsPerPage]);
 
   async function loadSettings() {
     try {
@@ -72,10 +74,10 @@ export default function CustomerOrdersPage() {
     }
   }
 
-  async function loadOrders(page: number) {
+  async function loadOrders(page: number, size: number) {
     setLoading(true);
     try {
-      const data = await getCustomerOrders(page, pageSize);
+      const data = await getCustomerOrders(page, size);
       setOrders(data.orders);
       setTotalPages(data.totalPages);
       setTotal(data.total);
@@ -103,229 +105,347 @@ export default function CustomerOrdersPage() {
     }
   }
 
-  function getStatusColor(status: string) {
-    switch (status.toUpperCase()) {
-      case "COMPLETED":
-        return "default";
-      case "PROCESSING":
-        return "secondary";
-      case "PENDING":
-        return "outline";
-      case "CANCELLED":
-        return "destructive";
-      default:
-        return "outline";
-    }
-  }
-
-  function getPaymentStatusColor(status: string) {
-    switch (status.toUpperCase()) {
-      case "PAID":
-        return "default";
-      case "PENDING":
-        return "outline";
-      case "FAILED":
-        return "destructive";
-      default:
-        return "outline";
-    }
-  }
-
   if (loading && orders.length === 0) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#E87154]" />
       </div>
     );
   }
 
   return (
     <TooltipProvider>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">My Orders</h1>
-          <p className="text-muted-foreground mt-1">
-            View and track your order history
-          </p>
-        </div>
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <ShoppingCart className="h-5 w-5" />
-          <span className="text-sm font-medium">{total} Orders</span>
-        </div>
-      </div>
+      <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500 pb-10">
+        <PageHeader
+            title="My Orders"
+            subtitle="Track your platform purchase history and download digital assets."
+            actions={
+                <div className="flex items-center gap-3 px-4 sm:px-5 h-11 sm:h-12 bg-slate-50 dark:bg-slate-800 rounded-2xl shadow-inner">
+                    <ShoppingCart className="h-4 w-4 text-[#E87154]" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">{total} Transactions</span>
+                </div>
+            }
+        />
 
       {orders.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Package className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No orders yet</h3>
-            <p className="text-muted-foreground text-center">
-              When you make a purchase, your orders will appear here.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="flex justify-center pt-10">
+            <Card className="max-w-md border-none shadow-2xl overflow-hidden bg-white dark:bg-slate-900 rounded-[2.5rem]">
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-8 sm:p-12 flex flex-col items-center justify-center text-center">
+                    <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-white dark:bg-slate-900 flex items-center justify-center shadow-lg mb-6">
+                        <Package className="h-8 w-8 sm:h-10 sm:w-10 text-slate-300" />
+                    </div>
+                    <h3 className="text-xl font-black text-slate-900 dark:text-white">Empty History</h3>
+                    <p className="text-slate-500 font-medium mt-2 leading-relaxed text-sm sm:text-base">
+                        When you make a purchase from our catalog, your items and tracking details will appear here.
+                    </p>
+                    <Button asChild className="mt-8 h-12 px-8 rounded-xl bg-[#E87154] hover:bg-[#D66144] font-black shadow-lg shadow-[#E87154]/20 transition-all active:scale-95 text-white">
+                        <Link href="/products">Visit Store</Link>
+                    </Button>
+                </div>
+            </Card>
+        </div>
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Order History</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-md border bg-white dark:bg-slate-900">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Order Number</TableHead>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead>Total Amount</TableHead>
-                    <TableHead>Payment Status</TableHead>
-                    <TableHead>Order Status</TableHead>
-                    <TableHead>Personalization</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {orders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell className="font-medium">
-                        {order.orderNumber}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          {order.product.featuredImageUrl && (
-                            <Image
-                              src={order.product.featuredImageUrl}
-                              alt={order.product.title}
-                              width={40}
-                              height={40}
-                              unoptimized
-                              className="rounded object-cover"
-                            />
-                          )}
-                          <div>
-                            <div className="font-medium">{order.product.title}</div>
-                            {order.product.description && (
-                              <div className="text-xs text-muted-foreground line-clamp-1">
-                                {order.product.description}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {order.product.productType}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{order.quantity}</TableCell>
-                      <TableCell className="font-medium">
-                        {getCurrencySymbol(currency)}{order.totalAmount.toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getPaymentStatusColor(order.paymentStatus)}>
-                          {formatStatusLabel(order.paymentStatus)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusColor(order.status)}>
-                          {formatStatusLabel(order.status)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {order.product.requiresCustomization ? (
-                          (() => {
-                            let submitted = false;
-                            try {
-                              if (order.customizationData) {
-                                const parsed = JSON.parse(order.customizationData);
-                                if (parsed?.personalizationStatus === "SUBMITTED") {
-                                  submitted = true;
-                                }
-                              }
-                            } catch (e) {}
-
-                            return submitted ? (
-                              <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none font-bold text-[10px] tracking-wide py-1 px-2.5 rounded-full flex items-center gap-1 w-fit">
-                                <Check size={10} className="stroke-[3px]" /> Completed
-                              </Badge>
-                            ) : (
-                              <div className="flex flex-col gap-1.5 w-fit">
-                                <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none font-bold text-[10px] tracking-wide py-1 px-2.5 rounded-full flex items-center gap-1">
-                                  <AlertCircle size={10} /> Pending Details
-                                </Badge>
-                                <Link href={`/customer/orders/personalize?orderId=${order.id}`}>
-                                  <Button size="sm" className="bg-[#E87154] hover:bg-[#D66144] font-black h-7 text-[9px] uppercase px-2 shadow-md hover:shadow-lg transition-all text-white gap-1 flex items-center mt-1">
-                                    <Sparkles size={8} /> Personalize Now
-                                  </Button>
-                                </Link>
-                              </div>
-                            );
-                          })()
-                        ) : (
-                          <span className="text-slate-400 text-xs font-medium">Not Required</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(order.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => {
-                                  setSelectedOrder(order);
-                                  setViewDialogOpen(true);
-                                }}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>View order details</p>
-                            </TooltipContent>
-                          </Tooltip>
-                          {order.status === "COMPLETED" && order.completedFileUrl && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => handleDownload(
-                                    order.completedFileUrl!,
-                                    `${order.orderNumber}-${order.product.title}.${order.completedFileUrl!.split('.').pop()}`
-                                  )}
+        <div className="space-y-4">
+            {/* Mobile View: Card Layout */}
+            <div className="grid gap-4 md:hidden">
+                {orders.map((order) => (
+                    <Card key={order.id} className="border-none shadow-md bg-white dark:bg-slate-900 rounded-3xl overflow-hidden group">
+                        <div className="p-5">
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="flex flex-col">
+                                    <span className="font-black text-slate-900 dark:text-white tracking-tighter text-lg">{order.orderNumber}</span>
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{new Date(order.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                </div>
+                                <Badge 
+                                    className={cn(
+                                        "text-[9px] font-black uppercase tracking-widest border-none px-2 h-6",
+                                        order.paymentStatus === "PAID" ? "bg-emerald-500 text-white" : "bg-amber-500 text-white"
+                                    )}
                                 >
-                                  <Download className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Download completed file</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
+                                    {formatStatusLabel(order.paymentStatus)}
+                                </Badge>
+                            </div>
+
+                            <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl mb-4">
+                                <div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm shrink-0">
+                                    {order.product.featuredImageUrl ? (
+                                        <Image
+                                        src={order.product.featuredImageUrl}
+                                        alt={order.product.title}
+                                        width={48}
+                                        height={48}
+                                        unoptimized
+                                        className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-slate-200">
+                                            <Package size={20} />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="font-black text-sm text-slate-900 dark:text-white truncate">{order.product.title}</h4>
+                                    <div className="flex items-center justify-between mt-1">
+                                        <span className="text-[10px] text-slate-400 font-bold uppercase">{order.product.productType}</span>
+                                        <span className="font-black text-sm">
+                                            <span className="text-[9px] text-slate-400 mr-1">GHS</span>
+                                            {order.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Personalization Section on Mobile */}
+                            {order.product.requiresCustomization && (
+                                <div className="p-4 bg-[#FFF8F6] dark:bg-slate-800/30 rounded-2xl border border-[#E87154]/10 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black uppercase tracking-wider text-[#E87154] flex items-center gap-1">
+                                            <Sparkles size={10} className="animate-pulse" /> Personalization
+                                        </p>
+                                        <p className="text-[11px] text-slate-500 dark:text-slate-450 font-medium">
+                                            Submit child details & photo references to start book production.
+                                        </p>
+                                    </div>
+                                    
+                                    {(() => {
+                                        let submitted = false;
+                                        try {
+                                            if (order.customizationData) {
+                                                const parsed = JSON.parse(order.customizationData);
+                                                if (parsed?.personalizationStatus === "SUBMITTED") {
+                                                    submitted = true;
+                                                }
+                                            }
+                                        } catch (e) {}
+
+                                        return submitted ? (
+                                            <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none font-bold text-[9px] tracking-wide py-1 px-3 rounded-full flex items-center gap-1 w-fit uppercase">
+                                                <CheckCircle2 size={10} /> Completed
+                                            </Badge>
+                                        ) : (
+                                            <Link href={`/customer/orders/personalize?orderId=${order.id}`} className="w-full sm:w-auto">
+                                                <Button size="sm" className="w-full sm:w-auto bg-[#E87154] hover:bg-[#D66144] font-black h-9 text-[10px] uppercase px-4 shadow-md hover:shadow-lg transition-all text-white gap-1.5 flex items-center rounded-xl border-none">
+                                                    <Sparkles size={10} /> Personalize Now
+                                                </Button>
+                                            </Link>
+                                        );
+                                    })()}
+                                </div>
+                            )}
+
+                            <div className="flex items-center justify-between gap-3">
+                                <Badge 
+                                    variant="outline"
+                                    className={cn(
+                                        "text-[9px] font-black uppercase tracking-widest border-none h-8 px-3",
+                                        order.status === "COMPLETED" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400" : 
+                                        order.status === "PROCESSING" ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-500"
+                                    )}
+                                >
+                                    {order.status}
+                                </Badge>
+                                <div className="flex gap-2">
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-9 w-9 p-0 rounded-xl bg-slate-50 hover:bg-[#E87154]/10 hover:text-[#E87154]"
+                                        onClick={() => {
+                                            setSelectedOrder(order);
+                                            setViewDialogOpen(true);
+                                        }}
+                                    >
+                                        <Eye size={16} />
+                                    </Button>
+                                    {order.status === "COMPLETED" && order.completedFileUrl && (
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-9 w-9 p-0 rounded-xl bg-emerald-50 hover:text-emerald-600"
+                                            onClick={() => handleDownload(
+                                                order.completedFileUrl!,
+                                                `${order.orderNumber}-${order.product.title}.${order.completedFileUrl!.split('.').pop()}`
+                                            )}
+                                        >
+                                            <Download size={16} />
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                    </Card>
+                ))}
             </div>
 
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              totalItems={total}
-              itemsPerPage={pageSize}
-              onPageChange={setCurrentPage}
-            />
-          </CardContent>
-        </Card>
+            {/* Desktop View: Table Layout */}
+            <div className="hidden md:block rounded-[2rem] border-none shadow-xl overflow-hidden bg-white dark:bg-slate-900 animate-in slide-in-from-bottom-4 duration-500">
+                <div className="overflow-x-auto relative w-full">
+                    <Table>
+                    <TableHeader>
+                        <TableRow className="hover:bg-transparent border-none">
+                        <TableHead className="pl-10">Reference</TableHead>
+                        <TableHead>Product</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead className="text-center">Qty</TableHead>
+                        <TableHead className="text-right">Price</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Order Details</TableHead>
+                        <TableHead>Personalization</TableHead>
+                        <TableHead className="text-right pr-10">Control</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {orders.map((order) => (
+                        <TableRow key={order.id} className="group transition-all duration-300">
+                            <TableCell className="pl-10 py-6">
+                                <div className="flex flex-col">
+                                    <span className="font-black text-slate-900 dark:text-white tracking-tighter text-base group-hover:text-[#E87154] transition-colors whitespace-nowrap">{order.orderNumber}</span>
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest whitespace-nowrap mt-0.5">{new Date(order.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                </div>
+                            </TableCell>
+                            <TableCell>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm shrink-0 group-hover:scale-105 transition-transform duration-300">
+                                        {order.product.featuredImageUrl ? (
+                                            <Image
+                                            src={order.product.featuredImageUrl}
+                                            alt={order.product.title}
+                                            width={48}
+                                            height={48}
+                                            unoptimized
+                                            className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-slate-200">
+                                                <Package size={20} />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex flex-col min-w-0">
+                                        <span className="font-black text-sm text-slate-900 dark:text-white truncate max-w-[150px] tracking-tight">{order.product.title}</span>
+                                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter line-clamp-1">{order.product.description}</span>
+                                    </div>
+                                </div>
+                            </TableCell>
+                            <TableCell>
+                                <Badge variant="outline" className="text-[9px] font-black uppercase tracking-[0.2em] bg-slate-50 dark:bg-slate-800 border-none px-3 h-6">
+                                    {order.product.productType}
+                                </Badge>
+                            </TableCell>
+                            <TableCell className="text-center font-black text-slate-500">{order.quantity}</TableCell>
+                            <TableCell className="text-right">
+                                <span className="text-base font-black text-slate-900 dark:text-white whitespace-nowrap">
+                                    <span className="text-[10px] text-slate-400 mr-1 font-bold uppercase">GHS</span>
+                                    {order.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                </span>
+                            </TableCell>
+                            <TableCell>
+                                <Badge 
+                                    className={cn(
+                                        "text-[10px] font-black uppercase tracking-widest border-none px-3 h-7 shadow-sm",
+                                        order.paymentStatus === "PAID" ? "bg-emerald-500 text-white shadow-emerald-500/10" : "bg-amber-500 text-white shadow-amber-500/10"
+                                    )}
+                                >
+                                    {formatStatusLabel(order.paymentStatus)}
+                                </Badge>
+                            </TableCell>
+                            <TableCell>
+                                <Badge 
+                                    variant="outline"
+                                    className={cn(
+                                        "text-[10px] font-black uppercase tracking-widest border-none h-7 px-3",
+                                        order.status === "COMPLETED" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400" : 
+                                        order.status === "PROCESSING" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/20" : "bg-slate-100 text-slate-500 dark:bg-slate-800"
+                                    )}
+                                >
+                                    {order.status === "COMPLETED" ? <CheckCircle2 size={10} className="mr-1.5" /> : 
+                                    order.status === "PROCESSING" ? <Clock size={10} className="mr-1.5" /> : null}
+                                    {formatStatusLabel(order.status)}
+                                </Badge>
+                            </TableCell>
+                            <TableCell>
+                                {order.product.requiresCustomization ? (
+                                    (() => {
+                                        let submitted = false;
+                                        try {
+                                            if (order.customizationData) {
+                                                const parsed = JSON.parse(order.customizationData);
+                                                if (parsed?.personalizationStatus === "SUBMITTED") {
+                                                    submitted = true;
+                                                }
+                                            }
+                                        } catch (e) {}
+
+                                        return submitted ? (
+                                            <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none font-bold text-[10px] tracking-wide py-1 px-2.5 rounded-full flex items-center gap-1 w-fit">
+                                                <CheckCircle2 size={10} className="stroke-[3px]" /> Completed
+                                            </Badge>
+                                        ) : (
+                                            <div className="flex flex-col gap-1.5 w-fit">
+                                                <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none font-bold text-[10px] tracking-wide py-1 px-2.5 rounded-full flex items-center gap-1">
+                                                    <Clock size={10} /> Pending Details
+                                                </Badge>
+                                                <Link href={`/customer/orders/personalize?orderId=${order.id}`}>
+                                                    <Button size="sm" className="bg-[#E87154] hover:bg-[#D66144] font-black h-7 text-[9px] uppercase px-2 shadow-md hover:shadow-lg transition-all text-white gap-1 flex items-center mt-1 border-none">
+                                                        <Sparkles size={8} /> Personalize Now
+                                                    </Button>
+                                                </Link>
+                                            </div>
+                                        );
+                                    })()
+                                ) : (
+                                    <span className="text-slate-400 text-xs font-medium">Not Required</span>
+                                )}
+                            </TableCell>
+                            <TableCell className="text-right pr-10">
+                                <div className="flex items-center justify-end gap-3">
+                                    <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-10 w-10 rounded-full hover:bg-[#E87154]/10 hover:text-[#E87154] transition-all group/btn"
+                                        onClick={() => {
+                                            setSelectedOrder(order);
+                                            setViewDialogOpen(true);
+                                        }}
+                                    >
+                                        <Eye className="h-5 w-5" />
+                                    </Button>
+                                    
+                                    {order.status === "COMPLETED" && order.completedFileUrl && (
+                                        <Button
+                                            size="icon"
+                                            variant="ghost"
+                                            className="h-10 w-10 rounded-full hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600 transition-all group/btn"
+                                            onClick={() => handleDownload(
+                                                order.completedFileUrl!,
+                                                `${order.orderNumber}-${order.product.title}.${order.completedFileUrl!.split('.').pop()}`
+                                            )}
+                                        >
+                                            <Download className="h-5 w-5" />
+                                        </Button>
+                                    )}
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                        ))}
+                    </TableBody>
+                    </Table>
+                </div>
+            </div>
+
+            <div className="p-4 sm:p-6 border-t border-slate-50 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-[2rem] md:rounded-t-none shadow-md md:shadow-none">
+                <TablePagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    itemsPerPage={itemsPerPage}
+                    totalItems={total}
+                    onPageChange={setCurrentPage}
+                    onItemsPerPageChange={(value) => {
+                        setItemsPerPage(value);
+                        setCurrentPage(1);
+                    }}
+                />
+            </div>
+        </div>
       )}
 
       <ViewOrderDialog

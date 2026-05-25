@@ -3,7 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package, User, CreditCard, Calendar, FileText, Download, Hash, ShoppingBag, UserCircle, MapPin, Truck, ExternalLink, CheckCircle2 } from "lucide-react";
+import { Package, User, CreditCard, Calendar, FileText, Download, Hash, ShoppingBag, UserCircle, MapPin, Truck, ExternalLink, CheckCircle2, Sparkles } from "lucide-react";
 import { getCurrencySymbol } from "@/lib/utils";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -23,7 +23,16 @@ function getFileExtension(url: string) {
 export function ViewOrderDialog({ open, onOpenChange, order, currency = "GHS" }: ViewOrderDialogProps) {
   if (!order) return null;
 
-  const customizationData = order.customizationData ? JSON.parse(order.customizationData) : null;
+  let customizationData = null;
+  try {
+    if (order.customizationData) {
+      customizationData = typeof order.customizationData === 'string'
+        ? JSON.parse(order.customizationData)
+        : order.customizationData;
+    }
+  } catch (e) {
+    console.error("Failed to parse customizationData:", e);
+  }
 
   const handleDownload = (url: string) => {
     if (url.startsWith('/uploads/')) {
@@ -246,106 +255,127 @@ export function ViewOrderDialog({ open, onOpenChange, order, currency = "GHS" }:
           )}
 
           {/* Customization Details */}
-          {customizationData && Object.keys(customizationData).length > 0 && (
+          {order.product.requiresCustomization && (
              <div className="space-y-4">
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-xl bg-stone-50 flex items-center justify-center text-amber-500 shadow-sm">
-                        <FileText size={16} />
+                        <Sparkles size={16} />
                     </div>
-                    <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.15em] text-slate-500">Customization & Onboarding Data</h4>
+                    <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.15em] text-slate-500">Book Customization</h4>
                 </div>
                 
-                {customizationData.personalizationStatus === "SUBMITTED" || customizationData.purchaser || customizationData.child ? (
-                  <div className="space-y-6">
-                    <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-                      <div className="bg-stone-50 rounded-[1.5rem] p-6 border border-stone-100 shadow-sm space-y-3">
-                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#E87154]">Order Placed By</p>
-                        <div className="space-y-1.5 text-xs text-slate-700">
-                          <p><span className="text-slate-400 font-medium">Purchaser:</span> <span className="font-bold">{customizationData.purchaser?.fullName}</span></p>
-                          <p><span className="text-slate-400 font-medium">Email:</span> <span className="font-bold">{customizationData.purchaser?.email}</span></p>
-                          <p><span className="text-slate-400 font-medium">Contact:</span> <span className="font-bold">{customizationData.purchaser?.contact || "N/A"}</span></p>
-                        </div>
-                      </div>
+                {(() => {
+                  let submitted = false;
+                  try {
+                    if (order.customizationData) {
+                      const parsed = JSON.parse(order.customizationData);
+                      if (parsed?.personalizationStatus === "SUBMITTED") {
+                        submitted = true;
+                      }
+                    }
+                  } catch (e) {}
 
-                      <div className="bg-stone-50 rounded-[1.5rem] p-6 border border-stone-100 shadow-sm space-y-3">
-                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#E87154]">Child Information</p>
-                        <div className="space-y-1.5 text-xs text-slate-700">
-                          <p><span className="text-slate-400 font-medium">Full Name:</span> <span className="font-bold">{customizationData.child?.fullName}</span></p>
-                          <p><span className="text-slate-400 font-medium">Date of Birth:</span> <span className="font-bold">{customizationData.child?.dob ? new Date(customizationData.child.dob).toLocaleDateString() : "N/A"}</span></p>
-                          <p><span className="text-slate-400 font-medium">Gender:</span> <span className="font-bold uppercase tracking-wider">{customizationData.child?.gender}</span></p>
-                        </div>
-                      </div>
-                    </div>
+                  if (submitted) {
+                    return (
+                      <div className="space-y-6">
+                        <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+                          <div className="bg-stone-50 rounded-[1.5rem] p-6 border border-stone-100 shadow-sm space-y-3">
+                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#E87154]">Order Placed By</p>
+                            <div className="space-y-1.5 text-xs text-slate-700">
+                              <p><span className="text-slate-400 font-medium">Purchaser:</span> <span className="font-bold">{customizationData?.purchaser?.fullName}</span></p>
+                              <p><span className="text-slate-400 font-medium">Email:</span> <span className="font-bold">{customizationData?.purchaser?.email}</span></p>
+                              <p><span className="text-slate-400 font-medium">Contact:</span> <span className="font-bold">{customizationData?.purchaser?.contact || "N/A"}</span></p>
+                            </div>
+                          </div>
 
-                    <div className="bg-stone-50 rounded-[1.5rem] p-6 border border-stone-100 shadow-sm space-y-4">
-                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#E87154]">Story Preferences</p>
-                      <div className="grid gap-6 grid-cols-2 text-xs">
-                        <div>
-                          <span className="text-slate-400 font-medium">Favorite Color</span>
-                          <p className="font-bold text-slate-900 mt-1 flex items-center gap-1.5">
-                            <span className="w-3.5 h-3.5 rounded-full border border-slate-200 inline-block" style={{ backgroundColor: customizationData.preferences?.favColor || "transparent" }} />
-                            {customizationData.preferences?.favColor}
+                          <div className="bg-stone-50 rounded-[1.5rem] p-6 border border-stone-100 shadow-sm space-y-3">
+                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#E87154]">Child Information</p>
+                            <div className="space-y-1.5 text-xs text-slate-700">
+                              <p><span className="text-slate-400 font-medium">Full Name:</span> <span className="font-bold">{customizationData?.child?.fullName}</span></p>
+                              <p><span className="text-slate-400 font-medium">Date of Birth:</span> <span className="font-bold">{customizationData?.child?.dob ? new Date(customizationData.child.dob).toLocaleDateString() : "N/A"}</span></p>
+                              <p><span className="text-slate-400 font-medium">Gender:</span> <span className="font-bold uppercase tracking-wider">{customizationData?.child?.gender}</span></p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-stone-50 rounded-[1.5rem] p-6 border border-stone-100 shadow-sm space-y-4">
+                          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#E87154]">Story Preferences</p>
+                          <div className="grid gap-6 grid-cols-2 text-xs">
+                            <div>
+                              <span className="text-slate-400 font-medium">Favorite Color</span>
+                              <p className="font-bold text-slate-900 mt-1 flex items-center gap-1.5">
+                                <span className="w-3.5 h-3.5 rounded-full border border-slate-200 inline-block" style={{ backgroundColor: customizationData?.preferences?.favColor || "transparent" }} />
+                                {customizationData?.preferences?.favColor}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 font-medium">Favorite Food</span>
+                              <p className="font-bold text-slate-900 mt-1">{customizationData?.preferences?.favFood}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid gap-6 grid-cols-2">
+                          <div className="space-y-2">
+                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Child Headshot</p>
+                            <div className="border border-stone-100 rounded-2xl overflow-hidden aspect-square bg-slate-50 relative max-h-48 flex items-center justify-center shadow-inner">
+                              {customizationData?.photos?.headshot ? (
+                                <img src={customizationData.photos.headshot} alt="Child headshot" className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="text-xs text-slate-400">Not Uploaded</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Child Full Body</p>
+                            <div className="border border-stone-100 rounded-2xl overflow-hidden aspect-square bg-slate-50 relative max-h-48 flex items-center justify-center shadow-inner">
+                              {customizationData?.photos?.fullBody ? (
+                                <img src={customizationData.photos.fullBody} alt="Child full body" className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="text-xs text-slate-400">Not Uploaded</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {customizationData?.additionalCharacters && customizationData.additionalCharacters.length > 0 && (
+                          <div className="bg-stone-50 rounded-[1.5rem] p-6 border border-stone-100 shadow-sm space-y-3">
+                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#E87154]">Additional Featured Characters</p>
+                            <div className="divide-y divide-stone-100">
+                              {customizationData.additionalCharacters.map((char: any, idx: number) => (
+                                <div key={idx} className="flex justify-between items-center py-2.5 text-xs text-slate-700">
+                                  <span className="font-bold">{char.fullName}</span>
+                                  <span className="text-slate-400 font-bold bg-white border px-2.5 py-0.5 rounded-full text-[10px] uppercase tracking-wider">{char.relationship}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div className="bg-[#FFF8F6] p-6 rounded-[2rem] border border-[#E87154]/25 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-[#E87154]">
+                            <Sparkles size={16} className="animate-pulse" />
+                            <h4 className="font-black text-sm uppercase tracking-wider leading-none">Personalization Required</h4>
+                          </div>
+                          <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-md">
+                            We need child specifications and photos to start printing and handcrafting your book. Submit these details now to start production!
                           </p>
                         </div>
-                        <div>
-                          <span className="text-slate-400 font-medium">Favorite Food</span>
-                          <p className="font-bold text-slate-900 mt-1">{customizationData.preferences?.favFood}</p>
-                        </div>
+                        <a href={`/customer/orders/personalize?orderId=${order.id}`} className="shrink-0 w-full sm:w-auto">
+                          <Button className="w-full sm:w-auto bg-[#E87154] hover:bg-[#D66144] font-black text-white h-12 rounded-xl px-6 shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 border-none">
+                            <Sparkles size={14} /> Personalize Now
+                          </Button>
+                        </a>
                       </div>
-                    </div>
-
-                    <div className="grid gap-6 grid-cols-2">
-                      <div className="space-y-2">
-                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Child Headshot</p>
-                        <div className="border border-stone-100 rounded-2xl overflow-hidden aspect-square bg-slate-50 relative max-h-48 flex items-center justify-center shadow-inner">
-                          {customizationData.photos?.headshot ? (
-                            <img src={customizationData.photos.headshot} alt="Child headshot" className="w-full.h-full object-cover" />
-                          ) : (
-                            <span className="text-xs text-slate-400">Not Uploaded</span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Child Full Body</p>
-                        <div className="border border-stone-100 rounded-2xl overflow-hidden aspect-square bg-slate-50 relative max-h-48 flex items-center justify-center shadow-inner">
-                          {customizationData.photos?.fullBody ? (
-                            <img src={customizationData.photos.fullBody} alt="Child full body" className="w-full.h-full object-cover" />
-                          ) : (
-                            <span className="text-xs text-slate-400">Not Uploaded</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {customizationData.additionalCharacters && customizationData.additionalCharacters.length > 0 && (
-                      <div className="bg-stone-50 rounded-[1.5rem] p-6 border border-stone-100 shadow-sm space-y-3">
-                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#E87154]">Additional Featured Characters</p>
-                        <div className="divide-y divide-stone-100">
-                          {customizationData.additionalCharacters.map((char: any, idx: number) => (
-                            <div key={idx} className="flex justify-between items-center py-2.5 text-xs text-slate-700">
-                              <span className="font-bold">{char.fullName}</span>
-                              <span className="text-slate-400 font-bold bg-white border px-2.5 py-0.5 rounded-full text-[10px] uppercase tracking-wider">{char.relationship}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="bg-stone-50 rounded-[1.5rem] p-6 sm:p-8 border border-stone-100 shadow-sm">
-                      <div className="grid gap-8 sm:gap-10 grid-cols-1 sm:grid-cols-2">
-                           {Object.entries(customizationData).map(([key, value]) => (
-                              <div key={key} className="space-y-2 group">
-                                  <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 group-hover:text-[#E87154] transition-colors">{key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ')}</p>
-                                  <p className="text-sm sm:text-base font-bold text-slate-900 leading-relaxed">{String(value)}</p>
-                              </div>
-                           ))}
-                      </div>
-                  </div>
-                )}
+                    );
+                  }
+                })()}
              </div>
           )}
-
           {/* Financial Summary */}
           <div className="space-y-4 pt-6">
             <div className="flex items-center gap-3">
