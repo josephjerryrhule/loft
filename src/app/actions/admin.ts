@@ -1375,26 +1375,64 @@ export async function deleteOrder(orderId: string) {
     }
 
     try {
-        await prisma.$transaction(async (tx) => {
-            // Delete associated commissions first
-            await tx.commission.deleteMany({
-                where: { sourceId: orderId }
-            });
-
-            // Delete the order itself
-            await tx.order.delete({
-                where: { id: orderId }
-            });
-
-            // Log activity
-            await tx.activityLog.create({
-                data: {
-                    userId: session.user!.id,
-                    actionType: "ADMIN_DELETE_ORDER",
-                    actionDetails: JSON.stringify({ orderId })
-                }
-            });
+        // Fetch order details first to get customizationData and file URLs
+        const order = await prisma.order.findUnique({
+            where: { id: orderId }
         });
+
+        if (!order) {
+            return { error: "Order not found" };
+        }
+
+        // Delete associated commissions first
+        await prisma.commission.deleteMany({
+            where: { sourceId: orderId }
+        });
+
+        // Delete the order itself
+        await prisma.order.delete({
+            where: { id: orderId }
+        });
+
+        // Log activity
+        await prisma.activityLog.create({
+            data: {
+                userId: session.user!.id,
+                actionType: "ADMIN_DELETE_ORDER",
+                actionDetails: JSON.stringify({ orderId, orderNumber: order.orderNumber })
+            }
+        });
+
+        // Delete associated files from storage
+        const filesToDelete: string[] = [];
+        if (order.customerUploadUrl) {
+            filesToDelete.push(order.customerUploadUrl);
+        }
+        if (order.completedFileUrl) {
+            filesToDelete.push(order.completedFileUrl);
+        }
+        if (order.customizationData) {
+            try {
+                const parsed = JSON.parse(order.customizationData);
+                if (parsed?.photos?.headshot) {
+                    filesToDelete.push(parsed.photos.headshot);
+                }
+                if (parsed?.photos?.fullBody) {
+                    filesToDelete.push(parsed.photos.fullBody);
+                }
+            } catch (e) {
+                console.error("Failed to parse customizationData for file cleanup:", e);
+            }
+        }
+
+        if (filesToDelete.length > 0) {
+            const { deleteFromSupabase } = await import("@/lib/upload");
+            await Promise.all(
+                filesToDelete.map(url => deleteFromSupabase(url).catch(err => {
+                    console.error(`Failed to delete file from storage: ${url}`, err);
+                }))
+            );
+        }
 
         revalidatePath("/admin/orders");
         revalidatePath("/admin/personalizations");
@@ -1417,6 +1455,30 @@ export async function deleteOrderCustomization(orderId: string) {
     }
 
     try {
+        const order = await prisma.order.findUnique({
+            where: { id: orderId }
+        });
+
+        if (!order) {
+            return { error: "Order not found" };
+        }
+
+        // Delete associated files from storage
+        const filesToDelete: string[] = [];
+        if (order.customizationData) {
+            try {
+                const parsed = JSON.parse(order.customizationData);
+                if (parsed?.photos?.headshot) {
+                    filesToDelete.push(parsed.photos.headshot);
+                }
+                if (parsed?.photos?.fullBody) {
+                    filesToDelete.push(parsed.photos.fullBody);
+                }
+            } catch (e) {
+                console.error("Failed to parse customizationData for file cleanup:", e);
+            }
+        }
+
         await prisma.order.update({
             where: { id: orderId },
             data: {
@@ -1433,6 +1495,15 @@ export async function deleteOrderCustomization(orderId: string) {
                 actionDetails: JSON.stringify({ orderId })
             }
         });
+
+        if (filesToDelete.length > 0) {
+            const { deleteFromSupabase } = await import("@/lib/upload");
+            await Promise.all(
+                filesToDelete.map(url => deleteFromSupabase(url).catch(err => {
+                    console.error(`Failed to delete file from storage: ${url}`, err);
+                }))
+            );
+        }
 
         revalidatePath("/admin/orders");
         revalidatePath("/admin/personalizations");

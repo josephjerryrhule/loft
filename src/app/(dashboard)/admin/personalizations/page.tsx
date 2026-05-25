@@ -217,7 +217,7 @@ export default function AdminPersonalizationsPage() {
     printWindow.print();
   };
 
-  if (loading) {
+  if (loading && personalizations.length === 0) {
     return (
       <div className="flex items-center justify-center h-96">
         <Loader2 className="h-8 w-8 animate-spin text-[#E87154]" />
