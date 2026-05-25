@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, Sparkles } from "lucide-react";
 import { PurchaseProductDialog } from "@/components/payment/PurchaseProductDialog";
 import { getSystemSettings } from "@/app/actions/settings";
 import { getCurrencySymbol } from "@/lib/utils";
@@ -44,7 +44,7 @@ export function ProductCard({ product, userEmail, userId }: ProductCardProps) {
 
   return (
     <>
-      <Card className="flex flex-col border-none shadow-md hover:shadow-2xl transition-all duration-500 rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900 group">
+      <Card className="flex flex-col border border-slate-100 dark:border-slate-800 shadow-md hover:shadow-2xl hover:border-[#E87154]/20 dark:hover:border-[#E87154]/20 transition-all duration-500 rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900 group">
         <div className="h-64 bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-200 relative overflow-hidden">
           {product.featuredImageUrl ? (
             <Image
@@ -52,25 +52,35 @@ export function ProductCard({ product, userEmail, userId }: ProductCardProps) {
               alt={product.title}
               fill
               unoptimized
-              className="object-cover transition-transform duration-700 group-hover:scale-110"
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
             />
           ) : (
-            <ShoppingBag size={64} className="opacity-20 group-hover:scale-110 transition-transform duration-700" />
+            <ShoppingBag size={64} className="opacity-15 group-hover:scale-105 transition-transform duration-700" />
           )}
-          <div className="absolute top-4 right-4">
-              <Badge className="bg-white/90 dark:bg-slate-900/90 text-slate-900 dark:text-white border-none backdrop-blur-md font-black text-[10px] uppercase tracking-widest px-3 shadow-lg">
+          
+          {/* Customization Flow Badge */}
+          {product.requiresCustomization && (
+            <div className="absolute top-4 left-4 z-10">
+              <Badge className="bg-[#E87154] hover:bg-[#E87154] text-white border-none font-black text-[9px] uppercase tracking-widest px-3 py-1 shadow-md shadow-[#E87154]/20 flex items-center gap-1">
+                <Sparkles size={8} className="animate-pulse" /> Personalized
+              </Badge>
+            </div>
+          )}
+
+          <div className="absolute top-4 right-4 z-10">
+              <Badge className="bg-slate-950/70 text-white dark:bg-slate-900/90 border border-white/10 backdrop-blur-md font-black text-[9px] uppercase tracking-widest px-3 shadow-lg">
                   {product.productType}
               </Badge>
           </div>
         </div>
-        <CardHeader className="p-6 pb-2">
+        <CardHeader className="p-6 pb-2 text-left">
           <CardTitle className="text-xl font-black text-slate-900 dark:text-white tracking-tight line-clamp-1 group-hover:text-[#E87154] transition-colors">{product.title}</CardTitle>
           <div className="text-2xl font-black text-[#E87154] tracking-tighter mt-1">
             <span className="text-xs font-bold text-slate-400 mr-1 uppercase">{getCurrencySymbol(currency)}</span>
             {price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </div>
         </CardHeader>
-        <CardContent className="flex-1 px-6 pt-2">
+        <CardContent className="flex-1 px-6 pt-2 text-left">
           <p className="text-sm text-slate-500 font-medium line-clamp-2 leading-relaxed">
             {product.description}
           </p>
