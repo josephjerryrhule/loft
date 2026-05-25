@@ -22,6 +22,7 @@ import {
   BarChart3,
   TrendingUp,
   Wallet,
+  Sparkles,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -49,6 +50,7 @@ function getLinks(userRole?: string, hasChildren?: boolean) {
     { href: "/admin/flipbooks", label: "Flipbooks", icon: BookOpen },
     { href: "/admin/products", label: "Products", icon: ShoppingBag },
     { href: "/admin/orders", label: "Orders", icon: FileText },
+    { href: "/admin/personalizations", label: "Book Customizations", icon: Sparkles },
     { href: "/admin/plans", label: "Plans", icon: CreditCard },
     { href: "/admin/finance", label: "Finance & Payouts", icon: CreditCard },
     { href: "/admin/payments", label: "Payment Tracker", icon: Wallet },
@@ -60,6 +62,7 @@ function getLinks(userRole?: string, hasChildren?: boolean) {
     { href: "/admin/users", label: "User Management", icon: Users },
     { href: "/admin/ambassadors", label: "Ambassador Management", icon: Shield },
     { href: "/admin/orders", label: "Orders", icon: FileText },
+    { href: "/admin/personalizations", label: "Book Customizations", icon: Sparkles },
     { href: "/admin/finance", label: "System Revenue", icon: CreditCard },
     { href: "/admin/commissions", label: "My Earnings", icon: Wallet },
     { href: "/admin/payments", label: "Payment Tracker", icon: Wallet },

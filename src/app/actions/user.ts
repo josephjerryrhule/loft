@@ -482,7 +482,8 @@ export async function getCustomerOrders(page = 1, pageSize = 10) {
                     description: order.product.description,
                     productType: order.product.productType,
                     price: order.product.price.toNumber(),
-                    featuredImageUrl: order.product.featuredImageUrl
+                    featuredImageUrl: order.product.featuredImageUrl,
+                    requiresCustomization: order.product.requiresCustomization,
                 },
                 referredBy: order.referredBy ? {
                     firstName: order.referredBy.firstName,

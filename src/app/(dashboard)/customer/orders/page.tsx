@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Package, ShoppingCart, Eye, Download } from "lucide-react";
+import { Loader2, Package, ShoppingCart, Eye, Download, Check, AlertCircle, Sparkles } from "lucide-react";
 import { getCustomerOrders } from "@/app/actions/user";
 import { getSystemSettings } from "@/app/actions/settings";
 import { getCurrencySymbol, formatStatusLabel } from "@/lib/utils";
@@ -13,6 +13,7 @@ import { ViewOrderDialog } from "@/components/order/ViewOrderDialog";
 import Image from "next/image";
 import { Pagination } from "@/components/ui/pagination";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import Link from "next/link";
 
 interface Order {
   id: string;
@@ -33,6 +34,7 @@ interface Order {
     productType: string;
     price: number;
     featuredImageUrl: string | null;
+    requiresCustomization: boolean;
   };
   referredBy: {
     firstName: string | null;
@@ -180,6 +182,7 @@ export default function CustomerOrdersPage() {
                     <TableHead>Total Amount</TableHead>
                     <TableHead>Payment Status</TableHead>
                     <TableHead>Order Status</TableHead>
+                    <TableHead>Personalization</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -230,6 +233,40 @@ export default function CustomerOrdersPage() {
                         <Badge variant={getStatusColor(order.status)}>
                           {formatStatusLabel(order.status)}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {order.product.requiresCustomization ? (
+                          (() => {
+                            let submitted = false;
+                            try {
+                              if (order.customizationData) {
+                                const parsed = JSON.parse(order.customizationData);
+                                if (parsed?.personalizationStatus === "SUBMITTED") {
+                                  submitted = true;
+                                }
+                              }
+                            } catch (e) {}
+
+                            return submitted ? (
+                              <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none font-bold text-[10px] tracking-wide py-1 px-2.5 rounded-full flex items-center gap-1 w-fit">
+                                <Check size={10} className="stroke-[3px]" /> Completed
+                              </Badge>
+                            ) : (
+                              <div className="flex flex-col gap-1.5 w-fit">
+                                <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none font-bold text-[10px] tracking-wide py-1 px-2.5 rounded-full flex items-center gap-1">
+                                  <AlertCircle size={10} /> Pending Details
+                                </Badge>
+                                <Link href={`/customer/orders/personalize?orderId=${order.id}`}>
+                                  <Button size="sm" className="bg-[#E87154] hover:bg-[#D66144] font-black h-7 text-[9px] uppercase px-2 shadow-md hover:shadow-lg transition-all text-white gap-1 flex items-center mt-1">
+                                    <Sparkles size={8} /> Personalize Now
+                                  </Button>
+                                </Link>
+                              </div>
+                            );
+                          })()
+                        ) : (
+                          <span className="text-slate-400 text-xs font-medium">Not Required</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         {new Date(order.createdAt).toLocaleDateString()}

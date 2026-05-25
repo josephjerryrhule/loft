@@ -15,16 +15,19 @@ const productSchema = z.object({
   type: z.string(), // DIGITAL, PHYSICAL
   featuredImageUrl: z.string().optional(),
   affiliateCommission: z.number().min(0),
+  requiresCustomization: z.boolean().optional(),
+  customizationFields: z.string().optional().nullable(),
 });
 
 export async function createProduct(formData: FormData) {
-  // ... existing code ...
   const title = formData.get("title") as string;
   const price = parseFloat(formData.get("price") as string);
   const description = formData.get("description") as string;
   const type = formData.get("type") as string;
   const featuredImageUrl = formData.get("featuredImageUrl") as string;
   const affiliateCommission = parseFloat(formData.get("affiliateCommission") as string);
+  const requiresCustomization = formData.get("requiresCustomization") === "on" || formData.get("requiresCustomization") === "true";
+  const customizationFields = formData.get("customizationFields") as string;
 
   try {
     const validatedData = productSchema.parse({ 
@@ -33,7 +36,9 @@ export async function createProduct(formData: FormData) {
         description, 
         type, 
         featuredImageUrl, 
-        affiliateCommission 
+        affiliateCommission,
+        requiresCustomization,
+        customizationFields: customizationFields || null,
     });
 
     await prisma.product.create({
@@ -44,6 +49,8 @@ export async function createProduct(formData: FormData) {
         productType: validatedData.type,
         featuredImageUrl: validatedData.featuredImageUrl,
         affiliateCommissionAmount: validatedData.affiliateCommission,
+        requiresCustomization: validatedData.requiresCustomization || false,
+        customizationFields: validatedData.customizationFields || null,
         isActive: true,
       },
     });
@@ -66,6 +73,8 @@ export async function updateProduct(formData: FormData) {
     const type = formData.get("type") as string;
     const featuredImageUrl = formData.get("featuredImageUrl") as string;
     const affiliateCommission = parseFloat(formData.get("affiliateCommission") as string);
+    const requiresCustomization = formData.get("requiresCustomization") === "on" || formData.get("requiresCustomization") === "true";
+    const customizationFields = formData.get("customizationFields") as string;
 
     if (!id) throw new Error("Product ID is required");
 
@@ -76,7 +85,9 @@ export async function updateProduct(formData: FormData) {
             description, 
             type, 
             featuredImageUrl, 
-            affiliateCommission 
+            affiliateCommission,
+            requiresCustomization,
+            customizationFields: customizationFields || null,
         });
 
         await prisma.product.update({
@@ -88,6 +99,8 @@ export async function updateProduct(formData: FormData) {
                 productType: validatedData.type,
                 featuredImageUrl: validatedData.featuredImageUrl,
                 affiliateCommissionAmount: validatedData.affiliateCommission,
+                requiresCustomization: validatedData.requiresCustomization || false,
+                customizationFields: validatedData.customizationFields || null,
             },
         });
 
@@ -97,9 +110,9 @@ export async function updateProduct(formData: FormData) {
         console.error("Failed to update product:", error);
         throw new Error("Failed to update product");
     }
+}
     
     // redirect("/admin/products"); // Optional, might just want to close dialog
-}
 
 export async function deleteProduct(id: string) {
     try {

@@ -102,6 +102,18 @@ export default function AdminProductsPage() {
                        </Select>
                    </div>
 
+                   <div className="flex items-center space-x-2 py-3 border-t border-b border-slate-100 dark:border-slate-800">
+                       <input 
+                           type="checkbox" 
+                           id="requiresCustomization" 
+                           name="requiresCustomization"
+                           className="h-5 w-5 rounded border-slate-300 dark:border-slate-700 text-[#E87154] focus:ring-[#E87154] cursor-pointer"
+                       />
+                       <Label htmlFor="requiresCustomization" className="text-sm font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
+                           Requires Personalization Flow (Post-Purchase Form)
+                       </Label>
+                   </div>
+
                    <FileUpload 
                       label="Product Image" 
                       name="featuredImageUrl" 

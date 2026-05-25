@@ -8,14 +8,17 @@ import {
 } from "@/app/actions/payment";
 import { getPaystackSecretKey } from "@/lib/paystack";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { prisma } from "@/lib/prisma";
 
 interface PaymentVerificationResult {
   success: boolean;
   type: "subscription" | "product";
   message: string;
+  orderId?: string;
+  requiresCustomization?: boolean;
 }
 
 async function verifyAndProcessPayment(params: {
@@ -106,7 +109,25 @@ async function verifyAndProcessPayment(params: {
         if (productResult.error) {
           return { success: false, type, message: productResult.error };
         }
-        return { success: true, type, message: "Purchase completed successfully!" };
+        
+        let requiresCustomization = false;
+        try {
+          const product = await prisma.product.findUnique({
+            where: { id: itemId },
+            select: { requiresCustomization: true }
+          });
+          requiresCustomization = product?.requiresCustomization || false;
+        } catch (e) {
+          console.error("Failed to query product customization flag in callback:", e);
+        }
+
+        return { 
+          success: true, 
+          type, 
+          message: "Purchase completed successfully!",
+          orderId: (productResult as any).order?.id,
+          requiresCustomization
+        };
       } catch (err) {
         console.error("Product processing error:", err);
         return { success: false, type, message: "Failed to process order" };
@@ -128,31 +149,55 @@ async function PaymentResult({
   const result = await verifyAndProcessPayment(params);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-      <Card className="w-full max-w-md">
-        <CardContent className="pt-6 text-center space-y-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#FFFAF5] p-4">
+      <Card className="w-full max-w-md border-none shadow-2xl rounded-3xl overflow-hidden bg-white">
+        <CardContent className="pt-8 text-center space-y-6 px-6 sm:px-8">
           {result.success ? (
             <>
-              <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
-              <h1 className="text-2xl font-bold text-green-600">Payment Successful!</h1>
-              <p className="text-muted-foreground">{result.message}</p>
+              <div className="relative mx-auto w-20 h-20 bg-green-50 rounded-full flex items-center justify-center">
+                <CheckCircle className="h-12 w-12 text-green-500" />
+              </div>
+              <div className="space-y-2">
+                <h1 className="text-2xl font-black text-slate-900 tracking-tight">Payment Successful!</h1>
+                <p className="text-sm text-slate-500 font-medium leading-relaxed">{result.message}</p>
+              </div>
               
-              {result.type === "subscription" ? (
-                  <div className="pt-4 space-y-2">
+              {result.requiresCustomization && result.orderId ? (
+                <div className="pt-2 space-y-4">
+                  <div className="bg-[#FFF8F6] p-6 rounded-[2rem] border border-[#E87154]/20 space-y-3">
+                    <div className="flex justify-center text-[#E87154]">
+                      <Sparkles className="h-8 w-8 animate-bounce" />
+                    </div>
+                    <h3 className="font-black text-base text-[#E87154] tracking-tight">Personalization Required</h3>
+                    <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                      To start printing and handcrafting your Birthday Book, please submit child details and photos.
+                    </p>
+                    <Link href={`/customer/orders/personalize?orderId=${result.orderId}`}>
+                      <Button className="w-full bg-[#E87154] hover:bg-[#D66144] font-black text-white h-12 rounded-xl shadow-lg shadow-[#E87154]/20 transition-all active:scale-95 gap-2">
+                        Personalize Your Book
+                      </Button>
+                    </Link>
+                  </div>
+                  <Link href="/customer/orders" className="block text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors">
+                    Or personalize later from My Orders
+                  </Link>
+                </div>
+              ) : result.type === "subscription" ? (
+                  <div className="pt-2 space-y-2">
                     <Link href="/parent">
-                      <Button className="w-full">Go to Dashboard</Button>
+                      <Button className="w-full bg-slate-900 hover:bg-black font-black text-white h-12 rounded-xl transition-all">Go to Dashboard</Button>
                     </Link>
                     <Link href="/parent/plans">
-                      <Button variant="outline" className="w-full">View Plans</Button>
+                      <Button variant="outline" className="w-full h-12 rounded-xl font-bold">View Plans</Button>
                     </Link>
                   </div>
               ) : (
-                  <div className="pt-4 space-y-2">
+                  <div className="pt-2 space-y-2">
                     <Link href="/customer/orders">
-                      <Button className="w-full">View My Orders</Button>
+                      <Button className="w-full bg-slate-900 hover:bg-black font-black text-white h-12 rounded-xl transition-all">View My Orders</Button>
                     </Link>
                     <Link href="/products">
-                      <Button variant="outline" className="w-full">Continue Shopping</Button>
+                      <Button variant="outline" className="w-full h-12 rounded-xl font-bold">Continue Shopping</Button>
                     </Link>
                   </div>
               )}
