@@ -19,7 +19,6 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 
 const PAGE_SIZE = 8;
 
@@ -185,12 +184,10 @@ export default function ShopsPage() {
             <div className="relative aspect-[4/5] bg-white dark:bg-slate-800 rounded-[2rem] p-4 shadow-xl border border-slate-100 dark:border-slate-700/50 transform rotate-2 hover:rotate-0 transition-transform duration-500 flex flex-col justify-between">
               <div className="relative w-full h-[80%] rounded-2xl overflow-hidden bg-slate-50 dark:bg-slate-900/50">
                 {featuredProduct.featuredImageUrl ? (
-                  <Image 
+                  <img 
                     src={featuredProduct.featuredImageUrl} 
                     alt={featuredProduct.title}
-                    fill
-                    unoptimized
-                    className="object-cover"
+                    className="absolute inset-0 w-full h-full object-cover"
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center text-slate-350">

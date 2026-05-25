@@ -12,7 +12,6 @@ import { Minus, Plus, ShoppingBag, CreditCard, Hash, FileText, Upload, X, CheckC
 import { PaystackButton } from "@/components/payment/PaystackButton";
 import { getSystemSettings } from "@/app/actions/settings";
 import { getCurrencySymbol } from "@/lib/utils";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -148,12 +147,9 @@ export function PurchaseProductDialog({
             <div className="flex flex-col sm:flex-row gap-6 sm:gap-8 items-center relative z-10">
                 <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl sm:rounded-[1.5rem] bg-white border-2 border-slate-100 dark:bg-slate-900 dark:border-slate-700 overflow-hidden shadow-xl shrink-0">
                     {product.featuredImageUrl ? (
-                    <Image
+                    <img
                         src={product.featuredImageUrl}
                         alt={product.title}
-                        width={128}
-                        height={128}
-                        unoptimized
                         className="w-full h-full object-cover"
                     />
                     ) : (

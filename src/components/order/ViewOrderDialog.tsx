@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Package, User, CreditCard, Calendar, FileText, Download, Hash, ShoppingBag, UserCircle, MapPin, Truck, ExternalLink, CheckCircle2, Sparkles } from "lucide-react";
 import { getCurrencySymbol } from "@/lib/utils";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface ViewOrderDialogProps {
@@ -155,12 +154,9 @@ export function ViewOrderDialog({ open, onOpenChange, order, currency = "GHS" }:
               <div className="flex flex-col sm:flex-row gap-6 sm:gap-8 items-center relative z-10">
                 <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl sm:rounded-[1.5rem] bg-white border border-stone-100 overflow-hidden shadow-sm shrink-0 group-hover:scale-105 transition-transform duration-500">
                     {order.product.featuredImageUrl ? (
-                    <Image
+                    <img
                         src={order.product.featuredImageUrl}
                         alt={order.product.title}
-                        width={112}
-                        height={112}
-                        unoptimized
                         className="w-full h-full object-cover"
                     />
                     ) : (

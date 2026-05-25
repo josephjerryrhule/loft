@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { formatRole } from "@/lib/format-utils";
 import { Button } from "@/components/ui/button";
@@ -142,11 +141,10 @@ function NavContent({ userRole, setOpen, logoUrl, platformName, hasChildren }: {
             {logoUrl ? (
               <div className="flex items-center gap-3">
                 <div className="relative w-10 h-10 p-1 bg-white/10 rounded-xl">
-                  <Image 
+                  <img 
                     src={logoUrl} 
                     alt={platformName || "Logo"} 
-                    fill
-                    className="object-contain"
+                    className="absolute inset-0 w-full h-full object-contain p-1"
                   />
                 </div>
                 <div className="flex flex-col">

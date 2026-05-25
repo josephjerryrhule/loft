@@ -10,7 +10,6 @@ import { getCustomerOrders } from "@/app/actions/user";
 import { getSystemSettings } from "@/app/actions/settings";
 import { getCurrencySymbol } from "@/lib/utils";
 import { ViewOrderDialog } from "@/components/order/ViewOrderDialog";
-import Image from "next/image";
 import Link from "next/link";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -169,12 +168,9 @@ export default function CustomerOrdersPage() {
                             <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl mb-4">
                                 <div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm shrink-0">
                                     {order.product.featuredImageUrl ? (
-                                        <Image
+                                        <img
                                         src={order.product.featuredImageUrl}
                                         alt={order.product.title}
-                                        width={48}
-                                        height={48}
-                                        unoptimized
                                         className="w-full h-full object-cover"
                                         />
                                     ) : (
@@ -306,12 +302,9 @@ export default function CustomerOrdersPage() {
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm shrink-0 group-hover:scale-105 transition-transform duration-300">
                                         {order.product.featuredImageUrl ? (
-                                            <Image
+                                            <img
                                             src={order.product.featuredImageUrl}
                                             alt={order.product.title}
-                                            width={48}
-                                            height={48}
-                                            unoptimized
                                             className="w-full h-full object-cover"
                                             />
                                         ) : (

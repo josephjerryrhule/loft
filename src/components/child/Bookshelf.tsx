@@ -18,7 +18,6 @@ interface BookItemProps {
     createdAt: Date | string;
   };
 }
-import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -110,12 +109,10 @@ function BookItem({ book }: BookItemProps) {
       <Link href={`/child/flipbooks/${book.id}`} className="block w-full">
         <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden shadow-xl transform transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-2 group-hover:rotate-1 ring-4 ring-white group-hover:ring-[#E87154]/20">
           {book.coverImageUrl ? (
-            <Image
+            <img
               src={book.coverImageUrl}
               alt={book.title}
-              fill
-              className="object-cover"
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="absolute inset-0 w-full h-full object-cover"
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center bg-[#FFFAF5] p-6 text-center">

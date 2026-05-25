@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Loader2, CheckCircle2, Upload, X, User } from "lucide-react";
 import { toast } from "sonner";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface FileUploadProps {
@@ -90,14 +89,12 @@ export function FileUpload({
         <input type="hidden" name={name} value={uploadedUrl} required={required} />
         
         <div className="relative group">
-          <div className={`w-32 h-32 rounded-full overflow-hidden border-2 ${uploadedUrl ? 'border-blue-500' : 'border-dashed border-slate-300'} bg-slate-50 flex items-center justify-center transition-all group-hover:border-blue-400`}>
+          <div className={`relative w-32 h-32 rounded-full overflow-hidden border-2 ${uploadedUrl ? 'border-blue-500' : 'border-dashed border-slate-300'} bg-slate-50 flex items-center justify-center transition-all group-hover:border-blue-400`}>
             {uploadedUrl ? (
-              <Image 
+              <img 
                 src={uploadedUrl} 
                 alt="Avatar Preview" 
-                fill 
-                unoptimized
-                className="object-cover"
+                className="absolute inset-0 w-full h-full object-cover"
               />
             ) : (
               <div className="flex flex-col items-center text-slate-400">

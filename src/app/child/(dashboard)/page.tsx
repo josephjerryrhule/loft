@@ -6,7 +6,6 @@ export const dynamic = "force-dynamic";
 import { getChildFlipbooks } from "@/app/actions/child-flipbooks";
 import { Bookshelf } from "@/components/child/Bookshelf";
 import { BookOpen, Trophy, Star, ChevronRight, Sparkles } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DynamicGreeting } from "@/components/child/DynamicGreeting";
@@ -75,12 +74,10 @@ export default async function ChildDashboardPage() {
              
              <div className="relative flex flex-col md:flex-row gap-10 items-center">
                 <div className="w-48 md:w-64 aspect-[3/4] relative rounded-3xl overflow-hidden shadow-2xl transform group-hover:rotate-2 transition-transform duration-700">
-                  <Image 
+                  <img 
                     src={lastReadProgress.coverImageUrl || "/images/book-placeholder.png"} 
                     alt={lastReadProgress.title} 
-                    fill 
-                    className="object-cover"
-                    sizes="(max-width: 768px) 192px, 256px"
+                    className="absolute inset-0 w-full h-full object-cover"
                   />
                   <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-white/20 to-transparent"></div>
                 </div>

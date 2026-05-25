@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Loader2, Sparkles, BookOpen, Rocket, ArrowLeft } from "lucide-react";
-import Image from "next/image";
 import { DashboardAnimations } from "@/components/child/DashboardAnimations";
 
 const usernameSchema = z.object({
@@ -106,9 +105,9 @@ export default function LoginForm({ logoUrl, platformName }: LoginFormProps) {
         <div className="text-center mb-10 space-y-6">
           <div className="mx-auto w-28 h-28 bg-white rounded-[32px] shadow-[0_12px_40px_rgba(232,113,84,0.12)] flex items-center justify-center border border-[#E87154]/10 transform hover:rotate-3 transition-transform duration-500">
             {logoUrl ? (
-              <Image src={logoUrl} alt={platformName || "Logo"} width={80} height={80} className="object-contain" />
+              <img src={logoUrl} alt={platformName || "Logo"} className="w-20 h-20 object-contain" />
             ) : (
-              <Image src="/logo.png" alt="Loft Logo" width={80} height={80} className="object-contain" />
+              <img src="/logo.png" alt="Loft Logo" className="w-20 h-20 object-contain" />
             )}
           </div>
           

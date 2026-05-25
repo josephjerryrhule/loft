@@ -2,7 +2,6 @@ import { auth } from "@/auth";
 import { Sidebar, MobileNav } from "@/components/layout/Sidebar";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import Image from "next/image";
 
 async function getBrandingSettings() {
   try {
@@ -65,7 +64,7 @@ export default async function DashboardLayout({
              <div className="flex items-center gap-2 ml-2">
                {branding.logoUrl && (
                  <div className="relative w-6 h-6">
-                   <Image src={branding.logoUrl} alt="Logo" fill className="object-contain" />
+                   <img src={branding.logoUrl} alt="Logo" className="absolute inset-0 w-full h-full object-contain" />
                  </div>
                )}
                <span className="font-bold">{branding.platformName || "Loft"}</span>

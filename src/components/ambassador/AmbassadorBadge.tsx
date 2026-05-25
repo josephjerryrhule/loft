@@ -1,7 +1,6 @@
 "use client";
 
 import { User, CheckCircle2, XCircle, ShieldCheck } from "lucide-react";
-import Image from "next/image";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
@@ -49,11 +48,10 @@ export function AmbassadorBadge({ user, logoUrl }: AmbassadorBadgeProps) {
       {/* Brand Header - Reduced Padding */}
       <div className="bg-[#FFFAF5] p-5 flex flex-col items-center border-b">
         <div className="relative w-28 h-8 mb-1.5">
-            <Image 
+            <img 
                 src={logoUrl || "/logo.png"} 
                 alt="Logo" 
-                fill 
-                className="object-contain" 
+                className="absolute inset-0 w-full h-full object-contain" 
             />
         </div>
         <div className="flex items-center gap-1.5">
@@ -66,14 +64,12 @@ export function AmbassadorBadge({ user, logoUrl }: AmbassadorBadgeProps) {
       <div className="p-6 flex flex-col items-center text-center">
         {/* Photo Area - Slightly Smaller */}
         <div className="relative mb-5">
-          <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#FFFAF5] shadow-xl bg-slate-50 flex items-center justify-center">
+          <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-[#FFFAF5] shadow-xl bg-slate-50 flex items-center justify-center">
             {user.profilePictureUrl ? (
-              <Image 
+              <img 
                 src={user.profilePictureUrl} 
                 alt={fullName} 
-                fill 
-                unoptimized
-                className="object-cover"
+                className="absolute inset-0 w-full h-full object-cover"
               />
             ) : (
               <User className="w-14 h-14 text-slate-200" />
@@ -104,7 +100,7 @@ export function AmbassadorBadge({ user, logoUrl }: AmbassadorBadgeProps) {
             {/* QR Code */}
             <div className="bg-white p-1 rounded-lg border border-slate-200 shadow-sm shrink-0">
                 {qrCodeUrl ? (
-                    <Image src={qrCodeUrl} alt="QR Code" width={70} height={70} className="rounded-sm" />
+                    <img src={qrCodeUrl} alt="QR Code" className="w-[70px] h-[70px] rounded-sm object-contain" />
                 ) : (
                     <div className="w-[70px] h-[70px] bg-slate-100 animate-pulse rounded-sm" />
                 )}

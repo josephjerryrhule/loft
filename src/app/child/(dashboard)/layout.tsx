@@ -5,7 +5,6 @@ import { LogOut, LayoutDashboard, Library } from "lucide-react";
 import { logoutChild } from "@/app/actions/child-auth";
 import { Button } from "@/components/ui/button";
 import { getSystemSettings } from "@/app/actions/settings";
-import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { DashboardAnimations } from "@/components/child/DashboardAnimations";
@@ -32,7 +31,7 @@ export default async function ChildDashboardLayout({ children }: { children: Rea
           <div className="flex items-center gap-3">
              <Link href="/child" className="flex items-center gap-3 group">
                <div className="relative w-12 h-12 bg-white rounded-2xl shadow-sm border border-[#E87154]/5 flex items-center justify-center p-2 transform group-hover:scale-105 transition-transform duration-300">
-                  <Image src={logoUrl} alt={platformName} width={32} height={32} className="object-contain" />
+                  <img src={logoUrl} alt={platformName} className="w-8 h-8 object-contain" />
                </div>
                <h1 className="text-2xl font-black text-[#E87154] tracking-tight">
                  {platformName}

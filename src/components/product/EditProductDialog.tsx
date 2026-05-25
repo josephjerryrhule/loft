@@ -114,6 +114,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
                             label="Replace Product Image" 
                             name="featuredImageUrl" 
                             accept="image/*"
+                            defaultValue={product.featuredImageUrl || ""}
                         />
                         {product.featuredImageUrl && (
                             <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border-none shadow-inner">

@@ -79,12 +79,10 @@ function ProductDetailsDialog({
           <div className="space-y-4">
             <div className="bg-slate-50 dark:bg-slate-800/20 rounded-2xl border border-slate-100 dark:border-slate-800/65 flex items-center justify-center p-4 aspect-square relative overflow-hidden shadow-inner">
               {product.featuredImageUrl ? (
-                <Image 
+                <img 
                   src={product.featuredImageUrl} 
                   alt={product.title} 
-                  fill
-                  unoptimized
-                  className="object-cover"
+                  className="object-cover w-full h-full absolute inset-0"
                 />
               ) : (
                 <div className="flex flex-col items-center gap-2 text-slate-350 dark:text-slate-650">
@@ -219,12 +217,10 @@ export function ProductCard({ product, userEmail, userId }: ProductCardProps) {
           className="h-64 bg-slate-50 dark:bg-slate-850 flex items-center justify-center text-slate-200 relative overflow-hidden cursor-pointer"
         >
           {product.featuredImageUrl ? (
-            <Image
+            <img
               src={product.featuredImageUrl}
               alt={product.title}
-              fill
-              unoptimized
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
+              className="object-cover w-full h-full absolute inset-0 transition-transform duration-700 group-hover:scale-105"
             />
           ) : (
             <ShoppingBag size={64} className="opacity-15 group-hover:scale-105 transition-transform duration-700" />

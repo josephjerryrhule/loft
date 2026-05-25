@@ -17,9 +17,8 @@ import {
   CheckCircle2,
   AlertCircle
 } from "lucide-react";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface ProductViewerProps {
   product: any;
@@ -62,12 +61,10 @@ export function ProductViewer({ product, open, onOpenChange }: ProductViewerProp
           <div className="space-y-4">
             <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center justify-center p-4 aspect-square relative overflow-hidden shadow-inner group">
               {product.featuredImageUrl ? (
-                <Image 
+                <img 
                   src={product.featuredImageUrl} 
                   alt={product.title} 
-                  fill
-                  unoptimized
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
               ) : (
                 <div className="flex flex-col items-center gap-2 text-slate-300">

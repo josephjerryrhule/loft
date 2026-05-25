@@ -25,7 +25,6 @@ import {
   Check,
   AlertCircle
 } from "lucide-react";
-import Image from "next/image";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 
@@ -633,12 +632,9 @@ export default function PersonalizationPage() {
                     />
                     {headshotUrl ? (
                       <div className="relative group border rounded-2xl overflow-hidden aspect-square max-h-56 bg-slate-50 flex items-center justify-center shadow-inner">
-                        <Image
+                        <img
                           src={headshotUrl}
                           alt="Child headshot"
-                          width={224}
-                          height={224}
-                          unoptimized
                           className="w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -689,12 +685,9 @@ export default function PersonalizationPage() {
                     />
                     {fullBodyUrl ? (
                       <div className="relative group border rounded-2xl overflow-hidden aspect-square max-h-56 bg-slate-50 flex items-center justify-center shadow-inner">
-                        <Image
+                        <img
                           src={fullBodyUrl}
                           alt="Child full body"
-                          width={224}
-                          height={224}
-                          unoptimized
                           className="w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
