@@ -174,7 +174,10 @@ export async function getPaymentTrackerData(filters?: {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - now.getDay());
+  const day = now.getDay();
+  const diff = now.getDate() - (day === 0 ? 6 : day - 1);
+  startOfWeek.setDate(diff);
+  startOfWeek.setHours(0, 0, 0, 0);
 
   const completed = subscriptions.filter((s) => s.paymentStatus === "COMPLETED" || s.paymentStatus === "COMPLETED_FREE");
   const totalRevenue = completed.reduce((s, sub) => s + Number(sub.plan.price), 0);
@@ -262,7 +265,10 @@ export async function getDailySignupData(filters?: {
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - now.getDay());
+  const day = now.getDay();
+  const diff = now.getDate() - (day === 0 ? 6 : day - 1);
+  startOfWeek.setDate(diff);
+  startOfWeek.setHours(0, 0, 0, 0);
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
   const allParents = await prisma.user.findMany({

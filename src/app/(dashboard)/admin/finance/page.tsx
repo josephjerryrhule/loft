@@ -361,11 +361,10 @@ export default function AdminFinancePage() {
     
     commissions.forEach(comm => {
       const date = new Date(comm.createdAt);
-      const day = date.getDay(); // 0 is Sunday, 1 is Monday, etc.
+      const day = date.getUTCDay(); // 0 is Sunday, 1 is Monday, etc.
       // Adjust Sunday (0) to 6 (so we subtract 6 days), and Monday-Saturday (1-6) to subtract (day - 1) days.
-      const diff = date.getDate() - (day === 0 ? 6 : day - 1);
-      const startOfWeek = new Date(date.setDate(diff));
-      startOfWeek.setHours(0, 0, 0, 0);
+      const diff = date.getUTCDate() - (day === 0 ? 6 : day - 1);
+      const startOfWeek = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), diff, 0, 0, 0, 0));
       const weekKey = startOfWeek.toISOString();
       
       if (!groups[weekKey]) {
