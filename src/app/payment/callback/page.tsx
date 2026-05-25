@@ -12,6 +12,7 @@ import { CheckCircle, XCircle, Loader2, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 
 interface PaymentVerificationResult {
   success: boolean;
@@ -147,6 +148,9 @@ async function PaymentResult({
   params: { reference?: string; gateway?: string; session_id?: string; token?: string } 
 }) {
   const result = await verifyAndProcessPayment(params);
+  const session = await auth();
+  const userRole = session?.user?.role || "CUSTOMER";
+  const ordersLink = userRole === "PARENT" ? "/parent/orders" : "/customer/orders";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#FFFAF5] p-4">
@@ -178,7 +182,7 @@ async function PaymentResult({
                       </Button>
                     </Link>
                   </div>
-                  <Link href="/customer/orders" className="block text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors">
+                  <Link href={ordersLink} className="block text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors">
                     Or personalize later from My Orders
                   </Link>
                 </div>
@@ -193,7 +197,7 @@ async function PaymentResult({
                   </div>
               ) : (
                   <div className="pt-2 space-y-2">
-                    <Link href="/customer/orders">
+                    <Link href={ordersLink}>
                       <Button className="w-full bg-slate-900 hover:bg-black font-black text-white h-12 rounded-xl transition-all">View My Orders</Button>
                     </Link>
                     <Link href="/products">

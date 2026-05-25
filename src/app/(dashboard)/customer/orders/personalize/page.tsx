@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 
 interface AdditionalCharacter {
   fullName: string;
@@ -37,6 +38,9 @@ export default function PersonalizationPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const orderId = searchParams.get("orderId");
+  const { data: session } = useSession();
+  const userRole = (session?.user as { role?: string })?.role || "CUSTOMER";
+  const ordersLink = userRole === "PARENT" ? "/parent/orders" : "/customer/orders";
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -79,7 +83,7 @@ export default function PersonalizationPage() {
   useEffect(() => {
     if (!orderId) {
       toast.error("No Order ID provided.");
-      router.push("/customer/orders");
+      router.push(ordersLink);
       return;
     }
     loadOrder();
@@ -131,7 +135,7 @@ export default function PersonalizationPage() {
     } catch (error) {
       console.error("Failed to load order:", error);
       toast.error("Failed to load order details.");
-      router.push("/customer/orders");
+      router.push(ordersLink);
     } finally {
       setLoading(false);
     }
@@ -355,7 +359,7 @@ export default function PersonalizationPage() {
 
             <div className="pt-6 border-t flex flex-col sm:flex-row gap-4">
               <Button 
-                onClick={() => router.push("/customer/orders")}
+                onClick={() => router.push(ordersLink)}
                 className="flex-1 bg-[#E87154] hover:bg-[#D66144] font-black h-12 rounded-xl text-white shadow-xl shadow-[#E87154]/20 transition-all active:scale-95"
               >
                 Track My Orders

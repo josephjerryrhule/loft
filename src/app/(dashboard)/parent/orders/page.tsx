@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Package, ShoppingCart, Eye, Download, CheckCircle2, Clock, Trash2, ArrowUpRight, Hash } from "lucide-react";
+import { Loader2, Package, ShoppingCart, Eye, Download, CheckCircle2, Clock, Trash2, ArrowUpRight, Hash, Sparkles } from "lucide-react";
 import { getCustomerOrders } from "@/app/actions/user";
 import { getSystemSettings } from "@/app/actions/settings";
 import { getCurrencySymbol } from "@/lib/utils";
@@ -36,6 +36,7 @@ interface Order {
     productType: string;
     price: number;
     featuredImageUrl: string | null;
+    requiresCustomization: boolean;
   };
   referredBy: {
     firstName: string | null;
@@ -194,6 +195,44 @@ export default function CustomerOrdersPage() {
                                 </div>
                             </div>
 
+                            {/* Personalization Section on Mobile */}
+                            {order.product.requiresCustomization && (
+                                <div className="p-4 bg-[#FFF8F6] dark:bg-slate-800/30 rounded-2xl border border-[#E87154]/10 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black uppercase tracking-wider text-[#E87154] flex items-center gap-1">
+                                            <Sparkles size={10} className="animate-pulse" /> Personalization
+                                        </p>
+                                        <p className="text-[11px] text-slate-500 dark:text-slate-450 font-medium">
+                                            Submit child details & photo references to start book production.
+                                        </p>
+                                    </div>
+                                    
+                                    {(() => {
+                                        let submitted = false;
+                                        try {
+                                            if (order.customizationData) {
+                                                const parsed = JSON.parse(order.customizationData);
+                                                if (parsed?.personalizationStatus === "SUBMITTED") {
+                                                    submitted = true;
+                                                }
+                                            }
+                                        } catch (e) {}
+
+                                        return submitted ? (
+                                            <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none font-bold text-[9px] tracking-wide py-1 px-3 rounded-full flex items-center gap-1 w-fit uppercase">
+                                                <CheckCircle2 size={10} /> Completed
+                                            </Badge>
+                                        ) : (
+                                            <Link href={`/customer/orders/personalize?orderId=${order.id}`} className="w-full sm:w-auto">
+                                                <Button size="sm" className="w-full sm:w-auto bg-[#E87154] hover:bg-[#D66144] font-black h-9 text-[10px] uppercase px-4 shadow-md hover:shadow-lg transition-all text-white gap-1.5 flex items-center rounded-xl border-none">
+                                                    <Sparkles size={10} /> Personalize Now
+                                                </Button>
+                                            </Link>
+                                        );
+                                    })()}
+                                </div>
+                            )}
+
                             <div className="flex items-center justify-between gap-3">
                                 <Badge 
                                     variant="outline"
@@ -250,6 +289,7 @@ export default function CustomerOrdersPage() {
                         <TableHead className="text-right">Price</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Order Details</TableHead>
+                        <TableHead>Personalization</TableHead>
                         <TableHead className="text-right pr-10">Control</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -321,6 +361,40 @@ export default function CustomerOrdersPage() {
                                     order.status === "PROCESSING" ? <Clock size={10} className="mr-1.5" /> : null}
                                     {formatStatusLabel(order.status)}
                                 </Badge>
+                            </TableCell>
+                            <TableCell>
+                                {order.product.requiresCustomization ? (
+                                    (() => {
+                                        let submitted = false;
+                                        try {
+                                            if (order.customizationData) {
+                                                const parsed = JSON.parse(order.customizationData);
+                                                if (parsed?.personalizationStatus === "SUBMITTED") {
+                                                    submitted = true;
+                                                }
+                                            }
+                                        } catch (e) {}
+
+                                        return submitted ? (
+                                            <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none font-bold text-[10px] tracking-wide py-1 px-2.5 rounded-full flex items-center gap-1 w-fit">
+                                                <CheckCircle2 size={10} className="stroke-[3px]" /> Completed
+                                            </Badge>
+                                        ) : (
+                                            <div className="flex flex-col gap-1.5 w-fit">
+                                                <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none font-bold text-[10px] tracking-wide py-1 px-2.5 rounded-full flex items-center gap-1">
+                                                    <Clock size={10} /> Pending Details
+                                                </Badge>
+                                                <Link href={`/customer/orders/personalize?orderId=${order.id}`}>
+                                                    <Button size="sm" className="bg-[#E87154] hover:bg-[#D66144] font-black h-7 text-[9px] uppercase px-2 shadow-md hover:shadow-lg transition-all text-white gap-1 flex items-center mt-1 border-none">
+                                                        <Sparkles size={8} /> Personalize Now
+                                                    </Button>
+                                                </Link>
+                                            </div>
+                                        );
+                                    })()
+                                ) : (
+                                    <span className="text-slate-400 text-xs font-medium">Not Required</span>
+                                )}
                             </TableCell>
                             <TableCell className="text-right pr-10">
                                 <div className="flex items-center justify-end gap-3">

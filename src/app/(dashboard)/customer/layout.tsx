@@ -6,7 +6,9 @@ export default async function CustomerLayout({ children }: { children: React.Rea
   const session = await auth();
 
   if (!session?.user) redirect("/auth/login");
-  if ((session.user as { role?: string }).role !== Role.CUSTOMER) redirect("/");
+  
+  const role = (session.user as { role?: string }).role;
+  if (role !== Role.CUSTOMER && role !== Role.PARENT) redirect("/");
 
   return children;
 }
