@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { ChevronLeft, ChevronRight, X, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -218,33 +218,46 @@ export function ReliableFlipbookViewer({
     };
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center">
-            {/* Header */}
-            <div className="absolute top-4 right-4 z-50">
-                <Button variant="ghost" size="icon" onClick={onClose} className="text-white hover:bg-white/20">
-                    <X className="h-6 w-6" />
+        <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-2xl flex flex-col items-center justify-center overflow-hidden select-none">
+            {/* Ambient Background Glows */}
+            <div className="absolute -top-[40%] -left-[20%] w-[80%] h-[80%] rounded-full bg-[#E87154]/10 blur-[120px] pointer-events-none -z-10 animate-pulse" />
+            <div className="absolute -bottom-[40%] -right-[20%] w-[80%] h-[80%] rounded-full bg-[#E87154]/5 blur-[120px] pointer-events-none -z-10 animate-pulse" style={{ animationDelay: '2s' }} />
+
+            {/* Elegant Top Header Bar */}
+            <div className="absolute top-0 left-0 right-0 h-20 bg-slate-950/40 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-6 z-50 shadow-sm">
+                <div className="flex items-center gap-3 text-left">
+                    <div className="h-9 w-9 rounded-xl bg-[#E87154]/20 flex items-center justify-center text-[#E87154] shrink-0">
+                        <Sparkles size={16} className="animate-pulse" />
+                    </div>
+                    <div className="min-w-0">
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-[#E87154] leading-none">LOFT Reader</h3>
+                        <h2 className="text-sm font-bold text-white mt-1.5 leading-none truncate max-w-[200px] sm:max-w-md">{title || "Book Preview"}</h2>
+                    </div>
+                </div>
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={onClose} 
+                    className="text-white/60 hover:text-white hover:bg-white/10 rounded-full h-11 w-11 transition-all active:scale-95 border border-white/5 shadow-inner shrink-0"
+                >
+                    <X className="h-5 w-5" />
                 </Button>
             </div>
-            {title && (
-                <div className="absolute top-4 left-4 text-white font-medium text-lg z-50">
-                    {title}
-                </div>
-            )}
 
             {/* Loading State */}
             {loading && (
                 <div className="flex flex-col items-center gap-4 max-w-md">
-                    <Loader2 className="h-12 w-12 animate-spin text-white" />
-                    <p className="text-white text-lg">Loading flipbook...</p>
+                    <Loader2 className="h-12 w-12 animate-spin text-[#E87154]" />
+                    <p className="text-white text-base font-bold uppercase tracking-wider">Loading book content...</p>
                     {pdfUrl && !iframeContent && (
                         <>
-                            <div className="w-64 bg-white/20 rounded-full h-2 overflow-hidden">
+                            <div className="w-64 bg-white/10 rounded-full h-2 overflow-hidden shadow-inner border border-white/5">
                                 <div 
-                                    className="bg-white h-full transition-all duration-300"
+                                    className="bg-[#E87154] h-full transition-all duration-300"
                                     style={{ width: `${loadingProgress}%` }}
                                 />
                             </div>
-                            <p className="text-white/70 text-sm">{loadingProgress}% - Rendering pages</p>
+                            <p className="text-white/60 text-xs font-semibold">{loadingProgress}% - Rendering book spreads</p>
                         </>
                     )}
                 </div>
@@ -254,22 +267,22 @@ export function ReliableFlipbookViewer({
             {error && (
                 <div className="flex flex-col items-center gap-4 max-w-md text-center">
                     <div className="text-red-500 text-6xl">⚠️</div>
-                    <p className="text-white text-lg">{error}</p>
-                    <Button onClick={onClose} variant="outline">Close</Button>
+                    <p className="text-white text-lg font-bold">{error}</p>
+                    <Button onClick={onClose} variant="outline" className="border-white/20 text-white hover:bg-white/10">Close</Button>
                 </div>
             )}
 
             {/* Iframe View (Heyzine) */}
             {!loading && !error && iframeContent && (
-                <div className="w-full h-full flex flex-col items-center justify-center p-4 md:p-10">
+                <div className="w-full h-full flex flex-col items-center justify-center p-4 md:p-10 pt-24 pb-28">
                     <div 
-                        className="w-full h-full max-w-7xl relative [&>iframe]:w-full! [&>iframe]:h-full! [&>iframe]:border-0"
+                        className="w-full h-full max-w-7xl relative [&>iframe]:w-full! [&>iframe]:h-full! [&>iframe]:border-0 rounded-2xl overflow-hidden shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)]"
                         dangerouslySetInnerHTML={{ __html: iframeContent }}
                     />
                     
                     {/* Manual Complete Button for Iframe */}
                     {onComplete && !hasMarkedComplete && (
-                         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 mt-4">
+                         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
                             <Button
                                 onClick={() => {
                                     if (!hasMarkedComplete) {
@@ -277,7 +290,7 @@ export function ReliableFlipbookViewer({
                                         onComplete();
                                     }
                                 }}
-                                className="bg-green-600 hover:bg-green-700 text-white"
+                                className="bg-[#E87154] hover:bg-[#D66144] text-white font-black px-6 py-2.5 rounded-full shadow-lg shadow-orange-500/20 active:scale-95 transition-all"
                             >
                                 Mark as Completed
                             </Button>
@@ -288,44 +301,58 @@ export function ReliableFlipbookViewer({
 
             {/* PDF Flipbook */}
             {!loading && !error && !iframeContent && pageImages.length > 0 && (
-                <div className="flex-1 flex flex-col items-center justify-center w-full relative pb-24 md:pb-0">
-                    <HTMLFlipBook
-                        ref={bookRef}
-                        width={dimensions.width}
-                        height={dimensions.height}
-                        size="stretch"
-                        minWidth={300}
-                        maxWidth={1000}
-                        minHeight={400}
-                        maxHeight={1400}
-                        drawShadow={true}
-                        flippingTime={600}
-                        usePortrait={isMobile}
-                        startPage={initialPage}
-                        className="flipbook"
-                        style={{}}
-                        startZIndex={0}
-                        autoSize={true}
-                        maxShadowOpacity={0.5}
-                        showCover={false}
-                        mobileScrollSupport={true}
-                        clickEventForward={true}
-                        useMouseEvents={true}
-                        swipeDistance={30}
-                        showPageCorners={true}
-                        disableFlipByClick={false}
-                        onFlip={handlePageChange}
-                    >
-                        {pageImages.map((imageUrl, index) => (
-                            <div key={index} className="bg-white shadow-2xl flex items-center justify-center">
-                                <img 
-                                    src={imageUrl} 
-                                    alt={`Page ${index + 1}`}
-                                    className="w-full h-full object-contain"
-                                />
-                            </div>
-                        ))}
-                    </HTMLFlipBook>
+                <div className="flex-1 flex flex-col items-center justify-center w-full relative pb-28 md:pb-0 pt-20">
+                    <div className="relative shadow-[0_25px_70px_-15px_rgba(0,0,0,0.95)] rounded-2xl overflow-hidden">
+                        {/* 3D Book Cover Glow */}
+                        <div className="absolute inset-0 bg-[#E87154]/5 blur-[40px] pointer-events-none -z-10" />
+                        
+                        <HTMLFlipBook
+                            ref={bookRef}
+                            width={dimensions.width}
+                            height={dimensions.height}
+                            size="stretch"
+                            minWidth={300}
+                            maxWidth={1000}
+                            minHeight={400}
+                            maxHeight={1400}
+                            drawShadow={true}
+                            flippingTime={600}
+                            usePortrait={isMobile}
+                            startPage={initialPage}
+                            className="flipbook"
+                            style={{}}
+                            startZIndex={0}
+                            autoSize={true}
+                            maxShadowOpacity={0.5}
+                            showCover={false}
+                            mobileScrollSupport={true}
+                            clickEventForward={true}
+                            useMouseEvents={true}
+                            swipeDistance={30}
+                            showPageCorners={true}
+                            disableFlipByClick={false}
+                            onFlip={handlePageChange}
+                        >
+                            {pageImages.map((imageUrl, index) => (
+                                <div key={index} className="bg-white shadow-2xl flex items-center justify-center relative overflow-hidden group select-none">
+                                    <img 
+                                        src={imageUrl} 
+                                        alt={`Page ${index + 1}`}
+                                        className="w-full h-full object-contain"
+                                        draggable={false}
+                                    />
+                                    {/* 3D Page Crease Shadow Overlay */}
+                                    {index % 2 === 0 ? (
+                                        <div className="absolute top-0 right-0 w-[5%] h-full bg-gradient-to-r from-transparent to-black/15 pointer-events-none z-10" />
+                                    ) : (
+                                        <div className="absolute top-0 left-0 w-[5%] h-full bg-gradient-to-l from-transparent to-black/15 pointer-events-none z-10" />
+                                    )}
+                                    {/* Page edge lighting */}
+                                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/5 pointer-events-none z-10" />
+                                </div>
+                            ))}
+                        </HTMLFlipBook>
+                    </div>
 
                     {/* Navigation Controls - Desktop: sides, Mobile: bottom */}
                     <div className="hidden md:block">
@@ -333,76 +360,86 @@ export function ReliableFlipbookViewer({
                             onClick={() => bookRef.current?.pageFlip()?.flipPrev()}
                             disabled={currentPage === 0}
                             className={cn(
-                                "absolute left-4 top-1/2 -translate-y-1/2 z-50",
-                                "bg-white/90 hover:bg-white p-3 rounded-full shadow-lg",
-                                "disabled:opacity-30 disabled:cursor-not-allowed",
-                                "transition-all hover:scale-110"
+                                "absolute left-6 top-1/2 -translate-y-1/2 z-50",
+                                "bg-slate-900/60 hover:bg-[#E87154] text-white p-4 rounded-full shadow-2xl backdrop-blur-md border border-white/10",
+                                "disabled:opacity-20 disabled:cursor-not-allowed",
+                                "transition-all duration-300 hover:scale-110 active:scale-95"
                             )}
                         >
-                            <ChevronLeft className="h-6 w-6" />
+                            <ChevronLeft className="h-6 w-6 stroke-[3px]" />
                         </button>
                         <button
                             onClick={() => bookRef.current?.pageFlip()?.flipNext()}
                             disabled={currentPage >= numPages - 1}
                             className={cn(
-                                "absolute right-4 top-1/2 -translate-y-1/2 z-50",
-                                "bg-white/90 hover:bg-white p-3 rounded-full shadow-lg",
-                                "disabled:opacity-30 disabled:cursor-not-allowed",
-                                "transition-all hover:scale-110"
+                                "absolute right-6 top-1/2 -translate-y-1/2 z-50",
+                                "bg-slate-900/60 hover:bg-[#E87154] text-white p-4 rounded-full shadow-2xl backdrop-blur-md border border-white/10",
+                                "disabled:opacity-20 disabled:cursor-not-allowed",
+                                "transition-all duration-300 hover:scale-110 active:scale-95"
                             )}
                         >
-                            <ChevronRight className="h-6 w-6" />
+                            <ChevronRight className="h-6 w-6 stroke-[3px]" />
                         </button>
                     </div>
 
                     {/* Mobile Navigation - Bottom (both portrait and landscape) */}
-                    <div className="md:hidden fixed bottom-16 left-0 right-0 flex justify-center gap-4 z-50 px-4">
+                    <div className="md:hidden fixed bottom-24 left-0 right-0 flex justify-center gap-6 z-50 px-4">
                         <button
                             onClick={() => bookRef.current?.pageFlip()?.flipPrev()}
                             disabled={currentPage === 0}
                             className={cn(
-                                "bg-white/90 hover:bg-white p-4 rounded-full shadow-lg",
-                                "disabled:opacity-30 disabled:cursor-not-allowed",
+                                "bg-slate-900/60 hover:bg-[#E87154] text-white p-4 rounded-full shadow-2xl backdrop-blur-md border border-white/10",
+                                "disabled:opacity-20 disabled:cursor-not-allowed",
                                 "transition-all active:scale-95"
                             )}
                         >
-                            <ChevronLeft className="h-6 w-6" />
+                            <ChevronLeft className="h-6 w-6 stroke-[3px]" />
                         </button>
                         <button
                             onClick={() => bookRef.current?.pageFlip()?.flipNext()}
                             disabled={currentPage >= numPages - 1}
                             className={cn(
-                                "bg-white/90 hover:bg-white p-4 rounded-full shadow-lg",
-                                "disabled:opacity-30 disabled:cursor-not-allowed",
+                                "bg-slate-900/60 hover:bg-[#E87154] text-white p-4 rounded-full shadow-2xl backdrop-blur-md border border-white/10",
+                                "disabled:opacity-20 disabled:cursor-not-allowed",
                                 "transition-all active:scale-95"
                             )}
                         >
-                            <ChevronRight className="h-6 w-6" />
+                            <ChevronRight className="h-6 w-6 stroke-[3px]" />
                         </button>
                     </div>
 
-                    {/* Page Counter */}
-                    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-black/80 backdrop-blur-sm text-white px-4 py-2 rounded-full text-xs flex md:flex-row flex-col items-center gap-3 shadow-lg">
-                        <span className="font-medium">Page {currentPage + 1} of {numPages}</span>
+                    {/* Page Counter and Sleek progress pill */}
+                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-3">
+                        <div className="bg-slate-900/85 backdrop-blur-md text-white px-5 py-2.5 rounded-full text-xs flex items-center gap-4 shadow-2xl border border-white/10">
+                            <span className="font-bold tracking-wider text-[11px]">Page {currentPage + 1} of {numPages}</span>
+                            
+                            {/* Mark Complete Button */}
+                            {currentPage >= numPages - 2 && !hasMarkedComplete && onComplete && (
+                                <>
+                                    <div className="w-[1px] h-4 bg-white/20" />
+                                    <Button
+                                        onClick={() => {
+                                            if (!hasMarkedComplete) {
+                                                setHasMarkedComplete(true);
+                                                onComplete();
+                                            }
+                                        }}
+                                        size="sm"
+                                        className="bg-emerald-500 hover:bg-emerald-600 font-black text-white h-7 px-3.5 rounded-full text-[10px] uppercase tracking-wider transition-all active:scale-95 shadow-md shadow-emerald-500/25"
+                                    >
+                                        Mark Complete
+                                    </Button>
+                                </>
+                            )}
+                        </div>
                         
-                        {/* Mark Complete Button when on last page or last spread */}
-                        {currentPage >= numPages - 2 && !hasMarkedComplete && onComplete && (
-                            <>
-                                <div className="w-px h-4 bg-white/30 hidden" />
-                                <Button
-                                    onClick={() => {
-                                        if (!hasMarkedComplete) {
-                                            setHasMarkedComplete(true);
-                                            onComplete();
-                                        }
-                                    }}
-                                    size="sm"
-                                    className="bg-green-600 hover:bg-green-700 text-white h-7 px-3 text-xs font-medium"
-                                >
-                                    Mark Complete
-                                </Button>
-                            </>
-                        )}
+                        {/* Miniature Progress Bar */}
+                        <div className="w-48 bg-white/10 h-1 rounded-full overflow-hidden shadow-inner border border-white/5">
+                            <div 
+                                className="bg-[#E87154] h-full rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(232,113,84,0.6)]"
+                                style={{ width: `${(currentPage / (numPages - 1 || 1)) * 100}%` }}
+                            />
+                        </div>
                     </div>
                 </div>
             )}
