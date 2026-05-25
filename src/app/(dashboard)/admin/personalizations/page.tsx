@@ -25,9 +25,11 @@ import {
   Heart,
   Image as ImageIcon,
   FileText,
-  Trash2
+  Trash2,
+  FolderArchive
 } from "lucide-react";
-import Image from "next/image";
+import JSZip from "jszip";
+import jsPDF from "jspdf";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -50,6 +52,7 @@ export default function AdminPersonalizationsPage() {
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [orderToReset, setOrderToReset] = useState<any>(null);
   const [resetting, setResetting] = useState(false);
+  const [downloadingZip, setDownloadingZip] = useState<string | null>(null);
 
   const handleResetCustomization = async () => {
     if (!orderToReset) return;
@@ -148,73 +151,153 @@ export default function AdminPersonalizationsPage() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
-  const handlePrint = (order: any) => {
+  const handleDownloadZip = async (order: any) => {
     const custom = parseCustomization(order);
-    if (!custom) return;
+    if (!custom) {
+      toast.error("No customization data available for this order.");
+      return;
+    }
 
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
+    try {
+      setDownloadingZip(order.id);
+      toast.info("Preparing ZIP download...");
 
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Personalization Specs - ${order.orderNumber}</title>
-          <style>
-            body { font-family: system-ui, sans-serif; color: #1e293b; padding: 40px; line-height: 1.5; }
-            h1 { font-size: 24px; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 24px; color: #e87154; }
-            h2 { font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-top: 32px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
-            .grid { display: grid; grid-template-cols: 1fr 1fr; gap: 20px; }
-            .item { margin-bottom: 12px; }
-            .label { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
-            .value { font-size: 14px; font-weight: 700; color: #334155; margin-top: 2px; }
-            .photos { display: flex; gap: 20px; margin-top: 16px; }
-            .photo-card { border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; width: 220px; text-align: center; }
-            .photo-card img { max-width: 100%; max-height: 200px; object-fit: contain; border-radius: 8px; }
-            .characters-list { list-style: none; padding: 0; }
-            .character-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #f1f5f9; font-size: 14px; }
-          </style>
-        </head>
-        <body>
-          <h1>Personalization Sheet - Order ${order.orderNumber}</h1>
-          <div class="grid">
-            <div class="item"><div class="label">Purchaser Name</div><div class="value">${custom.purchaser?.fullName}</div></div>
-            <div class="item"><div class="label">Purchaser Contact</div><div class="value">${custom.purchaser?.contact || "N/A"}</div></div>
-            <div class="item"><div class="label">Purchaser Email</div><div class="value">${custom.purchaser?.email}</div></div>
-            <div class="item"><div class="label">Child Full Name</div><div class="value">${custom.child?.fullName}</div></div>
-            <div class="item"><div class="label">Child Gender</div><div class="value">${custom.child?.gender}</div></div>
-            <div class="item"><div class="label">Child D.O.B</div><div class="value">${new Date(custom.child?.dob).toLocaleDateString()}</div></div>
-            <div class="item"><div class="label">Favorite Color</div><div class="value">${custom.preferences?.favColor}</div></div>
-            <div class="item"><div class="label">Favorite Food</div><div class="value">${custom.preferences?.favFood}</div></div>
-          </div>
+      const zip = new JSZip();
 
-          <h2>Additional Featured Characters</h2>
-          ${custom.additionalCharacters?.length > 0 ? `
-            <ul class="characters-list">
-              ${custom.additionalCharacters.map((c: any) => `
-                <li class="character-row">
-                  <strong>${c.fullName}</strong>
-                  <span>${c.relationship}</span>
-                </li>
-              `).join("")}
-            </ul>
-          ` : `<p>No additional characters requested.</p>`}
+      // --- Generate PDF spec sheet ---
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const margin = 20;
+      let y = 20;
 
-          <h2>Provided Photo References</h2>
-          <div class="photos">
-            <div class="photo-card">
-              <div class="label" style="margin-bottom:8px;">Headshot Photo</div>
-              <img src="${custom.photos?.headshot}" alt="headshot" />
-            </div>
-            <div class="photo-card">
-              <div class="label" style="margin-bottom:8px;">Full Body Photo</div>
-              <img src="${custom.photos?.fullBody}" alt="full body" />
-            </div>
-          </div>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.print();
+      // Header
+      pdf.setFillColor(232, 113, 84); // #E87154
+      pdf.rect(0, 0, pageW, 38, "F");
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(22);
+      pdf.setFont("helvetica", "bold");
+      pdf.text(`Spec Sheet — ${order.orderNumber}`, margin, 18);
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`Generated: ${new Date().toLocaleDateString()} • ${custom.personalizationStatus === "SUBMITTED" ? "Submitted" : "Pending"}`, margin, 28);
+      pdf.text(`Product: ${order.product?.title || "Personalized Birthday Book"}`, margin, 34);
+      y = 48;
+
+      // Helper
+      const addField = (label: string, value: string) => {
+        if (y > 270) { pdf.addPage(); y = 20; }
+        pdf.setTextColor(148, 163, 184);
+        pdf.setFontSize(8);
+        pdf.setFont("helvetica", "bold");
+        pdf.text(label.toUpperCase(), margin, y);
+        pdf.setTextColor(30, 41, 59);
+        pdf.setFontSize(11);
+        pdf.setFont("helvetica", "normal");
+        pdf.text(value || "N/A", margin, y + 5);
+        y += 14;
+      };
+
+      // Purchaser section
+      pdf.setTextColor(232, 113, 84);
+      pdf.setFontSize(11);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("PURCHASER DETAILS", margin, y);
+      y += 8;
+      addField("Full Name", custom.purchaser?.fullName || `${order.customer.firstName} ${order.customer.lastName}`);
+      addField("Email", custom.purchaser?.email || order.customer.email);
+      addField("Phone", custom.purchaser?.contact || order.customer.phoneNumber || "N/A");
+
+      // Child section
+      pdf.setTextColor(232, 113, 84);
+      pdf.setFontSize(11);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("CHILD PROFILE", margin, y);
+      y += 8;
+      addField("Full Name", custom.child?.fullName || "Pending");
+      addField("Gender", custom.child?.gender || "Pending");
+      addField("Date of Birth", custom.child?.dob ? new Date(custom.child.dob).toLocaleDateString() : "Pending");
+
+      // Preferences
+      pdf.setTextColor(232, 113, 84);
+      pdf.setFontSize(11);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("STORY PREFERENCES", margin, y);
+      y += 8;
+      addField("Favorite Color", custom.preferences?.favColor || "N/A");
+      addField("Favorite Food", custom.preferences?.favFood || "N/A");
+
+      // Additional characters
+      if (custom.additionalCharacters && custom.additionalCharacters.length > 0) {
+        pdf.setTextColor(232, 113, 84);
+        pdf.setFontSize(11);
+        pdf.setFont("helvetica", "bold");
+        pdf.text("ADDITIONAL CHARACTERS", margin, y);
+        y += 8;
+        custom.additionalCharacters.forEach((c: any) => {
+          if (y > 270) { pdf.addPage(); y = 20; }
+          pdf.setTextColor(30, 41, 59);
+          pdf.setFontSize(10);
+          pdf.setFont("helvetica", "bold");
+          pdf.text(`${c.fullName}`, margin, y);
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(100, 116, 139);
+          pdf.text(` — ${c.relationship}`, margin + pdf.getTextWidth(`${c.fullName} `), y);
+          y += 7;
+        });
+        y += 4;
+      }
+
+      // Photo references note
+      if (y > 260) { pdf.addPage(); y = 20; }
+      pdf.setTextColor(148, 163, 184);
+      pdf.setFontSize(9);
+      pdf.setFont("helvetica", "italic");
+      pdf.text("Photo reference files are included in this ZIP archive.", margin, y);
+
+      zip.file(`spec-sheet-${order.orderNumber}.pdf`, pdf.output("blob"));
+
+      // --- Fetch and add images ---
+      const fetchImage = async (url: string, filename: string) => {
+        try {
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`Failed to fetch ${filename}`);
+          const blob = await response.blob();
+          // Detect extension from content type
+          const contentType = blob.type || "image/jpeg";
+          const ext = contentType.includes("png") ? ".png" : contentType.includes("webp") ? ".webp" : ".jpg";
+          zip.file(`${filename}${ext}`, blob);
+        } catch (err) {
+          console.warn(`Could not fetch image: ${filename}`, err);
+        }
+      };
+
+      const imagePromises: Promise<void>[] = [];
+      if (custom.photos?.headshot) {
+        imagePromises.push(fetchImage(custom.photos.headshot, "headshot-photo"));
+      }
+      if (custom.photos?.fullBody) {
+        imagePromises.push(fetchImage(custom.photos.fullBody, "fullbody-photo"));
+      }
+      await Promise.all(imagePromises);
+
+      // --- Generate and trigger download ---
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${order.orderNumber}-customization.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast.success(`ZIP downloaded for ${order.orderNumber}`);
+    } catch (error) {
+      console.error("ZIP generation failed:", error);
+      toast.error("Failed to generate ZIP. Please try again.");
+    } finally {
+      setDownloadingZip(null);
+    }
   };
 
   if (loading && personalizations.length === 0) {
@@ -381,9 +464,10 @@ export default function AdminPersonalizationsPage() {
                               size="icon"
                               variant="ghost"
                               className="h-9 w-9 rounded-full hover:bg-blue-50 hover:text-blue-600 transition-all"
-                              onClick={() => handlePrint(order)}
+                              onClick={() => handleDownloadZip(order)}
+                              disabled={downloadingZip === order.id}
                             >
-                              <Download className="h-4 w-4" />
+                              {downloadingZip === order.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderArchive className="h-4 w-4" />}
                             </Button>
                           )}
                           <Button
@@ -572,10 +656,12 @@ export default function AdminPersonalizationsPage() {
                       {isSubmitted && (
                         <Button
                           type="button"
-                          onClick={() => handlePrint(selectedOrder)}
+                          onClick={() => handleDownloadZip(selectedOrder)}
+                          disabled={downloadingZip === selectedOrder.id}
                           className="flex-1 sm:flex-none h-11 rounded-xl bg-[#E87154] hover:bg-[#D66144] font-black text-white px-6 gap-2 shadow-lg shadow-[#E87154]/25"
                         >
-                          <Download size={16} /> Print Spec Sheet
+                          {downloadingZip === selectedOrder.id ? <Loader2 size={16} className="animate-spin" /> : <FolderArchive size={16} />}
+                          {downloadingZip === selectedOrder.id ? "Preparing..." : "Download ZIP"}
                         </Button>
                       )}
                     </div>
