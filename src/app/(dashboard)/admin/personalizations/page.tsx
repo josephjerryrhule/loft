@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getPersonalizations } from "@/app/actions/personalization";
+import { deleteOrderCustomization } from "@/app/actions/admin";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,7 +24,8 @@ import {
   User,
   Heart,
   Image as ImageIcon,
-  FileText
+  FileText,
+  Trash2
 } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -44,6 +46,32 @@ export default function AdminPersonalizationsPage() {
   // Detail Modal
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const [orderToReset, setOrderToReset] = useState<any>(null);
+  const [resetting, setResetting] = useState(false);
+
+  const handleResetCustomization = async () => {
+    if (!orderToReset) return;
+    try {
+      setResetting(true);
+      const res = await deleteOrderCustomization(orderToReset.id);
+      if (res && 'error' in res && res.error) {
+        toast.error(res.error);
+      } else {
+        toast.success(`Customization for ${orderToReset.orderNumber} cleared successfully`);
+        setResetConfirmOpen(false);
+        setOrderToReset(null);
+        setDetailOpen(false);
+        loadPersonalizations();
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to clear customization");
+    } finally {
+      setResetting(false);
+    }
+  };
 
   useEffect(() => {
     loadPersonalizations();
@@ -346,7 +374,7 @@ export default function AdminPersonalizationsPage() {
                               setDetailOpen(true);
                             }}
                           >
-                            <Eye className="h-4.w-4" />
+                            <Eye className="h-4 w-4" />
                           </Button>
                           {isSubmitted && (
                             <Button
@@ -358,6 +386,18 @@ export default function AdminPersonalizationsPage() {
                               <Download className="h-4 w-4" />
                             </Button>
                           )}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-9 w-9 rounded-full hover:bg-red-50 hover:text-red-600 transition-all"
+                            onClick={() => {
+                              setOrderToReset(order);
+                              setResetConfirmOpen(true);
+                            }}
+                            title="Delete/Reset Customization"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -508,7 +548,19 @@ export default function AdminPersonalizationsPage() {
                       <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{selectedOrder.product.title}</span>
                     </div>
                     
-                    <div className="flex gap-3 w-full sm:w-auto">
+                    <div className="flex gap-3 w-full sm:w-auto items-center">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => {
+                          setOrderToReset(selectedOrder);
+                          setResetConfirmOpen(true);
+                        }}
+                        className="h-11 w-11 rounded-xl hover:bg-red-50 hover:text-red-600 text-slate-400 flex items-center justify-center shrink-0"
+                        title="Delete/Reset Customization"
+                      >
+                        <Trash2 size={18} />
+                      </Button>
                       <Button
                         type="button"
                         variant="ghost"
@@ -533,6 +585,38 @@ export default function AdminPersonalizationsPage() {
               </>
             );
           })()}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
+        <DialogContent className="max-w-md rounded-2xl p-6 border-none shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black text-slate-900">Delete Customization</DialogTitle>
+            <DialogDescription className="text-sm font-medium text-slate-500 mt-2">
+              Are you sure you want to delete the customization data for order <span className="font-bold text-slate-700">{orderToReset?.orderNumber}</span>? 
+              This will clear all submitted preferences, images, and child information, and revert the order status back to pending. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-6 flex gap-3">
+            <Button
+              variant="outline"
+              disabled={resetting}
+              onClick={() => {
+                setResetConfirmOpen(false);
+                setOrderToReset(null);
+              }}
+              className="flex-1 rounded-xl font-bold h-11 border-slate-200"
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={resetting}
+              onClick={handleResetCustomization}
+              className="flex-1 rounded-xl font-black h-11 bg-red-500 hover:bg-red-600 text-white border-none shadow-md shadow-red-500/10 flex items-center justify-center gap-2"
+            >
+              {resetting ? <Loader2 size={16} className="animate-spin" /> : "Delete Data"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

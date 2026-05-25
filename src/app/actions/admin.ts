@@ -1366,3 +1366,82 @@ export async function updateOrderStatus(orderId: string, status: string, complet
         return { error: "Failed to update order" };
     }
 }
+
+export async function deleteOrder(orderId: string) {
+    const session = await auth();
+    const role = (session?.user as any)?.role;
+    if (!session?.user?.id || role !== "ADMIN") {
+        return { error: "Unauthorized" };
+    }
+
+    try {
+        await prisma.$transaction(async (tx) => {
+            // Delete associated commissions first
+            await tx.commission.deleteMany({
+                where: { sourceId: orderId }
+            });
+
+            // Delete the order itself
+            await tx.order.delete({
+                where: { id: orderId }
+            });
+
+            // Log activity
+            await tx.activityLog.create({
+                data: {
+                    userId: session.user!.id,
+                    actionType: "ADMIN_DELETE_ORDER",
+                    actionDetails: JSON.stringify({ orderId })
+                }
+            });
+        });
+
+        revalidatePath("/admin/orders");
+        revalidatePath("/admin/personalizations");
+        revalidatePath("/admin/finance");
+        revalidatePath("/admin");
+        revalidatePath("/customer/orders");
+        revalidatePath("/parent/orders");
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to delete order:", error);
+        return { error: "Failed to delete order" };
+    }
+}
+
+export async function deleteOrderCustomization(orderId: string) {
+    const session = await auth();
+    const role = (session?.user as any)?.role;
+    if (!session?.user?.id || role !== "ADMIN") {
+        return { error: "Unauthorized" };
+    }
+
+    try {
+        await prisma.order.update({
+            where: { id: orderId },
+            data: {
+                customizationData: null,
+                status: "PENDING"
+            }
+        });
+
+        // Log activity
+        await prisma.activityLog.create({
+            data: {
+                userId: session.user!.id,
+                actionType: "ADMIN_DELETE_CUSTOMIZATION",
+                actionDetails: JSON.stringify({ orderId })
+            }
+        });
+
+        revalidatePath("/admin/orders");
+        revalidatePath("/admin/personalizations");
+        revalidatePath("/customer/orders");
+        revalidatePath("/parent/orders");
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to delete order customization:", error);
+        return { error: "Failed to delete customization data" };
+    }
+}
+

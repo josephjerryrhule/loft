@@ -7,8 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { Loader2, Eye, Pencil, ShoppingBag, Clock, CheckCircle2, Search, Filter } from "lucide-react";
-import { getAllOrders } from "@/app/actions/admin";
+import { Loader2, Eye, Pencil, ShoppingBag, Clock, CheckCircle2, Search, Filter, Trash2 } from "lucide-react";
+import { getAllOrders, deleteOrder } from "@/app/actions/admin";
 import { getSystemSettings } from "@/app/actions/settings";
 import { getCurrencySymbol } from "@/lib/utils";
 import { ViewOrderDialog } from "@/components/order/ViewOrderDialog";
@@ -17,6 +17,8 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { cn, formatStatusLabel } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 
 export default function AdminOrdersPage() {
@@ -29,6 +31,30 @@ export default function AdminOrdersPage() {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<any>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteOrder = async () => {
+    if (!orderToDelete) return;
+    try {
+      setDeleting(true);
+      const res = await deleteOrder(orderToDelete.id);
+      if (res && 'error' in res && res.error) {
+        toast.error(res.error);
+      } else {
+        toast.success(`Order ${orderToDelete.orderNumber} deleted successfully`);
+        setDeleteConfirmOpen(false);
+        setOrderToDelete(null);
+        loadOrders();
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete order");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     loadOrders();
@@ -206,13 +232,24 @@ export default function AdminOrdersPage() {
                         <Button
                         size="icon"
                         variant="ghost"
-                        className="h-9 w-9 sm:h-10 sm:w-10 rounded-full hover:bg-blue-50:bg-blue-900/20 hover:text-blue-600 transition-all group/btn"
+                        className="h-9 w-9 sm:h-10 sm:w-10 rounded-full hover:bg-blue-50 hover:text-blue-600 transition-all group/btn"
                         onClick={() => {
                             setSelectedOrder(order);
                             setEditDialogOpen(true);
                         }}
                         >
                         <Pencil className="h-4 w-4 sm:h-5 sm:w-5" />
+                        </Button>
+                        <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-9 w-9 sm:h-10 sm:w-10 rounded-full hover:bg-red-50 hover:text-red-600 transition-all group/btn"
+                        onClick={() => {
+                            setOrderToDelete(order);
+                            setDeleteConfirmOpen(true);
+                        }}
+                        >
+                        <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
                         </Button>
                     </div>
                     </TableCell>
@@ -251,6 +288,38 @@ export default function AdminOrdersPage() {
           onSuccess={loadOrders}
         />
       )}
+
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent className="max-w-md rounded-2xl p-6 border-none shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black text-slate-900">Delete Order</DialogTitle>
+            <DialogDescription className="text-sm font-medium text-slate-500 mt-2">
+              Are you sure you want to permanently delete order <span className="font-bold text-slate-700">{orderToDelete?.orderNumber}</span>? 
+              This will also remove any related commission tracking records. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-6 flex gap-3">
+            <Button
+              variant="outline"
+              disabled={deleting}
+              onClick={() => {
+                setDeleteConfirmOpen(false);
+                setOrderToDelete(null);
+              }}
+              className="flex-1 rounded-xl font-bold h-11 border-slate-200"
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={deleting}
+              onClick={handleDeleteOrder}
+              className="flex-1 rounded-xl font-black h-11 bg-red-500 hover:bg-red-600 text-white border-none shadow-md shadow-red-500/10 flex items-center justify-center gap-2"
+            >
+              {deleting ? <Loader2 size={16} className="animate-spin" /> : "Delete Order"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
