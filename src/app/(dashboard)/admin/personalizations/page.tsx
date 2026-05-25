@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import JSZip from "jszip";
 import jsPDF from "jspdf";
+import Link from "next/link";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -412,7 +413,7 @@ export default function AdminPersonalizationsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="font-bold text-slate-800 text-sm truncate max-w-[150px]">{custom?.purchaser?.fullName || `${order.customer.firstName} ${order.customer.lastName}`}</span>
+                          <Link href={`/admin/users/${order.customer.id}`} className="font-bold text-slate-800 text-sm truncate max-w-[150px] hover:text-[#E87154] hover:underline transition-colors">{custom?.purchaser?.fullName || `${order.customer.firstName} ${order.customer.lastName}`}</Link>
                           <span className="text-[10px] text-slate-400 font-bold">{custom?.purchaser?.email || order.customer.email}</span>
                         </div>
                       </TableCell>
@@ -544,7 +545,7 @@ export default function AdminPersonalizationsPage() {
                     <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl space-y-2 border border-slate-100 dark:border-slate-700">
                       <h4 className="text-[10px] font-black text-[#E87154] uppercase tracking-wider flex items-center gap-1.5"><User size={12} /> Purchaser Contact</h4>
                       <div className="text-xs space-y-1 text-slate-700 dark:text-slate-300">
-                        <p><span className="text-slate-400 font-medium">Name:</span> <span className="font-bold">{custom?.purchaser?.fullName || `${selectedOrder.customer.firstName} ${selectedOrder.customer.lastName}`}</span></p>
+                        <p><span className="text-slate-400 font-medium">Name:</span> <Link href={`/admin/users/${selectedOrder.customer.id}`} className="font-bold hover:text-[#E87154] hover:underline transition-colors">{custom?.purchaser?.fullName || `${selectedOrder.customer.firstName} ${selectedOrder.customer.lastName}`}</Link></p>
                         <p><span className="text-slate-400 font-medium">Email:</span> <span className="font-bold">{custom?.purchaser?.email || selectedOrder.customer.email}</span></p>
                         <p><span className="text-slate-400 font-medium">Phone:</span> <span className="font-bold">{custom?.purchaser?.contact || selectedOrder.customer.phoneNumber || "N/A"}</span></p>
                       </div>
