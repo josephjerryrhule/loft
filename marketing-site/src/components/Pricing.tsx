@@ -63,13 +63,43 @@ export default function Pricing() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  const paidPlans = plans.filter((p) => p.price > 0);
-  const paidFallbackPlans = fallbackPlans.filter((p) => p.price > 0);
+  // Filter out free plans and select exactly 3: "most purchased", "best value", and "the last one"
+  const selectPlansForDisplay = (plansList: any[]) => {
+    // Filter out free plans and exclude the 100 GHS plan
+    const paid = plansList.filter((p) => Number(p.price) > 0 && Number(p.price) !== 100);
+    if (paid.length <= 3) return paid;
+
+    // Sort by price to identify positions
+    const sorted = [...paid].sort((a, b) => Number(a.price) - Number(b.price));
+
+    // 1. Most purchased: cheapest paid plan
+    const mostPurchased = sorted[0];
+
+    // 2. The last one: highest priced plan
+    const lastOne = sorted[sorted.length - 1];
+
+    // 3. Best value: recommended plan or middle plan
+    let bestValue = sorted.find((p) => 
+      p.name.toLowerCase().includes("recommended") || 
+      p.name.toLowerCase().includes("yearly") || 
+      p.name.toLowerCase().includes("value")
+    );
+    if (!bestValue || bestValue.id === mostPurchased.id || bestValue.id === lastOne.id) {
+      const remaining = sorted.filter((p) => p.id !== mostPurchased.id && p.id !== lastOne.id);
+      bestValue = remaining[Math.floor(remaining.length / 2)] || sorted[1];
+    }
+
+    return [mostPurchased, bestValue, lastOne].sort((a, b) => Number(a.price) - Number(b.price));
+  };
+
+  const paidPlans = selectPlansForDisplay(plans);
+  const paidFallbackPlans = selectPlansForDisplay(fallbackPlans);
 
   useEffect(() => {
     async function fetchPlans() {
       // List of endpoints to try: local dev port, then configured base URL
       const urls = [
+        "http://localhost:3000/api/plans",
         `${API_BASE_URL}/api/plans`,
       ];
 
@@ -199,7 +229,7 @@ export default function Pricing() {
     return (
       <div
         key={plan.id}
-        className={`flex flex-col justify-between p-8 rounded-3xl border transition-all duration-300 relative shadow-soft ${
+        className={`flex flex-col justify-between p-8 rounded-3xl border transition-all duration-300 relative shadow-soft snap-center flex-shrink-0 w-[290px] sm:w-[325px] md:w-auto ${
           recommended
             ? "bg-brand-coral text-white border-brand-coral shadow-lg md:-translate-y-2 scale-[1.02] shadow-card-hover"
             : "bg-white text-text-dark border-brand-coral/10 hover:border-brand-coral/25 shadow-soft hover:shadow-lg hover:-translate-y-1"
@@ -280,7 +310,7 @@ export default function Pricing() {
 
         <div className="pt-8">
           <a
-            href={`${APP_URL}/auth/register`}
+            href={isLive ? `${APP_URL}/auth/register?planId=${plan.id}` : `${APP_URL}/auth/register`}
             target="_blank"
             rel="noopener noreferrer"
             className={`w-full inline-flex items-center justify-center py-3 rounded-full text-xs font-extrabold transition shadow-sm ${
@@ -345,7 +375,7 @@ export default function Pricing() {
               </p>
             </div>
 
-            <div className={getGridColsClass(paidFallbackPlans.length)}>
+            <div className="flex flex-row overflow-x-auto md:overflow-visible snap-x snap-mandatory md:grid md:grid-cols-3 gap-6 max-w-5xl mx-auto px-4 pt-10 pb-8 scrollbar-hide justify-start md:justify-center">
               {reorderPlansForUX(paidFallbackPlans).map((plan) => renderCard(plan, false, paidFallbackPlans))}
             </div>
 
@@ -365,7 +395,7 @@ export default function Pricing() {
           </div>
         ) : (
           /* Live Plans from API */
-          <div className={getGridColsClass(paidPlans.length)}>
+          <div className="flex flex-row overflow-x-auto md:overflow-visible snap-x snap-mandatory md:grid md:grid-cols-3 gap-6 max-w-5xl mx-auto px-4 pt-10 pb-8 scrollbar-hide justify-start md:justify-center">
             {reorderPlansForUX(paidPlans).map((plan) => renderCard(plan, true, paidPlans))}
           </div>
         )}

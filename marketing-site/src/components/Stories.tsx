@@ -101,55 +101,67 @@ export default function Stories() {
   const tweenRef = useRef<gsap.core.Tween | null>(null);
 
   const [displayBooks, setDisplayBooks] = useState<any[]>(books);
-  const [activeBook, setActiveBook] = useState(books[0]);
+  const [activeBook, setActiveBook] = useState<any>(books[0]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // A high-performance Ref to capture the closest book in the viewport center
-  const closestBookRef = useRef(books[0]);
+  const closestBookRef = useRef<any>(books[0]);
 
   const marqueeBooks = [...displayBooks, ...displayBooks, ...displayBooks];
 
-  // Fetch free flipbooks from the API
+  // Fetch free flipbooks from the API (trying local dev then prod URL)
   useEffect(() => {
     async function fetchFreeFlipbooks() {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/flipbooks`);
-        if (response.ok) {
-          const data = await response.json();
-          if (Array.isArray(data) && data.length > 0) {
-            const mappedBooks = data.map((book: any, idx: number) => {
-              const bgColors = ["bg-brand-green", "bg-brand-purple", "bg-brand-orange", "bg-brand-blue", "bg-brand-cream"];
-              const illustrations = [
-                books[0].illustration,
-                books[1].illustration,
-                books[2].illustration,
-                books[3].illustration,
-                books[4].illustration,
-              ];
-              
-              const coverUrl = book.coverImageUrl 
-                ? (book.coverImageUrl.startsWith("http") ? book.coverImageUrl : `${API_BASE_URL}${book.coverImageUrl}`)
-                : null;
-              
-              return {
-                id: book.id,
-                title: book.title,
-                subtitle: book.description || "An enchanting reading adventure",
-                category: book.ageGroup || "All Ages",
-                bgColor: bgColors[idx % bgColors.length],
-                textColor: "text-[#302824]",
-                heyzineUrl: book.heyzineUrl || "https://a.heyzine.com/flip-book/3f7e6f6630.html",
-                coverImageUrl: coverUrl,
-                illustration: illustrations[idx % illustrations.length],
-              };
-            });
-            setDisplayBooks(mappedBooks);
-            setActiveBook(mappedBooks[0]);
-            closestBookRef.current = mappedBooks[0];
+      const urls = [
+        "http://localhost:3000/api/flipbooks",
+        `${API_BASE_URL}/api/flipbooks`,
+      ];
+
+      for (const url of urls) {
+        try {
+          const response = await fetch(url, { signal: AbortSignal.timeout(4000) });
+          if (response.ok) {
+            const data = await response.json();
+            if (Array.isArray(data) && data.length > 0) {
+              // Only fetch up to 5 free flipbooks
+              const mappedBooks = data.slice(0, 5).map((book: any, idx: number) => {
+                const bgColors = ["bg-brand-green", "bg-brand-purple", "bg-brand-orange", "bg-brand-blue", "bg-brand-cream"];
+                const illustrations = [
+                  books[0].illustration,
+                  books[1].illustration,
+                  books[2].illustration,
+                  books[3].illustration,
+                  books[4].illustration,
+                ];
+                
+                // Prefix relative URLs with base URL of the active source endpoint
+                const urlObj = new URL(url);
+                const activeOrigin = urlObj.origin;
+                const coverUrl = book.coverImageUrl 
+                  ? (book.coverImageUrl.startsWith("http") ? book.coverImageUrl : `${activeOrigin}${book.coverImageUrl}`)
+                  : null;
+                
+                return {
+                  id: book.id,
+                  title: book.title,
+                  subtitle: book.description || "An enchanting reading adventure",
+                  category: book.ageGroup || "All Ages",
+                  bgColor: bgColors[idx % bgColors.length],
+                  textColor: "text-[#302824]",
+                  heyzineUrl: book.heyzineUrl || "https://a.heyzine.com/flip-book/3f7e6f6630.html",
+                  coverImageUrl: coverUrl,
+                  illustration: illustrations[idx % illustrations.length],
+                };
+              });
+              setDisplayBooks(mappedBooks);
+              setActiveBook(mappedBooks[0]);
+              closestBookRef.current = mappedBooks[0];
+              break;
+            }
           }
+        } catch (err) {
+          // Continue to next URL
         }
-      } catch (err) {
-        console.error("Failed to fetch flipbooks from API:", err);
       }
     }
     fetchFreeFlipbooks();
@@ -159,6 +171,8 @@ export default function Stories() {
     const track = trackRef.current;
     const container = containerRef.current;
     if (!track || !container) return;
+
+    let tickHandler: () => void;
 
     const ctx = gsap.context(() => {
       // 1. Loop translation marquee
@@ -172,13 +186,13 @@ export default function Stories() {
       tweenRef.current = tween;
 
       // 2. GSAP Ticker handles checking proximity to center to "pop" cards
-      const tickHandler = () => {
+      tickHandler = () => {
         const containerRect = container.getBoundingClientRect();
         const containerCenter = containerRect.left + containerRect.width / 2;
         const cards = track.querySelectorAll(".book-card");
 
         let minDistance = Infinity;
-        let closestBook = books[0];
+        let closestBook = displayBooks[0] || books[0];
 
         cards.forEach((card) => {
           const cardRect = card.getBoundingClientRect();
@@ -199,7 +213,7 @@ export default function Stories() {
           if (distance < minDistance) {
             minDistance = distance;
             const bookId = card.getAttribute("data-book-id");
-            const found = books.find((b) => b.id.toString() === bookId);
+            const found = displayBooks.find((b) => b && b.id && b.id.toString() === bookId);
             if (found) closestBook = found;
           }
 
@@ -215,13 +229,14 @@ export default function Stories() {
       };
 
       gsap.ticker.add(tickHandler);
-
-      return () => {
-        gsap.ticker.remove(tickHandler);
-      };
     });
 
-    return () => ctx.revert();
+    return () => {
+      ctx.revert();
+      if (tickHandler) {
+        gsap.ticker.remove(tickHandler);
+      }
+    };
   }, [displayBooks]);
 
   const handleMouseEnter = () => {
@@ -236,7 +251,7 @@ export default function Stories() {
     }
   };
 
-  const openBookModal = (book: typeof books[0]) => {
+  const openBookModal = (book: any) => {
     setActiveBook(book);
     setIsModalOpen(true);
   };
