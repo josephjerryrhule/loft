@@ -158,50 +158,42 @@ export default function RootLayout({
     "mainEntity": [
       {
         "@type": "Question",
-        "name": "What is Land of Fairy Tales?",
+        "name": "Who are Land of Fairy Tales stories designed for?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Land of Fairy Tales is a personalized, interactive book club for families. We curate premium physical books and pair them with digital/interactive audio guides and story-building play to foster a lifelong love of reading."
+          "text": "Our stories are created for children aged 2–10, but they can be enjoyed by anyone who loves a good bedtime story."
         }
       },
       {
         "@type": "Question",
-        "name": "What age groups is Land of Fairy Tales designed for?",
+        "name": "How do I access the stories?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "We offer curated tracks for children aged 3 to 12. Each box is tailored to your child's reading level and developmental stage."
+          "text": "Simply log in on your phone, tablet or computer and browse our library. Everything streams securely through our ad‑free platform, so there’s nothing to download."
         }
       },
       {
         "@type": "Question",
-        "name": "How does the personalization work?",
+        "name": "Can I try Land of Fairy Tales before subscribing?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "When you sign up, you'll share your child's interests, reading habits, and milestones. Our educators and creators customize the experience—including personalized birthday book keepsakes—to make them feel like the hero of their reading journey."
+          "text": "Absolutely — sign up today and receive five free bedtime stories. If you love them, you can unlock all 365 stories for a small monthly fee."
         }
       },
       {
         "@type": "Question",
-        "name": "Can I pause or cancel my subscription?",
+        "name": "Are Land of Fairy Tales stories just entertainment or also educational?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes, absolutely! You can pause, adjust, or cancel your subscription at any time directly from your family portal, with no commitments or hidden fees."
+          "text": "They’re both! Each tale we produce includes themes that build empathy, vocabulary and cultural awareness, so your child is learning while they listen."
         }
       },
       {
         "@type": "Question",
-        "name": "How are the books selected?",
+        "name": "How do I cancel my subscription?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "We partner with leading children's publishers and independent authors to find stories that spark curiosity, build empathy, and represent diverse worlds and perspectives."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Do you ship internationally?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes! We ship from our locations in Accra, Ghana, and partner hubs across the UK and internationally to reach story lovers worldwide."
+          "text": "You’re in control. You can upgrade, downgrade or cancel your membership at any time through your account settings, and you’ll still keep access to your free stories."
         }
       }
     ]

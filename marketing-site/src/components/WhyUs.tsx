@@ -168,7 +168,7 @@ export default function WhyUs() {
               return (
                 <div
                   key={`${card.id}-${idx}`}
-                  className={`flex-shrink-0 w-[285px] sm:w-[400px] h-[340px] sm:h-[300px] p-6 sm:p-8 flex flex-col justify-between border-2 border-[#302824] ${card.bgColor} rounded-3xl shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lg`}
+                  className={`flex-shrink-0 w-[285px] sm:w-[400px] h-[380px] sm:h-[340px] p-6 sm:p-7 flex flex-col justify-between border-2 border-[#302824] ${card.bgColor} rounded-3xl shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lg`}
                 >
                   <div className="space-y-3 sm:space-y-4">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white border-2 border-[#302824] flex items-center justify-center">

@@ -13,28 +13,24 @@ export default function FAQ() {
 
   const faqs: FAQItem[] = [
     {
-      question: "What is Land of Fairy Tales?",
-      answer: "Land of Fairy Tales is a personalized, interactive book club for families. We curate premium physical books and pair them with digital/interactive audio guides and story-building play to foster a lifelong love of reading.",
+      question: "Who are Land of Fairy Tales stories designed for?",
+      answer: "Our stories are created for children aged 2–10, but they can be enjoyed by anyone who loves a good bedtime story.",
     },
     {
-      question: "What age groups is Land of Fairy Tales designed for?",
-      answer: "We offer curated tracks for children aged 3 to 12. Each box is tailored to your child's reading level and developmental stage.",
+      question: "How do I access the stories?",
+      answer: "Simply log in on your phone, tablet or computer and browse our library. Everything streams securely through our ad‑free platform, so there’s nothing to download.",
     },
     {
-      question: "How does the personalization work?",
-      answer: "When you sign up, you'll share your child's interests, reading habits, and milestones. Our educators and creators customize the experience—including personalized birthday book keepsakes—to make them feel like the hero of their reading journey.",
+      question: "Can I try Land of Fairy Tales before subscribing?",
+      answer: "Absolutely — sign up today and receive five free bedtime stories. If you love them, you can unlock all 365 stories for a small monthly fee.",
     },
     {
-      question: "Can I pause or cancel my subscription?",
-      answer: "Yes, absolutely! You can pause, adjust, or cancel your subscription at any time directly from your family portal, with no commitments or hidden fees.",
+      question: "Are Land of Fairy Tales stories just entertainment or also educational?",
+      answer: "They’re both! Each tale we produce includes themes that build empathy, vocabulary and cultural awareness, so your child is learning while they listen.",
     },
     {
-      question: "How are the books selected?",
-      answer: "We partner with leading children's publishers and independent authors to find stories that spark curiosity, build empathy, and represent diverse worlds and perspectives.",
-    },
-    {
-      question: "Do you ship internationally?",
-      answer: "Yes! We ship from our locations in Accra, Ghana, and partner hubs across the UK and internationally to reach story lovers worldwide.",
+      question: "How do I cancel my subscription?",
+      answer: "You’re in control. You can upgrade, downgrade or cancel your membership at any time through your account settings, and you’ll still keep access to your free stories.",
     },
   ];
 
