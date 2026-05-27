@@ -359,7 +359,7 @@ export default function BirthdayBooks() {
               rel="noopener noreferrer"
               className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition-all shadow-soft btn-springy"
             >
-              <span>Order A Birthday Book</span>
+              <span>Personalise a Book</span>
               <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 flex-shrink-0" />
             </a>
             <a
