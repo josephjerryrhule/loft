@@ -49,7 +49,7 @@ export default function Hero() {
             href="https://app.landoffairytales.com/auth/register"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-black text-text-dark bg-brand-coral hover:bg-brand-coral/95 transition-all shadow-soft btn-springy"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition-all shadow-soft btn-springy"
           >
             <span>Start Your Journey</span>
             <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 flex-shrink-0" />
