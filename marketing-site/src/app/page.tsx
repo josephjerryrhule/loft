@@ -13,6 +13,7 @@ import Pricing from "../components/Pricing";
 import BirthdayBooks from "../components/BirthdayBooks";
 import Testimonials from "../components/Testimonials";
 import Ambassador from "../components/Ambassador";
+import FAQ from "../components/FAQ";
 import Gateway from "../components/Gateway";
 import Footer from "../components/Footer";
 
@@ -127,7 +128,10 @@ export default function Home() {
         {/* Section 10: Ambassador Programme */}
         <Ambassador />
 
-        {/* Section 11: Portal Gateway */}
+        {/* Section 11: Frequently Asked Questions */}
+        <FAQ />
+
+        {/* Section 12: Portal Gateway */}
         <Gateway />
       </main>
 

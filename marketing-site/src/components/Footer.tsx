@@ -10,9 +10,10 @@ const FacebookIcon = () => (
   </svg>
 );
 
-const TwitterIcon = () => (
+const TikTokIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/>
+    <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5.14 1" />
+    <path d="M17 8a5 5 0 0 0-5-5" />
   </svg>
 );
 
@@ -21,14 +22,6 @@ const InstagramIcon = () => (
     <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
     <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
     <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
-  </svg>
-);
-
-const LinkedinIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
-    <rect x="2" y="9" width="4" height="12"/>
-    <circle cx="4" cy="4" r="2"/>
   </svg>
 );
 
@@ -121,11 +114,14 @@ export default function Footer() {
             <span className="inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-white text-[#E87154] border border-[#302824] shadow-sm">
               office
             </span>
-            <div className="space-y-1">
+            <div className="space-y-2">
               <p className="text-lg sm:text-2xl font-bold leading-tight font-sans">
-                Accra, Ghana & International Locations
+                The East Wing - Parakuo link rd, Accra- Ghana
               </p>
-              <div className="pt-3 flex items-center gap-1.5 text-sm font-semibold text-white/80 hover:text-white transition cursor-pointer">
+              <p className="text-xs font-semibold text-white/70">
+                Company reg no. CS259931125
+              </p>
+              <div className="pt-1 flex items-center gap-1.5 text-sm font-semibold text-white/80 hover:text-white transition cursor-pointer">
                 <MapPin className="w-4 h-4" />
                 <span className="underline decoration-1">Google Maps</span>
               </div>
@@ -137,24 +133,32 @@ export default function Footer() {
             <span className="inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-white text-[#E87154] border border-[#302824] shadow-sm">
               contact
             </span>
-            <div className="space-y-2">
+            <div className="space-y-3">
               <a
-                href="mailto:support@landoffairytales.com"
+                href="mailto:hello@landoffairytales.com"
                 className="block text-lg sm:text-2xl font-bold leading-tight font-sans hover:underline decoration-2"
               >
-                support@landoffairytales.com
+                hello@landoffairytales.com
               </a>
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/70">
-                * We are story lovers: reach out anytime
-              </p>
+              
+              <div className="space-y-1">
+                <p className="text-[10px] font-black uppercase tracking-wider text-white/70">Telephone</p>
+                <div className="flex flex-col gap-1 text-base sm:text-lg font-bold">
+                  <a href="tel:+233559922299" className="hover:underline hover:text-brand-purple transition">
+                    +233 (0) 55 992 2299
+                  </a>
+                  <a href="tel:+447907602402" className="hover:underline hover:text-brand-purple transition">
+                    +447907602402
+                  </a>
+                </div>
+              </div>
 
               {/* Social Icons row inside column */}
-              <div className="flex gap-4 pt-4">
+              <div className="flex gap-4 pt-3">
                 {[
-                  { icon: <FacebookIcon />, href: "https://facebook.com/landoffairytales" },
-                  { icon: <TwitterIcon />, href: "https://twitter.com/landoffairytales" },
-                  { icon: <InstagramIcon />, href: "https://instagram.com/landoffairytales" },
-                  { icon: <LinkedinIcon />, href: "https://linkedin.com/company/landoffairytales" },
+                  { icon: <FacebookIcon />, href: "https://www.facebook.com/Loftbookclub" },
+                  { icon: <InstagramIcon />, href: "https://www.instagram.com/loftbookclub?igsh=bGx3N2dxdzdib3Ru&utm_source=qr" },
+                  { icon: <TikTokIcon />, href: "https://www.tiktok.com/@loftbookclub?_t=ZM-8zB5lDZR0cC&_r=1" },
                 ].map((soc, idx) => (
                   <a
                     key={idx}
