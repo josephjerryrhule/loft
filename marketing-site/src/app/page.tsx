@@ -12,6 +12,7 @@ import HowItWorks from "../components/HowItWorks";
 import Pricing from "../components/Pricing";
 import BirthdayBooks from "../components/BirthdayBooks";
 import Testimonials from "../components/Testimonials";
+import NotReady from "../components/NotReady";
 import Ambassador from "../components/Ambassador";
 import FAQ from "../components/FAQ";
 import Gateway from "../components/Gateway";
@@ -124,6 +125,9 @@ export default function Home() {
 
         {/* Section 9: Testimonials (Paywall avatar cloud) */}
         <Testimonials />
+
+        {/* Section 9.5: Not Ready To Subscribe Callout Banner */}
+        <NotReady />
 
         {/* Section 10: Ambassador Programme */}
         <Ambassador />
