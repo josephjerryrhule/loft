@@ -266,7 +266,7 @@ export default function Testimonials() {
             Voices of Trust
           </span>
           <h2 className="text-3xl sm:text-4xl text-text-dark font-quicksand font-bold">
-            Joyful Moments With LOFT
+            Joyful Moments With Land of Fairy Tales
           </h2>
           <p className="text-base sm:text-lg text-text-muted font-medium">
             Hear from parents, teachers, and ambassadors who are transforming screen time into literacy milestones.
@@ -440,6 +440,17 @@ export default function Testimonials() {
             <Sparkles className="w-3.5 h-3.5 text-brand-coral" />
             Hover over any face in the cloud above to read their story
           </span>
+        </div>
+
+        {/* CTA after social proof */}
+        <div className="text-center mt-12">
+          <a
+            href="#pricing"
+            className="inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition-all shadow-soft btn-springy section-cta"
+          >
+            <span>Join Thousands of Happy Families</span>
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 sm:w-5 sm:h-5 ml-2 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
         </div>
 
       </div>

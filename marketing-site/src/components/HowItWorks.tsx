@@ -93,7 +93,7 @@ export default function HowItWorks() {
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition shadow-soft shadow-card-hover btn-springy"
           >
-            <span>Start Your Journey</span>
+            <span>Create Your Free Account</span>
             <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 flex-shrink-0" />
           </a>
         </div>

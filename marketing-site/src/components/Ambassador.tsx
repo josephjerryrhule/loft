@@ -218,7 +218,7 @@ export default function Ambassador() {
                     <div>
                       <h4 className="font-bold text-sm text-text-dark mb-1">Group Management</h4>
                       <p className="text-xs font-semibold text-text-muted leading-relaxed">
-                        A central team panel to manage promoter promoter onboarding pipelines in Ghana and beyond.
+                        A central team panel to manage promoter onboarding pipelines in Ghana and beyond.
                       </p>
                     </div>
                   </div>

@@ -52,7 +52,7 @@ export default function Partners() {
   };
 
   return (
-    <section className="w-full py-8 bg-[#FAF5EF]/40 border-b border-brand-coral/5 overflow-hidden">
+    <section id="partners" className="w-full py-8 bg-[#FAF5EF]/40 border-b border-brand-coral/5 overflow-hidden">
       <div className="mx-auto max-w-[100rem]">
         {/* Small Intro label */}
         <p className="text-center text-[10px] uppercase font-black text-text-muted tracking-[0.2em] mb-5">

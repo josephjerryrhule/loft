@@ -96,46 +96,30 @@ export default function Home() {
       <Header />
 
       <main className="flex-grow">
-        {/* Section 1: Hero */}
+        {/* 1. AWARENESS — Hook them */}
         <Hero />
-
-        {/* Brand Partners Marquee */}
         <Partners />
 
-        {/* Section 2: About (What is LOFT?) */}
+        {/* 2. EDUCATION — Show them */}
         <About />
-
-        {/* Section 3: Why Families Love LOFT */}
-        <WhyUs />
-
-        {/* Section 4: Stories That Feel Like Home */}
+        <Products />
         <Stories />
 
-        {/* Section 5: Products & Experiences (GSAP Scroll Video Banner) */}
-        <Products />
-
-        {/* Section 6: How LOFT Works */}
+        {/* 3. DIFFERENTIATION — Convince them */}
+        <WhyUs />
+        <BirthdayBooks />
         <HowItWorks />
 
-        {/* Section 7: Plans & Pricing */}
-        <Pricing />
-
-        {/* Section 8: Personalized Birthday Books (Bespoke Keepsakes) */}
-        <BirthdayBooks />
-
-        {/* Section 9: Testimonials (Paywall avatar cloud) */}
+        {/* 4. TRUST — Prove it */}
         <Testimonials />
 
-        {/* Section 9.5: Not Ready To Subscribe Callout Banner */}
+        {/* 5. CONVERSION — Close them */}
+        <Pricing />
         <NotReady />
-
-        {/* Section 10: Ambassador Programme */}
-        <Ambassador />
-
-        {/* Section 11: Frequently Asked Questions */}
         <FAQ />
 
-        {/* Section 12: Portal Gateway */}
+        {/* 6. SECONDARY AUDIENCES */}
+        <Ambassador />
         <Gateway />
       </main>
 

@@ -94,10 +94,10 @@ export default function Products() {
         <div className="max-w-3xl mx-auto text-center mb-16 space-y-4 px-6">
           <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-black text-[#302824] bg-[#F4C491] border-2 border-[#302824] shadow-sm">
             <Sparkles className="w-3.5 h-3.5" />
-            Discover LOFT
+            Discover Land of Fairy Tales
           </span>
           <h2 className="text-3xl sm:text-4xl text-text-dark font-quicksand font-bold">
-            Discover The World Of LOFT
+            Discover The World Of Land of Fairy Tales
           </h2>
           <p className="text-base sm:text-lg text-text-muted font-medium">
             Immersive reading experiences designed to build confidence, culture, and literacy.
@@ -136,29 +136,15 @@ export default function Products() {
           </div>
         </div>
 
-        {/* Three Columns below Video (Connects to standard margins) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16 max-w-7xl min-[1700px]:max-w-[100rem] mx-auto px-6">
-          <div className="space-y-3 p-6 rounded-2xl bg-brand-cream/40 border border-[#302824]/5 shadow-soft">
-            <span className="text-xs font-black text-brand-coral">01 Interactive Stories</span>
-            <h4 className="text-base font-bold text-text-dark">Explore wiggling 3D flipbooks</h4>
-            <p className="text-xs font-semibold text-text-muted leading-relaxed">
-              Open magical books where children guide their own reading adventure, tap words for audio assistance, and earn achievement badges.
-            </p>
-          </div>
-          <div className="space-y-3 p-6 rounded-2xl bg-brand-cream/40 border border-[#302824]/5 shadow-soft">
-            <span className="text-xs font-black text-brand-coral">02 Personalize & Grow</span>
-            <h4 className="text-base font-bold text-text-dark">Custom Birthday Stories</h4>
-            <p className="text-xs font-semibold text-text-muted leading-relaxed">
-              Create keepsake stories dynamically woven with your child's name in Ashanti-inspired quests that build strong identity and confidence.
-            </p>
-          </div>
-          <div className="space-y-3 p-6 rounded-2xl bg-brand-cream/40 border border-[#302824]/5 shadow-soft">
-            <span className="text-xs font-black text-brand-coral">03 Share & Earn Rewards</span>
-            <h4 className="text-base font-bold text-text-dark">Ambassador Network</h4>
-            <p className="text-xs font-semibold text-text-muted leading-relaxed">
-              Introduce LOFT to schools in your area and earn up to 20% direct commissions and override percentages paid weekly into your MoMo wallet.
-            </p>
-          </div>
+        {/* CTA */}
+        <div className="text-center mt-14 px-6">
+          <a
+            href="#pricing"
+            className="inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition-all shadow-soft btn-springy section-cta"
+          >
+            <span>See Our Plans</span>
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 sm:w-5 sm:h-5 ml-2 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
         </div>
 
       </div>

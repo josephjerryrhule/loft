@@ -67,7 +67,6 @@ export default function Pricing() {
     async function fetchPlans() {
       // List of endpoints to try: local dev port, then configured base URL
       const urls = [
-        "http://localhost:3000/api/plans",
         `${API_BASE_URL}/api/plans`,
       ];
 

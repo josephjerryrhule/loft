@@ -103,6 +103,22 @@ export default function FAQ() {
           })}
         </div>
 
+        {/* Closing CTA */}
+        <div className="text-center mt-14">
+          <p className="text-sm sm:text-base text-text-muted font-medium mb-5">
+            Still have questions? We&apos;d love to hear from you.
+          </p>
+          <a
+            href="https://app.landoffairytales.com/auth/register"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition-all shadow-soft btn-springy section-cta"
+          >
+            <span>Try It Free Today</span>
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 sm:w-5 sm:h-5 ml-2 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
+        </div>
+
       </div>
     </section>
   );
