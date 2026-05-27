@@ -140,7 +140,7 @@ export default function About() {
 
             {/* Body copy */}
             <p className="text-sm sm:text-[15px] lg:text-base text-text-muted leading-relaxed max-w-xl">
-              Land of Fairy Tales is an interactive reading platform that helps children fall in love with stories. We combine 3D flipbooks, personalized quests, and culturally relevant tales to turn screen time into meaningful milestones.
+              We’re continually expanding our library of authentic African bedtime stories, bringing children of all ages into a world of wonder. Our mission is to nurture imagination, cultural pride and family connection through safe, ad‑free storytelling. Every tale is crafted with love to turn bedtime into a moment of magic and meaning. Born from founder Rosemary Larbi’s passion for empowering young minds, Land of Fairy Tales connects families across the globe to rich African voices and traditions. With hundreds of stories accessible on any device, we aim to make bedtime a cherished ritual—one that sparks curiosity, teaches life lessons and helps every child drift off to sleep with a smile.
             </p>
 
             {/* Pillars — clean inline tags using brand colors */}

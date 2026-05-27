@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
-import { Tv, Sparkles, Heart, BarChart, UserCheck, Flame, ArrowRight } from "lucide-react";
+import { Tv, Sparkles, Heart, BarChart, UserCheck, Flame, ArrowRight, Smartphone, Clock, ShieldCheck } from "lucide-react";
 import { gsap } from "gsap";
 
 const cards = [
@@ -27,34 +27,61 @@ const cards = [
     id: 3,
     icon: Sparkles,
     title: "Build Confidence Through Reading",
-    description: "LOFT helps nurture confidence, vocabulary, curiosity, creativity, and stronger reading habits through joyful, child-guided digital experiences.",
+    description: "Land of Fairy Tales helps nurture confidence, vocabulary, curiosity, creativity, and stronger reading habits through joyful, child-guided digital experiences.",
     bgColor: "bg-brand-purple",
     iconColor: "text-brand-coral",
     footerText: "Confidence & vocabulary"
   },
   {
     id: 4,
+    icon: Smartphone,
+    title: "Seamless Access",
+    description: "Enjoy Land of Fairy Tales wherever you are — log in on your phone, tablet or computer and start exploring stories instantly.",
+    bgColor: "bg-brand-blue",
+    iconColor: "text-brand-coral",
+    footerText: "Read on any device"
+  },
+  {
+    id: 5,
+    icon: Clock,
+    title: "Daily Storytime",
+    description: "A fresh bedtime tale awaits every day, giving your child something new to anticipate and dream about each evening.",
+    bgColor: "bg-brand-orange/40",
+    iconColor: "text-brand-coral",
+    footerText: "A new tale every day"
+  },
+  {
+    id: 6,
+    icon: ShieldCheck,
+    title: "Safe & Ad‑Free",
+    description: "Our platform is designed for kids, with a clean, ad‑free environment so you can focus on bonding over stories without interruptions.",
+    bgColor: "bg-brand-green/45",
+    iconColor: "text-brand-coral",
+    footerText: "100% kid-safe environment"
+  },
+  {
+    id: 7,
     icon: UserCheck,
     title: "Personalized Learning",
-    description: "From personalized birthday storybooks to tailored child profiles and age-based reading journeys, LOFT feels custom-fit to every child's growth track.",
-    bgColor: "bg-brand-blue",
+    description: "From personalized birthday storybooks to tailored child profiles and age-based reading journeys, Land of Fairy Tales feels custom-fit to every child's growth track.",
+    bgColor: "bg-brand-blue/50",
     iconColor: "text-brand-coral",
     footerText: "Adaptive reading maps"
   },
   {
-    id: 5,
+    id: 8,
     icon: BarChart,
     title: "Parent-Friendly Experience",
     description: "Parents can support reading through simple control dashboards, detailed progress tracking charts, separate profiles, and age-appropriate content recommendations.",
-    bgColor: "bg-brand-orange/40",
+    bgColor: "bg-brand-orange/30",
     iconColor: "text-brand-coral",
     footerText: "Real-time parent analytics"
   },
   {
-    id: 6,
+    id: 9,
     icon: Flame,
     title: "Reading Children Actually Enjoy",
-    description: "No boring exercises. LOFT is fully built around gamified challenges, reading achievements, wiggling story book flipboards, and badges to make children ask to read every day.",
+    description: "No boring exercises. Land of Fairy Tales is fully built around gamified challenges, reading achievements, wiggling story book flipboards, and badges to make children ask to read every day.",
     bgColor: "bg-brand-purple/50",
     iconColor: "text-brand-coral",
     footerText: "Gamified reading streaks"
@@ -81,7 +108,7 @@ export default function WhyUs() {
       const tween = gsap.to(track, {
         xPercent: -50,
         ease: "none",
-        duration: 35, // Adjust duration for scrolling speed
+        duration: 45, // Adjust duration for scrolling speed (slower since we have more cards)
         repeat: -1,
       });
 
@@ -115,7 +142,7 @@ export default function WhyUs() {
             Loved By Families
           </div>
           <h2 className="text-3xl sm:text-4xl text-text-dark font-quicksand font-bold">
-            Why Families Love LOFT
+            Why Families Love Land of Fairy Tales
           </h2>
           <p className="text-base sm:text-lg text-text-muted font-medium">
             Built for children to love. Designed for parents to trust.

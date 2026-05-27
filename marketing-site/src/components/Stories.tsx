@@ -291,6 +291,35 @@ export default function Stories() {
           </a>
         </div>
 
+        {/* Not Ready To Subscribe Callout Banner */}
+        <div className="mt-16 max-w-4xl mx-auto rounded-[2rem] border-3 border-[#302824] bg-[#0e0f2b] p-8 sm:p-12 relative overflow-hidden shadow-soft">
+          {/* Subtle background sparkles */}
+          <div className="absolute top-4 right-6 opacity-20 pointer-events-none">
+            <Sparkles className="w-12 h-12 text-[#e99a31]" />
+          </div>
+
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="space-y-3 text-center md:text-left max-w-xl">
+              <h3 className="text-2xl sm:text-3xl font-quicksand font-extrabold text-white leading-tight">
+                Not Ready To Subscribe Yet? Get Five Free Stories…
+              </h3>
+              <p className="text-sm sm:text-base font-medium text-white/80 leading-relaxed font-inter">
+                Start your Land of Fairy Tales journey with five enchanting African bedtime tales delivered instantly when you sign up — no commitment, just pure bedtime magic to share with your child.
+              </p>
+            </div>
+            
+            <a
+              href="https://app.landoffairytales.com/auth/register?planId=free-plan-default"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full md:w-auto inline-flex items-center justify-center px-8 py-4 rounded-full text-sm sm:text-base font-black bg-[#e99a31] text-[#0e0f2b] hover:bg-[#e99a31]/95 hover:scale-102 active:scale-98 transition-all shadow-md btn-springy whitespace-nowrap cursor-pointer"
+            >
+              Join Now
+              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 flex-shrink-0" />
+            </a>
+          </div>
+        </div>
+
       </div>
 
       {/* Heyzine Flipbook Modal Overlay */}
