@@ -72,7 +72,9 @@ export default function Header() {
   ];
 
   return (
-    <header className="sticky top-0 left-0 w-full z-50 pointer-events-none transition-all duration-500 py-3">
+    <header className={`sticky top-0 left-0 w-full z-50 pointer-events-none transition-all duration-500 py-3 ${
+      isScrolled ? "bg-transparent" : "bg-brand-purple"
+    }`}>
       {/* Morphing Nav Container - Centered grid/flex layout */}
       <div
         className={`mx-auto flex items-center pointer-events-auto transition-all duration-500 ${
