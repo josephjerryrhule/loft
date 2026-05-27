@@ -321,7 +321,7 @@ export default function Header() {
       {/* Mobile Menu Dropdown */}
       {isOpen && (
         <div
-          className={`md:hidden mx-auto w-[92%] mt-2 rounded-3xl border-2 border-[#302824] px-6 py-5 space-y-5 shadow-2xl max-h-[75vh] overflow-y-auto ${
+          className={`md:hidden mx-auto w-[92%] mt-2 rounded-3xl border-2 border-[#302824] px-6 py-5 space-y-5 shadow-2xl max-h-[75vh] overflow-y-auto pointer-events-auto ${
             isScrolled
               ? "bg-[#302824] text-[#FAF5EF]"
               : "bg-brand-cream text-text-dark border-brand-coral/10"
