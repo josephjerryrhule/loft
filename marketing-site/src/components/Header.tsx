@@ -23,7 +23,7 @@ export default function Header() {
 
   // IntersectionObserver for Scroll Spy
   useEffect(() => {
-    const sectionIds = ["hero", "about", "products", "pricing", "ambassador"];
+    const sectionIds = ["hero", "about", "products", "how-it-works", "pricing", "testimonials", "ambassador"];
     const observers = sectionIds.map((id) => {
       const el = document.getElementById(id);
       if (!el) return null;
@@ -63,10 +63,12 @@ export default function Header() {
 
   const navItems = [
     { label: "Home", href: "#hero" },
-    { label: "About LOFT", href: "#about" },
+    { label: "About", href: "#about" },
     { label: "Products", href: "#products" },
-    { label: "Plans & Pricing", href: "#pricing" },
-    { label: "Ambassador Programme", href: "#ambassador" },
+    { label: "How It Works", href: "#how-it-works" },
+    { label: "Pricing", href: "#pricing" },
+    { label: "Testimonials", href: "#testimonials" },
+    { label: "Ambassador", href: "#ambassador" },
   ];
 
   return (
@@ -75,7 +77,7 @@ export default function Header() {
       <div
         className={`mx-auto flex items-center pointer-events-auto transition-all duration-500 ${
           isScrolled
-            ? "w-[92%] max-w-4xl bg-[#302824] border-2 border-brand-coral/20 px-4 py-2 rounded-full shadow-2xl mt-1.5"
+            ? "w-[92%] max-w-[60rem] bg-[#302824] border-2 border-brand-coral/20 px-4 py-2 rounded-full shadow-2xl mt-1.5"
             : "w-full max-w-7xl min-[1700px]:max-w-[100rem] bg-brand-cream/80 backdrop-blur-md border-b border-brand-coral/10 px-6 py-5.5 rounded-none shadow-none"
         }`}
       >

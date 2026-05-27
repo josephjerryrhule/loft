@@ -110,7 +110,7 @@ export default function WhyUs() {
       <div className="mx-auto max-w-[100rem]">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4 px-6">
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold text-brand-coral bg-brand-coral/5 border border-brand-coral/10">
+          <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-black text-[#302824] bg-brand-coral border-2 border-[#302824] shadow-sm">
             <Heart className="w-3.5 h-3.5" />
             Loved By Families
           </div>
