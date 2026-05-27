@@ -63,6 +63,9 @@ export default function Pricing() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  const paidPlans = plans.filter((p) => p.price > 0);
+  const paidFallbackPlans = fallbackPlans.filter((p) => p.price > 0);
+
   useEffect(() => {
     async function fetchPlans() {
       // List of endpoints to try: local dev port, then configured base URL
@@ -277,7 +280,7 @@ export default function Pricing() {
 
         <div className="pt-8">
           <a
-            href={`${APP_URL}/signup`}
+            href={`${APP_URL}/auth/register`}
             target="_blank"
             rel="noopener noreferrer"
             className={`w-full inline-flex items-center justify-center py-3 rounded-full text-xs font-extrabold transition shadow-sm ${
@@ -342,8 +345,8 @@ export default function Pricing() {
               </p>
             </div>
 
-            <div className={getGridColsClass(fallbackPlans.length)}>
-              {reorderPlansForUX(fallbackPlans).map((plan) => renderCard(plan, false, fallbackPlans))}
+            <div className={getGridColsClass(paidFallbackPlans.length)}>
+              {reorderPlansForUX(paidFallbackPlans).map((plan) => renderCard(plan, false, paidFallbackPlans))}
             </div>
 
             <div className="text-center pt-4">
@@ -362,8 +365,8 @@ export default function Pricing() {
           </div>
         ) : (
           /* Live Plans from API */
-          <div className={getGridColsClass(plans.length)}>
-            {reorderPlansForUX(plans).map((plan) => renderCard(plan, true, plans))}
+          <div className={getGridColsClass(paidPlans.length)}>
+            {reorderPlansForUX(paidPlans).map((plan) => renderCard(plan, true, paidPlans))}
           </div>
         )}
 

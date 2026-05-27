@@ -194,7 +194,7 @@ export default function WhyUs() {
         {/* CTA Banner */}
         <div className="text-center mt-16 px-6">
           <a
-            href="https://app.landoffairytales.com/signup"
+            href="https://app.landoffairytales.com/auth/register"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition-all shadow-soft btn-springy text-center"

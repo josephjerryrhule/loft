@@ -93,19 +93,67 @@ const books = [
   }
 ];
 
-// Triple cards list to allow a seamless looping marquee
-const marqueeBooks = [...books, ...books, ...books];
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://app.landoffairytales.com";
 
 export default function Stories() {
   const containerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);
 
+  const [displayBooks, setDisplayBooks] = useState<any[]>(books);
   const [activeBook, setActiveBook] = useState(books[0]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // A high-performance Ref to capture the closest book in the viewport center
   const closestBookRef = useRef(books[0]);
+
+  const marqueeBooks = [...displayBooks, ...displayBooks, ...displayBooks];
+
+  // Fetch free flipbooks from the API
+  useEffect(() => {
+    async function fetchFreeFlipbooks() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/flipbooks`);
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data) && data.length > 0) {
+            const mappedBooks = data.map((book: any, idx: number) => {
+              const bgColors = ["bg-brand-green", "bg-brand-purple", "bg-brand-orange", "bg-brand-blue", "bg-brand-cream"];
+              const illustrations = [
+                books[0].illustration,
+                books[1].illustration,
+                books[2].illustration,
+                books[3].illustration,
+                books[4].illustration,
+              ];
+              
+              const coverUrl = book.coverImageUrl 
+                ? (book.coverImageUrl.startsWith("http") ? book.coverImageUrl : `${API_BASE_URL}${book.coverImageUrl}`)
+                : null;
+              
+              return {
+                id: book.id,
+                title: book.title,
+                subtitle: book.description || "An enchanting reading adventure",
+                category: book.ageGroup || "All Ages",
+                bgColor: bgColors[idx % bgColors.length],
+                textColor: "text-[#302824]",
+                heyzineUrl: book.heyzineUrl || "https://a.heyzine.com/flip-book/3f7e6f6630.html",
+                coverImageUrl: coverUrl,
+                illustration: illustrations[idx % illustrations.length],
+              };
+            });
+            setDisplayBooks(mappedBooks);
+            setActiveBook(mappedBooks[0]);
+            closestBookRef.current = mappedBooks[0];
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch flipbooks from API:", err);
+      }
+    }
+    fetchFreeFlipbooks();
+  }, []);
 
   useEffect(() => {
     const track = trackRef.current;
@@ -174,7 +222,7 @@ export default function Stories() {
     });
 
     return () => ctx.revert();
-  }, []);
+  }, [displayBooks]);
 
   const handleMouseEnter = () => {
     if (tweenRef.current) {
@@ -252,8 +300,16 @@ export default function Stories() {
                   </div>
 
                   {/* Illustration Body */}
-                  <div className="flex-1 flex items-center justify-center py-4">
-                    {book.illustration}
+                  <div className="flex-1 flex items-center justify-center py-4 select-none pointer-events-none">
+                    {book.coverImageUrl ? (
+                      <img
+                        src={book.coverImageUrl}
+                        alt={book.title}
+                        className="w-auto h-32 object-contain rounded-lg border border-[#302824]/10 shadow-sm"
+                      />
+                    ) : (
+                      book.illustration
+                    )}
                   </div>
 
                   {/* Cover Footer */}
@@ -282,7 +338,7 @@ export default function Stories() {
           </button>
           
           <a
-            href="https://app.landoffairytales.com/signup"
+            href="https://app.landoffairytales.com/auth/register"
             target="_blank"
             rel="noopener noreferrer"
             className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold text-text-dark bg-white border-2 border-[#302824] hover:bg-brand-cream transition-all shadow-soft btn-springy"

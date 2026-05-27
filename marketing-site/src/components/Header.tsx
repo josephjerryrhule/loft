@@ -118,25 +118,18 @@ export default function Header() {
           }`}>
             {navItems.map((item, index) => {
               const isActive = activeSection === item.href;
-              const itemNumber = index + 1;
-
               if (isScrolled) {
                 return (
                   <a
                     key={item.href}
                     href={item.href}
-                    className={`transition-all duration-300 rounded-full px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 ${
+                    className={`transition-all duration-300 rounded-full px-3 py-1.5 text-xs font-bold flex items-center ${
                       isActive
                         ? "bg-brand-green text-text-dark font-black px-3.5 py-1.5 border border-[#302824]/10 shadow-sm scale-102"
                         : "text-[#FAF5EF]/75 hover:text-white hover:bg-white/5 border border-transparent"
                     }`}
                   >
                     {item.label}
-                    {isActive && (
-                      <span className="w-4 h-4 rounded-full bg-[#302824] text-white flex items-center justify-center text-[9px] font-black leading-none">
-                        {itemNumber}
-                      </span>
-                    )}
                   </a>
                 );
               }
@@ -220,7 +213,7 @@ export default function Header() {
                     <hr className="border-text-dark/5 my-1.5" />
                     
                     <a
-                      href="https://app.landoffairytales.com/signup"
+                      href="https://app.landoffairytales.com/auth/register"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="block px-3 py-2.5 text-xs font-black text-white bg-brand-coral hover:bg-brand-coral/95 rounded-xl transition text-center shadow-soft btn-springy"
@@ -289,7 +282,7 @@ export default function Header() {
                       <hr className="border-text-dark/5 my-1.5" />
                       
                       <a
-                        href="https://app.landoffairytales.com/signup"
+                        href="https://app.landoffairytales.com/auth/register"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="block px-3 py-2.5 text-xs font-black text-white bg-brand-coral hover:bg-brand-coral/95 rounded-xl transition text-center shadow-soft btn-springy"
@@ -387,7 +380,7 @@ export default function Header() {
               Ambassador Portal
             </a>
             <a
-              href="https://app.landoffairytales.com/signup"
+              href="https://app.landoffairytales.com/auth/register"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center py-3.5 text-xs font-black text-white bg-brand-coral rounded-full shadow-soft hover:bg-brand-coral/90 transition btn-springy"
