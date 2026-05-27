@@ -76,7 +76,7 @@ export default function Header() {
         className={`mx-auto flex items-center pointer-events-auto transition-all duration-500 ${
           isScrolled
             ? "w-[92%] max-w-4xl bg-[#302824] border-2 border-brand-coral/20 px-4 py-2 rounded-full shadow-2xl mt-1.5"
-            : "w-full max-w-7xl min-[1700px]:max-w-[100rem] bg-brand-cream/80 backdrop-blur-md border-b border-brand-coral/10 px-6 py-4 rounded-none shadow-none"
+            : "w-full max-w-7xl min-[1700px]:max-w-[100rem] bg-brand-cream/80 backdrop-blur-md border-b border-brand-coral/10 px-6 py-5.5 rounded-none shadow-none"
         }`}
       >
         {/* Left Column: Brand Logo */}
@@ -111,7 +111,9 @@ export default function Header() {
 
         {/* Center Column: Desktop Navigation Items */}
         <div className="hidden md:flex flex-initial justify-center items-center">
-          <nav className="flex items-center gap-1.5 lg:gap-2.5">
+          <nav className={`flex items-center transition-all duration-500 ${
+            isScrolled ? "gap-1.5 lg:gap-2.5" : "gap-4 lg:gap-7 xl:gap-9"
+          }`}>
             {navItems.map((item, index) => {
               const isActive = activeSection === item.href;
               const itemNumber = index + 1;
