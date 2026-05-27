@@ -15,10 +15,10 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className="relative w-full overflow-hidden bg-brand-cream bg-grid-pattern pt-16 pb-20 md:pt-24 md:pb-28 border-b border-brand-coral/5"
+      className="relative w-full overflow-hidden bg-brand-purple bg-grid-pattern pt-16 pb-20 md:pt-24 md:pb-28 border-b border-brand-coral/5"
     >
       {/* Background radial gradient mask for softening the grid lines */}
-      <div className="absolute inset-0 bg-radial-gradient from-transparent via-brand-cream/40 to-brand-cream pointer-events-none" />
+      <div className="absolute inset-0 bg-radial-gradient from-transparent via-brand-purple/40 to-brand-purple pointer-events-none" />
 
       <div className="relative mx-auto max-w-7xl min-[1700px]:max-w-[100rem] px-6 flex flex-col items-center text-center">
         {/* Cute top badge */}
@@ -35,7 +35,7 @@ export default function Hero() {
         </h1>
 
         {/* Subheadline */}
-        <p className="max-w-3xl text-base sm:text-lg text-text-muted leading-relaxed mb-8 md:mb-10 font-medium">
+        <p className="max-w-3xl text-base sm:text-lg text-text-dark/85 leading-relaxed mb-8 md:mb-10 font-medium">
           Interactive reading adventures children love, rooted in culture,
           imagination, and confidence-building. From magical storybooks and
           personalized birthday stories to habit-forming reading experiences,
@@ -83,19 +83,19 @@ export default function Hero() {
         <div className="w-full max-w-5xl mt-8 flex flex-wrap items-center justify-center gap-8 md:gap-16 select-none">
           <div className="flex flex-col items-center">
             <GreenBlob className="w-24 h-24 sm:w-28 sm:h-28 md:w-36 md:h-36 drop-shadow-md" />
-            <span className="text-xs font-bold text-text-muted mt-2">Ages 0 - 3</span>
+            <span className="text-xs font-bold text-text-dark/75 mt-2">Ages 0 - 3</span>
           </div>
           <div className="flex flex-col items-center">
             <PurpleBlob className="w-24 h-24 sm:w-28 sm:h-28 md:w-36 md:h-36 drop-shadow-md" />
-            <span className="text-xs font-bold text-text-muted mt-2">Ages 4 - 7</span>
+            <span className="text-xs font-bold text-text-dark/75 mt-2">Ages 4 - 7</span>
           </div>
           <div className="flex flex-col items-center">
             <OrangeBlob className="w-24 h-24 sm:w-28 sm:h-28 md:w-36 md:h-36 drop-shadow-md" />
-            <span className="text-xs font-bold text-text-muted mt-2">Ages 8+</span>
+            <span className="text-xs font-bold text-text-dark/75 mt-2">Ages 8+</span>
           </div>
           <div className="flex flex-col items-center">
             <CoralBlob className="w-24 h-24 sm:w-28 sm:h-28 md:w-36 md:h-36 drop-shadow-md" />
-            <span className="text-xs font-bold text-text-muted mt-2">Magical Books</span>
+            <span className="text-xs font-bold text-text-dark/75 mt-2">Magical Books</span>
           </div>
         </div>
       </div>

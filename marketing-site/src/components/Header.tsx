@@ -78,7 +78,7 @@ export default function Header() {
         className={`mx-auto flex items-center pointer-events-auto transition-all duration-500 ${
           isScrolled
             ? "w-[92%] max-w-[60rem] bg-[#302824] border-2 border-brand-coral/20 px-4 py-2 rounded-full shadow-2xl mt-1.5"
-            : "w-full max-w-7xl min-[1700px]:max-w-[100rem] bg-brand-cream/80 backdrop-blur-md border-b border-brand-coral/10 px-6 py-5.5 rounded-none shadow-none"
+            : "w-full max-w-7xl min-[1700px]:max-w-[100rem] bg-brand-purple/80 backdrop-blur-md border-b border-brand-coral/10 px-6 py-5.5 rounded-none shadow-none"
         }`}
       >
         {/* Left Column: Brand Logo */}
@@ -317,7 +317,7 @@ export default function Header() {
           className={`md:hidden mx-auto w-[92%] mt-2 rounded-3xl border-2 border-[#302824] px-6 py-5 space-y-5 shadow-2xl max-h-[75vh] overflow-y-auto pointer-events-auto ${
             isScrolled
               ? "bg-[#302824] text-[#FAF5EF]"
-              : "bg-brand-cream text-text-dark border-brand-coral/10"
+              : "bg-brand-purple text-text-dark border-brand-coral/10"
           }`}
         >
           <nav className="flex flex-col gap-3">
