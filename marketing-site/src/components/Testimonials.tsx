@@ -242,7 +242,7 @@ export default function Testimonials() {
   ];
 
   return (
-    <section id="testimonials" className="w-full py-20 bg-brand-cream/30 border-b border-brand-coral/5 overflow-hidden">
+    <section id="testimonials" className="w-full py-20 bg-brand-purple border-b border-brand-coral/5 overflow-hidden">
       <div className="mx-auto max-w-7xl min-[1700px]:max-w-[100rem] px-6">
         
         <style>{`
@@ -268,7 +268,7 @@ export default function Testimonials() {
           <h2 className="text-3xl sm:text-4xl text-text-dark font-quicksand font-bold">
             Joyful Moments With Land of Fairy Tales
           </h2>
-          <p className="text-base sm:text-lg text-text-muted font-medium">
+          <p className="text-base sm:text-lg text-text-dark/85 font-medium">
             Hear from parents, teachers, and ambassadors who are transforming screen time into literacy milestones.
           </p>
         </div>
@@ -436,7 +436,7 @@ export default function Testimonials() {
 
         {/* Hover Hint text (Desktop only) */}
         <div className="hidden lg:block text-center pt-2 select-none">
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-text-muted">
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-text-dark/75">
             <Sparkles className="w-3.5 h-3.5 text-brand-coral" />
             Hover over any face in the cloud above to read their story
           </span>
