@@ -29,7 +29,7 @@ export default function Hero() {
         {/* Main Headline */}
         <h1 className="max-w-4xl text-4xl sm:text-5xl md:text-6xl text-text-dark tracking-tight leading-[1.1] mb-6 font-quicksand font-bold">
           Build Confidence Through Stories That{" "}
-          <span className="text-brand-coral relative inline-block">
+          <span className="bg-[#302824] text-[#FAF5EF] px-4 sm:px-5 py-1.5 sm:py-2.5 rounded-[1.25rem] sm:rounded-[1.75rem] relative inline-block rotate-[-1.5deg] shadow-sm select-none">
             Feel Like Home
           </span>
         </h1>
@@ -49,14 +49,14 @@ export default function Hero() {
             href="https://app.landoffairytales.com/auth/register"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition-all shadow-soft btn-springy"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-black text-text-dark bg-brand-coral hover:bg-brand-coral/95 transition-all shadow-soft btn-springy"
           >
             <span>Start Your Journey</span>
             <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 flex-shrink-0" />
           </a>
           <a
             href="#about"
-            className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold text-brand-coral bg-white border border-brand-coral/20 hover:bg-brand-coral/5 transition-all shadow-soft btn-springy"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold text-text-dark bg-white border-2 border-[#302824] hover:bg-brand-cream transition-all shadow-soft btn-springy"
           >
             Explore LOFT
           </a>

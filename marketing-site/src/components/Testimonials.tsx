@@ -386,7 +386,7 @@ export default function Testimonials() {
 
             {/* Author Meta */}
             <div className="border-t border-[#302824]/10 pt-3 w-full flex flex-col items-center">
-              <span className="text-xs font-black uppercase text-brand-coral tracking-wider">
+              <span className="text-xs font-black uppercase text-text-dark tracking-wider">
                 {testimonials[activeMobileIdx].name}
               </span>
               <span className="text-[10px] font-bold text-text-muted mt-0.5">
@@ -436,7 +436,7 @@ export default function Testimonials() {
 
         {/* Hover Hint text (Desktop only) */}
         <div className="hidden lg:block text-center pt-2 select-none">
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-text-dark/75">
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-text-dark">
             <Sparkles className="w-3.5 h-3.5 text-brand-coral" />
             Hover over any face in the cloud above to read their story
           </span>

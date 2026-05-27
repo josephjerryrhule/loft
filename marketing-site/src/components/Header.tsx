@@ -136,15 +136,15 @@ export default function Header() {
                 );
               }
 
-              // Unscrolled State (expanded / light background): Clean flat text, no background pills or badges
+              // Unscrolled State (expanded / light background): Clean flat text with bottom underlines to avoid low-contrast orange text on purple background
               return (
                 <a
                   key={item.href}
                   href={item.href}
-                  className={`transition-all duration-300 px-3.5 py-2 text-sm rounded-full ${
+                  className={`transition-all duration-300 px-3.5 pb-1 text-sm border-b-2 ${
                     isActive
-                      ? "text-brand-coral font-black"
-                      : "font-semibold text-text-dark/80 hover:text-brand-coral hover:bg-brand-coral/5"
+                      ? "text-text-dark font-black border-brand-coral"
+                      : "font-semibold text-text-dark/80 border-transparent hover:text-text-dark hover:border-brand-coral/60"
                   }`}
                 >
                   {item.label}
