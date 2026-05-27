@@ -52,10 +52,10 @@ export default function Partners() {
   };
 
   return (
-    <section id="partners" className="w-full py-8 bg-[#FAF5EF]/40 border-b border-brand-coral/5 overflow-hidden">
+    <section id="partners" className="w-full py-8 bg-brand-purple border-b border-brand-coral/5 overflow-hidden">
       <div className="mx-auto max-w-[100rem]">
         {/* Small Intro label */}
-        <p className="text-center text-[10px] uppercase font-black text-text-muted tracking-[0.2em] mb-5">
+        <p className="text-center text-[10px] uppercase font-black text-text-dark/75 tracking-[0.2em] mb-5">
           Partnering with leading schools and organizations
         </p>
 
@@ -66,8 +66,8 @@ export default function Partners() {
           onMouseLeave={handleMouseLeave}
         >
           {/* Side shadows to blend */}
-          <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-[#FAF5EF] to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-[#FAF5EF] to-transparent z-10 pointer-events-none" />
+          <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-brand-purple to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-brand-purple to-transparent z-10 pointer-events-none" />
 
           <div
             ref={trackRef}
