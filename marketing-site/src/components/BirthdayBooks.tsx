@@ -333,13 +333,13 @@ export default function BirthdayBooks() {
           </div>
 
           {/* Carousel dots indicators */}
-          <div className="flex gap-2 mt-6 justify-center items-center">
+          <div className="flex gap-1.5 mt-6 justify-center items-center">
             {cards.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => setActiveIndex(idx)}
-                className={`w-2.5 h-2.5 rounded-full border border-[#302824]/20 transition-all duration-300 cursor-pointer ${
-                  idx === activeIndex ? "bg-brand-coral scale-110" : "bg-brand-cream"
+                className={`w-2 h-2 rounded-full transition-all cursor-pointer ${
+                  idx === activeIndex ? "bg-brand-coral w-4" : "bg-[#302824]/20"
                 }`}
                 aria-label={`Go to book ${idx + 1}`}
               />
