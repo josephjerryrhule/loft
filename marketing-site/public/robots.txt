@@ -1,0 +1,8 @@
+# Allow all search engine spiders and AI answer engines
+User-agent: *
+Allow: /
+Disallow: /_next/
+Disallow: /static/
+
+# Explicitly identify Sitemap URL
+Sitemap: https://www.landoffairytales.com/sitemap.xml
