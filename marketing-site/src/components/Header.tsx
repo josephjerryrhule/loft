@@ -281,17 +281,6 @@ export default function Header() {
                           <span className="text-[9px] text-text-muted font-medium">Affiliate metrics & tools</span>
                         </div>
                       </a>
-                      
-                      <hr className="border-text-dark/5 my-1.5" />
-                      
-                      <a
-                        href="https://app.landoffairytales.com/signup"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block px-3 py-2.5 text-xs font-black text-white bg-brand-coral hover:bg-brand-coral/95 rounded-xl transition text-center shadow-soft btn-springy"
-                      >
-                        Start Your Journey
-                      </a>
                     </div>
                   </div>
                 </div>
