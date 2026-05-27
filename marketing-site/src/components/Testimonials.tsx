@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Star, MessageCircle, Sparkles, Flame, Gift, ShieldCheck } from "lucide-react";
+import { Star, MessageCircle, Sparkles, Flame, Gift, ShieldCheck, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface TestimonialData {
   name: string;
@@ -407,9 +407,10 @@ export default function Testimonials() {
           <div className="flex items-center justify-between mt-4 px-2">
             <button
               onClick={() => setActiveMobileIdx((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1))}
-              className="px-3.5 py-1.5 rounded-full border-2 border-[#302824] bg-white hover:bg-brand-cream text-[#302824] text-xs font-black transition cursor-pointer active:scale-95 shadow-sm"
+              className="w-10 h-10 rounded-full border-2 border-[#302824] bg-white hover:bg-brand-cream text-[#302824] flex items-center justify-center transition cursor-pointer active:scale-95 shadow-sm"
+              aria-label="Previous Testimonial"
             >
-              Prev
+              <ChevronLeft className="w-5 h-5" />
             </button>
             <div className="flex gap-1.5">
               {testimonials.map((_, idx) => (
@@ -425,9 +426,10 @@ export default function Testimonials() {
             </div>
             <button
               onClick={() => setActiveMobileIdx((prev) => (prev === testimonials.length - 1 ? 0 : prev + 1))}
-              className="px-3.5 py-1.5 rounded-full border-2 border-[#302824] bg-white hover:bg-brand-cream text-[#302824] text-xs font-black transition cursor-pointer active:scale-95 shadow-sm"
+              className="w-10 h-10 rounded-full border-2 border-[#302824] bg-white hover:bg-brand-cream text-[#302824] flex items-center justify-center transition cursor-pointer active:scale-95 shadow-sm"
+              aria-label="Next Testimonial"
             >
-              Next
+              <ChevronRight className="w-5 h-5" />
             </button>
           </div>
         </div>
