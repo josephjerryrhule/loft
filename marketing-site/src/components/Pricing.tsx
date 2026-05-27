@@ -55,6 +55,9 @@ const fallbackPlans = [
   },
 ];
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://app.landoffairytales.com";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://app.landoffairytales.com";
+
 export default function Pricing() {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,10 +65,10 @@ export default function Pricing() {
 
   useEffect(() => {
     async function fetchPlans() {
-      // List of endpoints to try: local dev port, then prod domain
+      // List of endpoints to try: local dev port, then configured base URL
       const urls = [
         "http://localhost:3000/api/plans",
-        "https://app.landoffairytales.com/api/plans",
+        `${API_BASE_URL}/api/plans`,
       ];
 
       let success = false;
@@ -275,7 +278,7 @@ export default function Pricing() {
 
         <div className="pt-8">
           <a
-            href="https://app.landoffairytales.com/signup"
+            href={`${APP_URL}/signup`}
             target="_blank"
             rel="noopener noreferrer"
             className={`w-full inline-flex items-center justify-center py-3 rounded-full text-xs font-extrabold transition shadow-sm ${
@@ -349,7 +352,7 @@ export default function Pricing() {
                 View our current plans directly on the platform:
               </p>
               <a
-                href="https://app.landoffairytales.com"
+                href={APP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-xs font-extrabold text-brand-coral hover:underline mt-1"
