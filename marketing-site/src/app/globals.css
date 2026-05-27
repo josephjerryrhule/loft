@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@theme {
+  --font-quicksand: var(--font-quicksand), sans-serif;
+  --font-inter: var(--font-inter), sans-serif;
+  
+  --color-brand-coral: #E87154;      /* Deep warm terracotta/coral */
+  --color-brand-cream: #FAF5EF;      /* Soft warm linen/parchment background */
+  --color-brand-green: #C2D5A8;      /* Soft organic sage green */
+  --color-brand-purple: #D0C3E5;     /* Soft warm clay lavender */
+  --color-brand-orange: #F4C491;     /* Soft warm sunset gold */
+  --color-brand-blue: #B8D3E5;       /* Soft dusty sky blue */
+  
+  --color-text-dark: #302824;        /* Deep warm ebony/charcoal */
+  --color-text-muted: #786B63;       /* Warm cocoa muted */
+  
+  --radius-custom: 1.75rem;
+}
+
+:root {
+  --background: #FAF5EF;
+  --foreground: #302824;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-quicksand);
+  font-weight: 700;
+}
+
+/* Custom background grid pattern utility - warm and soft */
+.bg-grid-pattern {
+  background-size: 56px 56px;
+  background-image: 
+    linear-gradient(to right, rgba(48, 40, 36, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(48, 40, 36, 0.03) 1px, transparent 1px);
+}
+
+/* Smooth scroll behavior for anchor navigation */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Soft warm drop shadows */
+.shadow-soft {
+  box-shadow: 0 12px 36px -12px rgba(48, 40, 36, 0.06), 0 2px 8px -2px rgba(48, 40, 36, 0.03);
+}
+
+.shadow-card-hover {
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.shadow-card-hover:hover {
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 0 24px 48px -18px rgba(232, 113, 84, 0.12), 0 2px 8px -2px rgba(232, 113, 84, 0.04);
+}
+
+/* Soft border styling */
+.border-soft {
+  border: 1.5px solid rgba(48, 40, 36, 0.05);
+}
+
+/* Tactile organic wobbly card layout - feels hand-crafted */
+.card-organic {
+  border-radius: 2rem 1.75rem 2.25rem 1.85rem / 1.85rem 2.25rem 1.75rem 2rem;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 1.5px solid rgba(48, 40, 36, 0.06);
+}
+
+.card-organic:hover {
+  border-radius: 1.85rem 2.25rem 1.75rem 2rem / 2rem 1.75rem 2.25rem 1.85rem;
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 24px 48px -18px rgba(232, 113, 84, 0.1), 0 2px 8px -2px rgba(232, 113, 84, 0.03);
+}
+
+/* Springy button scale transition */
+.btn-springy {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-springy:hover {
+  transform: scale(1.035) translateY(-1px);
+}
+
+.btn-springy:active {
+  transform: scale(0.97) translateY(1px);
+}
+
