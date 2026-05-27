@@ -1,9 +1,123 @@
 "use client";
-
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Sparkles, ArrowRight } from "lucide-react";
 
+const fallbackBooks = [
+  {
+    id: 1,
+    title: "Kweku Ananse and the Golden Pot",
+    illustration: (
+      <svg viewBox="0 0 100 100" className="w-14 h-14 opacity-90" stroke="currentColor" fill="none" strokeWidth="2.5">
+        <circle cx="50" cy="55" r="18" />
+        <path d="M40 37 L60 37 M45 37 L45 32 Q50 28 55 32 L55 37" />
+        <path d="M32 55 Q20 48 18 35 M32 58 Q16 58 14 50 M32 62 Q18 68 18 72" />
+        <path d="M68 55 Q80 48 82 35 M68 58 Q84 58 86 50 M68 62 Q82 68 82 72" />
+        <circle cx="50" cy="22" r="3" fill="currentColor" />
+      </svg>
+    )
+  },
+  {
+    id: 2,
+    title: "Ama's Magical Ashanti Stool",
+    illustration: (
+      <svg viewBox="0 0 100 100" className="w-14 h-14 opacity-90" stroke="currentColor" fill="none" strokeWidth="2.5">
+        <path d="M25 45 C35 38, 65 38, 75 45 L72 52 C55 47, 45 47, 28 52 Z" fill="currentColor" />
+        <rect x="44" y="52" width="12" height="18" rx="1" />
+        <rect x="28" y="70" width="44" height="6" rx="2" fill="currentColor" />
+      </svg>
+    )
+  },
+  {
+    id: 3,
+    title: "Kojo's Twelve Days of Joy",
+    illustration: (
+      <svg viewBox="0 0 100 100" className="w-14 h-14 opacity-90" stroke="currentColor" fill="none" strokeWidth="2.5">
+        <circle cx="50" cy="40" r="14" />
+        <line x1="50" y1="20" x2="50" y2="12" strokeLinecap="round" />
+        <line x1="50" y1="60" x2="50" y2="68" strokeLinecap="round" />
+        <line x1="30" y1="40" x2="22" y2="40" strokeLinecap="round" />
+        <line x1="70" y1="40" x2="78" y2="40" strokeLinecap="round" />
+        <rect x="40" y="72" width="20" height="14" rx="1" />
+        <line x1="50" y1="72" x2="50" y2="86" />
+      </svg>
+    )
+  },
+  {
+    id: 4,
+    title: "The Baobab Tree Whispers",
+    illustration: (
+      <svg viewBox="0 0 100 100" className="w-14 h-14 opacity-90" stroke="currentColor" fill="none" strokeWidth="2.5">
+        <path d="M45 22 C55 22, 65 30, 65 42 C65 48, 60 55, 52 59 C62 57, 68 48, 68 39 C68 28, 58 18, 45 22 Z" fill="currentColor" />
+        <path d="M20 75 Q40 70 60 72 T80 65" strokeLinecap="round" />
+        <path d="M40 72 Q45 60 48 55" strokeLinecap="round" />
+      </svg>
+    )
+  },
+  {
+    id: 5,
+    title: "Yaa Sails the Volta River",
+    illustration: (
+      <svg viewBox="0 0 100 100" className="w-14 h-14 opacity-90" stroke="currentColor" fill="none" strokeWidth="2.5">
+        <path d="M25 60 L75 60 Q50 75 25 60" fill="currentColor" />
+        <path d="M50 15 L50 60 M50 20 L70 38 L50 38" strokeLinejoin="round" />
+        <path d="M15 78 Q30 73 50 78 T85 78" strokeLinecap="round" />
+      </svg>
+    )
+  }
+];
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://app.landoffairytales.com";
+
 export default function NotReady() {
+  const [selectedBook, setSelectedBook] = useState<any>(fallbackBooks[0]);
+
+  useEffect(() => {
+    async function fetchRandomFlipbook() {
+      const urls = [
+        "http://localhost:3000/api/flipbooks",
+        `${API_BASE_URL}/api/flipbooks`,
+      ];
+
+      for (const url of urls) {
+        try {
+          const response = await fetch(url, { signal: AbortSignal.timeout(4000) });
+          if (response.ok) {
+            const data = await response.json();
+            if (Array.isArray(data) && data.length > 0) {
+              const randomIndex = Math.floor(Math.random() * data.length);
+              const book = data[randomIndex];
+
+              const urlObj = new URL(url);
+              const activeOrigin = urlObj.origin;
+              const coverUrl = book.coverImageUrl 
+                ? (book.coverImageUrl.startsWith("http") ? book.coverImageUrl : `${activeOrigin}${book.coverImageUrl}`)
+                : null;
+
+              const illustrations = fallbackBooks.map((b) => b.illustration);
+              const fallbackIllustration = illustrations[randomIndex % illustrations.length];
+
+              setSelectedBook({
+                id: book.id,
+                title: book.title,
+                coverImageUrl: coverUrl,
+                illustration: fallbackIllustration,
+              });
+              return;
+            }
+          }
+        } catch (err) {
+          // Continue to next URL
+        }
+      }
+
+      // Fallback
+      const randomFallbackIndex = Math.floor(Math.random() * fallbackBooks.length);
+      setSelectedBook(fallbackBooks[randomFallbackIndex]);
+    }
+
+    fetchRandomFlipbook();
+  }, []);
+
   return (
     <section id="not-ready" className="w-full py-16 bg-white overflow-visible">
       <div className="max-w-7xl mx-auto px-6 overflow-visible">
@@ -71,16 +185,20 @@ export default function NotReady() {
                       </span>
                       <Sparkles className="w-3 h-3 text-[#302824] animate-pulse" />
                     </div>
-                    <div className="flex-1 flex items-center justify-center my-3 text-brand-coral">
-                      <svg viewBox="0 0 100 100" className="w-14 h-14 opacity-90" stroke="currentColor" fill="none" strokeWidth="2.5">
-                        <circle cx="50" cy="55" r="18" />
-                        <path d="M40 37 L60 37 M45 37 L45 32 Q50 28 55 32 L55 37" />
-                        <circle cx="50" cy="22" r="3" fill="currentColor" />
-                      </svg>
+                    <div className="flex-1 flex items-center justify-center my-3 text-brand-coral select-none pointer-events-none">
+                      {selectedBook.coverImageUrl ? (
+                        <img
+                          src={selectedBook.coverImageUrl}
+                          alt={selectedBook.title}
+                          className="w-auto h-24 object-contain rounded-lg border border-[#302824]/10 shadow-sm"
+                        />
+                      ) : (
+                        selectedBook.illustration
+                      )}
                     </div>
                     <div className="border-t border-[#302824]/10 pt-2 text-left">
                       <h4 className="text-[9px] font-quicksand font-black text-text-dark leading-tight line-clamp-2">
-                        Ananse & the Golden Pot
+                        {selectedBook.title}
                       </h4>
                     </div>
                   </div>
