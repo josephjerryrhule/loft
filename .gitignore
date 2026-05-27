@@ -1,56 +1,8 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Ignore everything at the root level
+/*
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# Allow tracking of this .gitignore file
+!.gitignore
 
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-/src/generated/prisma
-/public/uploads/misclogs/
-scratch/
-artifacts/
-tests/
-
-/.claude/
-/graphify-out
-/logs
-
-# scripts outputs
-/scripts/audits/
-/scripts/backups/
-/backups/
+# Allow tracking of the marketing-site folder and its contents
+!/marketing-site/
