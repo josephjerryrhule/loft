@@ -123,13 +123,13 @@ export default function Header() {
                     href={item.href}
                     className={`transition-all duration-300 rounded-full px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 ${
                       isActive
-                        ? "bg-white/10 text-white border border-white/10 shadow-sm"
+                        ? "bg-brand-green text-text-dark font-black px-3.5 py-1.5 border border-[#302824]/10 shadow-sm scale-102"
                         : "text-[#FAF5EF]/75 hover:text-white hover:bg-white/5 border border-transparent"
                     }`}
                   >
                     {item.label}
                     {isActive && (
-                      <span className="w-4 h-4 rounded-full bg-white text-[#302824] flex items-center justify-center text-[9px] font-black leading-none">
+                      <span className="w-4 h-4 rounded-full bg-[#302824] text-white flex items-center justify-center text-[9px] font-black leading-none">
                         {itemNumber}
                       </span>
                     )}
@@ -137,23 +137,18 @@ export default function Header() {
                 );
               }
 
-              // Unscrolled State (expanded / light background)
+              // Unscrolled State (expanded / light background): Clean flat text, no background pills or badges
               return (
                 <a
                   key={item.href}
                   href={item.href}
-                  className={`transition-all duration-300 rounded-full flex items-center gap-1.5 ${
+                  className={`transition-all duration-300 px-3.5 py-2 text-sm rounded-full ${
                     isActive
-                      ? "bg-brand-green text-text-dark font-black px-4.5 py-2 border border-text-dark/10 shadow-sm scale-102 animate-springy"
-                      : "text-sm font-semibold text-text-dark/80 hover:text-brand-coral hover:bg-brand-coral/5 px-3.5 py-2"
+                      ? "text-brand-coral font-black"
+                      : "font-semibold text-text-dark/80 hover:text-brand-coral hover:bg-brand-coral/5"
                   }`}
                 >
                   {item.label}
-                  {isActive && (
-                    <span className="w-5 h-5 rounded-full bg-[#302824] text-white flex items-center justify-center text-[10px] font-black leading-none animate-pulse">
-                      {itemNumber}
-                    </span>
-                  )}
                 </a>
               );
             })}
