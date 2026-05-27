@@ -156,6 +156,7 @@ const AvatarIllustration = ({ type }: { type: string }) => {
 
 export default function Testimonials() {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [activeMobileIdx, setActiveMobileIdx] = useState(0);
 
   const testimonials: TestimonialData[] = [
     {
@@ -260,7 +261,7 @@ export default function Testimonials() {
 
         {/* Header */}
         <div className="max-w-3xl mx-auto text-center mb-10 space-y-4">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-brand-coral bg-brand-coral/5 border border-brand-coral/10">
+          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-black text-[#302824] bg-[#B8D3E5] border-2 border-[#302824] shadow-sm">
             <MessageCircle className="w-3.5 h-3.5" />
             Voices of Trust
           </span>
@@ -272,8 +273,8 @@ export default function Testimonials() {
           </p>
         </div>
 
-        {/* Testimonials Scattered Cloud Container */}
-        <div className="relative mx-auto max-w-5xl w-full h-[380px] sm:h-[460px] md:h-[480px] my-10 overflow-visible">
+        {/* Testimonials Scattered Cloud Container (Desktop Viewport) */}
+        <div className="hidden lg:block relative mx-auto max-w-5xl w-full h-[480px] my-10 overflow-visible">
           
           {testimonials.map((t, idx) => {
             const isHovered = hoveredIdx === idx;
@@ -357,8 +358,82 @@ export default function Testimonials() {
 
         </div>
 
-        {/* Hover Hint text */}
-        <div className="text-center pt-2 select-none">
+        {/* Testimonials Mobile Slider (Mobile Viewport) */}
+        <div className="block lg:hidden mx-auto max-w-sm w-full my-8 px-4">
+          <div className="card-organic p-6 bg-white border-2 border-[#302824] shadow-soft flex flex-col items-center text-center space-y-4 relative min-h-[300px] justify-between">
+            
+            {/* Top quote bubble design details */}
+            <div className="w-16 h-16 rounded-full border-[3px] border-[#302824] bg-white p-0.5 shadow-sm relative flex-shrink-0">
+              <AvatarIllustration type={testimonials[activeMobileIdx].avatarType} />
+              <span className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-brand-green border-[2px] border-[#302824] flex items-center justify-center text-[7px] font-black text-text-dark shadow-sm">
+                +
+              </span>
+            </div>
+
+            <div className="space-y-3 flex-1 flex flex-col justify-center">
+              {/* Rating stars */}
+              <div className="flex justify-center gap-1">
+                {[...Array(testimonials[activeMobileIdx].rating)].map((_, i) => (
+                  <Star key={i} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400 stroke-none" />
+                ))}
+              </div>
+
+              {/* Quote */}
+              <p className="text-xs italic font-semibold leading-relaxed text-text-dark px-2">
+                "{testimonials[activeMobileIdx].quote}"
+              </p>
+            </div>
+
+            {/* Author Meta */}
+            <div className="border-t border-[#302824]/10 pt-3 w-full flex flex-col items-center">
+              <span className="text-xs font-black uppercase text-brand-coral tracking-wider">
+                {testimonials[activeMobileIdx].name}
+              </span>
+              <span className="text-[10px] font-bold text-text-muted mt-0.5">
+                {testimonials[activeMobileIdx].role} &bull; {testimonials[activeMobileIdx].location}
+              </span>
+            </div>
+
+            {/* Mobile Float Badge if exists */}
+            {testimonials[activeMobileIdx].badgeText && (
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-cream border-2 border-[#302824] text-[9px] font-black text-text-dark shadow-sm">
+                {testimonials[activeMobileIdx].badgeIcon}
+                <span>{testimonials[activeMobileIdx].badgeText}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Navigation Controls */}
+          <div className="flex items-center justify-between mt-4 px-2">
+            <button
+              onClick={() => setActiveMobileIdx((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1))}
+              className="px-3.5 py-1.5 rounded-full border-2 border-[#302824] bg-white hover:bg-brand-cream text-[#302824] text-xs font-black transition cursor-pointer active:scale-95 shadow-sm"
+            >
+              Prev
+            </button>
+            <div className="flex gap-1.5">
+              {testimonials.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setActiveMobileIdx(idx)}
+                  className={`w-2 h-2 rounded-full transition-all cursor-pointer ${
+                    activeMobileIdx === idx ? "bg-brand-coral w-4" : "bg-[#302824]/20"
+                  }`}
+                  aria-label={`Go to testimonial ${idx + 1}`}
+                />
+              ))}
+            </div>
+            <button
+              onClick={() => setActiveMobileIdx((prev) => (prev === testimonials.length - 1 ? 0 : prev + 1))}
+              className="px-3.5 py-1.5 rounded-full border-2 border-[#302824] bg-white hover:bg-brand-cream text-[#302824] text-xs font-black transition cursor-pointer active:scale-95 shadow-sm"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+
+        {/* Hover Hint text (Desktop only) */}
+        <div className="hidden lg:block text-center pt-2 select-none">
           <span className="inline-flex items-center gap-1.5 text-xs font-bold text-text-muted">
             <Sparkles className="w-3.5 h-3.5 text-brand-coral" />
             Hover over any face in the cloud above to read their story

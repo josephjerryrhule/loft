@@ -22,7 +22,7 @@ export default function Ambassador() {
         
         {/* Title Section */}
         <div className="max-w-3xl mx-auto text-center mb-10 space-y-4">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-brand-coral bg-brand-coral/5 border border-brand-coral/10">
+          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-black text-[#302824] bg-[#B8D3E5] border-2 border-[#302824] shadow-sm">
             <Users className="w-3.5 h-3.5" />
             Ambassador Network
           </span>
@@ -94,10 +94,10 @@ export default function Ambassador() {
                     href="https://app.landoffairytales.com/join"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full inline-flex items-center justify-center px-8 py-4 rounded-full text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition shadow-soft hover:-translate-y-0.5"
+                    className="w-full inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition shadow-soft hover:-translate-y-0.5"
                   >
-                    Become An Ambassador
-                    <ArrowRight className="w-5 h-5 ml-2" />
+                    <span>Become An Ambassador</span>
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 flex-shrink-0" />
                   </a>
                 </div>
               </div>
@@ -139,10 +139,10 @@ export default function Ambassador() {
                     href="https://app.landoffairytales.com/join"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full inline-flex items-center justify-center px-8 py-4 rounded-full text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition shadow-soft hover:-translate-y-0.5"
+                    className="w-full inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition shadow-soft hover:-translate-y-0.5"
                   >
-                    Become An Ambassador
-                    <ArrowRight className="w-5 h-5 ml-2" />
+                    <span>Become An Ambassador</span>
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 flex-shrink-0" />
                   </a>
                 </div>
               </div>
@@ -184,10 +184,10 @@ export default function Ambassador() {
                     href="https://app.landoffairytales.com/join"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full inline-flex items-center justify-center px-8 py-4 rounded-full text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition shadow-soft hover:-translate-y-0.5"
+                    className="w-full inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition shadow-soft hover:-translate-y-0.5"
                   >
-                    Become An Ambassador
-                    <ArrowRight className="w-5 h-5 ml-2" />
+                    <span>Become An Ambassador</span>
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 flex-shrink-0" />
                   </a>
                 </div>
               </div>
@@ -229,10 +229,10 @@ export default function Ambassador() {
                     href="https://app.landoffairytales.com/join"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full inline-flex items-center justify-center px-8 py-4 rounded-full text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition shadow-soft hover:-translate-y-0.5"
+                    className="w-full inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition shadow-soft hover:-translate-y-0.5"
                   >
-                    Become An Ambassador
-                    <ArrowRight className="w-5 h-5 ml-2" />
+                    <span>Become An Ambassador</span>
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 flex-shrink-0" />
                   </a>
                 </div>
               </div>
@@ -274,10 +274,10 @@ export default function Ambassador() {
                     href="https://app.landoffairytales.com/join"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full inline-flex items-center justify-center px-8 py-4 rounded-full text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition shadow-soft hover:-translate-y-0.5"
+                    className="w-full inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition shadow-soft hover:-translate-y-0.5"
                   >
-                    Become An Ambassador
-                    <ArrowRight className="w-5 h-5 ml-2" />
+                    <span>Become An Ambassador</span>
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 flex-shrink-0" />
                   </a>
                 </div>
               </div>
@@ -310,7 +310,7 @@ export default function Ambassador() {
                   </div>
 
                   {/* Mockup KPI Cards Row */}
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="bg-white border border-[#302824]/10 p-3 rounded-2xl shadow-sm space-y-1">
                       <span className="text-[9px] font-bold text-text-muted uppercase">My Referrals</span>
                       <p className="text-lg font-black text-text-dark leading-none">18 Parents</p>
@@ -407,7 +407,7 @@ export default function Ambassador() {
                   </div>
                   
                   {/* Balance rows */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="p-3 bg-white rounded-2xl border border-[#302824]/10 flex items-center justify-between">
                       <span className="text-[10px] font-bold text-text-muted">Approved Balance</span>
                       <span className="text-sm font-black text-emerald-600">GHS 120.00</span>

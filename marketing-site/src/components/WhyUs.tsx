@@ -141,20 +141,20 @@ export default function WhyUs() {
               return (
                 <div
                   key={`${card.id}-${idx}`}
-                  className={`flex-shrink-0 w-[300px] sm:w-[400px] h-[300px] p-8 flex flex-col justify-between border-2 border-[#302824] ${card.bgColor} rounded-3xl shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lg`}
+                  className={`flex-shrink-0 w-[285px] sm:w-[400px] h-[340px] sm:h-[300px] p-6 sm:p-8 flex flex-col justify-between border-2 border-[#302824] ${card.bgColor} rounded-3xl shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lg`}
                 >
-                  <div className="space-y-4">
-                    <div className="w-12 h-12 rounded-2xl bg-white border-2 border-[#302824] flex items-center justify-center">
-                      <Icon className={`w-6 h-6 ${card.iconColor}`} />
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white border-2 border-[#302824] flex items-center justify-center">
+                      <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${card.iconColor}`} />
                     </div>
-                    <h3 className="text-lg sm:text-xl font-quicksand font-bold text-text-dark leading-tight">
+                    <h3 className="text-base sm:text-xl font-quicksand font-bold text-text-dark leading-tight">
                       {card.title}
                     </h3>
                     <p className="text-xs sm:text-sm font-medium text-text-muted leading-relaxed">
                       {card.description}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-text-dark/80 mt-4 pt-4 border-t border-[#302824]/10">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-text-dark/80 mt-2 sm:mt-4 pt-3 sm:pt-4 border-t border-[#302824]/10">
                     <Sparkles className="w-3.5 h-3.5 text-brand-coral" />
                     <span>{card.footerText}</span>
                   </div>
@@ -170,10 +170,12 @@ export default function WhyUs() {
             href="https://app.landoffairytales.com/signup"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center px-8 py-4 rounded-full text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition-all shadow-soft btn-springy"
+            className="inline-block px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition-all shadow-soft btn-springy text-center"
           >
-            Help Your Child Fall In Love With Reading
-            <ArrowRight className="w-5 h-5 ml-2" />
+            <span className="inline-block text-center">
+              Help Your Child Fall In Love With Reading
+              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 inline-block align-middle ml-2 flex-shrink-0" />
+            </span>
           </a>
         </div>
       </div>

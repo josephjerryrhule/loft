@@ -34,7 +34,7 @@ const LinkedinIcon = () => (
 
 // Cute wiggling sticker components for the bottom signature decoration
 const WinkingSmileySticker = () => (
-  <svg className="w-16 h-16 rotate-[-12deg] drop-shadow-md hover:scale-110 transition cursor-pointer" viewBox="0 0 100 100">
+  <svg className="w-10 h-10 sm:w-16 sm:h-16 rotate-[-12deg] drop-shadow-md hover:scale-110 transition cursor-pointer" viewBox="0 0 100 100">
     <circle cx="50" cy="50" r="45" fill="#BFDBFE" stroke="#302824" strokeWidth="3" />
     <path d="M35 45 L45 45" stroke="#302824" strokeWidth="3" strokeLinecap="round" />
     <path d="M60 42 C62 40, 66 40, 68 42" fill="none" stroke="#302824" strokeWidth="3" strokeLinecap="round" />
@@ -44,7 +44,7 @@ const WinkingSmileySticker = () => (
 );
 
 const ReadStarSticker = () => (
-  <svg className="w-16 h-16 rotate-[15deg] drop-shadow-md hover:scale-110 transition cursor-pointer" viewBox="0 0 100 100">
+  <svg className="w-10 h-10 sm:w-16 sm:h-16 rotate-[15deg] drop-shadow-md hover:scale-110 transition cursor-pointer" viewBox="0 0 100 100">
     <path
       d="M50 5 L63 35 L95 38 L70 60 L78 92 L50 75 L22 92 L30 60 L5 38 L37 35 Z"
       fill="#FED7AA"
@@ -68,7 +68,7 @@ const ReadStarSticker = () => (
 );
 
 const PurpleBlobSticker = () => (
-  <svg className="w-20 h-20 rotate-[-5deg] drop-shadow-md hover:scale-110 transition cursor-pointer" viewBox="0 0 100 100">
+  <svg className="w-12 h-12 sm:w-20 sm:h-20 rotate-[-5deg] drop-shadow-md hover:scale-110 transition cursor-pointer" viewBox="0 0 100 100">
     <path
       d="M20 75 C12 70, 10 50, 20 40 C15 25, 30 22, 35 30 C42 12, 58 12, 65 30 C70 22, 85 25, 80 40 C90 50, 88 70, 80 75 Z"
       fill="#DDD6FE"
@@ -93,7 +93,7 @@ export default function Footer() {
   return (
     <footer className="w-full bg-brand-cream pt-16">
       {/* Brand Coral Card Container - Sits flush at page bottom, rounded top corners, side margins, wide layout */}
-      <div className="mx-6 max-w-7xl min-[1700px]:max-w-[100rem] lg:mx-auto rounded-t-[2.5rem] bg-[#E87154] border-t-[3px] border-x-[3px] border-[#302824] text-white p-10 md:p-16 pb-12 md:pb-16 relative overflow-hidden select-none">
+      <div className="mx-6 max-w-7xl min-[1700px]:max-w-[100rem] lg:mx-auto rounded-t-[2.5rem] bg-[#E87154] border-t-[3px] border-x-[3px] border-[#302824] text-white p-6 sm:p-10 md:p-16 pb-12 md:pb-16 relative overflow-hidden select-none">
         
         {/* Three-Column Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
@@ -108,7 +108,7 @@ export default function Footer() {
                 <a
                   key={item.href}
                   href={item.href}
-                  className="text-xl sm:text-2xl font-quicksand font-bold text-white hover:text-brand-purple hover:underline decoration-2 transition leading-tight"
+                  className="text-lg sm:text-2xl font-quicksand font-bold text-white hover:text-brand-purple hover:underline decoration-2 transition leading-tight"
                 >
                   {item.label}
                 </a>
@@ -122,7 +122,7 @@ export default function Footer() {
               office
             </span>
             <div className="space-y-1">
-              <p className="text-xl sm:text-2xl font-bold leading-tight font-sans">
+              <p className="text-lg sm:text-2xl font-bold leading-tight font-sans">
                 Accra, Ghana & International Locations
               </p>
               <div className="pt-3 flex items-center gap-1.5 text-sm font-semibold text-white/80 hover:text-white transition cursor-pointer">
@@ -140,7 +140,7 @@ export default function Footer() {
             <div className="space-y-2">
               <a
                 href="mailto:support@landoffairytales.com"
-                className="block text-xl sm:text-2xl font-bold leading-tight font-sans hover:underline decoration-2"
+                className="block text-lg sm:text-2xl font-bold leading-tight font-sans hover:underline decoration-2"
               >
                 support@landoffairytales.com
               </a>
@@ -176,18 +176,18 @@ export default function Footer() {
         <div className="relative mt-20 pt-10 border-t border-white/10 flex flex-col items-center justify-center min-h-[140px] z-10 select-none">
           
           {/* Massive background text signature */}
-          <span className="text-[7rem] sm:text-[10rem] md:text-[13rem] font-quicksand font-extrabold uppercase tracking-widest text-white opacity-20 select-none pointer-events-none leading-none">
+          <span className="text-[6.5rem] sm:text-[10rem] md:text-[13rem] font-quicksand font-extrabold uppercase tracking-widest text-white opacity-20 select-none pointer-events-none leading-none">
             loft
           </span>
 
           {/* Overlapping stickers */}
-          <div className="absolute top-[35%] left-[20%] z-20">
+          <div className="absolute top-[35%] left-[5%] sm:left-[20%] z-20">
             <WinkingSmileySticker />
           </div>
-          <div className="absolute top-[40%] right-[22%] z-20">
+          <div className="absolute top-[40%] right-[5%] sm:right-[22%] z-20">
             <ReadStarSticker />
           </div>
-          <div className="absolute top-[18%] left-[45%] z-20">
+          <div className="absolute top-[15%] sm:top-[18%] left-[42%] sm:left-[45%] z-20">
             <PurpleBlobSticker />
           </div>
         </div>

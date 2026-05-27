@@ -22,7 +22,7 @@ export default function Hero() {
 
       <div className="relative mx-auto max-w-7xl min-[1700px]:max-w-[100rem] px-6 flex flex-col items-center text-center">
         {/* Cute top badge */}
-        <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold text-brand-coral bg-brand-coral/10 border border-brand-coral/15 mb-6 md:mb-8 animate-bounce">
+        <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-black text-[#302824] bg-[#FFD02B] border-2 border-[#302824] mb-6 md:mb-8 shadow-sm animate-bounce">
           Welcome to a new world of reading
         </div>
 
@@ -44,19 +44,19 @@ export default function Hero() {
         </p>
 
         {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto mb-10 md:mb-12">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-[85%] sm:w-auto mb-10 md:mb-12">
           <a
             href="https://app.landoffairytales.com/signup"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 rounded-full text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition-all shadow-soft btn-springy"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition-all shadow-soft btn-springy"
           >
-            Start Your Journey
-            <ArrowRight className="w-5 h-5 ml-2" />
+            <span>Start Your Journey</span>
+            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 flex-shrink-0" />
           </a>
           <a
             href="#about"
-            className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 rounded-full text-base font-bold text-brand-coral bg-white border border-brand-coral/20 hover:bg-brand-coral/5 transition-all shadow-soft btn-springy"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold text-brand-coral bg-white border border-brand-coral/20 hover:bg-brand-coral/5 transition-all shadow-soft btn-springy"
           >
             Explore LOFT
           </a>

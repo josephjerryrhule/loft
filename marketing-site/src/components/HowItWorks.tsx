@@ -41,7 +41,7 @@ export default function HowItWorks() {
         
         {/* Header */}
         <div className="max-w-3xl mx-auto text-center mb-16 space-y-4">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-brand-coral bg-brand-coral/5 border border-brand-coral/10">
+          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-black text-[#302824] bg-[#C2D5A8] border-2 border-[#302824] shadow-sm">
             <Sparkles className="w-3.5 h-3.5" />
             Simple Steps
           </span>
@@ -86,15 +86,15 @@ export default function HowItWorks() {
         </div>
 
         {/* CTA Banner */}
-        <div className="text-center">
+        <div className="text-center px-6">
           <a
             href="https://app.landoffairytales.com/signup"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center px-8 py-4 rounded-full text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition shadow-soft shadow-card-hover"
+            className="inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition shadow-soft shadow-card-hover btn-springy"
           >
-            Start Your Journey
-            <ArrowRight className="w-5 h-5 ml-2" />
+            <span>Start Your Journey</span>
+            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 flex-shrink-0" />
           </a>
         </div>
 

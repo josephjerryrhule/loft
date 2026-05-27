@@ -204,7 +204,7 @@ export default function Stories() {
         
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-12 space-y-4">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black text-[#302824] bg-[#FFD02B] border-2 border-[#302824] shadow-sm animate-pulse">
+          <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-black text-[#302824] bg-[#FFD02B] border-2 border-[#302824] shadow-sm animate-pulse">
             <Sparkles className="w-3.5 h-3.5 fill-[#302824]" />
             Free Library Preview
           </div>
@@ -275,17 +275,17 @@ export default function Stories() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 px-6">
           <button
             onClick={handleCtaClick}
-            className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 rounded-full text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition-all shadow-soft btn-springy cursor-pointer"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition-all shadow-soft btn-springy cursor-pointer"
           >
-            Read Free Story
-            <ArrowRight className="w-5 h-5 ml-2" />
+            <span>Read Free Story</span>
+            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 flex-shrink-0" />
           </button>
           
           <a
             href="https://app.landoffairytales.com/signup"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 rounded-full text-base font-bold text-text-dark bg-white border-2 border-[#302824] hover:bg-brand-cream transition-all shadow-soft btn-springy"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 rounded-full text-sm sm:text-base font-bold text-text-dark bg-white border-2 border-[#302824] hover:bg-brand-cream transition-all shadow-soft btn-springy"
           >
             Join Platform
           </a>

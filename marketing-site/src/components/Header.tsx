@@ -70,7 +70,7 @@ export default function Header() {
   ];
 
   return (
-    <header className="fixed top-0 left-0 w-full z-50 pointer-events-none transition-all duration-500 py-3">
+    <header className="sticky top-0 left-0 w-full z-50 pointer-events-none transition-all duration-500 py-3">
       {/* Morphing Nav Container - Centered grid/flex layout */}
       <div
         className={`mx-auto flex items-center pointer-events-auto transition-all duration-500 ${
@@ -283,18 +283,20 @@ export default function Header() {
                           <span className="text-[9px] text-text-muted font-medium">Affiliate metrics & tools</span>
                         </div>
                       </a>
+                      
+                      <hr className="border-text-dark/5 my-1.5" />
+                      
+                      <a
+                        href="https://app.landoffairytales.com/signup"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block px-3 py-2.5 text-xs font-black text-white bg-brand-coral hover:bg-brand-coral/95 rounded-xl transition text-center shadow-soft btn-springy"
+                      >
+                        Start Your Journey
+                      </a>
                     </div>
                   </div>
                 </div>
-
-                <a
-                  href="https://app.landoffairytales.com/signup"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center px-5 py-2.5 rounded-full text-sm font-extrabold text-white bg-brand-coral shadow-soft hover:bg-brand-coral/90 transition shadow-card-hover btn-springy"
-                >
-                  Start Your Journey
-                </a>
               </div>
             )}
           </div>
@@ -317,7 +319,7 @@ export default function Header() {
       {/* Mobile Menu Dropdown */}
       {isOpen && (
         <div
-          className={`md:hidden mx-auto w-[92%] mt-2 rounded-3xl border-2 border-[#302824] px-6 py-5 space-y-5 shadow-2xl ${
+          className={`md:hidden mx-auto w-[92%] mt-2 rounded-3xl border-2 border-[#302824] px-6 py-5 space-y-5 shadow-2xl max-h-[75vh] overflow-y-auto ${
             isScrolled
               ? "bg-[#302824] text-[#FAF5EF]"
               : "bg-brand-cream text-text-dark border-brand-coral/10"

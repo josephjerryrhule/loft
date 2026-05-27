@@ -88,7 +88,7 @@ export default function About() {
           
           {/* Left Column: Context & Pillars */}
           <div className="lg:col-span-7 space-y-6">
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold text-brand-coral bg-brand-coral/5 border border-brand-coral/10">
+            <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-black text-[#302824] bg-[#D0C3E5] border-2 border-[#302824] shadow-sm">
               <Sparkles className="w-3.5 h-3.5" />
               What is LOFT?
             </div>
@@ -130,10 +130,10 @@ export default function About() {
             <div className="pt-4 flex items-center gap-2">
               <a
                 href="#products"
-                className="inline-flex items-center justify-center px-7 py-3.5 rounded-full text-sm font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition-all shadow-soft btn-springy"
+                className="inline-flex items-center justify-center px-6 sm:px-7 py-3 sm:py-3.5 rounded-full text-xs sm:text-sm font-bold text-white bg-brand-coral hover:bg-brand-coral/90 transition-all shadow-soft btn-springy"
               >
-                Explore Experiences
-                <ChevronRight className="w-4 h-4 ml-1" />
+                <span>Explore Experiences</span>
+                <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1 flex-shrink-0" />
               </a>
             </div>
           </div>

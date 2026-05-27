@@ -41,11 +41,12 @@ export default function Products() {
     // GSAP context helps safely manage scroll animations and clean them up automatically
     const ctx = gsap.context(() => {
       if (videoWrapperRef.current && sectionRef.current) {
+        const isMobile = window.innerWidth < 768;
         gsap.fromTo(
           videoWrapperRef.current,
           {
-            width: "80%",
-            borderRadius: "2.5rem",
+            width: isMobile ? "92%" : "80%",
+            borderRadius: isMobile ? "1.5rem" : "2.5rem",
             borderWidth: "3px",
           },
           {
@@ -91,7 +92,7 @@ export default function Products() {
         
         {/* Header */}
         <div className="max-w-3xl mx-auto text-center mb-16 space-y-4 px-6">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-brand-coral bg-brand-coral/5 border border-brand-coral/10">
+          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-black text-[#302824] bg-[#F4C491] border-2 border-[#302824] shadow-sm">
             <Sparkles className="w-3.5 h-3.5" />
             Discover LOFT
           </span>
@@ -107,8 +108,7 @@ export default function Products() {
         <div className="w-full overflow-hidden flex justify-center py-4">
           <div
             ref={videoWrapperRef}
-            className="relative border-[3px] border-[#302824] bg-[#302824] shadow-soft aspect-[21/9] sm:aspect-[21/9] overflow-hidden flex items-center justify-center"
-            style={{ width: "80%", borderRadius: "2.5rem" }}
+            className="relative border-[3px] border-[#302824] bg-[#302824] shadow-soft aspect-[16/10] md:aspect-[21/9] w-[92%] md:w-[80%] rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden flex items-center justify-center"
           >
             {/* Background Autoplay Video */}
             <video
