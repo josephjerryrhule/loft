@@ -90,7 +90,7 @@ export default function Header() {
             >
               <Image
                 src="/logo-v2.png"
-                alt="LOFT Logo"
+                alt="Land of Fairy Tales Logo"
                 width={28}
                 height={28}
                 className="object-contain"
@@ -101,7 +101,7 @@ export default function Header() {
             <a href="#hero" className="flex items-center gap-2 transition hover:opacity-90">
               <Image
                 src="/logo-v2.png"
-                alt="LOFT Logo"
+                alt="Land of Fairy Tales Logo"
                 width={44}
                 height={44}
                 className="h-10 w-auto object-contain"

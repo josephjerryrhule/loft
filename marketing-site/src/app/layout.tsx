@@ -17,9 +17,8 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Land of Fairy Tales — Build Confidence Through Stories That Feel Like Home",
   description:
-    "Interactive reading adventures children love, rooted in culture, imagination, and confidence-building. From magical 3D storybooks and personalized birthday stories to habit-forming reading experiences, LOFT helps children grow while parents feel confident.",
+    "Interactive reading adventures children love, rooted in culture, imagination, and confidence-building. From magical 3D storybooks and personalized birthday stories to habit-forming reading experiences, Land of Fairy Tales helps children grow while parents feel confident.",
   keywords: [
-    "LOFT",
     "Land of Fairy Tales",
     "children reading",
     "interactive storybooks",
@@ -51,14 +50,14 @@ export const metadata: Metadata = {
       "Interactive reading adventures children love, rooted in culture, imagination, and confidence-building.",
     type: "website",
     locale: "en_US",
-    siteName: "LOFT",
+    siteName: "Land of Fairy Tales",
     url: "https://www.landoffairytales.com",
     images: [
       {
         url: "/logo-v2.png",
         width: 512,
         height: 512,
-        alt: "LOFT Land of Fairy Tales Logo",
+        alt: "Land of Fairy Tales Logo",
       },
     ],
   },
@@ -81,7 +80,7 @@ export default function RootLayout({
     "@context": "https://schema.org",
     "@type": "Organization",
     "@id": "https://www.landoffairytales.com/#organization",
-    "name": "LOFT (Land of Fairy Tales)",
+    "name": "Land of Fairy Tales",
     "url": "https://www.landoffairytales.com",
     "logo": "https://www.landoffairytales.com/logo-v2.png",
     "address": {
@@ -117,12 +116,12 @@ export default function RootLayout({
     "@context": "https://schema.org",
     "@type": "Product",
     "@id": "https://www.landoffairytales.com/#product",
-    "name": "LOFT Book Club Subscription",
+    "name": "Land of Fairy Tales Book Club Subscription",
     "image": "https://www.landoffairytales.com/logo-v2.png",
     "description": "Curated physical children books paired with interactive 3D digital guides and story-building play to foster reading habits.",
     "brand": {
       "@type": "Brand",
-      "name": "LOFT"
+      "name": "Land of Fairy Tales"
     },
     "offers": {
       "@type": "AggregateOffer",
@@ -159,15 +158,15 @@ export default function RootLayout({
     "mainEntity": [
       {
         "@type": "Question",
-        "name": "What is LOFT (Land of Fairy Tales)?",
+        "name": "What is Land of Fairy Tales?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "LOFT is a personalized, interactive book club for families. We curate premium physical books and pair them with digital/interactive audio guides and story-building play to foster a lifelong love of reading."
+          "text": "Land of Fairy Tales is a personalized, interactive book club for families. We curate premium physical books and pair them with digital/interactive audio guides and story-building play to foster a lifelong love of reading."
         }
       },
       {
         "@type": "Question",
-        "name": "What age groups is LOFT designed for?",
+        "name": "What age groups is Land of Fairy Tales designed for?",
         "acceptedAnswer": {
           "@type": "Answer",
           "text": "We offer curated tracks for children aged 3 to 12. Each box is tailored to your child's reading level and developmental stage."

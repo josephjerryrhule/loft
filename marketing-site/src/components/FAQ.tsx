@@ -13,11 +13,11 @@ export default function FAQ() {
 
   const faqs: FAQItem[] = [
     {
-      question: "What is LOFT (Land of Fairy Tales)?",
-      answer: "LOFT is a personalized, interactive book club for families. We curate premium physical books and pair them with digital/interactive audio guides and story-building play to foster a lifelong love of reading.",
+      question: "What is Land of Fairy Tales?",
+      answer: "Land of Fairy Tales is a personalized, interactive book club for families. We curate premium physical books and pair them with digital/interactive audio guides and story-building play to foster a lifelong love of reading.",
     },
     {
-      question: "What age groups is LOFT designed for?",
+      question: "What age groups is Land of Fairy Tales designed for?",
       answer: "We offer curated tracks for children aged 3 to 12. Each box is tailored to your child's reading level and developmental stage.",
     },
     {

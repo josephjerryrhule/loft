@@ -130,7 +130,7 @@ export default function About() {
 
             {/* Badge */}
             <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-black text-[#302824] bg-brand-purple border-2 border-[#302824] shadow-sm">
-              What is LOFT?
+              What is Land of Fairy Tales?
             </div>
 
             {/* Heading */}
@@ -140,7 +140,7 @@ export default function About() {
 
             {/* Body copy */}
             <p className="text-sm sm:text-[15px] lg:text-base text-text-muted leading-relaxed max-w-xl">
-              LOFT is an interactive reading platform that helps children fall in love with stories. We combine 3D flipbooks, personalized quests, and culturally relevant tales to turn screen time into meaningful milestones.
+              Land of Fairy Tales is an interactive reading platform that helps children fall in love with stories. We combine 3D flipbooks, personalized quests, and culturally relevant tales to turn screen time into meaningful milestones.
             </p>
 
             {/* Pillars — clean inline tags using brand colors */}
