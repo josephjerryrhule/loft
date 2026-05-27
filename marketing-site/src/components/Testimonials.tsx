@@ -238,6 +238,45 @@ export default function Testimonials() {
       avatarType: "teacher-wrap",
       sizeClass: "w-14 h-14 md:w-18 md:h-18",
       positionClass: "right-[2%] sm:right-[3%] top-[34%]"
+    },
+    {
+      name: "Ekow Mensah",
+      role: "Parent of 6-year-old twins",
+      location: "Cape Coast",
+      quote: "The offline activities paired with wiggling storybooks have created a wonderful routine. Our twins Kweku and Kakra literally race to the bookshelf now.",
+      rating: 5,
+      avatarType: "boy",
+      sizeClass: "w-14 h-14 md:w-18 md:h-18",
+      positionClass: "left-[14%] sm:left-[17%] top-[68%]",
+      badgeText: "Twins Active",
+      badgeIcon: <Sparkles className="w-3.5 h-3.5 text-brand-coral" />,
+      badgePosition: "-left-8 top-16"
+    },
+    {
+      name: "Naa Koshie",
+      role: "Mother of 4-year-old",
+      location: "Osu",
+      quote: "LOFT is the first reading tool that represents our heritage so beautifully. My daughter loves matching the audio voiceovers with the wiggling character pictures.",
+      rating: 5,
+      avatarType: "mother-glasses",
+      sizeClass: "w-14 h-14 md:w-18 md:h-18",
+      positionClass: "right-[14%] sm:right-[17%] top-[68%]",
+      badgeText: "Audio read-along",
+      badgeIcon: <Flame className="w-3.5 h-3.5 text-brand-coral fill-brand-coral" />,
+      badgePosition: "-right-10 top-16"
+    },
+    {
+      name: "Selorm Amenyo",
+      role: "Education Coordinator",
+      location: "Hohoe",
+      quote: "The cultural stories are excellent for building reading confidence. We've seen a measurable rise in engagement since introducing the printable custom kits in our literacy program.",
+      rating: 5,
+      avatarType: "teacher-wrap",
+      sizeClass: "w-16 h-16 md:w-20 md:h-20",
+      positionClass: "left-[43%] sm:left-[45%] top-[70%]",
+      badgeText: "Curriculum Approved",
+      badgeIcon: <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />,
+      badgePosition: "left-16 -top-6"
     }
   ];
 
