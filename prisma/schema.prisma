@@ -57,6 +57,7 @@ model User {
   payoutMethodType        String?                  @map("payout_method_type")
   payoutDetails           String?                  @map("payout_details")
   payouts                 Payout[]
+  manualPayments          ManualPayment[]
 
   @@index([email])
   @@index([role])
@@ -242,9 +243,10 @@ model Commission {
   status     String    @default("PENDING")
   createdAt  DateTime  @default(now()) @map("created_at")
   paidAt     DateTime? @map("paid_at")
-  user       User      @relation(fields: [userId], references: [id])
-  payoutId   String?   @map("payout_id")
-  payout     Payout?   @relation(fields: [payoutId], references: [id])
+  user              User                      @relation(fields: [userId], references: [id])
+  payoutId          String?                   @map("payout_id")
+  payout            Payout?                   @relation(fields: [payoutId], references: [id])
+  manualAllocations ManualPaymentAllocation[]
 
   @@index([userId])
   @@index([status])
@@ -378,4 +380,43 @@ model ChildLoginToken {
 
   @@index([childId])
   @@map("child_login_tokens")
+}
+
+model ManualPayment {
+  id              String                   @id @default(uuid())
+  recipientId     String                   @map("recipient_id")
+  recipient       User                     @relation(fields: [recipientId], references: [id])
+  paymentType     String                   @map("payment_type")
+  totalAmount     Decimal                  @map("total_amount")
+  allocatedAmount Decimal                  @default(0) @map("allocated_amount")
+  bonusAmount     Decimal                  @default(0) @map("bonus_amount")
+  currency        String                   @default("GHS")
+  reason          String?
+  paymentMethod   String?                  @map("payment_method")
+  paymentRef      String?                  @map("payment_ref")
+  status          String                   @default("COMPLETED")
+  createdById     String                   @map("created_by_id")
+  createdAt       DateTime                 @default(now()) @map("created_at")
+  updatedAt       DateTime                 @updatedAt @map("updated_at")
+  allocations     ManualPaymentAllocation[]
+
+  @@index([recipientId])
+  @@index([paymentType])
+  @@index([status])
+  @@index([createdAt])
+  @@map("manual_payments")
+}
+
+model ManualPaymentAllocation {
+  id              String        @id @default(uuid())
+  manualPaymentId String        @map("manual_payment_id")
+  manualPayment   ManualPayment @relation(fields: [manualPaymentId], references: [id])
+  commissionId    String        @map("commission_id")
+  commission      Commission    @relation(fields: [commissionId], references: [id])
+  amount          Decimal
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  @@unique([manualPaymentId, commissionId])
+  @@index([commissionId])
+  @@map("manual_payment_allocations")
 }

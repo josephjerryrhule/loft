@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { getAmbassadorTrackingData } from "@/app/actions/finance";
+import { getManualPayments } from "@/app/actions/manual-payment";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Download, Users, TrendingUp, Wallet, AlertCircle, Search, Filter } from "lucide-react";
+import { Loader2, Download, Users, TrendingUp, Wallet, AlertCircle, Search, Filter, HandCoins } from "lucide-react";
 import { toast } from "sonner";
 import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
 import { PageHeader } from "@/components/dashboard/PageHeader";
@@ -40,6 +41,7 @@ function exportToCSV(rows: any[]) {
 
 export default function AmbassadorTrackingPage() {
   const [data, setData] = useState<any>(null);
+  const [manualSummary, setManualSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
@@ -49,13 +51,17 @@ export default function AmbassadorTrackingPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await getAmbassadorTrackingData({
-        search: search || undefined,
-        role: roleFilter,
-        status: statusFilter,
-        managerId: managerFilter,
-      });
+      const [result, manualResult] = await Promise.all([
+        getAmbassadorTrackingData({
+          search: search || undefined,
+          role: roleFilter,
+          status: statusFilter,
+          managerId: managerFilter,
+        }),
+        getManualPayments()
+      ]);
       setData(result);
+      setManualSummary(manualResult?.summary || null);
     } catch (e) {
       toast.error("Failed to load data");
     } finally {
@@ -88,7 +94,7 @@ export default function AmbassadorTrackingPage() {
       />
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <PremiumKPICard
           title="Total Ambassadors"
           value={summary.totalAmbassadors ?? 0}
@@ -112,6 +118,15 @@ export default function AmbassadorTrackingPage() {
           value={`GHS ${(summary.totalPaidOut ?? 0).toFixed(2)}`}
           icon={Wallet}
         />
+        <Link href="/finance/manual-payments" className="block transition-transform hover:scale-[1.02]">
+          <PremiumKPICard
+            title="Manual Payments"
+            value={`GHS ${(manualSummary?.totalAmount ?? 0).toFixed(2)}`}
+            icon={HandCoins}
+            theme="primary"
+            description={`${manualSummary?.totalCount ?? 0} manual transactions`}
+          />
+        </Link>
       </div>
 
       <div className="space-y-4">

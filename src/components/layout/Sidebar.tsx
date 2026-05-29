@@ -22,6 +22,7 @@ import {
   TrendingUp,
   Wallet,
   Sparkles,
+  HandCoins,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -53,6 +54,7 @@ function getLinks(userRole?: string, hasChildren?: boolean) {
     { href: "/admin/plans", label: "Plans", icon: CreditCard },
     { href: "/admin/finance", label: "Finance & Payouts", icon: CreditCard },
     { href: "/admin/payments", label: "Payment Tracker", icon: Wallet },
+    { href: "/admin/manual-payments", label: "Manual Payments", icon: HandCoins },
     leaderboardLink,
   ];
 
@@ -65,6 +67,7 @@ function getLinks(userRole?: string, hasChildren?: boolean) {
     { href: "/admin/finance", label: "System Revenue", icon: CreditCard },
     { href: "/admin/commissions", label: "My Earnings", icon: Wallet },
     { href: "/admin/payments", label: "Payment Tracker", icon: Wallet },
+    { href: "/admin/manual-payments", label: "Manual Payments", icon: HandCoins },
     leaderboardLink,
   ];
 
@@ -116,6 +119,7 @@ function getLinks(userRole?: string, hasChildren?: boolean) {
     { href: "/finance/payments", label: "Payment Tracker", icon: Wallet },
     { href: "/finance/signups", label: "Daily Signups", icon: TrendingUp },
     { href: "/finance/payouts", label: "Payout Requests", icon: BarChart3 },
+    { href: "/finance/manual-payments", label: "Manual Payments", icon: HandCoins },
     leaderboardLink,
   ];
 

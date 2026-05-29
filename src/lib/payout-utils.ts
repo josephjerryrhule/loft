@@ -42,6 +42,7 @@ export async function checkAndGeneratePayablePayouts(userId: string) {
     where: {
       userId,
       payoutId: null,
+      status: { in: ["PENDING", "APPROVED"] },
       createdAt: { lt: maturedCutoff }
     }
   });
@@ -131,6 +132,7 @@ export async function checkAndGenerateAllMaturedPayouts() {
   const unpayoutedUsers = await prisma.commission.findMany({
     where: {
       payoutId: null,
+      status: { in: ["PENDING", "APPROVED"] },
       createdAt: { lt: maturedCutoff }
     },
     select: {
