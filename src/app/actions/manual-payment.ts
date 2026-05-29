@@ -172,7 +172,7 @@ export async function createManualPayment(input: CreateManualPaymentInput) {
 
   // Execute in a transaction
   try {
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // Create the manual payment record
       const payment = await tx.manualPayment.create({
         data: {
@@ -416,7 +416,7 @@ export async function voidManualPayment(id: string) {
   }
 
   try {
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // Void the payment
       await tx.manualPayment.update({
         where: { id },
