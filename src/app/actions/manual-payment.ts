@@ -137,7 +137,7 @@ export async function createManualPayment(input: CreateManualPaymentInput) {
 
   // If commissions selected, validate they belong to recipient and are outstanding
   let allocatedAmount = 0;
-  let commissionsToAllocate: { id: string; amount: Decimal }[] = [];
+  let commissionsToAllocate: { id: string; amount: Decimal; currency: string; payoutId: string | null }[] = [];
 
   if (commissionIds.length > 0) {
     commissionsToAllocate = await prisma.commission.findMany({
@@ -146,7 +146,7 @@ export async function createManualPayment(input: CreateManualPaymentInput) {
         userId: recipientId,
         status: { in: ["PENDING", "APPROVED"] },
       },
-      select: { id: true, amount: true },
+      select: { id: true, amount: true, currency: true, payoutId: true },
     });
 
     if (commissionsToAllocate.length !== commissionIds.length) {
@@ -200,11 +200,43 @@ export async function createManualPayment(input: CreateManualPaymentInput) {
           },
         });
 
+        // If the commission is linked to an unpaid weekly payout, reduce the weekly payout's amount
+        if (commission.payoutId) {
+          const payout = await tx.payout.findUnique({
+            where: { id: commission.payoutId },
+          });
+
+          if (payout && payout.status !== "PAID") {
+            const isUSD = commission.currency === "USD";
+            const currentAmountGHS = Number(payout.amountGHS);
+            const currentAmountUSD = Number(payout.amountUSD);
+            const commAmount = Number(commission.amount);
+
+            const newAmountGHS = isUSD ? currentAmountGHS : Math.max(0, currentAmountGHS - commAmount);
+            const newAmountUSD = isUSD ? Math.max(0, currentAmountUSD - commAmount) : currentAmountUSD;
+
+            if (newAmountGHS <= 0 && newAmountUSD <= 0) {
+              await tx.payout.delete({
+                where: { id: payout.id },
+              });
+            } else {
+              await tx.payout.update({
+                where: { id: payout.id },
+                data: {
+                  amountGHS: newAmountGHS,
+                  amountUSD: newAmountUSD,
+                },
+              });
+            }
+          }
+        }
+
         await tx.commission.update({
           where: { id: commission.id },
           data: {
             status: "PAID",
             paidAt: new Date(),
+            payoutId: null, // Dissociate from the weekly payout record since it was paid manually
           },
         });
       }
