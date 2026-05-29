@@ -164,7 +164,7 @@ function NavContent({ userRole, setOpen, logoUrl, platformName, hasChildren }: {
             )}
           </div>
     
-          <nav className="flex-1 space-y-1.5">
+          <nav className="flex-1 overflow-y-auto space-y-1.5 pr-1 sidebar-scrollbar">
             {links.map((link) => {
               const Icon = link.icon;
               const isRootDashboard = ["/admin", "/manager", "/affiliate", "/parent", "/finance"].includes(link.href);
