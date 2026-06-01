@@ -90,9 +90,9 @@ function SignupForm() {
     return (
         <Card className="w-full max-w-lg my-8">
             <CardHeader>
-            <CardTitle>Sign Up</CardTitle>
-            <CardDescription>
-                {step === 1 ? "Create your LOFT account" : "Tell us where you're located"}
+            <CardTitle className="text-3xl font-black tracking-tight text-stone-900">Start Your LOFT Journey</CardTitle>
+            <CardDescription className="text-stone-500 font-bold mt-2">
+                {step === 1 ? "Join a world of imagination, confidence, culture, and joyful learning." : "Tell us where you're located"}
             </CardDescription>
             </CardHeader>
             <CardContent>

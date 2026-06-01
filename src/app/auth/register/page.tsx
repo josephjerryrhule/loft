@@ -76,9 +76,9 @@ function RegisterForm() {
                 </div>
                 <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-stone-400">Join Us</span>
             </div>
-            <CardTitle className="text-3xl font-bold leading-none tracking-tight text-stone-900">Create Account</CardTitle>
-            <CardDescription className="text-stone-500 font-medium mt-4 text-base">
-                Join our community and start your journey today.
+            <CardTitle className="text-3xl font-black leading-none tracking-tight text-stone-900">Start Your LOFT Journey</CardTitle>
+            <CardDescription className="text-stone-500 font-bold mt-4 text-base">
+                Join a world of imagination, confidence, culture, and joyful learning.
             </CardDescription>
           </CardHeader>
       </div>

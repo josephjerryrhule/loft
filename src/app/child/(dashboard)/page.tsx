@@ -30,40 +30,85 @@ export default async function ChildDashboardPage() {
       </div>
     );
   }
+  const getChildSubGreeting = (streak: number) => {
+    if (streak > 0) {
+      return "Keep your reading streak glowing 🔥";
+    }
+    const hour = new Date().getHours();
+    if (hour < 12) {
+      return "Let’s discover something magical today. ✨";
+    } else {
+      return "A new story is waiting for you. 📚";
+    }
+  };
 
   return (
     <div className="space-y-12 pb-20">
       {/* Welcome Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-2">
-          <DynamicGreeting />
-          <h1 className="text-4xl sm:text-6xl font-black text-[#2D2D2D] font-quicksand tracking-tight">
-            Hi, <span className="text-[#E87154]">{childName || session.username}</span>!
-          </h1>
+          {lastReadProgress ? (
+            <h1 className="text-3xl sm:text-5xl font-black text-[#2D2D2D] font-quicksand tracking-tight">
+              Welcome Back, Explorer 🚀 <span className="text-[#E87154]">{childName || session.username}</span>!
+            </h1>
+          ) : (
+            <h1 className="text-4xl sm:text-6xl font-black text-[#2D2D2D] font-quicksand tracking-tight">
+              Welcome, <span className="text-[#E87154]">{childName || session.username}</span>!
+            </h1>
+          )}
+          <p className="text-sm font-bold text-[#E87154] uppercase tracking-wider font-quicksand">
+            {getChildSubGreeting(stats?.readingStreak || 0)}
+          </p>
         </div>
         
         {/* Compact Stats Row */}
         <div className="flex items-center gap-4">
           <div className="bg-white px-6 py-3 rounded-2xl border border-[#E87154]/10 shadow-sm flex items-center gap-3">
              <div className="w-8 h-8 bg-[#E87154]/10 rounded-lg flex items-center justify-center text-[#E87154]">
-               <Star className="w-4 h-4" fill="currentColor" />
+                <Star className="w-4 h-4" fill="currentColor" />
              </div>
              <div className="flex flex-col">
-               <span className="text-lg font-black leading-none text-[#2D2D2D]">{stats?.totalBooksRead || 0}</span>
-               <span className="text-[8px] font-black text-[#BBBBBB] uppercase tracking-widest">Books</span>
+                <span className="text-lg font-black leading-none text-[#2D2D2D]">{stats?.totalBooksRead || 0}</span>
+                <span className="text-[8px] font-black text-[#BBBBBB] uppercase tracking-widest">Books</span>
              </div>
           </div>
           <div className="bg-[#E87154] px-6 py-3 rounded-2xl shadow-md flex items-center gap-3 text-white">
              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-               <Trophy className="w-4 h-4" />
+                <Trophy className="w-4 h-4" />
              </div>
              <div className="flex flex-col">
-               <span className="text-lg font-black leading-none">{stats?.readingStreak || 0}</span>
-               <span className="text-[8px] font-black text-white/70 uppercase tracking-widest">Streak</span>
+                <span className="text-lg font-black leading-none">{stats?.readingStreak || 0}</span>
+                <span className="text-[8px] font-black text-white/70 uppercase tracking-widest">Streak</span>
              </div>
           </div>
         </div>
       </div>
+
+      {/* Celebration Banners */}
+      {(stats?.readingStreak > 0 || stats?.totalBooksRead > 0) && (
+        <div className="space-y-3">
+          {stats?.readingStreak > 0 && (
+            <div className="bg-amber-50 border border-amber-200 p-4 sm:p-5 rounded-[20px] flex items-center gap-3 text-amber-800 font-bold text-xs sm:text-sm animate-in slide-in-from-top-2 duration-300">
+              <span>🔥 You’re doing amazing! Keep your reading streak alive.</span>
+            </div>
+          )}
+          {stats?.readingStreak >= 7 && (
+            <div className="bg-orange-50 border border-orange-200 p-4 sm:p-5 rounded-[20px] flex items-center gap-3 text-orange-800 font-bold text-xs sm:text-sm animate-in slide-in-from-top-2 duration-300">
+              <span>🔥 Streak unlocked! You’ve read for 7 days in a row.</span>
+            </div>
+          )}
+          {stats?.totalBooksRead === 1 && (
+            <div className="bg-emerald-50 border border-emerald-200 p-4 sm:p-5 rounded-[20px] flex items-center gap-3 text-emerald-800 font-bold text-xs sm:text-sm animate-in slide-in-from-top-2 duration-300">
+              <span>🎉 Amazing work! You completed your first book.</span>
+            </div>
+          )}
+          {stats?.totalBooksRead >= 5 && (
+            <div className="bg-indigo-50 border border-indigo-200 p-4 sm:p-5 rounded-[20px] flex items-center gap-3 text-indigo-800 font-bold text-xs sm:text-sm animate-in slide-in-from-top-2 duration-300">
+              <span>🏆 Achievement unlocked! You earned a new reading badge. You’re becoming a reading superstar.</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Hero Section */}
       <div className="relative">
@@ -102,14 +147,13 @@ export default async function ChildDashboardPage() {
                         <div className="h-4 w-full bg-[#F5F5F5] rounded-full overflow-hidden border border-[#E87154]/5">
                           <div 
                             className="h-full bg-[#E87154] rounded-full shadow-[0_0_15px_rgba(232,113,84,0.3)] transition-all duration-1500"
- 
                             style={{ width: `${lastReadProgress.progress}%` }}
                           ></div>
                         </div>
                       </div>
 
                       <Link href={`/child/flipbooks/${lastReadProgress.id}`} className="block">
-                        <Button className="w-full md:w-auto h-16 px-12 bg-[#E87154] hover:bg-[#D65D41] text-white rounded-2xl font-black text-xl shadow-[0_15px_30px_rgba(232,113,84,0.3)] hover:shadow-[0_20px_40px_rgba(232,113,84,0.4)] transition-all flex items-center justify-center gap-3 transform hover:scale-105 active:scale-95">
+                        <Button className="w-full md:w-auto h-16 px-12 bg-[#E87154] hover:bg-[#D65D41] text-white rounded-2xl font-black text-xl shadow-[0_15px_30px_rgba(232,113,84,0.3)] hover:shadow-[0_20px_40px_rgba(232,113,84,0.4)] transition-all flex items-center justify-center gap-3 transform hover:scale-105 active:scale-95 border-none">
                           Jump Back In! <ChevronRight className="w-7 h-7" />
                         </Button>
                       </Link>
@@ -117,7 +161,7 @@ export default async function ChildDashboardPage() {
                   ) : (
                     <div className="max-w-md mx-auto md:mx-0">
                       <Link href={`/child/flipbooks/${lastReadProgress.id}`} className="block">
-                        <Button className="w-full md:w-auto h-16 px-12 bg-[#E87154] hover:bg-[#D65D41] text-white rounded-2xl font-black text-xl shadow-[0_15px_30px_rgba(232,113,84,0.3)] hover:shadow-[0_20px_40px_rgba(232,113,84,0.4)] transition-all flex items-center justify-center gap-3 transform hover:scale-105 active:scale-95">
+                        <Button className="w-full md:w-auto h-16 px-12 bg-[#E87154] hover:bg-[#D65D41] text-white rounded-2xl font-black text-xl shadow-[0_15px_30px_rgba(232,113,84,0.3)] hover:shadow-[0_20px_40px_rgba(232,113,84,0.4)] transition-all flex items-center justify-center gap-3 transform hover:scale-105 active:scale-95 border-none">
                           Read Again! <ChevronRight className="w-7 h-7" />
                         </Button>
                       </Link>
@@ -126,21 +170,42 @@ export default async function ChildDashboardPage() {
                 </div>
              </div>
           </div>
-        ) : (
+        ) : flipbooks.length === 0 ? (
+          /* EMPTY STATE: NO BOOKS YET */
           <div className="bg-white rounded-[40px] p-16 border border-[#E87154]/10 shadow-[0_10px_40px_rgba(232,113,84,0.05)] relative overflow-hidden flex flex-col items-center justify-center text-center space-y-8">
-             <div className="w-32 h-32 bg-[#E87154]/10 rounded-full flex items-center justify-center text-6xl animate-bounce">✨</div>
+             <div className="w-32 h-32 bg-[#E87154]/10 rounded-full flex items-center justify-center text-6xl">🔍</div>
              <div className="space-y-4">
-               <h2 className="text-4xl font-black text-[#2D2D2D] font-quicksand tracking-tight">Ready for an Adventure?</h2>
-               <p className="text-[#6D6D6D] font-medium text-xl max-w-md mx-auto leading-relaxed">
-                 Pick your first magical book from the shelf below to start your journey!
+               <h2 className="text-3xl font-black text-[#2D2D2D] font-quicksand tracking-tight">Your next adventure is waiting.</h2>
+               <p className="text-[#6D6D6D] font-medium text-lg max-w-md mx-auto leading-relaxed">
+                 Ask your parents to add books to your library bookshelf!
                </p>
+             </div>
+             <Button asChild className="h-14 px-10 bg-[#E87154] hover:bg-[#D65D41] text-white rounded-2xl font-black text-lg shadow-[0_10px_20px_rgba(232,113,84,0.2)] border-none">
+               <Link href="/parent">Explore Books</Link>
+             </Button>
+          </div>
+        ) : (
+          /* EMPTY STATE: NO READING HISTORY (FIRST LOGIN) */
+          <div className="bg-white rounded-[40px] p-16 border border-[#E87154]/10 shadow-[0_20px_50px_rgba(232,113,84,0.08)] relative overflow-hidden flex flex-col items-center justify-center text-center space-y-8">
+             <div className="w-32 h-32 bg-[#E87154]/10 rounded-full flex items-center justify-center text-6xl animate-pulse">✨</div>
+             <div className="space-y-4">
+               <h2 className="text-4xl font-black text-[#2D2D2D] font-quicksand tracking-tight">Welcome To Your Reading Adventure ✨</h2>
+               <p className="text-[#6D6D6D] font-medium text-lg max-w-md mx-auto leading-relaxed">
+                 Books, stories, adventures, and magical discoveries are waiting for you. Let’s begin.
+               </p>
+             </div>
+             <div className="space-y-4">
+               <p className="text-[#6D6D6D] font-bold text-xs uppercase tracking-widest">Let’s start your first story today.</p>
+               <Button asChild className="h-16 px-12 bg-[#E87154] hover:bg-[#D65D41] text-white rounded-2xl font-black text-xl shadow-[0_15px_30px_rgba(232,113,84,0.3)] transform hover:scale-105 transition-all border-none">
+                 <Link href="#bookshelf">Start Adventure</Link>
+               </Button>
              </div>
           </div>
         )}
       </div>
 
       {/* Library Section */}
-      <div className="space-y-12">
+      <div id="bookshelf" className="space-y-12 scroll-mt-24">
         <div className="flex items-center gap-4">
            <div className="h-px flex-1 bg-stone-100"></div>
            <h2 className="text-2xl font-black text-[#2D2D2D] font-quicksand uppercase tracking-[0.2em]">The Bookshelf</h2>

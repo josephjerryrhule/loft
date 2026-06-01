@@ -1,12 +1,7 @@
-import { getSystemSettings } from "@/app/actions/settings";
-import LoginForm from "./LoginForm";
+import { redirect } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
 
-export default async function ChildLoginPage() {
-  const settings = await getSystemSettings();
-  const logoUrl = settings.logoUrl;
-  const platformName = settings.platformName;
-
-  return <LoginForm logoUrl={logoUrl} platformName={platformName} />;
+export default function ChildLoginPage() {
+  redirect("/auth/login?type=child");
 }

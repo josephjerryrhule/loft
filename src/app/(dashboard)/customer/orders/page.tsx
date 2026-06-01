@@ -133,12 +133,12 @@ export default function CustomerOrdersPage() {
                     <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-white dark:bg-slate-900 flex items-center justify-center shadow-lg mb-6">
                         <Package className="h-8 w-8 sm:h-10 sm:w-10 text-slate-300" />
                     </div>
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white">Empty History</h3>
-                    <p className="text-slate-500 font-medium mt-2 leading-relaxed text-sm sm:text-base">
-                        When you make a purchase from our catalog, your items and tracking details will appear here.
+                    <h3 className="text-xl font-black text-slate-900 dark:text-white">No Orders Yet</h3>
+                    <p className="text-slate-500 font-medium mt-2 leading-relaxed text-xs sm:text-sm max-w-xs mx-auto">
+                        You haven’t placed any orders yet. Explore birthday books, printables, and learning products.
                     </p>
-                    <Button asChild className="mt-8 h-12 px-8 rounded-xl bg-[#E87154] hover:bg-[#D66144] font-black shadow-lg shadow-[#E87154]/20 transition-all active:scale-95 text-white">
-                        <Link href="/products">Visit Store</Link>
+                    <Button asChild className="mt-8 h-12 px-8 rounded-2xl bg-[#E87154] hover:bg-[#D66144] font-black shadow-lg shadow-[#E87154]/20 transition-all active:scale-95 text-white border-none">
+                        <Link href="/products">Explore Products</Link>
                     </Button>
                 </div>
             </Card>
