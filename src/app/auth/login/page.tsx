@@ -12,7 +12,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
-import { Loader2, Mail, ShieldCheck, ArrowRight, Lock, BookOpen, Rocket, ArrowLeft, Sparkles, RefreshCw } from "lucide-react";
+import { Loader2, Mail, ShieldCheck, ArrowRight, Lock, BookOpen, Rocket, ArrowLeft, Sparkles, RefreshCw, Heart } from "lucide-react";
 import Link from "next/link";
 import { loginSchema } from "@/lib/validations";
 import { checkLoginStatus, resendEmailVerification } from "@/app/actions/auth";
@@ -226,8 +226,8 @@ function LoginForm() {
               {loginType === "parent" ? "Loft Gate" : "Reading Nook"}
             </span>
           </div>
-          <CardTitle className="text-3xl font-black leading-none tracking-tight text-stone-900">
-            Welcome Back ❤️
+          <CardTitle className="text-3xl font-black leading-none tracking-tight text-stone-900 flex items-center gap-2">
+            Welcome Back <Heart className="h-6 w-6 text-[#E87154] fill-[#E87154]" />
           </CardTitle>
           <CardDescription className="text-stone-500 font-bold mt-3 text-sm sm:text-base leading-relaxed">
             Continue building confidence through stories.
@@ -282,7 +282,7 @@ function LoginForm() {
                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
                         <Input 
                           placeholder="email@example.com" 
-                          className="pl-12 h-12 bg-stone-50 border-none rounded-xl font-bold focus-visible:ring-[#E87154] shadow-inner px-4 text-slate-800 text-[16px]" 
+                          className="pl-12 pr-4 h-12 bg-stone-50 border-none rounded-xl font-bold focus-visible:ring-[#E87154] shadow-inner text-slate-800 text-[16px]" 
                           {...field} 
                           disabled={isLoading}
                         />
