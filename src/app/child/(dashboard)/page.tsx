@@ -5,10 +5,11 @@ import { getChildSession } from "@/lib/child-auth";
 export const dynamic = "force-dynamic";
 import { getChildFlipbooks } from "@/app/actions/child-flipbooks";
 import { Bookshelf } from "@/components/child/Bookshelf";
-import { BookOpen, Trophy, Star, ChevronRight, Sparkles } from "lucide-react";
+import { BookOpen, Trophy, Star, ChevronRight, Sparkles, Rocket, Flame, Book, HelpCircle, Gift } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DynamicGreeting } from "@/components/child/DynamicGreeting";
+import { CelebrationToasts } from "@/components/child/CelebrationToasts";
 
 export default async function ChildDashboardPage() {
   const session = await getChildSession();
@@ -32,33 +33,48 @@ export default async function ChildDashboardPage() {
   }
   const getChildSubGreeting = (streak: number) => {
     if (streak > 0) {
-      return "Keep your reading streak glowing 🔥";
+      return (
+        <span className="flex items-center gap-1.5">
+          Keep your reading streak glowing <Flame className="h-4 w-4 text-amber-500 fill-amber-500 animate-pulse" />
+        </span>
+      );
     }
     const hour = new Date().getHours();
     if (hour < 12) {
-      return "Let’s discover something magical today. ✨";
+      return (
+        <span className="flex items-center gap-1.5">
+          Let’s discover something magical today <Sparkles className="h-4 w-4 text-[#E87154] animate-pulse" />
+        </span>
+      );
     } else {
-      return "A new story is waiting for you. 📚";
+      return (
+        <span className="flex items-center gap-1.5">
+          A new story is waiting for you <BookOpen className="h-4 w-4 text-[#E87154]" />
+        </span>
+      );
     }
   };
 
   return (
     <div className="space-y-12 pb-20">
+      {/* Toast Achievements Notification */}
+      <CelebrationToasts stats={stats} />
+
       {/* Welcome Section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-2">
           {lastReadProgress ? (
-            <h1 className="text-3xl sm:text-5xl font-black text-[#2D2D2D] font-quicksand tracking-tight">
-              Welcome Back, Explorer 🚀 <span className="text-[#E87154]">{childName || session.username}</span>!
+            <h1 className="text-3xl sm:text-5xl font-black text-[#2D2D2D] font-quicksand tracking-tight flex items-center gap-2 flex-wrap">
+              Welcome Back, Explorer <Rocket className="h-7 w-7 text-[#E87154]" /> <span className="text-[#E87154]">{childName || session.username}</span>!
             </h1>
           ) : (
             <h1 className="text-4xl sm:text-6xl font-black text-[#2D2D2D] font-quicksand tracking-tight">
               Welcome, <span className="text-[#E87154]">{childName || session.username}</span>!
             </h1>
           )}
-          <p className="text-sm font-bold text-[#E87154] uppercase tracking-wider font-quicksand">
+          <div className="text-sm font-bold text-[#E87154] uppercase tracking-wider font-quicksand">
             {getChildSubGreeting(stats?.readingStreak || 0)}
-          </p>
+          </div>
         </div>
         
         {/* Compact Stats Row */}
@@ -83,32 +99,6 @@ export default async function ChildDashboardPage() {
           </div>
         </div>
       </div>
-
-      {/* Celebration Banners */}
-      {(stats?.readingStreak > 0 || stats?.totalBooksRead > 0) && (
-        <div className="space-y-3">
-          {stats?.readingStreak > 0 && (
-            <div className="bg-amber-50 border border-amber-200 p-4 sm:p-5 rounded-[20px] flex items-center gap-3 text-amber-800 font-bold text-xs sm:text-sm animate-in slide-in-from-top-2 duration-300">
-              <span>🔥 You’re doing amazing! Keep your reading streak alive.</span>
-            </div>
-          )}
-          {stats?.readingStreak >= 7 && (
-            <div className="bg-orange-50 border border-orange-200 p-4 sm:p-5 rounded-[20px] flex items-center gap-3 text-orange-800 font-bold text-xs sm:text-sm animate-in slide-in-from-top-2 duration-300">
-              <span>🔥 Streak unlocked! You’ve read for 7 days in a row.</span>
-            </div>
-          )}
-          {stats?.totalBooksRead === 1 && (
-            <div className="bg-emerald-50 border border-emerald-200 p-4 sm:p-5 rounded-[20px] flex items-center gap-3 text-emerald-800 font-bold text-xs sm:text-sm animate-in slide-in-from-top-2 duration-300">
-              <span>🎉 Amazing work! You completed your first book.</span>
-            </div>
-          )}
-          {stats?.totalBooksRead >= 5 && (
-            <div className="bg-indigo-50 border border-indigo-200 p-4 sm:p-5 rounded-[20px] flex items-center gap-3 text-indigo-800 font-bold text-xs sm:text-sm animate-in slide-in-from-top-2 duration-300">
-              <span>🏆 Achievement unlocked! You earned a new reading badge. You’re becoming a reading superstar.</span>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Hero Section */}
       <div className="relative">
@@ -173,7 +163,9 @@ export default async function ChildDashboardPage() {
         ) : flipbooks.length === 0 ? (
           /* EMPTY STATE: NO BOOKS YET */
           <div className="bg-white rounded-[40px] p-16 border border-[#E87154]/10 shadow-[0_10px_40px_rgba(232,113,84,0.05)] relative overflow-hidden flex flex-col items-center justify-center text-center space-y-8">
-             <div className="w-32 h-32 bg-[#E87154]/10 rounded-full flex items-center justify-center text-6xl">🔍</div>
+             <div className="w-32 h-32 bg-[#E87154]/10 rounded-full flex items-center justify-center text-[#E87154]">
+               <Book className="h-14 w-14" />
+             </div>
              <div className="space-y-4">
                <h2 className="text-3xl font-black text-[#2D2D2D] font-quicksand tracking-tight">Your next adventure is waiting.</h2>
                <p className="text-[#6D6D6D] font-medium text-lg max-w-md mx-auto leading-relaxed">
@@ -187,9 +179,13 @@ export default async function ChildDashboardPage() {
         ) : (
           /* EMPTY STATE: NO READING HISTORY (FIRST LOGIN) */
           <div className="bg-white rounded-[40px] p-16 border border-[#E87154]/10 shadow-[0_20px_50px_rgba(232,113,84,0.08)] relative overflow-hidden flex flex-col items-center justify-center text-center space-y-8">
-             <div className="w-32 h-32 bg-[#E87154]/10 rounded-full flex items-center justify-center text-6xl animate-pulse">✨</div>
+             <div className="w-32 h-32 bg-[#E87154]/10 rounded-full flex items-center justify-center text-[#E87154] animate-pulse">
+                <Sparkles className="h-14 w-14" />
+             </div>
              <div className="space-y-4">
-               <h2 className="text-4xl font-black text-[#2D2D2D] font-quicksand tracking-tight">Welcome To Your Reading Adventure ✨</h2>
+               <h2 className="text-4xl font-black text-[#2D2D2D] font-quicksand tracking-tight flex items-center gap-2">
+                 Welcome To Your Reading Adventure <Sparkles className="h-8 w-8 text-[#E87154] fill-[#E87154]" />
+               </h2>
                <p className="text-[#6D6D6D] font-medium text-lg max-w-md mx-auto leading-relaxed">
                  Books, stories, adventures, and magical discoveries are waiting for you. Let’s begin.
                </p>
@@ -218,7 +214,9 @@ export default async function ChildDashboardPage() {
         <div className="bg-[#E87154] p-10 rounded-[40px] shadow-xl text-white relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl group-hover:scale-110 transition-transform duration-700"></div>
           <div className="relative flex flex-col sm:flex-row items-center gap-8">
-            <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center text-4xl">🎁</div>
+            <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center text-4xl text-white">
+              <Gift className="h-10 w-10 text-white" />
+            </div>
             <div className="space-y-2 text-center sm:text-left flex-1">
               <h3 className="text-3xl font-black font-quicksand tracking-tight">
                 Want more magical books?
@@ -233,4 +231,3 @@ export default async function ChildDashboardPage() {
     </div>
   );
 }
-

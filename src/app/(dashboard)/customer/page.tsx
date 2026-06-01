@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { getCustomerDashboardData, getCustomerOrders } from "@/app/actions/user";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, BookOpen, RefreshCw, Sparkles, CreditCard, ShoppingBag, ArrowRight, CheckCircle2, ChevronRight, MessageSquare, AlertCircle } from "lucide-react";
+import { Loader2, BookOpen, RefreshCw, Sparkles, CreditCard, ShoppingBag, ArrowRight, CheckCircle2, ChevronRight, MessageSquare, AlertCircle, Heart } from "lucide-react";
 import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { cn } from "@/lib/utils";
@@ -65,7 +65,11 @@ export default function CustomerDashboardPage() {
     if (hours < 12) {
       return "Let’s continue your child’s learning journey.";
     } else if (hours < 18) {
-      return "Build confidence one story at a time ❤️";
+      return (
+        <span className="inline-flex items-center gap-1">
+          Build confidence one story at a time <Heart className="h-3.5 w-3.5 text-[#E87154] fill-[#E87154] inline" />
+        </span>
+      );
     } else {
       return "Stories, imagination, and confidence await.";
     }
@@ -88,7 +92,7 @@ export default function CustomerDashboardPage() {
 
     if (hasPendingPersonalization) {
       return {
-        text: "Complete your personalization form to begin production 🎂",
+        text: "Complete your personalization form to begin production.",
         cta: "Complete Form",
         href: "/customer/orders",
         icon: Sparkles,
@@ -120,7 +124,7 @@ export default function CustomerDashboardPage() {
 
     // 4. Streak default if they read
     return {
-      text: "🔥 Amazing! Your child is building a reading habit. Keep the streak going.",
+      text: "Amazing! Your child is building a reading habit. Keep the streak going.",
       cta: "Read Now",
       href: "/customer/flipbooks",
       icon: Sparkles,
@@ -167,11 +171,11 @@ export default function CustomerDashboardPage() {
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            Welcome Back 👋 Ready for today’s reading adventure?
+            Welcome Back! Ready for today’s reading adventure?
           </h1>
-          <p className="text-xs sm:text-sm text-stone-500 font-bold tracking-wide">
+          <div className="text-xs sm:text-sm text-stone-500 font-bold tracking-wide">
             {getSubWelcomeMessage()}
-          </p>
+          </div>
         </div>
         <div className="flex gap-3 shrink-0 w-full sm:w-auto">
           <Button 
@@ -207,7 +211,7 @@ export default function CustomerDashboardPage() {
               <Sparkles size={130} />
             </div>
             <div className="relative z-10 space-y-3">
-              <h2 className="text-3xl font-black tracking-tight">Welcome To LOFT ❤️</h2>
+              <h2 className="text-3xl font-black tracking-tight flex items-center gap-2">Welcome To LOFT <Heart className="h-6 w-6 text-white fill-white inline" /></h2>
               <p className="text-white/80 font-bold text-sm max-w-2xl leading-relaxed">
                 A world of stories, imagination, confidence, and meaningful learning awaits. We’re excited to help your child build confidence through magical reading adventures rooted in imagination, culture, and joyful discovery. Let’s get everything ready.
               </p>

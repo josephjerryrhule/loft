@@ -8,7 +8,7 @@ import { CopyInviteLinkButton } from "@/components/affiliate/CopyInviteLinkButto
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { TrendingUp, Users, DollarSign, Wallet, Clock, Zap, Target, Sparkles, CheckCircle2, AlertCircle, MessageSquare } from "lucide-react";
+import { TrendingUp, Users, DollarSign, Wallet, Clock, Zap, Target, Sparkles, CheckCircle2, AlertCircle, MessageSquare, Heart, Rocket } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
@@ -50,11 +50,19 @@ export default async function AffiliateDashboardPage() {
   const getSubWelcomeMessage = () => {
     const hours = new Date().getHours();
     if (hours < 12) {
-      return "You’re helping families discover confidence through stories ❤️";
+      return (
+        <span className="flex items-center gap-1.5">
+          You’re helping families discover confidence through stories <Heart className="h-4 w-4 text-[#E87154] fill-[#E87154] inline" />
+        </span>
+      );
     } else if (hours < 18) {
       return "Let’s grow your community impact.";
     } else {
-      return "Time to share more reading magic 🚀";
+      return (
+        <span className="flex items-center gap-1.5">
+          Time to share more reading magic <Rocket className="h-4 w-4 text-[#E87154] inline animate-pulse" />
+        </span>
+      );
     }
   };
 
@@ -131,7 +139,7 @@ export default async function AffiliateDashboardPage() {
 
     if (stats.referralsCount % 2 === 0) {
       return {
-        text: "You’re 2 signups away from today’s goal 🚀 Competition ends in 5 hours. Keep going!",
+        text: "You’re 2 signups away from today’s goal. Competition ends in 5 hours. Keep going!",
         cta: "View Rankings",
         href: "/leaderboard",
         icon: Target,
@@ -140,7 +148,7 @@ export default async function AffiliateDashboardPage() {
       };
     } else {
       return {
-        text: "You’re currently in 2nd place 🔥 Only 1 signup behind.",
+        text: "You’re currently in 2nd place. Only 1 signup behind.",
         cta: "View Rankings",
         href: "/leaderboard",
         icon: Target,
@@ -155,7 +163,7 @@ export default async function AffiliateDashboardPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       <PageHeader
-        title="Welcome Back 👋 Ready to grow your impact today?"
+        title="Welcome Back! Ready to grow your impact today?"
         subtitle={getSubWelcomeMessage()}
         actions={
           user?.inviteCode && (
@@ -197,7 +205,7 @@ export default async function AffiliateDashboardPage() {
               <Sparkles size={130} />
             </div>
             <div className="relative z-10 space-y-3">
-              <h2 className="text-3xl font-black tracking-tight">Welcome To The LOFT Ambassador Community 🎉</h2>
+              <h2 className="text-3xl font-black tracking-tight flex items-center gap-2">Welcome To The LOFT Ambassador Community <Sparkles className="h-6 w-6 text-white inline fill-white" /></h2>
               <p className="text-white/80 font-bold text-sm max-w-2xl leading-relaxed">
                 Help families discover magical reading experiences while building meaningful impact. You’re officially part of the mission to help children grow in confidence through stories, imagination, and learning. Let’s get you ready.
               </p>
@@ -210,9 +218,9 @@ export default async function AffiliateDashboardPage() {
                 <div className="h-3 w-full bg-white/25 rounded-full overflow-hidden">
                   <div className="h-full bg-white rounded-full transition-all duration-1000" style={{ width: `${progressPercent}%` }} />
                 </div>
-                <p className="text-[10px] italic text-white/70">
-                  Your impact journey starts here 🚀
-                </p>
+                <div className="text-[10px] flex items-center gap-1 text-white/70">
+                  <span>Your impact journey starts here</span> <Rocket className="h-3.5 w-3.5 text-white inline" />
+                </div>
               </div>
             </div>
           </div>
