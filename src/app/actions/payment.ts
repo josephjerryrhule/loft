@@ -258,11 +258,17 @@ export async function processProductPayment(
     quantity: number | string = 1, 
     customizationData?: any, 
     customerUploadUrl?: string,
-    skipRevalidate: boolean = false
+    skipRevalidate: boolean = false,
+    userId?: string
 ) {
 
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Unauthorized" };
+  let finalUserId = userId;
+  if (!finalUserId) {
+    const session = await auth();
+    finalUserId = session?.user?.id;
+  }
+  
+  if (!finalUserId) return { error: "Unauthorized" };
 
   // Ensure quantity is an integer
   const quantityInt = typeof quantity === 'string' ? parseInt(quantity, 10) : quantity;
@@ -302,7 +308,7 @@ export async function processProductPayment(
 
     // Get user's referrer and address for commission and shipping
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: finalUserId },
       select: { 
         referredById: true, 
         email: true, 
@@ -320,7 +326,7 @@ export async function processProductPayment(
     const order = await prisma.order.create({
       data: {
         orderNumber: `ORD-${Date.now()}`,
-        customerId: session.user.id,
+        customerId: finalUserId,
         productId: productId,
         quantity: quantityInt,
         unitPrice: product.price,
@@ -345,7 +351,7 @@ export async function processProductPayment(
     // Log activity
     await prisma.activityLog.create({
       data: {
-        userId: session.user.id,
+        userId: finalUserId,
         actionType: "CREATE_ORDER",
         actionDetails: JSON.stringify({
           productTitle: product.title,

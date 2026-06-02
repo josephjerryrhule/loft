@@ -45,14 +45,15 @@ export async function POST(request: NextRequest) {
           await processSubscriptionPayment(reference, metadata?.itemId || metadata?.planId, metadata?.userId);
       } else if (metadata?.type === "product") {
           const { processProductPayment } = await import("@/app/actions/payment");
-          // Assuming product payment action is also updated to handle background processing if needed
-          // For now, retaining existing signature but it might need userId injection if refactored strictly
-          // Checking existing signature in previous turn: processProductPayment(reference, productId, quantity, ...)
-          // It relies on session currently. I should probably update it too if I want full webhook support for products, 
-          // but scope is Plans. However, let's keep it safe. 
-          // The current processProductPayment throws Unauthorized if no session.
-          // So this won't work for products via webhook yet unless refactored.
-          // Focusing on subscription as per request.
+          await processProductPayment(
+            reference,
+            metadata?.itemId || metadata?.productId || metadata?.planId,
+            metadata?.quantity || 1,
+            metadata?.customizationData,
+            metadata?.customerUploadUrl,
+            true,
+            metadata?.userId
+          );
       }
     }
 

@@ -62,13 +62,48 @@ async function verifyAndProcessPayment(params: {
   }
 
   try {
+    // 1. Fast Database Check (in case the webhook has already processed and fulfilled the payment)
+    const existingSubscription = await prisma.subscription.findFirst({
+      where: { paymentReference: reference }
+    });
+    if (existingSubscription) {
+      return { success: true, type: "subscription", message: "Subscription activated successfully!" };
+    }
+
+    const existingOrder = await prisma.order.findFirst({
+      where: { paymentReference: reference },
+      select: { id: true, productId: true }
+    });
+    if (existingOrder) {
+      let requiresCustomization = false;
+      try {
+        const product = await prisma.product.findUnique({
+          where: { id: existingOrder.productId },
+          select: { requiresCustomization: true }
+        });
+        requiresCustomization = product?.requiresCustomization || false;
+      } catch (e) {
+        console.error("Failed to query product customization flag in fast db check:", e);
+      }
+      return { 
+        success: true, 
+        type: "product", 
+        message: "Purchase completed successfully!",
+        orderId: existingOrder.id,
+        requiresCustomization
+      };
+    }
+
     const secretKey = await getPaystackSecretKey();
     
     if (!secretKey) {
       return { success: false, type: "product", message: "Payment configuration error" };
     }
 
-    // Verify the transaction with Paystack
+    // Verify the transaction with Paystack (with abort timeout)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
+
     const response = await fetch(
       `https://api.paystack.co/transaction/verify/${reference}`,
       {
@@ -77,8 +112,10 @@ async function verifyAndProcessPayment(params: {
           Authorization: `Bearer ${secretKey}`,
         },
         cache: "no-store",
+        signal: controller.signal
       }
     );
+    clearTimeout(timeoutId);
 
     const result = await response.json();
 
