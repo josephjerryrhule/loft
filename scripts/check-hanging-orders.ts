@@ -66,17 +66,44 @@ async function main() {
     const itemId = metadata?.itemId || metadata?.productId || metadata?.planId || "unknown";
     const userId = metadata?.userId || "unknown";
 
-    // 1. Check Subscription DB
-    const sub = await prisma.subscription.findFirst({
-      where: { paymentReference: reference }
-    });
+    // Skip subscription references or explicit subscription types
+    if (reference.startsWith("SUB-") || type === "subscription") {
+      continue;
+    }
 
-    // 2. Check Order DB
+    // Only process product orders
+    const isProductOrder = reference.startsWith("ORD-") || type === "product";
+    if (!isProductOrder) {
+      continue;
+    }
+
+    // Skip if user or product does not exist (e.g. deleted / test orders)
+    if (!userId || userId === "unknown") {
+      continue;
+    }
+    const userExists = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+    if (!userExists) {
+      continue;
+    }
+
+    if (!itemId || itemId === "unknown") {
+      continue;
+    }
+    const productExists = await prisma.product.findUnique({
+      where: { id: itemId }
+    });
+    if (!productExists) {
+      continue;
+    }
+
+    // Check Order DB
     const order = await prisma.order.findFirst({
       where: { paymentReference: reference }
     });
 
-    if (!sub && !order) {
+    if (!order) {
       hangingCount++;
       console.log(`\x1b[31m[HANGING] Reference: ${reference}\x1b[0m`);
       console.log(`  Customer: ${email}`);
@@ -86,40 +113,24 @@ async function main() {
       console.log(`  User ID: ${userId}`);
 
       if (fulfillMode) {
-        if (type === "subscription") {
-          console.log(`  Attempting auto-fulfillment for Subscription...`);
-          try {
-            const res = await processSubscriptionPayment(reference, itemId, userId);
-            if (res.error) {
-              console.log(`  \x1b[31mFailed to fulfill subscription: ${res.error}\x1b[0m`);
-            } else {
-              console.log(`  \x1b[32mSuccessfully fulfilled subscription! Reference: ${reference}\x1b[0m`);
-            }
-          } catch (err: any) {
-            console.log(`  \x1b[31mError fulfilling subscription: ${err?.message || err}\x1b[0m`);
+        console.log(`  Attempting auto-fulfillment for Product Order...`);
+        try {
+          const res = await processProductPayment(
+            reference, 
+            itemId, 
+            metadata?.quantity || 1, 
+            metadata?.customizationData, 
+            metadata?.customerUploadUrl, 
+            true, 
+            userId
+          );
+          if (res.error) {
+            console.log(`  \x1b[31mFailed to fulfill order: ${res.error}\x1b[0m`);
+          } else {
+            console.log(`  \x1b[32mSuccessfully created order! ID: ${res.order?.orderNumber}\x1b[0m`);
           }
-        } else if (type === "product") {
-          console.log(`  Attempting auto-fulfillment for Product Order...`);
-          try {
-            const res = await processProductPayment(
-              reference, 
-              itemId, 
-              metadata?.quantity || 1, 
-              metadata?.customizationData, 
-              metadata?.customerUploadUrl, 
-              true, 
-              userId
-            );
-            if (res.error) {
-              console.log(`  \x1b[31mFailed to fulfill order: ${res.error}\x1b[0m`);
-            } else {
-              console.log(`  \x1b[32mSuccessfully created order! ID: ${res.order?.orderNumber}\x1b[0m`);
-            }
-          } catch (err: any) {
-            console.log(`  \x1b[31mError fulfilling order: ${err?.message || err}\x1b[0m`);
-          }
-        } else {
-          console.log(`  \x1b[33mWarning: Unknown transaction type '${type}'. Skipping.\x1b[0m`);
+        } catch (err: any) {
+          console.log(`  \x1b[31mError fulfilling order: ${err?.message || err}\x1b[0m`);
         }
       }
       console.log("------------------------------------------");
