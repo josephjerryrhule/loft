@@ -1,25 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import { processProductPayment, processSubscriptionPayment } from "../src/app/actions/payment";
+import { getPaystackSecretKey } from "../src/lib/paystack";
 
 const prisma = new PrismaClient();
-
-async function getPaystackSecretKey() {
-  const settings = await prisma.systemSettings.findMany({
-    where: {
-      key: { in: ["paystackMode", "paystackTestSecretKey", "paystackLiveSecretKey"] }
-    }
-  });
-
-  const config: Record<string, string> = {};
-  settings.forEach(s => {
-    config[s.key] = s.value;
-  });
-
-  const mode = config.paystackMode || "test";
-  return mode === "live" 
-    ? config.paystackLiveSecretKey || process.env.PAYSTACK_SECRET_KEY 
-    : config.paystackTestSecretKey || process.env.PAYSTACK_SECRET_KEY;
-}
 
 async function main() {
   const args = process.argv.slice(2);
