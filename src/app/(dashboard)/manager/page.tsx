@@ -5,7 +5,7 @@ import { EarningsChart } from "@/components/dashboard/EarningsChart";
 import { ActivityTable } from "@/components/dashboard/ActivityTable";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { TrendingUp, Users, DollarSign, Wallet, Clock, Zap, Target } from "lucide-react";
+import { TrendingUp, Users, DollarSign, Wallet, Clock, Zap, Target, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CopyInviteLinkButton } from "@/components/affiliate/CopyInviteLinkButton";
@@ -59,8 +59,8 @@ export default async function ManagerDashboardPage() {
         }
       />
       
-      {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {/* Performance Overview KPI Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <PremiumKPICard
           title="Marketing Tools"
           value="Active"
@@ -75,32 +75,54 @@ export default async function ManagerDashboardPage() {
           icon={Users}
         />
         <PremiumKPICard
-          title="Personal Earnings"
-          value={`GHS ${stats.totalEarnings.toFixed(2)}`}
-          description="From direct sales"
-          icon={DollarSign}
-        />
-        <PremiumKPICard
           title="Team Earnings"
           value={`GHS ${stats.teamEarnings.toFixed(2)}`}
           description="From affiliate overrides"
           icon={TrendingUp}
           theme="success"
         />
-        <PremiumKPICard
-          title="Approved Balance"
-          value={`GHS ${stats.approvedBalance.toFixed(2)}`}
-          description="Ready for payout"
-          icon={Wallet}
-          className="border-b-4 border-b-emerald-500"
-        />
-        <PremiumKPICard
-          title="Pending Balance"
-          value={`GHS ${stats.pendingBalance.toFixed(2)}`}
-          description="Awaiting approval"
-          icon={Clock}
-          className="border-b-4 border-b-amber-500"
-        />
+      </div>
+
+      {/* Commission & Payout Breakdown */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Wallet className="h-5 w-5 text-[#E87154]" />
+          <h3 className="text-lg font-black tracking-tight text-slate-800 dark:text-stone-200">
+            Personal Commission & Earnings Breakdown
+          </h3>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <PremiumKPICard
+            title="Lifetime Earnings"
+            value={`GHS ${stats.totalEarnings.toFixed(2)}`}
+            description="Total commission earned"
+            icon={DollarSign}
+            theme="white"
+          />
+          <PremiumKPICard
+            title="Already Paid"
+            value={`GHS ${(stats.paidBalance || 0).toFixed(2)}`}
+            description="Paid to registered method"
+            icon={CheckCircle2}
+            theme="success"
+          />
+          <PremiumKPICard
+            title="Withdrawable Balance"
+            value={`GHS ${stats.approvedBalance.toFixed(2)}`}
+            description="Available for withdrawal"
+            icon={Wallet}
+            theme="primary"
+            className="border-b-4 border-b-emerald-500"
+          />
+          <PremiumKPICard
+            title="Pending Approval"
+            value={`GHS ${stats.pendingBalance.toFixed(2)}`}
+            description="Awaiting verification"
+            icon={Clock}
+            theme="warning"
+            className="border-b-4 border-b-amber-500"
+          />
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">

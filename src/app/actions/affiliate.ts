@@ -43,6 +43,12 @@ export async function getAffiliateStats() {
     _sum: { amount: true },
   });
 
+  // Paid balance = PAID (already paid out)
+  const paidBalance = await prisma.commission.aggregate({
+    where: { userId: userId, status: "PAID" },
+    _sum: { amount: true },
+  });
+
   const thisMonthStart = new Date();
   thisMonthStart.setDate(1);
   thisMonthStart.setHours(0, 0, 0, 0);
@@ -60,6 +66,7 @@ export async function getAffiliateStats() {
     totalEarnings: Number(totalEarnings._sum.amount) || 0,
     pendingBalance: Number(pendingBalance._sum.amount) || 0,
     approvedBalance: Number(approvedBalance._sum.amount) || 0,
+    paidBalance: Number(paidBalance._sum.amount) || 0,
     monthEarnings: Number(monthEarnings._sum.amount) || 0,
     currency,
   };
