@@ -44,6 +44,12 @@ export async function getLeaderboardData(filters: {
   const viewerRole = (session.user as any).role;
   const viewerId = session.user.id;
 
+  // Default to the current calendar month if no date range is specified
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+  const range = filters.dateRange || { from: startOfMonth, to: endOfMonth };
+
   // 1. Fetch only Team Leaders and Affiliates
   const ambassadors = await prisma.user.findMany({
     where: {
@@ -75,7 +81,11 @@ export async function getLeaderboardData(filters: {
         include: {
           subscriptions: {
             where: {
-              paymentStatus: "COMPLETED"
+              paymentStatus: "COMPLETED",
+              createdAt: {
+                gte: range.from,
+                lte: range.to
+              }
             },
             include: { plan: true }
           }
@@ -84,10 +94,21 @@ export async function getLeaderboardData(filters: {
       // We also need to count sales from direct referrals that might be stored in the referredOrders
       referredOrders: {
           where: {
-              paymentStatus: { in: ["PAID", "COMPLETED"] }
+              paymentStatus: { in: ["PAID", "COMPLETED"] },
+              createdAt: {
+                gte: range.from,
+                lte: range.to
+              }
           }
       },
-      commissions: true
+      commissions: {
+          where: {
+              createdAt: {
+                gte: range.from,
+                lte: range.to
+              }
+          }
+      }
     }
   });
 
@@ -98,7 +119,7 @@ export async function getLeaderboardData(filters: {
     const productSales = user.referredOrders.length;
     const salesCount = subscriptionSales + productSales;
 
-    const referralsCount = user.referrals.length;
+    const referralsCount = user.referrals.filter(r => r.createdAt >= range.from && r.createdAt <= range.to).length;
     // A referral counts as "paid" if they hold at least one completed
     // subscription. Free-plan signups still appear in referralsCount, but
     // don't inflate this metric — so the leaderboard ordering can't be
