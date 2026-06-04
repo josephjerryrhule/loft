@@ -14,6 +14,7 @@ import { getCurrencySymbol } from "@/lib/utils";
 import { ViewOrderDialog } from "@/components/order/ViewOrderDialog";
 import { EditOrderDialog } from "@/components/order/EditOrderDialog";
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { UserLink } from "@/components/user/UserLink";
 import { cn, formatStatusLabel } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -161,16 +162,19 @@ export default function AdminOrdersPage() {
                     </TableCell>
                     <TableCell>
                     <div className="flex items-center gap-3">
-                        <Link href={`/admin/users/${order.customer.id}`} className="hover:opacity-80 transition-opacity">
+                        <UserLink userId={order.customer.id} status={order.customer.status} className="hover:opacity-80 transition-opacity">
                           <Avatar className="h-9 w-9 sm:h-10 sm:w-10 border-2 border-white shadow-sm ring-2 ring-slate-50">
                             <AvatarImage src={order.customer.profilePictureUrl || ""} />
                             <AvatarFallback className="bg-slate-100 text-[10px] font-black">{order.customer.email[0].toUpperCase()}</AvatarFallback>
                           </Avatar>
-                        </Link>
+                        </UserLink>
                         <div className="flex flex-col min-w-0">
-                            <Link href={`/admin/users/${order.customer.id}`} className="text-xs font-black text-slate-900 truncate max-w-[120px] hover:text-[#E87154] transition-colors">
-                              {order.customer.email}
-                            </Link>
+                            <UserLink
+                              userId={order.customer.id}
+                              userName={order.customer.email}
+                              status={order.customer.status}
+                              className="text-xs font-black text-slate-900 truncate max-w-[120px] hover:text-[#E87154] transition-colors"
+                            />
                             <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Client Portal</span>
                         </div>
                     </div>

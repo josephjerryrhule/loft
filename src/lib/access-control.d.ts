@@ -27,3 +27,17 @@ export function isFlipbookReadableForChild(input: {
   flipbookAgeGroup?: string | null;
   childAgeGroup?: string | null;
 }): boolean;
+
+export function canViewUserProfile(input: {
+  viewerRole: string | undefined | null;
+  viewerId: string | undefined | null;
+  targetUserId: string | undefined | null;
+  targetUserRole: string | undefined | null;
+  targetUserFields?: {
+    managerId?: string | null;
+    teamLeaderId?: string | null;
+  };
+}): {
+  canView: boolean;
+  canViewFull: boolean;
+};

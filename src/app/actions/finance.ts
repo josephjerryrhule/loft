@@ -49,7 +49,7 @@ export async function getAmbassadorTrackingData(filters?: {
     where,
     include: {
       commissions: true,
-      manager: { select: { id: true, firstName: true, lastName: true, email: true } },
+      manager: { select: { id: true, firstName: true, lastName: true, email: true, status: true } },
       referrals: {
         select: {
           id: true,
@@ -90,6 +90,7 @@ export async function getAmbassadorTrackingData(filters?: {
         ? `${user.manager.firstName || ""} ${user.manager.lastName || ""}`.trim() || user.manager.email
         : "—",
       managerId: user.managerId,
+      managerStatus: user.manager?.status,
       customersRecruited: user.referrals.length,
       revenueGenerated,
       totalCommissions,
@@ -161,7 +162,7 @@ export async function getPaymentTrackerData(filters?: {
   const subscriptions = await prisma.subscription.findMany({
     where,
     include: {
-      customer: { select: { id: true, firstName: true, lastName: true, email: true } },
+      customer: { select: { id: true, firstName: true, lastName: true, email: true, status: true } },
       childProfile: { select: { name: true } },
       plan: { select: { name: true, price: true } },
     },
@@ -197,6 +198,7 @@ export async function getPaymentTrackerData(filters?: {
       date: s.createdAt,
       parentId: s.customer.id,
       parentName: `${s.customer.firstName || ""} ${s.customer.lastName || ""}`.trim() || s.customer.email,
+      parentStatus: s.customer.status,
       childName: s.childProfile?.name || "—",
       plan: s.plan.name,
       planPrice: Number(s.plan.price),
@@ -241,7 +243,7 @@ export async function getDailySignupData(filters?: {
   const users = await prisma.user.findMany({
     where,
     include: {
-      referredBy: { select: { firstName: true, lastName: true, email: true, role: true } },
+      referredBy: { select: { id: true, firstName: true, lastName: true, email: true, role: true, status: true } },
       subscriptions: {
         orderBy: { createdAt: "desc" },
         take: 1,
@@ -292,6 +294,7 @@ export async function getDailySignupData(filters?: {
   return {
     rows: users.map((u) => ({
       id: u.id,
+      status: u.status,
       date: u.createdAt,
       parentName: `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email,
       source: u.referredById ? "Referred" : "Organic",
@@ -299,6 +302,7 @@ export async function getDailySignupData(filters?: {
       ambassador: u.referredBy
         ? `${u.referredBy.firstName || ""} ${u.referredBy.lastName || ""}`.trim() || u.referredBy.email
         : "—",
+      ambassadorStatus: u.referredBy?.status,
       plan: u.subscriptions[0]?.plan?.name || "No plan",
       paymentStatus: u.subscriptions[0]
         ? (u.subscriptions[0].paymentStatus === "COMPLETED_FREE" ? "COMPLETED" : u.subscriptions[0].paymentStatus)
@@ -319,7 +323,7 @@ export async function getFinancePayoutRequests() {
 
   const requests = await prisma.payoutRequest.findMany({
     include: {
-      user: { select: { firstName: true, lastName: true, email: true, role: true } },
+      user: { select: { id: true, firstName: true, lastName: true, email: true, role: true, status: true } },
     },
     orderBy: { requestedAt: "desc" },
   });

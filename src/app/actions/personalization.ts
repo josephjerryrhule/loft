@@ -147,6 +147,7 @@ export async function getPersonalizations() {
             email: true,
             phoneNumber: true,
             profilePictureUrl: true,
+            status: true,
           }
         },
         product: true

@@ -18,6 +18,8 @@ import {
   UserCheck
 } from "lucide-react";
 import { AddUserDialog } from "@/components/admin/AddUserDialog";
+import { UserLink } from "@/components/user/UserLink";
+import Link from "next/link";
 import { UserActions } from "@/components/admin/UserActions";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { getAllUsers } from "@/app/actions/admin";
@@ -26,7 +28,6 @@ import { formatRole } from "@/lib/format-utils";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { cn, getCurrencySymbol } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
-import Link from "next/link";
 
 interface User {
   id: string;
@@ -445,16 +446,19 @@ export default function AdminUsersPage() {
                 <TableRow key={user.id} className="group transition-colors border-slate-50 dark:border-slate-800">
                   <TableCell className="pl-6 py-4">
                     <div className="flex items-center gap-3">
-                      <Link href={`/admin/users/${user.id}`}>
+                      <UserLink userId={user.id} status={user.status}>
                         <Avatar className="h-10 w-10 border-2 border-white dark:border-slate-800 shadow-sm hover:opacity-85 transition-opacity cursor-pointer">
                           <AvatarImage src={user.profilePictureUrl || ""} />
                           <AvatarFallback className="bg-slate-100 text-slate-500 font-bold">{user.firstName?.[0] || user.email[0].toUpperCase()}</AvatarFallback>
                         </Avatar>
-                      </Link>
+                      </UserLink>
                       <div className="flex flex-col">
-                        <Link href={`/admin/users/${user.id}`} className="font-bold text-sm text-slate-900 dark:text-white hover:text-[#E87154] transition-colors">
-                          {user.firstName ? `${user.firstName} ${user.lastName || ''}` : 'No Name'}
-                        </Link>
+                        <UserLink
+                          userId={user.id}
+                          userName={user.firstName ? `${user.firstName} ${user.lastName || ''}` : 'No Name'}
+                          status={user.status}
+                          className="font-bold text-sm text-slate-900 dark:text-white hover:text-[#E87154] transition-colors"
+                        />
                         <span className="text-xs text-slate-400 font-medium">{user.email}</span>
                       </div>
                     </div>

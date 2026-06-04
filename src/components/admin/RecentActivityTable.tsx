@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { UserLink } from "@/components/user/UserLink";
 import { Badge } from "@/components/ui/badge";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { formatActivityDetails, getActionTypeLabel } from "@/lib/activity-formatter";
@@ -60,9 +61,11 @@ export function RecentActivityTable({ activities }: RecentActivityTableProps) {
               <TableRow key={log.id} className="group transition-colors">
                 <TableCell className="pl-6 font-bold text-sm text-slate-900 dark:text-white">
                     {log.user ? (
-                      <Link href={`/admin/users/${log.user.id}`} className="hover:underline cursor-pointer">
-                        {log.user.email}
-                      </Link>
+                      <UserLink
+                        userId={log.user.id}
+                        userName={log.user.email}
+                        className="hover:underline cursor-pointer"
+                      />
                     ) : (
                       "System"
                     )}

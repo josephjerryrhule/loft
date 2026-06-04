@@ -18,6 +18,7 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
 import { cn } from "@/lib/utils";
 import { formatRole } from "@/lib/format-utils";
+import { UserLink } from "@/components/user/UserLink";
 
 function exportToCSV(requests: any[]) {
   const headers = ["Ambassador", "Role", "Amount (GHS)", "Status", "Requested", "Processed", "Notes"];
@@ -189,9 +190,12 @@ export default function PayoutRequestsPage() {
                   <TableRow key={req.id} className="group transition-all duration-300">
                     <TableCell className="pl-10 py-6">
                       <div className="flex flex-col">
-                        <Link href={`/admin/users/${req.user.id}`} className="font-black text-slate-900 dark:text-white tracking-tight hover:text-[#E87154] transition-colors">
-                          {req.user.firstName || ""} {req.user.lastName || "Staff Account"}
-                        </Link>
+                        <UserLink
+                          userId={req.user.id}
+                          userName={`${req.user.firstName || ""} ${req.user.lastName || "Staff Account"}`.trim()}
+                          status={req.user.status}
+                          className="font-black text-slate-900 dark:text-white tracking-tight hover:text-[#E87154] transition-colors"
+                        />
                         <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{req.user.email}</span>
                       </div>
                     </TableCell>

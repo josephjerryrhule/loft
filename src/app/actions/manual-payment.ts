@@ -312,6 +312,7 @@ export async function getManualPayments(filters?: GetManualPaymentsFilters) {
           lastName: true,
           email: true,
           role: true,
+          status: true,
           ambassadorId: true,
         },
       },

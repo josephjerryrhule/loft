@@ -42,7 +42,7 @@ interface LeaderboardClientProps {
 
 function renderClickableName(entry: LeaderboardEntry, viewerRole: string, viewerId?: string, className?: string) {
   const isStaff = ["ADMIN", "OPERATIONS_MANAGER", "FINANCE"].includes(viewerRole);
-  const isAllowedToViewLeaderboard = ["OPERATIONS_MANAGER", "MANAGER", "TEAM_LEADER"].includes(viewerRole) || entry.id === viewerId;
+  const isSelf = entry.id === viewerId;
 
   if (isStaff) {
     return (
@@ -50,7 +50,7 @@ function renderClickableName(entry: LeaderboardEntry, viewerRole: string, viewer
         {entry.name}
       </Link>
     );
-  } else if (isAllowedToViewLeaderboard) {
+  } else if (isSelf) {
     return (
       <Link href={`/leaderboard/${entry.id}`} className={cn("hover:text-[#E87154] transition-colors hover:underline cursor-pointer", className)}>
         {entry.name}
@@ -64,7 +64,7 @@ function renderClickableName(entry: LeaderboardEntry, viewerRole: string, viewer
 function Podium({ top3, viewerRole, viewerId }: { top3: LeaderboardEntry[], viewerRole: string, viewerId?: string }) {
   const isAllowedToView = (entryUserId: string) => {
     const isStaff = ["ADMIN", "OPERATIONS_MANAGER", "FINANCE"].includes(viewerRole);
-    return isStaff || ["MANAGER", "TEAM_LEADER"].includes(viewerRole) || entryUserId === viewerId;
+    return isStaff || entryUserId === viewerId;
   };
 
   return (
@@ -344,7 +344,7 @@ export default function LeaderboardClient({ initialData, viewerRole, viewerId }:
                   <TableCell className="text-right pr-6">
                     {(() => {
                       const isStaff = ["ADMIN", "OPERATIONS_MANAGER", "FINANCE"].includes(viewerRole);
-                      const isAllowed = isStaff || ["MANAGER", "TEAM_LEADER"].includes(viewerRole) || entry.id === viewerId;
+                      const isAllowed = isStaff || entry.id === viewerId;
                       return isAllowed ? (
                         <Button variant="ghost" size="sm" asChild className="text-[#E87154] font-black hover:text-[#E87154] hover:bg-[#E87154]/10 rounded-full h-8 px-4 transition-all">
                           <Link href={isStaff ? `/admin/users/${entry.id}` : `/leaderboard/${entry.id}`}>

@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
 import { cn, formatStatusLabel } from "@/lib/utils";
+import { UserLink } from "@/components/user/UserLink";
 import {
   BarChart,
   Bar,
@@ -269,7 +270,7 @@ export default function DailySignupsPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <Link href={`/admin/users/${row.id}`} className="flex items-center gap-3 hover:opacity-85 transition-opacity">
+                                        <UserLink userId={row.id} status={row.status} className="flex items-center gap-3 hover:opacity-85 transition-opacity">
                                             <div className="h-10 w-10 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 flex items-center justify-center font-black text-slate-400 text-xs cursor-pointer">
                                                 {row.parentName ? row.parentName.substring(0, 2).toUpperCase() : "?"}
                                             </div>
@@ -277,7 +278,7 @@ export default function DailySignupsPage() {
                                                 <span className="font-black text-sm text-slate-900 dark:text-white truncate max-w-[180px] tracking-tight hover:underline cursor-pointer">{row.parentName || "Anonymous User"}</span>
                                                 <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Parent Account</span>
                                             </div>
-                                        </Link>
+                                        </UserLink>
                                     </TableCell>
                                     <TableCell>
                                         <Badge 
@@ -292,9 +293,12 @@ export default function DailySignupsPage() {
                                     </TableCell>
                                     <TableCell className="text-sm font-bold text-slate-600 dark:text-slate-400">
                                         {row.ambassadorId ? (
-                                            <Link href={`/admin/users/${row.ambassadorId}`} className="hover:underline hover:text-[#E87154] transition-colors cursor-pointer">
-                                                {row.ambassador}
-                                            </Link>
+                                            <UserLink
+                                                userId={row.ambassadorId}
+                                                userName={row.ambassador}
+                                                status={row.ambassadorStatus}
+                                                className="hover:underline hover:text-[#E87154] transition-colors cursor-pointer"
+                                            />
                                         ) : (
                                             row.ambassador || "Direct/Organic"
                                         )}

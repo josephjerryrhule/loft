@@ -45,3 +45,41 @@ export function isFlipbookReadableForChild({
   const ageMatches = isAllAgeGroup(flipbookAgeGroup) || flipbookAgeGroup === childAgeGroup;
   return hasEntitlement && ageMatches;
 }
+
+export function canViewUserProfile({
+  viewerRole,
+  viewerId,
+  targetUserId,
+  targetUserRole,
+  targetUserFields = {},
+}) {
+  const isSelf = viewerId === targetUserId;
+  const isAdmin = viewerRole === ROLE.ADMIN;
+  const isOpsManager = viewerRole === ROLE.OPERATIONS_MANAGER;
+  const isFinance = viewerRole === ROLE.FINANCE;
+  const isManagerOfUser = targetUserFields?.managerId === viewerId;
+  const isTeamLeaderOfUser = targetUserFields?.teamLeaderId === viewerId;
+
+  const isViewerAmbassador = [ROLE.MANAGER, ROLE.TEAM_LEADER, ROLE.AFFILIATE].includes(viewerRole);
+
+  if (isViewerAmbassador) {
+    // IF logged-in user role = Ambassador → allow profile access only where: profile.user_id = logged_in_user_id
+    return {
+      canView: isSelf,
+      canViewFull: isSelf,
+    };
+  }
+
+  // For Admin, Operations Manager, Finance, and other roles (like PARENT, CUSTOMER)
+  const canViewFull = isAdmin || isOpsManager || isFinance || isSelf || isManagerOfUser || isTeamLeaderOfUser;
+
+  // Check if target is an ambassador and viewer is allowed to view sanitized
+  const isViewerAllowedSanitized = [ROLE.ADMIN, ROLE.OPERATIONS_MANAGER, ROLE.FINANCE].includes(viewerRole);
+  const isTargetAmbassador = [ROLE.ADMIN, ROLE.OPERATIONS_MANAGER, ROLE.MANAGER, ROLE.TEAM_LEADER, ROLE.AFFILIATE].includes(targetUserRole);
+  const canViewSanitized = isViewerAllowedSanitized && isTargetAmbassador;
+
+  return {
+    canView: canViewFull || canViewSanitized,
+    canViewFull: canViewFull,
+  };
+}

@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { sendPayoutApprovalEmail, sendAccountStatusChangeEmail, sendOrderStatusChangeEmail } from "@/lib/email";
-import { canCreateSubscriptionForProfile } from "@/lib/access-control.mjs";
+import { canCreateSubscriptionForProfile, canViewUserProfile } from "@/lib/access-control.mjs";
 
 export async function approveCommission(commissionId: string) {
     const session = await auth();
@@ -579,20 +579,18 @@ export async function getUserFullProfile(userId: string) {
         });
         if (!targetUser) return null;
 
-        const isSelf = viewerId === userId;
-        const isAdmin = viewerRole === "ADMIN";
-        const isOpsManager = viewerRole === "OPERATIONS_MANAGER";
-        const isFinance = viewerRole === "FINANCE";
-        const isManagerOfUser = targetUser.managerId === viewerId;
-        const isTeamLeaderOfUser = targetUser.teamLeaderId === viewerId;
-        const isViewerAmbassador = ["ADMIN", "OPERATIONS_MANAGER", "MANAGER", "TEAM_LEADER", "AFFILIATE"].includes(viewerRole);
-        const isTargetAmbassador = ["ADMIN", "OPERATIONS_MANAGER", "MANAGER", "TEAM_LEADER", "AFFILIATE"].includes(targetUser.role);
+        const { canView, canViewFull } = canViewUserProfile({
+            viewerRole,
+            viewerId,
+            targetUserId: userId,
+            targetUserRole: targetUser.role,
+            targetUserFields: {
+                managerId: targetUser.managerId,
+                teamLeaderId: targetUser.teamLeaderId,
+            },
+        });
 
-        // Security check
-        const canViewFull = isAdmin || isOpsManager || isFinance || isSelf || isManagerOfUser || isTeamLeaderOfUser;
-        const canViewSanitized = isViewerAmbassador && isTargetAmbassador;
-
-        if (!canViewFull && !canViewSanitized) {
+        if (!canView) {
             throw new Error("Unauthorized");
         }
 

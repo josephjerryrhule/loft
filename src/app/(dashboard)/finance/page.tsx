@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { DashboardTable } from "@/components/dashboard/DashboardTable";
+import { UserLink } from "@/components/user/UserLink";
 
 function exportToCSV(rows: any[]) {
   const headers = [
@@ -217,9 +218,12 @@ export default function AmbassadorTrackingPage() {
                 {rows.map((row: any) => (
                   <TableRow key={row.id} className="group transition-colors">
                     <TableCell className="pl-6">
-                      <Link href={`/admin/users/${row.id}`} className="font-bold text-sm text-slate-900 dark:text-white hover:text-[#E87154] transition-colors">
-                        {row.name}
-                      </Link>
+                      <UserLink
+                        userId={row.id}
+                        userName={row.name}
+                        status={row.status}
+                        className="text-sm block"
+                      />
                       <div className="text-[10px] text-slate-500 font-medium">{row.email}</div>
                     </TableCell>
                     <TableCell>
@@ -232,9 +236,12 @@ export default function AmbassadorTrackingPage() {
                     </TableCell>
                     <TableCell className="text-slate-500 text-[11px] font-medium">
                       {row.managerId ? (
-                        <Link href={`/admin/users/${row.managerId}`} className="hover:text-[#E87154] transition-colors font-bold">
-                          {row.manager}
-                        </Link>
+                        <UserLink
+                          userId={row.managerId}
+                          userName={row.manager}
+                          status={row.managerStatus}
+                          className="hover:text-[#E87154] transition-colors font-bold"
+                        />
                       ) : (
                         row.manager || "—"
                       )}

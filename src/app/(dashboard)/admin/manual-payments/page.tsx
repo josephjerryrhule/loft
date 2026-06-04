@@ -13,6 +13,7 @@ import { Loader2, Plus, Receipt, Wallet, ArrowDownToLine, Gift, Eye } from "luci
 import { toast } from "sonner";
 import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { UserLink } from "@/components/user/UserLink";
 
 const TYPE_LABELS: Record<string, string> = {
   COMPETITION_PRIZE: "Competition Prize",
@@ -199,9 +200,12 @@ export default function AdminManualPaymentsPage() {
                         </TableCell>
                         <TableCell className="py-4">
                           <div>
-                            <span className="font-bold text-slate-900 dark:text-white block">
-                              {recipientName || "Unknown Ambassador"}
-                            </span>
+                            <UserLink
+                              userId={payment.recipient.id}
+                              userName={recipientName || "Unknown Ambassador"}
+                              status={payment.recipient.status}
+                              className="block"
+                            />
                             <span className="text-xs text-slate-400 block mt-0.5">
                               {payment.recipient.email} • ID: {payment.recipient.ambassadorId || "—"}
                             </span>

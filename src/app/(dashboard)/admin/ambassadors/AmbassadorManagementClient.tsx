@@ -15,6 +15,7 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
 import { cn } from "@/lib/utils";
 import { Users } from "lucide-react";
+import { UserLink } from "@/components/user/UserLink";
 
 interface Ambassador {
   id: string;
@@ -185,7 +186,7 @@ export default function AmbassadorManagementClient({
                 return (
                   <TableRow key={user.id} className="group transition-colors">
                     <TableCell className="pl-6">
-                      <Link href={`/admin/users/${user.id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                      <UserLink userId={user.id} status={user.status} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                         <Avatar className="h-10 w-10 border-2 border-white shadow-sm cursor-pointer">
                           <AvatarImage src={user.profilePictureUrl || ""} />
                           <AvatarFallback className="bg-slate-100 font-bold text-slate-500">{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
@@ -194,7 +195,7 @@ export default function AmbassadorManagementClient({
                             <span className="font-bold text-sm text-slate-900 hover:underline cursor-pointer">{user.name}</span>
                             <span className="text-[11px] text-slate-500">{user.email}</span>
                         </div>
-                      </Link>
+                      </UserLink>
                     </TableCell>
                     <TableCell>
                        <span className="font-mono text-[10px] font-black px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">
@@ -208,43 +209,35 @@ export default function AmbassadorManagementClient({
                     </TableCell>
                     <TableCell>
                         <div className="flex flex-col gap-1">
-                            {user.role === "MANAGER" && superior && (
+                             {user.role === "MANAGER" && superior && (
                                 <div className="flex items-center gap-1.5">
                                     <Shield className="h-3 w-3 text-[#E87154]" />
-                                    <Link href={`/admin/users/${superior.id}`} className="text-[11px] font-bold text-slate-700 hover:underline hover:text-[#E87154] transition-colors cursor-pointer">
-                                        {superior.name}
-                                    </Link>
+                                    <UserLink userId={superior.id} userName={superior.name} status={superior.status} className="text-[11px] font-bold text-slate-700 hover:underline hover:text-[#E87154] transition-colors cursor-pointer" />
                                 </div>
-                            )}
-                            {user.role === "TEAM_LEADER" && superior && (
+                             )}
+                             {user.role === "TEAM_LEADER" && superior && (
                                 <div className="flex items-center gap-1.5">
                                     <UserCheck className="h-3 w-3 text-[#E87154]" />
-                                    <Link href={`/admin/users/${superior.id}`} className="text-[11px] font-bold text-slate-700 hover:underline hover:text-[#E87154] transition-colors cursor-pointer">
-                                        {superior.name}
-                                    </Link>
+                                    <UserLink userId={superior.id} userName={superior.name} status={superior.status} className="text-[11px] font-bold text-slate-700 hover:underline hover:text-[#E87154] transition-colors cursor-pointer" />
                                 </div>
-                            )}
-                            {user.role === "AFFILIATE" && (
+                             )}
+                             {user.role === "AFFILIATE" && (
                                 <>
                                     {superior && (
                                         <div className="flex items-center gap-1.5">
                                             <UserCheck className="h-3 w-3 text-purple-500" />
-                                            <Link href={`/admin/users/${superior.id}`} className="text-[11px] font-medium text-slate-700 hover:underline hover:text-purple-600 transition-colors cursor-pointer">
-                                                {superior.name}
-                                            </Link>
+                                            <UserLink userId={superior.id} userName={superior.name} status={superior.status} className="text-[11px] font-medium text-slate-700 hover:underline hover:text-purple-600 transition-colors cursor-pointer" />
                                         </div>
                                     )}
                                     {teamLeader && (
                                         <div className="flex items-center gap-1.5">
                                             <UserPlus className="h-3 w-3 text-indigo-500" />
-                                            <Link href={`/admin/users/${teamLeader.id}`} className="text-[11px] font-medium text-slate-700 hover:underline hover:text-indigo-600 transition-colors cursor-pointer">
-                                                {teamLeader.name}
-                                            </Link>
+                                            <UserLink userId={teamLeader.id} userName={teamLeader.name} status={teamLeader.status} className="text-[11px] font-medium text-slate-700 hover:underline hover:text-indigo-600 transition-colors cursor-pointer" />
                                         </div>
                                     )}
                                     {!superior && !teamLeader && <span className="text-[11px] text-slate-400">—</span>}
                                 </>
-                            )}
+                             )}
                             {(user.role === "OPERATIONS_MANAGER" || (!superior && !teamLeader && user.role !== "AFFILIATE")) && (
                                 <span className="text-[11px] text-slate-400">—</span>
                             )}

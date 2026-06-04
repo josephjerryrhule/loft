@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { cn, formatStatusLabel } from "@/lib/utils";
+import { UserLink } from "@/components/user/UserLink";
 
 function exportToCSV(rows: any[]) {
   const headers = [
@@ -220,9 +221,12 @@ export default function PaymentTrackerPage() {
                     {new Date(tx.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                   </TableCell>
                   <TableCell>
-                    <Link href={`/admin/users/${tx.parentId}`} className="font-bold text-sm text-slate-900 dark:text-white hover:text-[#E87154] transition-colors">
-                      {tx.parentName}
-                    </Link>
+                    <UserLink
+                      userId={tx.parentId}
+                      userName={tx.parentName}
+                      status={tx.parentStatus}
+                      className="text-sm font-bold text-slate-900 dark:text-white hover:text-[#E87154] transition-colors"
+                    />
                   </TableCell>
                   <TableCell className="text-sm text-slate-500">{tx.childName || "—"}</TableCell>
                   <TableCell className="text-sm font-medium">{tx.plan}</TableCell>

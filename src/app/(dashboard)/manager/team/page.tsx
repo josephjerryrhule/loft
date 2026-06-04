@@ -92,16 +92,16 @@ export default async function ManagerTeamPage() {
                             teamMembers.map((member: any) => (
                                 <TableRow key={member.id}>
                                     <TableCell>
-                                        <Link href={`/leaderboard/${member.id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                                            <Avatar className="h-9 w-9 border-2 border-white dark:border-slate-800 shadow-sm cursor-pointer">
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="h-9 w-9 border-2 border-white dark:border-slate-800 shadow-sm">
                                                 <AvatarImage src={member.profilePictureUrl || ""} alt={member.name} />
                                                 <AvatarFallback className="text-[10px] font-bold">{member.name[0]}</AvatarFallback>
                                             </Avatar>
                                             <div>
-                                                <p className="text-sm font-bold text-slate-900 dark:text-white hover:underline cursor-pointer">{member.name}</p>
+                                                <p className="text-sm font-bold text-slate-900 dark:text-white">{member.name}</p>
                                                 <p className="text-[10px] text-slate-500 font-medium">{member.email}</p>
                                             </div>
-                                        </Link>
+                                        </div>
                                     </TableCell>
                                     <TableCell>
                                         <Badge className={member.role === Role.TEAM_LEADER ? "bg-blue-500/10 text-blue-600 border-none" : "bg-slate-500/10 text-slate-600 border-none"}>

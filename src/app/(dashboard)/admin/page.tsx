@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { cache } from "@/lib/cache";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { UserLink } from "@/components/user/UserLink";
 import { 
   Users, 
   ShoppingBag, 
@@ -307,16 +308,20 @@ export default async function AdminDashboardPage() {
                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-xs font-black">
                                  #{entry.rank}
                              </div>
-                             <Link href={`/admin/users/${entry.id}`} className="flex items-center gap-3 hover:opacity-85 transition-opacity">
-                                 <Avatar className="h-9 w-9 border-2 border-white shadow-sm cursor-pointer">
-                                     <AvatarImage src={entry.avatar || ""} alt={entry.name} />
-                                     <AvatarFallback className="text-[10px] font-bold">{entry.name[0]}</AvatarFallback>
-                                 </Avatar>
-                                 <div>
-                                     <p className="text-sm font-bold text-slate-900 hover:underline cursor-pointer">{entry.name}</p>
-                                     <p className="text-[10px] text-slate-500">{entry.role}</p>
-                                 </div>
-                             </Link>
+                              <UserLink
+                                  userId={entry.id}
+                                  status={entry.status}
+                                  className="flex items-center gap-3 hover:opacity-85 transition-opacity"
+                              >
+                                  <Avatar className="h-9 w-9 border-2 border-white shadow-sm cursor-pointer">
+                                      <AvatarImage src={entry.avatar || ""} alt={entry.name} />
+                                      <AvatarFallback className="text-[10px] font-bold">{entry.name[0]}</AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                      <p className="text-sm font-bold text-slate-900 hover:underline cursor-pointer">{entry.name}</p>
+                                      <p className="text-[10px] text-slate-500">{entry.role}</p>
+                                  </div>
+                              </UserLink>
                          </div>
                          <div className="text-right">
                              <p className="text-xs font-black text-slate-900">{entry.salesCount} Sales</p>
@@ -366,7 +371,11 @@ export default async function AdminDashboardPage() {
               {recentSales.map((order: any) => (
                 <div key={order.id} className="flex items-center justify-between p-4 hover:bg-slate-50:bg-slate-800/50 transition-colors">
                   <div className="flex items-center gap-3">
-                    <Link href={`/admin/users/${order.customer.id}`} className="flex items-center gap-3 hover:opacity-85 transition-opacity">
+                    <UserLink
+                      userId={order.customer.id}
+                      status={order.customer.status}
+                      className="flex items-center gap-3 hover:opacity-85 transition-opacity"
+                    >
                       <Avatar className="h-9 w-9 border-2 border-white shadow-sm cursor-pointer">
                         <AvatarImage src={order.customer.profilePictureUrl || ""} alt="Avatar" />
                         <AvatarFallback className="bg-slate-100 text-[10px] font-bold">
@@ -377,7 +386,7 @@ export default async function AdminDashboardPage() {
                         <p className="text-sm font-bold truncate text-slate-900">{order.product.title}</p>
                         <p className="text-[10px] text-slate-500 truncate hover:underline cursor-pointer">{order.customer.email}</p>
                       </div>
-                    </Link>
+                    </UserLink>
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-xs font-black text-emerald-600">+GHS {Number(order.totalAmount).toFixed(2)}</p>
