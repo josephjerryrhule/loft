@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Loader2, Search, ChevronDown } from "lucide-react";
+import { BookOpen, Loader2, Search } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { default as dynamicImport } from "next/dynamic";
 import { getCustomerFlipbooks, updateFlipbookProgress } from "@/app/actions/flipbooks";
@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 
 const ReliableFlipbookViewer = dynamicImport(() => import("@/components/flipbook/ReliableFlipbookViewer").then(mod => ({ default: mod.ReliableFlipbookViewer })), { ssr: false });
 
-const PAGE_SIZE = 12; // Increased to match larger grid sizes nicely
+const PAGE_SIZE = 12;
 
 export default function CustomerFlipbooksPage() {
   const [flipbooks, setFlipbooks] = useState<any[]>([]);
@@ -270,62 +270,60 @@ function CustomerBookItem({ book, onRead }: { book: any; onRead: (book: any) => 
 
   return (
     <div className="group flex flex-col w-full">
-      {/* Cover container: fixed height, items-end to align book bottoms */}
-      <div className="h-[220px] sm:h-[260px] w-full flex items-end justify-center mb-4 relative">
+      {/* Cover image button: scales naturally with aspect ratio, max height, and horizontal centering */}
+      <div className="w-full relative flex items-center justify-center">
         <button
           onClick={() => onRead(book)}
-          className="block w-auto max-w-full h-auto max-h-full transition-all duration-300 ease-out group-hover:scale-[1.03] group-hover:-translate-y-2 text-left shadow-[0_12px_24px_-8px_rgba(0,0,0,0.25)] group-hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.35)] rounded-[4px] relative"
+          className="block w-full max-h-[280px] transition-all duration-300 ease-out group-hover:scale-[1.03] group-hover:-translate-y-1.5 text-left shadow-[0_12px_24px_-8px_rgba(0,0,0,0.25)] group-hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.35)] rounded-[4px] relative mx-auto overflow-hidden bg-slate-50 border border-black/5"
           style={{ aspectRatio: `${cappedAspect}` }}
         >
-          <div className="relative w-full h-full rounded-[4px] overflow-hidden bg-slate-50 flex items-center justify-center border border-black/5">
-            {book.coverImageUrl ? (
-              <img
-                src={book.coverImageUrl}
-                alt={book.title}
-                onLoad={(e) => {
-                  const { naturalWidth, naturalHeight } = e.currentTarget;
-                  if (naturalWidth && naturalHeight) {
-                    setDimensions({ width: naturalWidth, height: naturalHeight });
-                  }
-                  setLoaded(true);
-                }}
-                className={cn(
-                  "w-full h-full object-cover transition-opacity duration-300",
-                  loaded ? "opacity-100" : "opacity-0"
-                )}
-              />
-            ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#FFFAF5] p-4 text-center">
-                <BookOpen className="h-8 w-8 text-[#E87154] mb-2" />
-                <span className="text-stone-850 font-bold text-xs sm:text-sm leading-tight line-clamp-3">
-                  {book.title}
-                </span>
-              </div>
-            )}
-            
-            {/* Spine binding highlight crease for premium look */}
-            <div className="absolute inset-y-0 left-0 w-[8px] bg-gradient-to-r from-black/15 via-black/5 to-transparent pointer-events-none z-20" />
-            <div className="absolute inset-y-0 left-[8px] w-[1px] bg-white/10 pointer-events-none z-20" />
-            
-            {/* Badges on cover */}
-            {book.isFree && (
-              <Badge className="absolute top-2 right-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[9px] px-1.5 py-0.5 rounded border-none tracking-wide" variant="default">Free</Badge>
-            )}
-            {hasProgress && progress.completed && (
-              <Badge className="absolute bottom-2 left-2 bg-[#E87154] hover:bg-[#E87154] text-white font-bold text-[9px] px-1.5 py-0.5 rounded border-none tracking-wide" variant="default">
-                Completed
-              </Badge>
-            )}
-          </div>
+          {book.coverImageUrl ? (
+            <img
+              src={book.coverImageUrl}
+              alt={book.title}
+              onLoad={(e) => {
+                const { naturalWidth, naturalHeight } = e.currentTarget;
+                if (naturalWidth && naturalHeight) {
+                  setDimensions({ width: naturalWidth, height: naturalHeight });
+                }
+                setLoaded(true);
+              }}
+              className={cn(
+                "w-full h-full object-cover transition-opacity duration-300",
+                loaded ? "opacity-100" : "opacity-0"
+              )}
+            />
+          ) : (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#FFFAF5] p-4 text-center">
+              <BookOpen className="h-8 w-8 text-[#E87154] mb-2" />
+              <span className="text-stone-855 font-bold text-xs sm:text-sm leading-tight line-clamp-3">
+                {book.title}
+              </span>
+            </div>
+          )}
+          
+          {/* Spine binding highlight crease for premium look */}
+          <div className="absolute inset-y-0 left-0 w-[8px] bg-gradient-to-r from-black/15 via-black/5 to-transparent pointer-events-none z-20" />
+          <div className="absolute inset-y-0 left-[8px] w-[1px] bg-white/10 pointer-events-none z-20" />
+          
+          {/* Badges on cover */}
+          {book.isFree && (
+            <Badge className="absolute top-2 right-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[9px] px-1.5 py-0.5 rounded border-none tracking-wide" variant="default">Free</Badge>
+          )}
+          {hasProgress && progress.completed && (
+            <Badge className="absolute bottom-2 left-2 bg-[#E87154] hover:bg-[#E87154] text-white font-bold text-[9px] px-1.5 py-0.5 rounded border-none tracking-wide" variant="default">
+              Completed
+            </Badge>
+          )}
         </button>
       </div>
 
       {/* Book Metadata - left aligned below cover */}
-      <div className="text-left w-full mt-2">
+      <div className="text-left w-full mt-2.5">
         <h3 className="font-bold text-slate-800 dark:text-slate-100 line-clamp-1 text-sm sm:text-base leading-tight group-hover:text-[#E87154] transition-colors cursor-pointer" onClick={() => onRead(book)}>
           {book.title}
         </h3>
-        <p className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-505 font-semibold mt-1 uppercase tracking-wider">
+        <p className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 font-semibold mt-1 uppercase tracking-wider">
           {book.category || "General"}
         </p>
       </div>

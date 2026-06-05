@@ -209,21 +209,20 @@ export default function AdminFlipbooksPage() {
         }
       />
 
-      <div className="rounded-xl border-none shadow-md overflow-hidden bg-white dark:bg-slate-900 p-6 space-y-6">
-        
-        {/* Search Bar Input */}
-        <div className="relative group w-full sm:max-w-md">
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search flipbooks..."
-            className="pl-10 h-10 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus-visible:ring-[#E87154]/20 focus-visible:border-[#E87154]"
-          />
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-[#E87154]" />
-        </div>
+      {/* Conditional Layout Containers based on View Mode */}
+      {viewMode === "table" ? (
+        <div className="rounded-xl border border-slate-100 dark:border-slate-800 shadow-md overflow-hidden bg-white dark:bg-slate-900 p-6 space-y-6">
+          {/* Search Bar Input inside table container */}
+          <div className="relative group w-full sm:max-w-md">
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search flipbooks..."
+              className="pl-10 h-10 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus-visible:ring-[#E87154]/20 focus-visible:border-[#E87154]"
+            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-[#E87154]" />
+          </div>
 
-        {/* View Mode Content */}
-        {viewMode === "table" ? (
           <div className="border rounded-lg overflow-hidden border-slate-100 dark:border-slate-800">
             <Table>
               <TableHeader>
@@ -303,7 +302,35 @@ export default function AdminFlipbooksPage() {
               </TableBody>
             </Table>
           </div>
-        ) : (
+
+          <div className="p-4 border-t border-slate-50 dark:border-slate-800">
+              <TablePagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  itemsPerPage={itemsPerPage}
+                  totalItems={filteredFlipbooks.length}
+                  onPageChange={setCurrentPage}
+                  onItemsPerPageChange={(value) => {
+                    setItemsPerPage(value);
+                    setCurrentPage(1);
+                  }}
+              />
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-8">
+          {/* Search Bar Input directly on page background in grid mode */}
+          <div className="relative group w-full sm:max-w-md">
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search flipbooks..."
+              className="pl-10 h-10 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus-visible:ring-[#E87154]/20 focus-visible:border-[#E87154]"
+            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-[#E87154]" />
+          </div>
+
+          {/* Grid Layout without a background box container */}
           <div className="grid gap-x-6 gap-y-10 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {paginatedFlipbooks.length === 0 && (
               <div className="col-span-full text-center py-20 text-slate-400">
@@ -317,22 +344,23 @@ export default function AdminFlipbooksPage() {
               <AdminBookItem key={book.id} book={book} loadFlipbooks={loadFlipbooks} />
             ))}
           </div>
-        )}
 
-        <div className="p-4 border-t border-slate-50 dark:border-slate-800">
-            <TablePagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                itemsPerPage={itemsPerPage}
-                totalItems={filteredFlipbooks.length}
-                onPageChange={setCurrentPage}
-                onItemsPerPageChange={(value) => {
-                  setItemsPerPage(value);
-                  setCurrentPage(1);
-                }}
-            />
+          {/* Pagination directly on page background */}
+          <div className="pt-6 border-t border-slate-200/50 dark:border-slate-800/50">
+              <TablePagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  itemsPerPage={itemsPerPage}
+                  totalItems={filteredFlipbooks.length}
+                  onPageChange={setCurrentPage}
+                  onItemsPerPageChange={(value) => {
+                    setItemsPerPage(value);
+                    setCurrentPage(1);
+                  }}
+              />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -349,87 +377,84 @@ function AdminBookItem({ book, loadFlipbooks }: { book: any; loadFlipbooks: () =
 
   return (
     <div className="group flex flex-col w-full">
-      {/* Cover container: fixed height, items-end to align book bottoms */}
-      <div className="h-[220px] sm:h-[260px] w-full flex items-end justify-center mb-4 relative">
+      {/* Cover image button: scales naturally with capped aspect ratio, max height, and horizontal centering */}
+      <div className="w-full relative flex items-center justify-center">
         <div
-          className="block w-auto max-w-full h-auto max-h-full transition-all duration-300 ease-out group-hover:scale-[1.03] group-hover:-translate-y-2 text-left shadow-[0_12px_24px_-8px_rgba(0,0,0,0.25)] group-hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.35)] rounded-[4px] relative"
+          className="block w-full max-h-[280px] transition-all duration-300 ease-out group-hover:scale-[1.03] group-hover:-translate-y-1.5 text-left shadow-[0_12px_24px_-8px_rgba(0,0,0,0.25)] group-hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.35)] rounded-[4px] relative mx-auto overflow-hidden bg-slate-50 border border-black/5"
           style={{ aspectRatio: `${cappedAspect}` }}
         >
-          <div className="relative w-full h-full rounded-[4px] overflow-hidden bg-slate-50 flex items-center justify-center border border-black/5">
-            {book.coverImageUrl ? (
-              <img
-                src={book.coverImageUrl}
-                alt={book.title}
-                onLoad={(e) => {
-                  const { naturalWidth, naturalHeight } = e.currentTarget;
-                  if (naturalWidth && naturalHeight) {
-                    setDimensions({ width: naturalWidth, height: naturalHeight });
-                  }
-                  setLoaded(true);
-                }}
-                className={cn(
-                  "w-full h-full object-cover transition-opacity duration-300",
-                  loaded ? "opacity-100" : "opacity-0"
-                )}
-              />
-            ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#FFFAF5] p-4 text-center">
-                <BookOpen className="h-8 w-8 text-[#E87154] mb-2" />
-                <span className="text-stone-850 font-bold text-xs sm:text-sm leading-tight line-clamp-3">
-                  {book.title}
-                </span>
-              </div>
+          {book.coverImageUrl ? (
+            <img
+              src={book.coverImageUrl}
+              alt={book.title}
+              onLoad={(e) => {
+                const { naturalWidth, naturalHeight } = e.currentTarget;
+                if (naturalWidth && naturalHeight) {
+                  setDimensions({ width: naturalWidth, height: naturalHeight });
+                }
+                setLoaded(true);
+              }}
+              className={cn(
+                "w-full h-full object-cover transition-opacity duration-300",
+                loaded ? "opacity-100" : "opacity-0"
+              )}
+            />
+          ) : (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#FFFAF5] p-4 text-center">
+              <BookOpen className="h-8 w-8 text-[#E87154] mb-2" />
+              <span className="text-stone-850 font-bold text-xs sm:text-sm leading-tight line-clamp-3">
+                {book.title}
+              </span>
+            </div>
+          )}
+          
+          {/* Spine binding highlight crease for premium look */}
+          <div className="absolute inset-y-0 left-0 w-[8px] bg-gradient-to-r from-black/15 via-black/5 to-transparent pointer-events-none z-20" />
+          <div className="absolute inset-y-0 left-[8px] w-[1px] bg-white/10 pointer-events-none z-20" />
+          
+          {/* Badges on cover */}
+          <div className="absolute top-2 left-2 flex flex-col gap-1 z-20">
+            {book.isFree && (
+              <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide w-fit" variant="default">Free</Badge>
             )}
-            
-            {/* Spine binding highlight crease for premium look */}
-            <div className="absolute inset-y-0 left-0 w-[8px] bg-gradient-to-r from-black/15 via-black/5 to-transparent pointer-events-none z-20" />
-            <div className="absolute inset-y-0 left-[8px] w-[1px] bg-white/10 pointer-events-none z-20" />
-            
-            {/* Badges on cover */}
-            <div className="absolute top-2 left-2 flex flex-col gap-1 z-20">
-              {book.isFree && (
-                <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide w-fit" variant="default">Free</Badge>
-              )}
-              {book.ageGroup ? (
-                <Badge className="bg-blue-500 hover:bg-blue-600 text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide w-fit" variant="default">
-                  {getAgeGroupLabel(book.ageGroup)}
-                </Badge>
-              ) : (
-                <Badge className="bg-slate-500 hover:bg-slate-600 text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide w-fit" variant="default">
-                  All Ages
-                </Badge>
-              )}
-            </div>
+            {book.ageGroup ? (
+              <Badge className="bg-blue-500 hover:bg-blue-600 text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide w-fit" variant="default">
+                {getAgeGroupLabel(book.ageGroup)}
+              </Badge>
+            ) : (
+              <Badge className="bg-slate-500 hover:bg-slate-600 text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide w-fit" variant="default">
+                All Ages
+              </Badge>
+            )}
+          </div>
 
-            <div className="absolute bottom-2 right-2 z-20">
-              {isScheduled ? (
-                <Badge className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide flex items-center gap-0.5" variant="default">
-                  <Clock size={8} /> Scheduled
-                </Badge>
-              ) : isPublished ? (
-                <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide flex items-center gap-0.5" variant="default">
-                  <CheckCircle2 size={8} /> Published
-                </Badge>
-              ) : (
-                <Badge className="bg-slate-400 hover:bg-slate-500 text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide" variant="default">
-                  Draft
-                </Badge>
-              )}
-            </div>
+          <div className="absolute bottom-2 right-2 z-20">
+            {isScheduled ? (
+              <Badge className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide flex items-center gap-0.5" variant="default">
+                <Clock size={8} /> Scheduled
+              </Badge>
+            ) : isPublished ? (
+              <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide flex items-center gap-0.5" variant="default">
+                <CheckCircle2 size={8} /> Published
+              </Badge>
+            ) : (
+              <Badge className="bg-slate-400 hover:bg-slate-500 text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide" variant="default">
+                Draft
+              </Badge>
+            )}
+          </div>
 
-            {/* Hover Actions Overlay */}
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 z-30">
-              {/* Wrapped in high-contrast floating pill */}
-              <div className="flex items-center justify-center p-1.5 bg-white dark:bg-slate-900 rounded-full shadow-lg border border-slate-100/10 dark:border-slate-800/10">
-                <FlipbookActions flipbook={book} />
-              </div>
+          {/* Hover Actions Overlay */}
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 z-30">
+            <div className="flex items-center justify-center p-1.5 bg-white dark:bg-slate-900 rounded-full shadow-lg border border-slate-100/10 dark:border-slate-800/10">
+              <FlipbookActions flipbook={book} />
             </div>
           </div>
         </div>
       </div>
 
       {/* Book Metadata - left aligned below cover */}
-      <div className="text-left w-full mt-2">
+      <div className="text-left w-full mt-2.5">
         <h3 className="font-bold text-slate-900 dark:text-slate-100 line-clamp-1 text-sm sm:text-base leading-tight">
           {book.title}
         </h3>
