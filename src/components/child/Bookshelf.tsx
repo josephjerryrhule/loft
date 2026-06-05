@@ -50,8 +50,8 @@ export function Bookshelf({ flipbooks }: BookshelfProps) {
               {row.map((book) => (
                 <BookItem key={book.id} book={book} />
               ))}
-              {/* Substantial Wood Shelf - Aligned to book bottom (bottom of h-[240px] cover container) */}
-              <div className="absolute top-[240px] left-2 right-2 h-4 bg-[#D4A373] rounded-full shadow-md z-10 opacity-80"></div>
+              {/* Substantial Wood Shelf - Aligned below book titles at the bottom of the row */}
+              <div className="absolute bottom-4 left-2 right-2 h-4 bg-[#D4A373] rounded-full shadow-md z-10 opacity-80"></div>
             </div>
           ))}
         </div>
@@ -63,7 +63,7 @@ export function Bookshelf({ flipbooks }: BookshelfProps) {
               {row.map((book) => (
                 <BookItem key={book.id} book={book} />
               ))}
-              <div className="absolute top-[240px] left-2 right-2 h-4 bg-[#D4A373] rounded-full shadow-md z-10 opacity-80"></div>
+              <div className="absolute bottom-4 left-2 right-2 h-4 bg-[#D4A373] rounded-full shadow-md z-10 opacity-80"></div>
             </div>
           ))}
         </div>
@@ -75,7 +75,7 @@ export function Bookshelf({ flipbooks }: BookshelfProps) {
               {row.map((book) => (
                 <BookItem key={book.id} book={book} />
               ))}
-              <div className="absolute top-[240px] left-2 right-2 h-4 bg-[#D4A373] rounded-full shadow-md z-10 opacity-80"></div>
+              <div className="absolute bottom-4 left-2 right-2 h-4 bg-[#D4A373] rounded-full shadow-md z-10 opacity-80"></div>
             </div>
           ))}
         </div>
@@ -87,7 +87,7 @@ export function Bookshelf({ flipbooks }: BookshelfProps) {
               {row.map((book) => (
                 <BookItem key={book.id} book={book} />
               ))}
-              <div className="absolute top-[180px] left-2 right-2 h-4 bg-[#D4A373] rounded-full shadow-md z-10 opacity-80"></div>
+              <div className="absolute bottom-4 left-2 right-2 h-4 bg-[#D4A373] rounded-full shadow-md z-10 opacity-80"></div>
             </div>
           ))}
         </div>
@@ -115,8 +115,8 @@ function BookItem({ book }: BookItemProps) {
 
   return (
     <div className="group flex flex-col items-center w-full">
-      {/* Cover container: fixed height, items-end to align book bottoms to the shelf */}
-      <div className="h-[180px] sm:h-[240px] w-full flex items-end justify-center mb-6">
+      {/* Cover container: fixed height, items-end to align book bottoms */}
+      <div className="h-[180px] sm:h-[240px] w-full flex items-end justify-center mb-4">
         <Link 
           href={`/child/flipbooks/${book.id}`} 
           className="block w-auto max-w-full h-auto max-h-full transition-transform duration-500 group-hover:scale-105 group-hover:-translate-y-2 group-hover:rotate-1"
@@ -154,7 +154,7 @@ function BookItem({ book }: BookItemProps) {
         </Link>
       </div>
       
-      {/* Book Info - below the shelf */}
+      {/* Book Info - above the shelf bar */}
       <div className="text-center w-full px-1 relative z-20">
         <h3 className="text-xs sm:text-sm font-black text-[#2D2D2D] font-quicksand leading-tight group-hover:text-[#E87154] transition-colors line-clamp-2">
           {book.title}
