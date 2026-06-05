@@ -35,6 +35,7 @@ import { PremiumKPICard } from "@/components/dashboard/PremiumKPICard";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { formatRole, formatUTCDate, formatUTCDateShort } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
+import { UserLink } from "@/components/user/UserLink";
 
 export default function AdminFinancePage() {
   const [stats, setStats] = useState<any>(null);
@@ -528,7 +529,13 @@ export default function AdminFinancePage() {
                   
                   return (
                     <TableRow key={req.id} className="group transition-colors">
-                      <TableCell className="pl-6 font-bold text-slate-900">{req.user.email}</TableCell>
+                      <TableCell className="pl-6 font-bold text-slate-900">
+                        <UserLink
+                          userId={req.user?.id}
+                          userName={req.user?.email}
+                          status={req.user?.status}
+                        />
+                      </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50 border-none">
                           {formatRole(req.user.role)}
@@ -761,8 +768,18 @@ export default function AdminFinancePage() {
                           </TableCell>
                           <TableCell className="font-bold text-slate-900">
                             <div className="flex flex-col">
-                              <span>{`${row.user.firstName || ""} ${row.user.lastName || ""}`.trim() || "Ambassador"}</span>
-                              <span className="text-xs text-slate-400 font-normal">{row.user.email}</span>
+                              <UserLink
+                                userId={row.user?.id}
+                                userName={`${row.user?.firstName || ""} ${row.user?.lastName || ""}`.trim() || "Ambassador"}
+                                status={row.user?.status}
+                                className="font-bold text-slate-900 hover:text-[#E87154] hover:underline transition-colors"
+                              />
+                              <UserLink
+                                userId={row.user?.id}
+                                userName={row.user?.email}
+                                status={row.user?.status}
+                                className="text-xs text-slate-400 font-normal hover:text-[#E87154] hover:underline transition-colors"
+                              />
                             </div>
                           </TableCell>
                           <TableCell>
@@ -966,7 +983,14 @@ export default function AdminFinancePage() {
                             </Button>
                           ) : null}
                         </TableCell>
-                        <TableCell className="font-bold text-slate-900">{comm.user?.email || "Unknown"}</TableCell>
+                        <TableCell className="font-bold text-slate-900">
+                          <UserLink
+                            userId={comm.user?.id}
+                            userName={comm.user?.email || "Unknown"}
+                            status={comm.user?.status}
+                            className="font-bold text-slate-900 hover:text-[#E87154] hover:underline transition-colors"
+                          />
+                        </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50 border-none">
                             {comm.sourceType === "SIGNUP" ? "Signup Bonus" : 

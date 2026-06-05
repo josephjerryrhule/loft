@@ -155,10 +155,12 @@ export async function getAdminPayoutQueue() {
             include: {
                 user: {
                     select: {
+                        id: true,
                         firstName: true,
                         lastName: true,
                         email: true,
                         role: true,
+                        status: true,
                         payoutMethodType: true,
                         payoutDetails: true
                     }
