@@ -5,18 +5,35 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createFlipbook, getAllFlipbooks } from "@/app/actions/flipbooks";
+import { createFlipbook, getAllFlipbooks, deleteFlipbook } from "@/app/actions/flipbooks";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { FlipbookActions } from "@/components/flipbook/FlipbookActions";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { Loader2, Plus, BookOpen, Clock, CheckCircle2, LayoutGrid, List, Search } from "lucide-react";
+import { Loader2, Plus, BookOpen, Clock, CheckCircle2, LayoutGrid, List, Search, Eye, Pencil, Trash2 } from "lucide-react";
 import { DateTimePicker } from "@/components/ui/datetime-picker";
 import { toast } from "sonner";
 import { getAgeGroupLabel } from "@/lib/utils";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { EditFlipbookDialog } from "@/components/flipbook/EditFlipbookDialog";
+import { default as dynamicImport } from "next/dynamic";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+const ReliableFlipbookViewer = dynamicImport(
+  () => import("@/components/flipbook/ReliableFlipbookViewer").then((mod) => mod.ReliableFlipbookViewer),
+  { ssr: false }
+);
 
 export default function AdminFlipbooksPage() {
   const [flipbooks, setFlipbooks] = useState<any[]>([]);
@@ -368,6 +385,9 @@ export default function AdminFlipbooksPage() {
 function AdminBookItem({ book, loadFlipbooks }: { book: any; loadFlipbooks: () => void }) {
   const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const aspect = dimensions ? dimensions.width / dimensions.height : 0.75;
   const cappedAspect = Math.max(0.5, Math.min(2.0, aspect));
@@ -375,9 +395,20 @@ function AdminBookItem({ book, loadFlipbooks }: { book: any; loadFlipbooks: () =
   const isScheduled = book.publishedAt && new Date(book.publishedAt) > new Date();
   const isPublished = book.isPublished && !isScheduled;
 
+  async function confirmDelete() {
+    const result = await deleteFlipbook(book.id);
+    if (result.success) {
+      toast.success("Flipbook deleted.");
+      loadFlipbooks();
+    } else {
+      toast.error(result.error || "Failed to delete.");
+    }
+    setDeleteOpen(false);
+  }
+
   return (
     <div className="group flex flex-col w-full">
-      {/* Cover image button: scales naturally with capped aspect ratio, max height, and horizontal centering */}
+      {/* Cover image wrapper: scales naturally with capped aspect ratio, max height, and horizontal centering */}
       <div className="w-full relative flex items-center justify-center">
         <div
           className="block w-full max-h-[280px] transition-all duration-300 ease-out group-hover:scale-[1.03] group-hover:-translate-y-1.5 text-left shadow-[0_12px_24px_-8px_rgba(0,0,0,0.25)] group-hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.35)] rounded-[4px] relative mx-auto overflow-hidden bg-slate-50 border border-black/5"
@@ -446,12 +477,72 @@ function AdminBookItem({ book, loadFlipbooks }: { book: any; loadFlipbooks: () =
 
           {/* Hover Actions Overlay */}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 z-30">
+            {/* Action pill is fully interactive and doesn't get hidden */}
             <div className="flex items-center justify-center p-1.5 bg-white dark:bg-slate-900 rounded-full shadow-lg border border-slate-100/10 dark:border-slate-800/10">
-              <FlipbookActions flipbook={book} />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setViewOpen(true)} 
+                title="View Flipbook"
+                className="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 h-8 w-8 p-0 cursor-pointer"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setEditOpen(true)} 
+                title="Edit"
+                className="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 h-8 w-8 p-0 cursor-pointer"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 w-8 p-0 cursor-pointer" 
+                onClick={() => setDeleteOpen(true)} 
+                title="Delete"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Render Modals at Root of AdminBookItem to prevent them from inheriting hover opacity-0 */}
+      <EditFlipbookDialog 
+          flipbook={book} 
+          open={editOpen} 
+          onOpenChange={setEditOpen} 
+      />
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+          <AlertDialogContent>
+              <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                      This will permanently delete "{book.title}".
+                  </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
+                      Delete
+                  </AlertDialogAction>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+      </AlertDialog>
+
+      {viewOpen && (
+           <ReliableFlipbookViewer 
+              pdfUrl={book.pdfUrl || ""} 
+              iframeContent={book.iframeContent}
+              onClose={() => setViewOpen(false)} 
+              title={book.title}
+           />
+      )}
 
       {/* Book Metadata - left aligned below cover */}
       <div className="text-left w-full mt-2.5">
