@@ -1,6 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+
 interface BookshelfProps {
   flipbooks: Array<{
     id: string;
@@ -18,8 +21,6 @@ interface BookItemProps {
     createdAt: Date | string;
   };
 }
-import Link from "next/link";
-import { cn } from "@/lib/utils";
 
 export function Bookshelf({ flipbooks }: BookshelfProps) {
   // Sorting books: newer first
@@ -43,38 +44,38 @@ export function Bookshelf({ flipbooks }: BookshelfProps) {
       {/* Dynamic Shelf Layouts */}
       <div className="relative">
         {/* Full Desktop Shelf (5 items per row) */}
-        <div className="hidden xl:block space-y-20">
+        <div className="hidden xl:block space-y-24">
           {getRows(sortedFlipbooks, 5).map((row, idx) => (
-            <div key={idx} className="grid grid-cols-5 gap-12 relative px-4 pb-10">
+            <div key={idx} className="grid grid-cols-5 gap-12 relative px-4 pb-12">
               {row.map((book) => (
                 <BookItem key={book.id} book={book} />
               ))}
-              {/* Substantial Wood Shelf - Slightly taller and closer to text */}
-              <div className="absolute bottom-4 left-2 right-2 h-4 bg-[#D4A373] rounded-full shadow-md z-10 opacity-80"></div>
+              {/* Substantial Wood Shelf - Aligned to book bottom (bottom of h-[240px] cover container) */}
+              <div className="absolute top-[240px] left-2 right-2 h-4 bg-[#D4A373] rounded-full shadow-md z-10 opacity-80"></div>
             </div>
           ))}
         </div>
 
         {/* Laptop View (4 items per row) */}
-        <div className="hidden lg:xl:hidden lg:block space-y-20">
+        <div className="hidden lg:xl:hidden lg:block space-y-24">
           {getRows(sortedFlipbooks, 4).map((row, idx) => (
-            <div key={idx} className="grid grid-cols-4 gap-10 relative px-4 pb-10">
+            <div key={idx} className="grid grid-cols-4 gap-10 relative px-4 pb-12">
               {row.map((book) => (
                 <BookItem key={book.id} book={book} />
               ))}
-              <div className="absolute bottom-4 left-2 right-2 h-4 bg-[#D4A373] rounded-full shadow-md z-10 opacity-80"></div>
+              <div className="absolute top-[240px] left-2 right-2 h-4 bg-[#D4A373] rounded-full shadow-md z-10 opacity-80"></div>
             </div>
           ))}
         </div>
 
         {/* Tablet View (3 items per row) */}
-        <div className="hidden sm:lg:hidden sm:block space-y-20">
+        <div className="hidden sm:lg:hidden sm:block space-y-24">
           {getRows(sortedFlipbooks, 3).map((row, idx) => (
-            <div key={idx} className="grid grid-cols-3 gap-8 relative px-4 pb-10">
+            <div key={idx} className="grid grid-cols-3 gap-8 relative px-4 pb-12">
               {row.map((book) => (
                 <BookItem key={book.id} book={book} />
               ))}
-              <div className="absolute bottom-4 left-2 right-2 h-4 bg-[#D4A373] rounded-full shadow-md z-10 opacity-80"></div>
+              <div className="absolute top-[240px] left-2 right-2 h-4 bg-[#D4A373] rounded-full shadow-md z-10 opacity-80"></div>
             </div>
           ))}
         </div>
@@ -86,7 +87,7 @@ export function Bookshelf({ flipbooks }: BookshelfProps) {
               {row.map((book) => (
                 <BookItem key={book.id} book={book} />
               ))}
-              <div className="absolute bottom-4 left-2 right-2 h-4 bg-[#D4A373] rounded-full shadow-md z-10 opacity-80"></div>
+              <div className="absolute top-[180px] left-2 right-2 h-4 bg-[#D4A373] rounded-full shadow-md z-10 opacity-80"></div>
             </div>
           ))}
         </div>
@@ -104,31 +105,58 @@ export function Bookshelf({ flipbooks }: BookshelfProps) {
 }
 
 function BookItem({ book }: BookItemProps) {
+  const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  // Default to portrait aspect ratio (3/4)
+  const aspect = dimensions ? dimensions.width / dimensions.height : 0.75;
+  // Cap aspect ratio to keep covers aesthetic (between 0.5 and 2.0)
+  const cappedAspect = Math.max(0.5, Math.min(2.0, aspect));
+
   return (
-    <div className="group flex flex-col items-center gap-6">
-      <Link href={`/child/flipbooks/${book.id}`} className="block w-full">
-        <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden shadow-xl transform transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-2 group-hover:rotate-1 ring-4 ring-white group-hover:ring-[#E87154]/20">
-          {book.coverImageUrl ? (
-            <img
-              src={book.coverImageUrl}
-              alt={book.title}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-[#FFFAF5] p-6 text-center">
-              <span className="text-[#E87154] font-black text-base font-quicksand leading-tight">
-                {book.title}
-              </span>
-            </div>
-          )}
-          
-          <div className="absolute left-0 top-0 bottom-0 w-4 bg-black/10 border-r border-white/10"></div>
-        </div>
-      </Link>
+    <div className="group flex flex-col items-center w-full">
+      {/* Cover container: fixed height, items-end to align book bottoms to the shelf */}
+      <div className="h-[180px] sm:h-[240px] w-full flex items-end justify-center mb-6">
+        <Link 
+          href={`/child/flipbooks/${book.id}`} 
+          className="block w-auto max-w-full h-auto max-h-full transition-transform duration-500 group-hover:scale-105 group-hover:-translate-y-2 group-hover:rotate-1"
+          style={{ aspectRatio: `${cappedAspect}` }}
+        >
+          <div className="relative w-full h-full rounded-xl sm:rounded-2xl overflow-hidden shadow-xl ring-4 ring-white group-hover:ring-[#E87154]/20 bg-stone-100 flex items-center justify-center">
+            {book.coverImageUrl ? (
+              <img
+                src={book.coverImageUrl}
+                alt={book.title}
+                onLoad={(e) => {
+                  const { naturalWidth, naturalHeight } = e.currentTarget;
+                  if (naturalWidth && naturalHeight) {
+                    setDimensions({ width: naturalWidth, height: naturalHeight });
+                  }
+                  setLoaded(true);
+                }}
+                className={cn(
+                  "w-full h-full object-cover transition-opacity duration-300",
+                  loaded ? "opacity-100" : "opacity-0"
+                )}
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center bg-[#FFFAF5] p-6 text-center">
+                <span className="text-[#E87154] font-black text-sm sm:text-base font-quicksand leading-tight">
+                  {book.title}
+                </span>
+              </div>
+            )}
+            
+            {/* 3D Spine Crease / Binding Shadow */}
+            <div className="absolute inset-y-0 left-0 w-[8px] sm:w-[12px] bg-gradient-to-r from-black/15 via-black/5 to-transparent pointer-events-none z-20" />
+            <div className="absolute inset-y-0 left-[8px] sm:left-[12px] w-[1px] bg-white/10 pointer-events-none z-20" />
+          </div>
+        </Link>
+      </div>
       
-      {/* Book Info - Now closer to the book, with more space below it to the shelf */}
+      {/* Book Info - below the shelf */}
       <div className="text-center w-full px-1 relative z-20">
-        <h3 className="text-sm font-black text-[#2D2D2D] font-quicksand leading-tight group-hover:text-[#E87154] transition-colors line-clamp-2">
+        <h3 className="text-xs sm:text-sm font-black text-[#2D2D2D] font-quicksand leading-tight group-hover:text-[#E87154] transition-colors line-clamp-2">
           {book.title}
         </h3>
       </div>

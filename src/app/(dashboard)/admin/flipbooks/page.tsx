@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -8,19 +8,15 @@ import { Label } from "@/components/ui/label";
 import { createFlipbook, getAllFlipbooks } from "@/app/actions/flipbooks";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { FileUpload } from "@/components/ui/file-upload";
 import { FlipbookActions } from "@/components/flipbook/FlipbookActions";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, BookOpen, Clock, CheckCircle2, LayoutGrid, List, Search } from "lucide-react";
 import { DateTimePicker } from "@/components/ui/datetime-picker";
 import { toast } from "sonner";
 import { getAgeGroupLabel } from "@/lib/utils";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { cn } from "@/lib/utils";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Calendar, Clock, CheckCircle2, Plus } from "lucide-react";
-
 
 export default function AdminFlipbooksPage() {
   const [flipbooks, setFlipbooks] = useState<any[]>([]);
@@ -30,6 +26,10 @@ export default function AdminFlipbooksPage() {
   const [schedulePublish, setSchedulePublish] = useState(false);
   const [publishDate, setPublishDate] = useState<Date | undefined>(undefined);
   const [dialogOpen, setDialogOpen] = useState(false);
+  
+  // Grid/Table View & Search States
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     loadFlipbooks();
@@ -51,15 +51,8 @@ export default function AdminFlipbooksPage() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    // Add publish date if scheduled
     if (schedulePublish && publishDate) {
       formData.set("publishedAt", publishDate.toISOString());
-    }
-    
-    // Debug: Log form data
-    console.log("Form submission data:");
-    for (const [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
     }
     
     const result = await createFlipbook(formData);
@@ -75,9 +68,19 @@ export default function AdminFlipbooksPage() {
     }
   };
 
-  const totalPages = Math.ceil(flipbooks.length / itemsPerPage);
+  // Filter flipbooks dynamically based on search query
+  const filteredFlipbooks = useMemo(() => {
+    if (!searchQuery.trim()) return flipbooks;
+    const q = searchQuery.toLowerCase();
+    return flipbooks.filter(f => 
+      f.title.toLowerCase().includes(q) || 
+      (f.description && f.description.toLowerCase().includes(q))
+    );
+  }, [flipbooks, searchQuery]);
+
+  const totalPages = Math.ceil(filteredFlipbooks.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedFlipbooks = flipbooks.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedFlipbooks = filteredFlipbooks.slice(startIndex, startIndex + itemsPerPage);
 
   if (loading) {
     return (
@@ -88,14 +91,41 @@ export default function AdminFlipbooksPage() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <PageHeader
         title="Flipbooks"
         subtitle="Manage and schedule digital flipbooks for various age groups"
         actions={
+          <div className="flex items-center gap-3">
+            {/* View Mode Toggle Switcher */}
+            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200/50 dark:border-slate-700/50 mr-2">
+              <Button
+                variant={viewMode === "grid" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("grid")}
+                className={cn(
+                  "h-8 px-3 rounded-md text-xs font-bold gap-1.5 cursor-pointer transition-all",
+                  viewMode === "grid" ? "bg-white dark:bg-slate-950 shadow-sm text-slate-850 dark:text-slate-100" : "text-slate-500 hover:text-slate-900"
+                )}
+              >
+                <LayoutGrid size={14} /> Grid
+              </Button>
+              <Button
+                variant={viewMode === "table" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("table")}
+                className={cn(
+                  "h-8 px-3 rounded-md text-xs font-bold gap-1.5 cursor-pointer transition-all",
+                  viewMode === "table" ? "bg-white dark:bg-slate-950 shadow-sm text-slate-850 dark:text-slate-100" : "text-slate-500 hover:text-slate-900"
+                )}
+              >
+                <List size={14} /> Table
+              </Button>
+            </div>
+
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-[#E87154] hover:bg-[#D66144] shadow-lg shadow-[#E87154]/20 gap-2">
+                <Button className="bg-[#E87154] hover:bg-[#D66144] shadow-lg shadow-[#E87154]/20 gap-2 cursor-pointer text-white">
                     <Plus size={18} /> Add Flipbook
                 </Button>
               </DialogTrigger>
@@ -175,100 +205,237 @@ export default function AdminFlipbooksPage() {
                 </form>
               </DialogContent>
             </Dialog>
+          </div>
         }
       />
 
-      <div className="rounded-xl border-none shadow-md overflow-hidden bg-white">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent border-none">
-              <TableHead className="pl-6">Flipbook</TableHead>
-              <TableHead>Age Group</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Publish Date</TableHead>
-              <TableHead>Author</TableHead>
-              <TableHead className="text-right pr-6">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedFlipbooks.length === 0 && (
-                <TableRow>
-                    <TableCell colSpan={6} className="text-center py-20 text-slate-400">
-                        <div className="flex flex-col items-center gap-2">
-                            <BookOpen className="h-10 w-10 opacity-20" />
-                            <p>No flipbooks found.</p>
+      <div className="rounded-xl border-none shadow-md overflow-hidden bg-white dark:bg-slate-900 p-6 space-y-6">
+        
+        {/* Search Bar Input */}
+        <div className="relative group w-full sm:max-w-md">
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search flipbooks..."
+            className="pl-10 h-10 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus-visible:ring-[#E87154]/20 focus-visible:border-[#E87154]"
+          />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-[#E87154]" />
+        </div>
+
+        {/* View Mode Content */}
+        {viewMode === "table" ? (
+          <div className="border rounded-lg overflow-hidden border-slate-100 dark:border-slate-800">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent border-none">
+                  <TableHead className="pl-6">Flipbook</TableHead>
+                  <TableHead>Age Group</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Publish Date</TableHead>
+                  <TableHead>Author</TableHead>
+                  <TableHead className="text-right pr-6">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedFlipbooks.length === 0 && (
+                    <TableRow>
+                        <TableCell colSpan={6} className="text-center py-20 text-slate-400">
+                            <div className="flex flex-col items-center gap-2">
+                                <BookOpen className="h-10 w-10 opacity-20" />
+                                <p>No flipbooks found.</p>
+                            </div>
+                        </TableCell>
+                    </TableRow>
+                )}
+                {paginatedFlipbooks.map((book) => (
+                  <TableRow key={book.id} className="group transition-colors">
+                    <TableCell className="pl-6">
+                        <div className="flex flex-col">
+                            <span className="font-bold text-sm text-slate-900 dark:text-slate-100">{book.title}</span>
+                            <span className="text-[11px] text-slate-500">Created {new Date(book.createdAt).toLocaleDateString()}</span>
                         </div>
                     </TableCell>
-                </TableRow>
+                    <TableCell>
+                        {book.ageGroup ? (
+                            <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-none">
+                                {getAgeGroupLabel(book.ageGroup)}
+                            </Badge>
+                        ) : (
+                            <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border-none">
+                                All Ages
+                            </Badge>
+                        )}
+                    </TableCell>
+                    <TableCell>
+                      {book.publishedAt && new Date(book.publishedAt) > new Date() ? (
+                        <Badge className="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border-none">
+                          <Clock size={10} className="mr-1" /> Scheduled
+                        </Badge>
+                      ) : book.isPublished ? (
+                        <Badge className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-none">
+                          <CheckCircle2 size={10} className="mr-1" /> Published
+                        </Badge>
+                      ) : (
+                        <Badge className="text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400 border-none">
+                          Draft
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {book.publishedAt ? (
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{new Date(book.publishedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                          <span className="text-[10px] text-slate-400">{new Date(book.publishedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm text-slate-500 dark:text-slate-400">
+                        {book.createdBy?.firstName || book.createdBy?.email.split('@')[0]}
+                    </TableCell>
+                    <TableCell className="text-right pr-6">
+                        {/* @ts-ignore */}
+                        <FlipbookActions flipbook={book} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <div className="grid gap-x-6 gap-y-10 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {paginatedFlipbooks.length === 0 && (
+              <div className="col-span-full text-center py-20 text-slate-400">
+                <div className="flex flex-col items-center gap-2">
+                  <BookOpen className="h-10 w-10 opacity-20" />
+                  <p>No flipbooks found.</p>
+                </div>
+              </div>
             )}
             {paginatedFlipbooks.map((book) => (
-              <TableRow key={book.id} className="group transition-colors">
-                <TableCell className="pl-6">
-                    <div className="flex flex-col">
-                        <span className="font-bold text-sm text-slate-900">{book.title}</span>
-                        <span className="text-[11px] text-slate-500">Created {new Date(book.createdAt).toLocaleDateString()}</span>
-                    </div>
-                </TableCell>
-                <TableCell>
-                    {book.ageGroup ? (
-                        <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border-none">
-                            {getAgeGroupLabel(book.ageGroup)}
-                        </Badge>
-                    ) : (
-                        <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50 text-slate-500 border-none">
-                            All Ages
-                        </Badge>
-                    )}
-                </TableCell>
-                <TableCell>
-                  {book.publishedAt && new Date(book.publishedAt) > new Date() ? (
-                    <Badge className="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 border-none">
-                      <Clock size={10} className="mr-1" /> Scheduled
-                    </Badge>
-                  ) : book.isPublished ? (
-                    <Badge className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 border-none">
-                      <CheckCircle2 size={10} className="mr-1" /> Published
-                    </Badge>
-                  ) : (
-                    <Badge className="text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border-none">
-                      Draft
-                    </Badge>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {book.publishedAt ? (
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-slate-700">{new Date(book.publishedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                      <span className="text-[10px] text-slate-400">{new Date(book.publishedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    </div>
-                  ) : (
-                    <span className="text-slate-400">—</span>
-                  )}
-                </TableCell>
-                <TableCell className="text-sm text-slate-500">
-                    {book.createdBy?.firstName || book.createdBy?.email.split('@')[0]}
-                </TableCell>
-                <TableCell className="text-right pr-6">
-                    {/* @ts-ignore */}
-                    <FlipbookActions flipbook={book} />
-                </TableCell>
-              </TableRow>
+              <AdminBookItem key={book.id} book={book} loadFlipbooks={loadFlipbooks} />
             ))}
-          </TableBody>
-        </Table>
-        <div className="p-4 border-t border-slate-50">
+          </div>
+        )}
+
+        <div className="p-4 border-t border-slate-50 dark:border-slate-800">
             <TablePagination
                 currentPage={currentPage}
                 totalPages={totalPages}
                 itemsPerPage={itemsPerPage}
-                totalItems={flipbooks.length}
+                totalItems={filteredFlipbooks.length}
                 onPageChange={setCurrentPage}
                 onItemsPerPageChange={(value) => {
-                setItemsPerPage(value);
-                setCurrentPage(1);
+                  setItemsPerPage(value);
+                  setCurrentPage(1);
                 }}
             />
         </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminBookItem({ book, loadFlipbooks }: { book: any; loadFlipbooks: () => void }) {
+  const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  const aspect = dimensions ? dimensions.width / dimensions.height : 0.75;
+  const cappedAspect = Math.max(0.5, Math.min(2.0, aspect));
+
+  const isScheduled = book.publishedAt && new Date(book.publishedAt) > new Date();
+  const isPublished = book.isPublished && !isScheduled;
+
+  return (
+    <div className="group flex flex-col w-full">
+      {/* Cover container: fixed height, items-end to align book bottoms */}
+      <div className="h-[220px] sm:h-[260px] w-full flex items-end justify-center mb-4 relative">
+        <div
+          className="block w-auto max-w-full h-auto max-h-full transition-all duration-300 ease-out group-hover:scale-[1.03] group-hover:-translate-y-2 text-left shadow-[0_12px_24px_-8px_rgba(0,0,0,0.25)] group-hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.35)] rounded-[4px] relative"
+          style={{ aspectRatio: `${cappedAspect}` }}
+        >
+          <div className="relative w-full h-full rounded-[4px] overflow-hidden bg-slate-50 flex items-center justify-center border border-black/5">
+            {book.coverImageUrl ? (
+              <img
+                src={book.coverImageUrl}
+                alt={book.title}
+                onLoad={(e) => {
+                  const { naturalWidth, naturalHeight } = e.currentTarget;
+                  if (naturalWidth && naturalHeight) {
+                    setDimensions({ width: naturalWidth, height: naturalHeight });
+                  }
+                  setLoaded(true);
+                }}
+                className={cn(
+                  "w-full h-full object-cover transition-opacity duration-300",
+                  loaded ? "opacity-100" : "opacity-0"
+                )}
+              />
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#FFFAF5] p-4 text-center">
+                <BookOpen className="h-8 w-8 text-[#E87154] mb-2" />
+                <span className="text-stone-850 font-bold text-xs sm:text-sm leading-tight line-clamp-3">
+                  {book.title}
+                </span>
+              </div>
+            )}
+            
+            {/* Spine binding highlight crease for premium look */}
+            <div className="absolute inset-y-0 left-0 w-[8px] bg-gradient-to-r from-black/15 via-black/5 to-transparent pointer-events-none z-20" />
+            <div className="absolute inset-y-0 left-[8px] w-[1px] bg-white/10 pointer-events-none z-20" />
+            
+            {/* Badges on cover */}
+            <div className="absolute top-2 left-2 flex flex-col gap-1 z-20">
+              {book.isFree && (
+                <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide w-fit" variant="default">Free</Badge>
+              )}
+              {book.ageGroup ? (
+                <Badge className="bg-blue-500 hover:bg-blue-600 text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide w-fit" variant="default">
+                  {getAgeGroupLabel(book.ageGroup)}
+                </Badge>
+              ) : (
+                <Badge className="bg-slate-500 hover:bg-slate-600 text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide w-fit" variant="default">
+                  All Ages
+                </Badge>
+              )}
+            </div>
+
+            <div className="absolute bottom-2 right-2 z-20">
+              {isScheduled ? (
+                <Badge className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide flex items-center gap-0.5" variant="default">
+                  <Clock size={8} /> Scheduled
+                </Badge>
+              ) : isPublished ? (
+                <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide flex items-center gap-0.5" variant="default">
+                  <CheckCircle2 size={8} /> Published
+                </Badge>
+              ) : (
+                <Badge className="bg-slate-400 hover:bg-slate-500 text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide" variant="default">
+                  Draft
+                </Badge>
+              )}
+            </div>
+
+            {/* Hover Actions Overlay */}
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 z-30">
+              {/* Wrapped in high-contrast floating pill */}
+              <div className="flex items-center justify-center p-1.5 bg-white dark:bg-slate-900 rounded-full shadow-lg border border-slate-100/10 dark:border-slate-800/10">
+                <FlipbookActions flipbook={book} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Book Metadata - left aligned below cover */}
+      <div className="text-left w-full mt-2">
+        <h3 className="font-bold text-slate-900 dark:text-slate-100 line-clamp-1 text-sm sm:text-base leading-tight">
+          {book.title}
+        </h3>
+        <p className="text-[11px] text-slate-400 font-semibold mt-1 uppercase tracking-wider">
+          Created {new Date(book.createdAt).toLocaleDateString()}
+        </p>
       </div>
     </div>
   );
