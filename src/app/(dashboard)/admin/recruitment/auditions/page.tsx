@@ -106,7 +106,8 @@ export default function AuditionsPage() {
     const form = e.target as HTMLFormElement;
     const startTime = (form.elements.namedItem("startTime") as HTMLInputElement).value;
     const endTime = (form.elements.namedItem("endTime") as HTMLInputElement).value;
-    const capacity = (form.elements.namedItem("capacity") as HTMLInputElement).value;
+    const capacityInput = form.elements.namedItem("capacity") as HTMLInputElement | null;
+    const capacity = capacityInput?.value;
     
     const eventDate = events.find(ev => ev.id === eventId)?.date || new Date().toISOString();
     const dateStr = new Date(eventDate).toISOString().split('T')[0];
@@ -322,6 +323,10 @@ export default function AuditionsPage() {
                       <div className="space-y-1 flex-1">
                         <Label className="text-[11px] font-bold uppercase text-slate-400">End</Label>
                         <Input name="endTime" type="time" required className="h-9 bg-white border-slate-200 rounded-lg text-sm" />
+                      </div>
+                      <div className="space-y-1 w-20">
+                        <Label className="text-[11px] font-bold uppercase text-slate-400">Cap (Opt)</Label>
+                        <Input name="capacity" type="number" className="h-9 bg-white border-slate-200 rounded-lg text-sm" />
                       </div>
                       <Button type="submit" size="sm" variant="secondary" className="h-9 rounded-lg px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold">Add Slot</Button>
                     </form>
