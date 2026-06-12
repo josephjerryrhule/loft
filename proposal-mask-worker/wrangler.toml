@@ -1,0 +1,9 @@
+name = "proposal-mask-worker"
+main = "src/index.js"
+compatibility_date = "2024-03-01"
+account_id = "d688d94dc37f521796563456c9570bfc"
+
+[[routes]]
+pattern = "proposal.landoffairytales.com"
+custom_domain = true
+

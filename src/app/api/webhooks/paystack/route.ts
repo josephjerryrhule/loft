@@ -54,6 +54,9 @@ export async function POST(request: NextRequest) {
             true,
             metadata?.userId
           );
+      } else if (metadata?.type === "recruitment") {
+          const { processRecruitmentPayment } = await import("@/app/actions/recruitment");
+          await processRecruitmentPayment(reference, metadata?.applicantId);
       }
     }
 

@@ -920,3 +920,143 @@ export async function sendChildOtpEmail({
     html: emailWrapper(content, branding.platformName, branding.logoUrl),
   });
 }
+
+// ============================================
+// RECRUITMENT EMAIL TEMPLATES
+// ============================================
+
+// Recruitment Application Confirmation
+export async function sendRecruitmentConfirmationEmail(data: {
+  email: string;
+  fullName: string;
+  applicantId: string;
+}) {
+  const branding = await getBranding();
+
+  const content = `
+    <h2>Application Received! 🎉</h2>
+    <p>Dear ${data.fullName},</p>
+    <p>Thank you for applying to become a <strong>LOFT Reading Club Facilitator</strong>. Your application and payment have been successfully received.</p>
+    
+    <div class="info-box">
+      <p><strong>Application ID:</strong> ${data.applicantId}</p>
+      <p><strong>Status:</strong> <span class="status-badge status-completed">Application Submitted</span></p>
+      <p><strong>Payment:</strong> <span class="status-badge status-active">GHC 100 — Paid</span></p>
+    </div>
+    
+    <h3>What Happens Next?</h3>
+    <ol>
+      <li>Our team will review your application.</li>
+      <li>If shortlisted, you will be invited to attend a physical audition.</li>
+      <li>You will be notified of the outcome via phone or email.</li>
+    </ol>
+    
+    <p><strong>Important:</strong> Please save your Application ID (<code>${data.applicantId}</code>) for your records. You can use it to check your application status at any time.</p>
+    
+    <p style="font-size: 14px; color: #666; margin-top: 30px;">
+      If you have any questions, feel free to contact us.
+    </p>
+  `;
+
+  return sendEmail({
+    to: data.email,
+    subject: `Application Received — ${data.applicantId} — ${branding.platformName}`,
+    html: emailWrapper(content, branding.platformName, branding.logoUrl),
+  });
+}
+
+// Audition Invitation Email
+export async function sendAuditionInvitationEmail(data: {
+  email: string;
+  fullName: string;
+  applicantId: string;
+  eventName?: string;
+  eventDate?: string;
+  venue?: string;
+  sessionTime?: string;
+}) {
+  const branding = await getBranding();
+
+  const eventDetails = data.eventName ? `
+    <div class="info-box">
+      <p><strong>Event:</strong> ${data.eventName}</p>
+      ${data.eventDate ? `<p><strong>Date:</strong> ${data.eventDate}</p>` : ""}
+      ${data.venue ? `<p><strong>Venue:</strong> ${data.venue}</p>` : ""}
+      ${data.sessionTime ? `<p><strong>Session Time:</strong> ${data.sessionTime}</p>` : ""}
+    </div>
+  ` : `
+    <p>Details about the audition date, venue, and time will be shared with you shortly.</p>
+  `;
+
+  const content = `
+    <h2>Congratulations! You've Been Shortlisted 🌟</h2>
+    <p>Dear ${data.fullName},</p>
+    <p>We are pleased to inform you that your application (<strong>${data.applicantId}</strong>) to become a LOFT Reading Club Facilitator has been shortlisted.</p>
+    <p>You are invited to attend a <strong>physical audition</strong> where we will assess your reading, storytelling, and facilitation skills.</p>
+    
+    ${eventDetails}
+    
+    <h3>What to Expect</h3>
+    <ul>
+      <li>A reading and storytelling exercise</li>
+      <li>A group facilitation activity</li>
+      <li>An improvisation task</li>
+    </ul>
+    
+    <p>Please confirm your attendance by clicking the button below:</p>
+    
+    <p style="text-align: center; margin: 30px 0;">
+      <a href="${branding.siteUrl}/recruitment/confirm-audition/${data.applicantId}" class="button">Confirm Attendance</a>
+    </p>
+    
+    <p style="font-size: 14px; color: #666; margin-top: 30px;">
+      We look forward to meeting you!
+    </p>
+  `;
+
+  return sendEmail({
+    to: data.email,
+    subject: `Audition Invitation — LOFT Reading Club Facilitator — ${branding.platformName}`,
+    html: emailWrapper(content, branding.platformName, branding.logoUrl),
+  });
+}
+
+// Payment Reminder Email
+export async function sendPaymentReminderEmail(data: {
+  email: string;
+  fullName: string;
+  applicantId: string;
+  paymentUrl: string;
+}) {
+  const branding = await getBranding();
+
+  const content = `
+    <h2>Complete Your Application 📋</h2>
+    <p>Dear ${data.fullName},</p>
+    <p>We noticed that you started your application to become a <strong>LOFT Reading Club Facilitator</strong> but haven't completed the payment yet.</p>
+    
+    <div class="info-box">
+      <p><strong>Application ID:</strong> ${data.applicantId}</p>
+      <p><strong>Amount Due:</strong> GHC 100 (Application & Assessment Fee)</p>
+      <p><strong>Status:</strong> <span class="status-badge status-pending">Pending Payment</span></p>
+    </div>
+    
+    <p>Your application will only be reviewed once the assessment fee is paid. Complete your payment to proceed:</p>
+    
+    <p style="text-align: center;">
+      <a href="${data.paymentUrl}" class="button">Complete Payment — GHC 100</a>
+    </p>
+    
+    <p>You can also visit our recruitment page and enter your Application ID (<code>${data.applicantId}</code>) to resume your application.</p>
+    
+    <p style="font-size: 14px; color: #666; margin-top: 30px;">
+      Please note that the application fee is non-refundable regardless of the outcome.
+    </p>
+  `;
+
+  return sendEmail({
+    to: data.email,
+    subject: `Complete Your Application — ${data.applicantId} — ${branding.platformName}`,
+    html: emailWrapper(content, branding.platformName, branding.logoUrl),
+  });
+}

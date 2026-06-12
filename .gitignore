@@ -54,4 +54,9 @@ tests/
 /scripts/audits/
 /scripts/backups/
 /backups/
-./marketing-site/
+./marketing-site/marketing-site/node_modules
+marketing-site/.next
+
+marketing-site/node_modules
+marketing-site/.next
+proposal-mask-worker/node_modules

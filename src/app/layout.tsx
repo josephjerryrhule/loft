@@ -83,7 +83,7 @@ export default async function RootLayout({
   const cloudflareWebAnalyticsToken = process.env.NEXT_PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN;
   
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${quicksand.variable} ${nunitoSans.variable} antialiased`}
       >

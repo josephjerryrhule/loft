@@ -420,3 +420,157 @@ model ManualPaymentAllocation {
   @@index([commissionId])
   @@map("manual_payment_allocations")
 }
+
+// ═══════════════════════════════════════════════════════════
+// RECRUITMENT SYSTEM MODELS
+// ═══════════════════════════════════════════════════════════
+
+model RecruitmentApplicant {
+  id                    String                     @id @default(uuid())
+  applicantId           String                     @unique @map("applicant_id") // e.g. LOFT-RC-250612-0042
+  status                String                     @default("DRAFT") // DRAFT, PENDING_PAYMENT, APPLICATION_SUBMITTED, UNDER_REVIEW, AUDITION_INVITED, AUDITION_CONFIRMED, AUDITION_ATTENDED, SHORTLISTED, SELECTED, REJECTED, HIRED
+
+  // Section 1: Personal Information
+  fullName              String                     @map("full_name")
+  dateOfBirth           DateTime                   @map("date_of_birth")
+  age                   Int
+  gender                String                     // MALE, FEMALE, PREFER_NOT_TO_SAY
+  phoneNumber           String                     @map("phone_number")
+  whatsappNumber        String                     @map("whatsapp_number")
+  email                 String?
+  residentialArea       String                     @map("residential_area")
+  townCity              String                     @map("town_city")
+  region                String
+
+  // Section 2: Education
+  highestEducation      String                     @map("highest_education") // SHS, DIPLOMA, HND, BACHELORS, MASTERS, OTHER
+  institution           String?
+  course                String?
+
+  // Section 3: Experience
+  workedWithChildren    Boolean                    @map("worked_with_children")
+  childrenExperienceDesc String?                   @map("children_experience_desc")
+  previousRoles         String                     @map("previous_roles") // JSON array
+  relevantExperience    String?                    @map("relevant_experience")
+
+  // Section 4: Communication & Facilitation
+  groupSpeakingComfort  String                     @map("group_speaking_comfort") // VERY_COMFORTABLE, COMFORTABLE, SOMEWHAT_COMFORTABLE, NOT_COMFORTABLE
+  ledGroupActivity      Boolean                    @map("led_group_activity")
+  groupActivityDesc     String?                    @map("group_activity_desc")
+  whatMakesLearningFun  String                     @map("what_makes_learning_fun")
+  engagementSkills      String                     @map("engagement_skills")
+
+  // Section 5: Short Answers
+  whyFacilitator        String                     @map("why_facilitator")
+  strengths             String
+  problemSolvingExample String                     @map("problem_solving_example")
+
+  // Section 6: Audition Info
+  auditionUnderstood    Boolean                    @map("audition_understood")
+  willingToTravel       Boolean                    @map("willing_to_travel")
+
+  // Declaration
+  declarationAgreed     Boolean                    @map("declaration_agreed")
+  declarationName       String                     @map("declaration_name")
+  declarationDate       DateTime                   @map("declaration_date")
+
+  // Payment
+  paymentStatus         String                     @default("UNPAID") @map("payment_status") // UNPAID, PAID, FAILED
+  paymentReference      String?                    @map("payment_reference")
+  paymentAmount         Decimal?                   @map("payment_amount")
+  paidAt                DateTime?                  @map("paid_at")
+
+  // Admin
+  internalNotes         String?                    @map("internal_notes")
+  auditionSessionId     String?                    @map("audition_session_id")
+  auditionSession       RecruitmentAuditionSession? @relation(fields: [auditionSessionId], references: [id])
+
+  createdAt             DateTime                   @default(now()) @map("created_at")
+  updatedAt             DateTime                   @updatedAt @map("updated_at")
+
+  statusHistory         RecruitmentStatusHistory[]
+  auditionScores        RecruitmentAuditionScore[]
+
+  @@index([applicantId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([phoneNumber])
+  @@index([createdAt])
+  @@map("recruitment_applicants")
+}
+
+model RecruitmentStatusHistory {
+  id          String               @id @default(uuid())
+  applicantId String               @map("applicant_id")
+  applicant   RecruitmentApplicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  fromStatus  String               @map("from_status")
+  toStatus    String               @map("to_status")
+  changedBy   String?              @map("changed_by") // admin user ID or "SYSTEM"
+  note        String?
+  createdAt   DateTime             @default(now()) @map("created_at")
+
+  @@index([applicantId])
+  @@index([createdAt])
+  @@map("recruitment_status_history")
+}
+
+model RecruitmentAuditionEvent {
+  id          String                       @id @default(uuid())
+  name        String
+  date        DateTime
+  venue       String
+  description String?
+  maxCapacity Int?                         @map("max_capacity")
+  createdAt   DateTime                     @default(now()) @map("created_at")
+  updatedAt   DateTime                     @updatedAt @map("updated_at")
+
+  sessions    RecruitmentAuditionSession[]
+
+  @@index([date])
+  @@map("recruitment_audition_events")
+}
+
+model RecruitmentAuditionSession {
+  id          String                      @id @default(uuid())
+  eventId     String                      @map("event_id")
+  event       RecruitmentAuditionEvent    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  startTime   DateTime                    @map("start_time")
+  endTime     DateTime                    @map("end_time")
+  maxCapacity Int?                        @map("max_capacity")
+  createdAt   DateTime                    @default(now()) @map("created_at")
+
+  applicants  RecruitmentApplicant[]
+  scores      RecruitmentAuditionScore[]
+
+  @@index([eventId])
+  @@map("recruitment_audition_sessions")
+}
+
+model RecruitmentAuditionScore {
+  id                      String                      @id @default(uuid())
+  applicantId             String                      @map("applicant_id")
+  applicant               RecruitmentApplicant        @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  sessionId               String?                     @map("session_id")
+  session                 RecruitmentAuditionSession? @relation(fields: [sessionId], references: [id])
+  evaluatorName           String                      @map("evaluator_name")
+
+  // Scoring categories (1-10 scale)
+  readingAbility          Int                         @map("reading_ability")
+  storytellingAbility     Int                         @map("storytelling_ability")
+  childEngagement         Int                         @map("child_engagement")
+  communicationSkills     Int                         @map("communication_skills")
+  confidence              Int
+  improvisation           Int
+  overallRecommendation   Int                         @map("overall_recommendation")
+  totalScore              Int                         @map("total_score") // Auto-calculated sum
+
+  evaluatorNotes          String?                     @map("evaluator_notes")
+  attended                Boolean                     @default(false)
+
+  createdAt               DateTime                    @default(now()) @map("created_at")
+  updatedAt               DateTime                    @updatedAt @map("updated_at")
+
+  @@index([applicantId])
+  @@index([sessionId])
+  @@map("recruitment_audition_scores")
+}

@@ -1,0 +1,15 @@
+export const RECRUITMENT_STATUSES = [
+  "DRAFT",
+  "PENDING_PAYMENT",
+  "APPLICATION_SUBMITTED",
+  "UNDER_REVIEW",
+  "AUDITION_INVITED",
+  "AUDITION_CONFIRMED",
+  "AUDITION_ATTENDED",
+  "SHORTLISTED",
+  "SELECTED",
+  "REJECTED",
+  "HIRED",
+] as const;
+
+export type RecruitmentStatus = (typeof RECRUITMENT_STATUSES)[number];
