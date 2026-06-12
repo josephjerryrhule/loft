@@ -34,7 +34,7 @@ const formSchema = z.object({
   gender: z.enum(["MALE", "FEMALE", "PREFER_NOT_TO_SAY"], { message: "Please select a gender" }),
   phoneNumber: z.string().min(10, "Valid phone number is required"),
   whatsappNumber: z.string().min(10, "Valid WhatsApp number is required"),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
+  email: z.string().min(1, "Email is required").email("Invalid email"),
   residentialArea: z.string().min(1, "Residential area is required"),
   townCity: z.string().min(1, "Town/City is required"),
   region: z.string().min(1, "Region is required"),
@@ -252,7 +252,7 @@ export default function ApplyPage() {
                 <div className="space-y-2 sm:col-span-2">
                   <Label>Email Address</Label>
                   <Controller name="email" control={control} render={({ field }) => (
-                    <Input {...field} type="email" placeholder="Optional" className="h-12 rounded-xl" />
+                    <Input {...field} type="email" placeholder="e.g. john@example.com" className="h-12 rounded-xl" />
                   )} />
                   {errors.email && <p className="text-red-500 text-xs">{errors.email.message}</p>}
                 </div>
