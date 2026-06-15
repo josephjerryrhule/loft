@@ -155,7 +155,7 @@ export function PortalDashboard({ initialData }: { initialData: any }) {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
-      <div className="bg-[#4B2E83] pt-28 pb-16 px-4">
+      <div className="bg-[#4B2E83] w-full -mt-28 pt-40 pb-16 px-4">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="text-white">
             <h1 className="text-3xl sm:text-4xl font-black mb-2">Welcome, {applicant.fullName}</h1>

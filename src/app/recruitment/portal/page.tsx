@@ -38,7 +38,7 @@ export default function PortalLoginPage() {
   };
 
   return (
-    <div className="min-h-screen pt-28 pb-20 px-4 flex items-center justify-center bg-slate-50">
+    <div className="min-h-screen -mt-28 pt-28 pb-20 px-4 flex items-center justify-center bg-slate-50">
       <Card className="max-w-md w-full border-slate-200 shadow-xl rounded-2xl overflow-hidden">
         <CardHeader className="bg-[#4B2E83] text-white text-center py-8">
           <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
