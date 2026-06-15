@@ -946,12 +946,13 @@ export async function sendRecruitmentConfirmationEmail(data: {
     
     <h3>What Happens Next?</h3>
     <ol>
-      <li>Our team will review your application.</li>
-      <li>If shortlisted, you will be invited to attend a physical audition.</li>
-      <li>You will be notified of the outcome via phone or email.</li>
+      <li><strong>Audition Invitation:</strong> You are officially invited to audition! Everyone who successfully applies and pays is invited.</li>
+      <li><strong>Audition Dates:</strong> We are currently finalizing our audition dates. Once they are released, you will receive an email and a WhatsApp message notifying you.</li>
+      <li><strong>Booking Your Slot:</strong> You will be required to log into the Applicant Portal using your Application ID to book your preferred audition slot.</li>
+      <li><strong>Preparation:</strong> You now have exclusive 1-month access to our Facilitator Preparation Library via the portal to help you prepare.</li>
     </ol>
     
-    <p><strong>Important:</strong> Please save your Application ID (<code>${data.applicantId}</code>) for your records. You can use it to check your application status at any time.</p>
+    <p><strong>Important:</strong> Please save your Application ID (<code>${data.applicantId}</code>) for your records. You can use it to log into the <a href="${branding.siteUrl}/recruitment/portal">Applicant Portal</a>.</p>
     
     <p style="font-size: 14px; color: #666; margin-top: 30px;">
       If you have any questions, feel free to contact us.
@@ -989,10 +990,10 @@ export async function sendAuditionInvitationEmail(data: {
   `;
 
   const content = `
-    <h2>Congratulations! You've Been Shortlisted 🌟</h2>
+    <h2>Audition Dates Released 📅</h2>
     <p>Dear ${data.fullName},</p>
-    <p>We are pleased to inform you that your application (<strong>${data.applicantId}</strong>) to become a LOFT Reading Club Facilitator has been shortlisted.</p>
-    <p>You are invited to attend a <strong>physical audition</strong> where we will assess your reading, storytelling, and facilitation skills.</p>
+    <p>We are pleased to inform you that the audition dates for the LOFT Reading Club Facilitator role have been finalized and released.</p>
+    <p>Our auditions are professional, structured, engaging, and enjoyable. Facilitators may be scheduled at any time between 10:00 AM and 6:00 PM.</p>
     
     ${eventDetails}
     
@@ -1003,14 +1004,14 @@ export async function sendAuditionInvitationEmail(data: {
       <li>An improvisation task</li>
     </ul>
     
-    <p>Please confirm your attendance by clicking the button below:</p>
+    <p>Please log into the Applicant Portal using your Application ID to book your preferred audition slot:</p>
     
     <p style="text-align: center; margin: 30px 0;">
-      <a href="${branding.siteUrl}/recruitment/confirm-audition/${data.applicantId}" class="button">Confirm Attendance</a>
+      <a href="${branding.siteUrl}/recruitment/portal" class="button">Log into Applicant Portal</a>
     </p>
     
     <p style="font-size: 14px; color: #666; margin-top: 30px;">
-      We look forward to meeting you!
+      We look forward to meeting you! Please review the Facilitator Preparation Library beforehand.
     </p>
   `;
 

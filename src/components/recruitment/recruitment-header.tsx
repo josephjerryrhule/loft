@@ -43,7 +43,7 @@ export function RecruitmentHeader() {
             triggerButton={
               <Button 
                 variant="ghost" 
-                className={`text-sm font-bold rounded-full transition-colors duration-300 ${
+                className={`text-sm font-bold rounded-full transition-colors duration-300 hidden sm:inline-flex ${
                   scrolled 
                     ? "text-slate-600 hover:bg-slate-100" 
                     : "text-white/90 hover:bg-white/20 hover:text-white"
@@ -54,6 +54,19 @@ export function RecruitmentHeader() {
             } 
           />
           
+          <Link href="/recruitment/portal">
+            <Button 
+              variant="outline" 
+              className={`text-sm font-bold rounded-full transition-colors duration-300 ${
+                scrolled 
+                  ? "border-[#4B2E83] text-[#4B2E83] hover:bg-[#4B2E83] hover:text-white" 
+                  : "border-white/50 text-white hover:bg-white/20"
+              }`}
+            >
+              Applicant Portal
+            </Button>
+          </Link>
+
           <Link href="/recruitment/apply">
             <Button className="bg-[#E87154] hover:bg-[#D66144] text-white font-bold px-6 py-2 rounded-full transition-transform hover:scale-105 active:scale-95 shadow-sm shadow-[#E87154]/20 border border-[#E87154]">
               Apply Now
