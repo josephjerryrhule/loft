@@ -37,20 +37,45 @@ export default async function PaymentCallbackPage({
             </div>
             
             <CardContent className="p-8 space-y-6">
-              <div className="bg-slate-50 p-4 rounded-xl text-center space-y-2 border border-slate-100">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Application ID</p>
-                <p className="text-xl font-mono font-bold text-slate-900">
+              <div className="bg-[#4B2E83]/10 border border-[#4B2E83]/20 p-6 rounded-xl text-center space-y-2">
+                <p className="text-xs font-bold text-[#4B2E83] uppercase tracking-widest">Your Applicant ID</p>
+                <p className="text-3xl font-mono font-black text-[#4B2E83]">
                   {result.applicantId || "Processing..."}
                 </p>
+                <p className="text-xs text-slate-500 font-medium pt-2">Keep this ID safe. You will need it to book your audition.</p>
               </div>
               
-              <div className="text-center space-y-3 text-sm text-slate-600">
+              <div className="space-y-4 text-sm text-slate-700 leading-relaxed bg-slate-50 p-6 rounded-xl border border-slate-100">
                 <p>
-                  Your application to become a LOFT Reading Club Facilitator has been officially submitted and is now under review.
+                  <strong>Congratulations!</strong> You have successfully applied and paid. You will be invited to audition.
                 </p>
                 <p>
-                  We have sent a confirmation email to the address you provided. If shortlisted, you will be invited to attend an audition.
+                  We are currently finalizing audition dates, which may become available sooner than expected. Once dates are released, you will be notified via both <strong>Email and WhatsApp</strong>.
                 </p>
+                <p>
+                  When notified, you will need to return to the portal to book an available audition slot.
+                </p>
+              </div>
+
+              <div className="space-y-4 text-sm text-slate-700 leading-relaxed bg-orange-50 p-6 rounded-xl border border-orange-100">
+                <h3 className="font-bold text-orange-900 text-base">Facilitator Preparation Library</h3>
+                <p className="text-orange-800">
+                  Your Applicant ID unlocks access to our Facilitator Preparation Library for the next month.
+                </p>
+                <p className="text-orange-800">
+                  We highly encourage you to read the books, familiarize yourself with LOFT, and use the library to prepare for your audition!
+                </p>
+              </div>
+
+              <div className="space-y-4 text-sm text-slate-700 leading-relaxed">
+                <p>
+                  Be sure to follow LOFT on all social media platforms for updates.
+                </p>
+                <div className="bg-slate-100 p-4 rounded-lg text-center sm:text-left">
+                  <p className="font-bold text-slate-900 mb-2">Need support?</p>
+                  <p>Email: <a href="mailto:hello@landoffairytales.com" className="text-[#E87154] hover:underline font-medium">hello@landoffairytales.com</a></p>
+                  <p>Phone/WhatsApp: <a href="tel:0559922299" className="text-[#E87154] hover:underline font-medium">0559922299</a></p>
+                </div>
               </div>
             </CardContent>
             

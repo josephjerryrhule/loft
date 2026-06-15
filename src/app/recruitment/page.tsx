@@ -218,7 +218,7 @@ export default function RecruitmentPage() {
             </div>
             <div className="p-8 text-center flex flex-col items-center justify-center gap-2">
               <MapPin className="w-6 h-6 text-slate-400 mb-1" />
-              <h4 className="text-2xl font-black text-slate-900">10AM–6PM</h4>
+              <h4 className="text-2xl font-black text-slate-900">Flexible</h4>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Schedule</p>
             </div>
             <div className="p-8 text-center flex flex-col items-center justify-center gap-2">
@@ -227,14 +227,19 @@ export default function RecruitmentPage() {
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Children</p>
             </div>
           </div>
+          <div className="bg-slate-50/80 border-t border-slate-100 p-4 text-center">
+            <p className="text-sm font-medium text-slate-600">
+              Facilitators may be scheduled at any time between 10:00 AM and 6:00 PM.
+            </p>
+          </div>
         </div>
       </section>
 
       {/* Skills Section */}
       <section id="skills" className="scroll-mt-32 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32">
         <div className="text-center mb-16">
-          <p className="text-[#E87154] font-bold tracking-wide text-sm mb-3">
-            Take the stress out of the audition
+          <p className="text-[#E87154] font-bold tracking-wide text-sm mb-3 uppercase">
+            Professional & Engaging
           </p>
           <h2 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight">
             Skills we look for in our facilitators
@@ -250,7 +255,7 @@ export default function RecruitmentPage() {
             </div>
             <h3 className="text-xl font-bold text-slate-900 mb-3">Interactive Storytelling</h3>
             <p className="text-sm text-slate-500 font-medium leading-relaxed px-4">
-              More than just reading words on a page. We look for the ability to captivate children using voice modulation, expression, and pacing.
+              More than just reading words on a page. We look for the ability to captivate children using voice acting, expression, and pacing.
             </p>
           </div>
 

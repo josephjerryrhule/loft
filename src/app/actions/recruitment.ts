@@ -1087,3 +1087,137 @@ export async function confirmAuditionAttendance(applicantId: string) {
 
   return { success: true };
 }
+
+// ═══════════════════════════════════════════════════════════
+// APPLICANT PORTAL
+// ═══════════════════════════════════════════════════════════
+
+export async function getApplicantPortalData(applicantId: string) {
+  try {
+    const applicant = await prisma.recruitmentApplicant.findUnique({
+      where: { applicantId },
+      include: {
+        auditionSession: {
+          include: {
+            event: true
+          }
+        }
+      }
+    });
+
+    if (!applicant) {
+      return { success: false, error: "Applicant not found." };
+    }
+
+    if (applicant.status === "DRAFT" || applicant.paymentStatus !== "PAID") {
+      return { success: false, error: "Portal access requires a submitted application with successful payment." };
+    }
+
+    let availableSessions = null;
+    if (applicant.status === "AUDITION_BOOKING_OPEN") {
+      // Fetch future events and sessions
+      const events = await prisma.recruitmentAuditionEvent.findMany({
+        where: { date: { gte: new Date() } },
+        include: {
+          sessions: {
+            include: {
+              _count: {
+                select: { applicants: true }
+              }
+            }
+          }
+        },
+        orderBy: { date: "asc" }
+      });
+      
+      // Filter out full sessions if maxCapacity is set
+      availableSessions = events.map(event => ({
+        ...event,
+        sessions: event.sessions.filter(s => !s.maxCapacity || s._count.applicants < s.maxCapacity)
+      })).filter(event => event.sessions.length > 0);
+    }
+
+    // Fetch library flipbooks
+    const libraryFlipbooks = await prisma.flipbook.findMany({
+      where: {
+        isPublished: true,
+        isFree: true, // For now, use free published flipbooks as the preparation library
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Check if library access is valid (1 month from paidAt or createdAt)
+    const accessStartDate = applicant.paidAt || applicant.createdAt;
+    const accessExpiryDate = new Date(accessStartDate);
+    accessExpiryDate.setMonth(accessExpiryDate.getMonth() + 1);
+    const hasLibraryAccess = new Date() <= accessExpiryDate;
+
+    return {
+      success: true,
+      data: {
+        applicant,
+        availableSessions,
+        libraryFlipbooks: hasLibraryAccess ? libraryFlipbooks : [],
+        hasLibraryAccess,
+        accessExpiryDate,
+      }
+    };
+  } catch (error) {
+    console.error("Failed to fetch applicant portal data:", error);
+    return { success: false, error: "An unexpected error occurred." };
+  }
+}
+
+export async function bookAuditionSession(applicantId: string, sessionId: string) {
+  try {
+    const applicant = await prisma.recruitmentApplicant.findUnique({
+      where: { applicantId }
+    });
+
+    if (!applicant) {
+      return { success: false, error: "Applicant not found." };
+    }
+
+    if (applicant.status !== "AUDITION_BOOKING_OPEN") {
+      return { success: false, error: "Audition booking is not currently open for this applicant." };
+    }
+
+    // Use a transaction to ensure we don't overbook
+    return await prisma.$transaction(async (tx) => {
+      const session = await tx.recruitmentAuditionSession.findUnique({
+        where: { id: sessionId },
+        include: {
+          _count: { select: { applicants: true } }
+        }
+      });
+
+      if (!session) {
+        throw new Error("Session not found.");
+      }
+
+      if (session.maxCapacity && session._count.applicants >= session.maxCapacity) {
+        throw new Error("This session is already full.");
+      }
+
+      const updatedApplicant = await tx.recruitmentApplicant.update({
+        where: { id: applicant.id },
+        data: {
+          auditionSessionId: sessionId,
+          status: "AUDITION_SLOT_BOOKED",
+          statusHistory: {
+            create: {
+              fromStatus: "AUDITION_BOOKING_OPEN",
+              toStatus: "AUDITION_SLOT_BOOKED",
+              note: "Applicant booked an audition slot via portal."
+            }
+          }
+        }
+      });
+
+      return { success: true, applicant: updatedApplicant };
+    });
+  } catch (error: any) {
+    console.error("Failed to book audition session:", error);
+    return { success: false, error: error.message || "An unexpected error occurred." };
+  }
+}
