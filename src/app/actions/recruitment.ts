@@ -1114,7 +1114,8 @@ export async function getApplicantPortalData(applicantId: string) {
     }
 
     let availableSessions = null;
-    if (applicant.status === "AUDITION_BOOKING_OPEN") {
+    const bookingEligibleStatuses = ["AUDITION_BOOKING_OPEN", "AUDITION_INVITED", "SHORTLISTED"];
+    if (bookingEligibleStatuses.includes(applicant.status)) {
       // Fetch future events and sessions
       const events = await prisma.recruitmentAuditionEvent.findMany({
         where: { date: { gte: new Date() } },
@@ -1178,7 +1179,8 @@ export async function bookAuditionSession(applicantId: string, sessionId: string
       return { success: false, error: "Applicant not found." };
     }
 
-    if (applicant.status !== "AUDITION_BOOKING_OPEN") {
+    const bookingEligibleStatuses = ["AUDITION_BOOKING_OPEN", "AUDITION_INVITED", "SHORTLISTED"];
+    if (!bookingEligibleStatuses.includes(applicant.status)) {
       return { success: false, error: "Audition booking is not currently open for this applicant." };
     }
 

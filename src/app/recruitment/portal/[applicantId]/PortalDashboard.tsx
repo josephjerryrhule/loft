@@ -150,7 +150,8 @@ export function PortalDashboard({ initialData }: { initialData: any }) {
   };
 
   const applicant = data.applicant;
-  const isBookingOpen = applicant.status === "AUDITION_BOOKING_OPEN";
+  const bookingEligibleStatuses = ["AUDITION_BOOKING_OPEN", "AUDITION_INVITED", "SHORTLISTED"];
+  const isBookingOpen = bookingEligibleStatuses.includes(applicant.status);
   const hasBooked = ["AUDITION_SLOT_BOOKED", "AUDITION_CONFIRMED", "AUDITION_ATTENDED"].includes(applicant.status);
 
   return (
