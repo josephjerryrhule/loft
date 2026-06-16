@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { 
-  getAuditionEvents, 
+  getAuditionEventsForAdmin, 
   createAuditionEvent, 
   createAuditionSession, 
   deleteAuditionEvent,
+  releaseAuditionSlots,
   submitAuditionScore
 } from "@/app/actions/recruitment";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
-import { MapPin, Users, Plus, Trash2, Clock, Star, Loader2, ChevronLeft, ChevronRight, Video, FileText, CheckCircle2 } from "lucide-react";
+import { MapPin, Users, Plus, Trash2, Clock, Star, Loader2, ChevronLeft, ChevronRight, Video, FileText, CheckCircle2, Unlock, Lock, Megaphone } from "lucide-react";
 import { format, isSameDay, startOfDay } from "date-fns";
 import { AddApplicantToSessionDialog } from "./_components/AddApplicantToSessionDialog";
 
@@ -63,7 +64,7 @@ export default function AuditionsPage() {
   const loadEvents = async () => {
     setLoading(true);
     try {
-      const res = await getAuditionEvents();
+      const res = await getAuditionEventsForAdmin();
       if (!res.error && res.events) setEvents(res.events);
     } catch (err) {
       console.error(err);
@@ -98,6 +99,29 @@ export default function AuditionsPage() {
       await loadEvents();
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const [releasingEventId, setReleasingEventId] = useState<string | null>(null);
+
+  const handleReleaseSlots = async (eventId: string, release: boolean) => {
+    const action = release ? "release" : "close";
+    if (!confirm(`Are you sure you want to ${action} audition slots for this event?${release ? " Eligible applicants will be able to book." : " New bookings will be prevented."}`)) return;
+    
+    setReleasingEventId(eventId);
+    try {
+      const res = await releaseAuditionSlots(eventId, release);
+      if (res.error) {
+        alert(res.error);
+      } else {
+        alert(res.message);
+      }
+      await loadEvents();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update event.");
+    } finally {
+      setReleasingEventId(null);
     }
   };
 
@@ -299,15 +323,58 @@ export default function AuditionsPage() {
                   </div>
                   <div className="w-px h-12 bg-slate-200 mx-2" />
                   <div className="flex-1 flex items-center justify-between">
-                    <div>
-                      <h3 className="text-xl font-bold text-slate-900">{event.name}</h3>
-                      <p className="text-sm text-slate-500 font-medium flex items-center gap-1.5 mt-0.5">
-                        <MapPin className="w-3.5 h-3.5" /> {event.venue}
-                      </p>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <div>
+                        <h3 className="text-xl font-bold text-slate-900">{event.name}</h3>
+                        <p className="text-sm text-slate-500 font-medium flex items-center gap-1.5 mt-0.5">
+                          <MapPin className="w-3.5 h-3.5" /> {event.venue}
+                        </p>
+                      </div>
+                      {/* Released Status Badge */}
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${event.isReleased 
+                        ? "bg-emerald-100 text-emerald-700 border border-emerald-200" 
+                        : "bg-slate-100 text-slate-600 border border-slate-200"}`}>
+                        {event.isReleased ? (
+                          <>
+                            <Unlock className="w-3 h-3" />
+                            <span>Released</span>
+                          </>
+                        ) : (
+                          <>
+                            <Lock className="w-3 h-3" />
+                            <span>Not Released</span>
+                          </>
+                        )}
+                      </span>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteEvent(event.id)} className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleReleaseSlots(event.id, !event.isReleased)}
+                        disabled={releasingEventId === event.id}
+                        className={event.isReleased 
+                          ? "border-amber-300 text-amber-700 hover:bg-amber-50" 
+                          : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"}
+                      >
+                        {releasingEventId === event.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : event.isReleased ? (
+                          <>
+                            <Lock className="w-3.5 h-3.5 mr-1" />
+                            Close Booking
+                          </>
+                        ) : (
+                          <>
+                            <Megaphone className="w-3.5 h-3.5 mr-1" />
+                            Release Slots
+                          </>
+                        )}
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDeleteEvent(event.id)} className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
 

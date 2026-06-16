@@ -921,6 +921,115 @@ export async function getAuditionEvents() {
 }
 
 /**
+ * Get all audition events (including isReleased) for admin management.
+ * Returns a simplified version for the admin auditions page.
+ */
+export async function getAuditionEventsForAdmin() {
+  const { error } = await requireRecruitmentAdmin();
+  if (error) return { error };
+
+  const events = await prisma.recruitmentAuditionEvent.findMany({
+    select: {
+      id: true,
+      name: true,
+      date: true,
+      venue: true,
+      description: true,
+      maxCapacity: true,
+      isReleased: true,
+      createdAt: true,
+      sessions: {
+        select: {
+          id: true,
+          startTime: true,
+          endTime: true,
+          maxCapacity: true,
+          applicants: {
+            select: {
+              applicantId: true,
+              fullName: true,
+              phoneNumber: true,
+              status: true,
+            },
+          },
+          _count: {
+            select: { applicants: true },
+          },
+        },
+        orderBy: { startTime: "asc" },
+      },
+    },
+    orderBy: { date: "desc" },
+  });
+
+  return { events };
+}
+
+/**
+ * Release or close audition slots for an event.
+ * When released: eligible applicants (APPLICATION_SUBMITTED, AWAITING_AUDITION_SLOT_RELEASE) 
+ * are moved to AUDITION_BOOKING_OPEN so they can self-book.
+ * When closed: booking is closed but existing bookings remain.
+ */
+export async function releaseAuditionSlots(eventId: string, release: boolean) {
+  const { error } = await requireRecruitmentAdmin();
+  if (error) return { error };
+
+  const event = await prisma.recruitmentAuditionEvent.findUnique({
+    where: { id: eventId },
+    include: { sessions: true },
+  });
+
+  if (!event) return { error: "Event not found" };
+
+  // Update event released status
+  await prisma.recruitmentAuditionEvent.update({
+    where: { id: eventId },
+    data: { isReleased: release },
+  });
+
+  if (release) {
+    // Find applicants eligible for booking: APPLICATION_SUBMITTED or AWAITING_AUDITION_SLOT_RELEASE
+    // who don't already have a session assigned
+    const eligibleApplicants = await prisma.recruitmentApplicant.findMany({
+      where: {
+        status: { in: ["APPLICATION_SUBMITTED", "AWAITING_AUDITION_SLOT_RELEASE"] },
+        auditionSessionId: null,
+      },
+      select: { id: true, applicantId: true, status: true },
+    });
+
+    if (eligibleApplicants.length > 0) {
+      // Bulk update to AUDITION_BOOKING_OPEN
+      await prisma.recruitmentApplicant.updateMany({
+        where: { id: { in: eligibleApplicants.map((a) => a.id) } },
+        data: { status: "AUDITION_BOOKING_OPEN" },
+      });
+
+      // Create status history entries
+      await prisma.recruitmentStatusHistory.createMany({
+        data: eligibleApplicants.map((a) => ({
+          applicantId: a.id,
+          fromStatus: a.status,
+          toStatus: "AUDITION_BOOKING_OPEN",
+          changedBy: "SYSTEM",
+          note: `Audition slots released for event: ${event.name}`,
+        })),
+      });
+    }
+
+    return { 
+      success: true, 
+      message: `Slots released. ${eligibleApplicants.length} applicants can now book.`,
+      applicantsNotified: eligibleApplicants.length 
+    };
+  } else {
+    // Closing slots - no status change for applicants, just prevent new bookings
+    return { success: true, message: "Booking closed for this event." };
+  }
+}
+
+/**
  * Delete an audition event and all its sessions.
  */
 export async function deleteAuditionEvent(eventId: string) {
@@ -1116,9 +1225,12 @@ export async function getApplicantPortalData(applicantId: string) {
     let availableSessions = null;
     const bookingEligibleStatuses = ["AUDITION_BOOKING_OPEN", "AUDITION_INVITED", "SHORTLISTED"];
     if (bookingEligibleStatuses.includes(applicant.status)) {
-      // Fetch future events and sessions
+      // Fetch future RELEASED events and sessions only
       const events = await prisma.recruitmentAuditionEvent.findMany({
-        where: { date: { gte: new Date() } },
+        where: { 
+          date: { gte: new Date() },
+          isReleased: true
+        },
         include: {
           sessions: {
             include: {

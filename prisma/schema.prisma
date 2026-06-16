@@ -521,6 +521,7 @@ model RecruitmentAuditionEvent {
   venue       String
   description String?
   maxCapacity Int?                         @map("max_capacity")
+  isReleased  Boolean                      @default(false) @map("is_released")
   createdAt   DateTime                     @default(now()) @map("created_at")
   updatedAt   DateTime                     @updatedAt @map("updated_at")
 
