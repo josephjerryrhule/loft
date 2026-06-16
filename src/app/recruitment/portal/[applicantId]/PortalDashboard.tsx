@@ -177,57 +177,80 @@ export function PortalDashboard({ initialData }: { initialData: any }) {
               <CardTitle className="text-2xl font-black text-slate-900">Book Your Audition</CardTitle>
               <CardDescription>Select an available time slot below to confirm your audition.</CardDescription>
             </CardHeader>
-            <CardContent className="p-6 bg-slate-50/50">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {data.availableSessions.map((event: any) => (
-                  event.sessions.map((session: any) => (
-                    <div key={session.id} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-[#E87154] transition-colors">
-                      <div className="space-y-3 mb-4">
-                        <h4 className="font-bold text-lg text-slate-900">{event.name}</h4>
-                        <div className="space-y-1 text-sm text-slate-600">
-                          <div className="flex items-center gap-2"><Calendar className="w-4 h-4 text-[#E87154]" /> {format(new Date(event.date), "EEEE, MMMM do, yyyy")}</div>
-                          <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-[#E87154]" /> {format(new Date(session.startTime), "h:mm a")} - {format(new Date(session.endTime), "h:mm a")}</div>
-                          <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-[#E87154]" /> {event.venue}</div>
+              <CardContent className="p-6 bg-slate-50/50">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {data.availableSessions.map((event: any) => (
+                    event.sessions.map((session: any) => (
+                      <div key={session.id} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col hover:border-[#E87154] hover:shadow-md transition-all duration-200">
+                        <div className="space-y-3 mb-4">
+                          <h4 className="font-bold text-lg text-slate-900">{event.name}</h4>
+                          <div className="space-y-1.5 text-sm text-slate-600">
+                            <div className="flex items-center gap-2"><Calendar className="w-4 h-4 text-[#E87154]" /> {format(new Date(event.date), "EEEE, MMMM do, yyyy")}</div>
+                            <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-[#E87154]" /> {format(new Date(session.startTime), "h:mm a")} - {format(new Date(session.endTime), "h:mm a")}</div>
+                            <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-[#E87154]" /> {event.venue}</div>
+                          </div>
+                        </div>
+                        <div className="pt-2 border-t border-slate-100">
+                          <Button 
+                            onClick={() => handleBookSession(session.id)}
+                            disabled={isBooking !== null}
+                            className="w-full bg-[#E87154] hover:bg-[#D66144] text-white font-bold rounded-xl h-12 shadow-sm hover:shadow-md transition-all"
+                          >
+                            {isBooking === session.id ? (
+                              <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Booking...</>
+                            ) : (
+                              "Book this Slot"
+                            )}
+                          </Button>
                         </div>
                       </div>
-                      <Button 
-                        onClick={() => handleBookSession(session.id)}
-                        disabled={isBooking !== null}
-                        className="w-full bg-[#1a1a1a] hover:bg-black text-white font-bold rounded-lg"
-                      >
-                        {isBooking === session.id ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Booking...</> : "Book this Slot"}
-                      </Button>
-                    </div>
-                  ))
-                ))}
-              </div>
-            </CardContent>
+                    ))
+                  ))}
+                </div>
+              </CardContent>
           </Card>
         )}
 
         {isBookingOpen && data.availableSessions?.length === 0 && (
-          <Card className="border-slate-200 shadow-sm rounded-2xl overflow-hidden">
+          <Card className="border-slate-200 shadow-sm rounded-2xl overflow-hidden bg-slate-50 border-amber-200">
             <CardContent className="p-8 text-center text-slate-600">
-              <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-8 h-8 text-amber-500" />
+              </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">No Slots Available</h3>
-              <p>Audition booking is open, but all currently released slots are full. Please check back later.</p>
+              <p className="text-slate-600 max-w-md mx-auto">Audition booking is open, but all currently released slots are full. Please check back later.</p>
             </CardContent>
           </Card>
         )}
 
-        {hasBooked && (
-          <Card className="border-slate-200 shadow-xl rounded-2xl overflow-hidden border-t-4 border-t-emerald-500">
-            <CardContent className="p-8 flex items-start gap-4">
-              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center shrink-0">
-                <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+        {hasBooked && data.applicant.auditionSession && (
+          <Card className="border-slate-200 shadow-xl rounded-2xl overflow-hidden border-t-4 border-t-emerald-500 bg-gradient-to-br from-emerald-50 to-white">
+            <CardContent className="p-6 md:p-8">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-emerald-100 rounded-2xl flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-7 h-7 text-emerald-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl md:text-2xl font-black text-slate-900">Audition Booked</h3>
+                    <p className="text-slate-600 mt-1 max-w-md">
+                      Your audition slot has been successfully confirmed. We look forward to seeing you!
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-emerald-100 text-center md:text-left min-w-[240px]">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Your Session</p>
+                  <p className="font-bold text-slate-900">{data.applicant.auditionSession.event?.name || "Audition Session"}</p>
+                  <div className="flex flex-wrap items-center gap-3 mt-3 text-sm text-slate-600">
+                    <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-[#E87154]" /> {format(new Date(data.applicant.auditionSession.event?.date), "MMM do, yyyy")}</span>
+                    <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-[#E87154]" /> {format(new Date(data.applicant.auditionSession.startTime), "h:mm a")}</span>
+                    <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-[#E87154]" /> {data.applicant.auditionSession.event?.venue}</span>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h3 className="text-xl font-bold text-slate-900 mb-1">Audition Booked</h3>
-                <p className="text-slate-600">
-                  Your audition slot has been successfully confirmed. We look forward to seeing you. 
-                  Remember to use the Facilitator Preparation Library to get ready!
-                </p>
-              </div>
+              <p className="text-slate-500 text-sm mt-6 text-center md:text-left">
+                Remember to use the <span className="font-bold text-[#E87154]">Facilitator Preparation Library</span> below to get ready!
+              </p>
             </CardContent>
           </Card>
         )}
