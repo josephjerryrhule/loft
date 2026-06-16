@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { BookOpen, Calendar, Clock, MapPin, Loader2, CheckCircle2, Lock, Eye, AlertCircle } from "lucide-react";
+import { BookOpen, Calendar, Clock, MapPin, Loader2, CheckCircle2, Lock, Eye, AlertCircle, LogOut, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import { bookAuditionSession } from "@/app/actions/recruitment";
+import Link from "next/link";
 
 const ReliableFlipbookViewer = dynamic(
   () => import("@/components/flipbook/ReliableFlipbookViewer").then((mod) => mod.ReliableFlipbookViewer),
@@ -162,9 +163,15 @@ export function PortalDashboard({ initialData }: { initialData: any }) {
             <h1 className="text-3xl sm:text-4xl font-black mb-2">Welcome, {applicant.fullName}</h1>
             <p className="text-purple-200 font-mono text-lg tracking-wider">{applicant.applicantId}</p>
           </div>
-          <Badge className="px-4 py-2 text-sm font-bold uppercase tracking-widest bg-white/20 hover:bg-white/30 border-none text-white backdrop-blur-sm">
-            Status: {getStatusLabel(applicant.status)}
-          </Badge>
+          <div className="flex items-center gap-4 flex-wrap">
+            <Badge className="px-4 py-2.5 text-sm font-bold uppercase tracking-widest bg-white text-[#4B2E83] border-none shadow-lg">
+              {getStatusLabel(applicant.status)}
+            </Badge>
+            <Link href="/recruitment/portal" className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl transition-colors backdrop-blur-sm border border-white/20">
+              <Home className="w-4 h-4" />
+              <span className="hidden sm:inline">Back to Portal</span>
+            </Link>
+          </div>
         </div>
       </div>
 
