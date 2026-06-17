@@ -519,6 +519,7 @@ model RecruitmentAuditionEvent {
   name        String
   date        DateTime
   venue       String
+  locationUrl String?                      @map("location_url")
   description String?
   maxCapacity Int?                         @map("max_capacity")
   isReleased  Boolean                      @default(false) @map("is_released")

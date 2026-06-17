@@ -151,9 +151,9 @@ export function PortalDashboard({ initialData }: { initialData: any }) {
   };
 
   const applicant = data.applicant;
-  const bookingEligibleStatuses = ["AUDITION_BOOKING_OPEN", "AUDITION_INVITED", "SHORTLISTED"];
-  const isBookingOpen = bookingEligibleStatuses.includes(applicant.status);
   const hasBooked = ["AUDITION_SLOT_BOOKED", "AUDITION_CONFIRMED", "AUDITION_ATTENDED"].includes(applicant.status);
+  const areSlotsAvailable = data.availableSessions && data.availableSessions.length > 0;
+  const isBookingOpen = areSlotsAvailable || ["AUDITION_BOOKING_OPEN", "AUDITION_INVITED", "SHORTLISTED"].includes(applicant.status);
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -178,7 +178,7 @@ export function PortalDashboard({ initialData }: { initialData: any }) {
       <div className="max-w-6xl mx-auto px-4 -mt-8 space-y-8">
         
         {/* Booking Section */}
-        {isBookingOpen && data.availableSessions && data.availableSessions.length > 0 && (
+        {!hasBooked && areSlotsAvailable && (
           <Card className="border-slate-200 shadow-xl rounded-2xl overflow-hidden border-t-4 border-t-[#E87154]">
             <CardHeader className="bg-white pb-4 border-b border-slate-100">
               <CardTitle className="text-2xl font-black text-slate-900">Book Your Audition</CardTitle>
@@ -194,7 +194,7 @@ export function PortalDashboard({ initialData }: { initialData: any }) {
                           <div className="space-y-1.5 text-sm text-slate-600">
                             <div className="flex items-center gap-2"><Calendar className="w-4 h-4 text-[#E87154]" /> {format(new Date(event.date), "EEEE, MMMM do, yyyy")}</div>
                             <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-[#E87154]" /> {format(new Date(session.startTime), "h:mm a")} - {format(new Date(session.endTime), "h:mm a")}</div>
-                            <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-[#E87154]" /> {event.venue}</div>
+                            <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-[#E87154]" /> <a href={event.locationUrl || `https://maps.google.com/?q=${encodeURIComponent(event.venue)}`} target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-[#E87154] transition-colors">{event.venue}</a></div>
                           </div>
                         </div>
                         <div className="pt-2 border-t border-slate-100">
@@ -218,14 +218,15 @@ export function PortalDashboard({ initialData }: { initialData: any }) {
           </Card>
         )}
 
-        {isBookingOpen && data.availableSessions?.length === 0 && (
+        {!hasBooked && !areSlotsAvailable && (
           <Card className="border-slate-200 shadow-sm rounded-2xl overflow-hidden bg-slate-50 border-amber-200">
             <CardContent className="p-8 text-center text-slate-600">
               <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <AlertCircle className="w-8 h-8 text-amber-500" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">No Slots Available</h3>
-              <p className="text-slate-600 max-w-md mx-auto">Audition booking is open, but all currently released slots are full. Please check back later.</p>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Awaiting Audition Dates</h3>
+              <p className="text-slate-600 max-w-lg mx-auto leading-relaxed">We are currently finalizing audition dates and schedules. Auditions are expected to take place in August; however, it is very possible that auditions may begin sooner than that.</p>
+              <p className="text-slate-600 max-w-lg mx-auto mt-4 leading-relaxed font-medium">As soon as audition slots become available, we will notify you via both email and WhatsApp. You will then be able to book your preferred audition slot right here.</p>
             </CardContent>
           </Card>
         )}
@@ -251,7 +252,7 @@ export function PortalDashboard({ initialData }: { initialData: any }) {
                   <div className="flex flex-wrap items-center gap-3 mt-3 text-sm text-slate-600">
                     <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-[#E87154]" /> {format(new Date(data.applicant.auditionSession.event?.date), "MMM do, yyyy")}</span>
                     <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-[#E87154]" /> {format(new Date(data.applicant.auditionSession.startTime), "h:mm a")}</span>
-                    <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-[#E87154]" /> {data.applicant.auditionSession.event?.venue}</span>
+                    <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-[#E87154]" /> <a href={data.applicant.auditionSession.event?.locationUrl || `https://maps.google.com/?q=${encodeURIComponent(data.applicant.auditionSession.event?.venue || '')}`} target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-[#E87154] transition-colors">{data.applicant.auditionSession.event?.venue}</a></span>
                   </div>
                 </div>
               </div>

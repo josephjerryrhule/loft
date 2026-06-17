@@ -934,29 +934,58 @@ export async function sendRecruitmentConfirmationEmail(data: {
   const branding = await getBranding();
 
   const content = `
-    <h2>Application Received! 🎉</h2>
-    <p>Dear ${data.fullName},</p>
-    <p>Thank you for applying to become a <strong>LOFT Reading Club Facilitator</strong>. Your application and payment have been successfully received.</p>
+    <h2>APPLICATION RECEIVED</h2>
+    <p>Thank you for completing your LOFT Reading Club Facilitator Application.</p>
+    <p>Your application and payment have been received successfully.</p>
     
     <div class="info-box">
-      <p><strong>Application ID:</strong> ${data.applicantId}</p>
-      <p><strong>Status:</strong> <span class="status-badge status-completed">Application Submitted</span></p>
-      <p><strong>Payment:</strong> <span class="status-badge status-active">GHC 100 — Paid</span></p>
+      <p><strong>Your Applicant ID is:</strong></p>
+      <p style="font-size: 24px; font-weight: bold; font-family: monospace; letter-spacing: 2px;">${data.applicantId}</p>
+      <p style="font-size: 14px; margin-top: 10px;">Please keep this Applicant ID safe, as it will be used throughout the recruitment process and to access your Facilitator Preparation Library.</p>
     </div>
     
-    <h3>What Happens Next?</h3>
-    <ol>
-      <li><strong>Audition Invitation:</strong> You are officially invited to audition! Everyone who successfully applies and pays is invited.</li>
-      <li><strong>Audition Dates:</strong> We are currently finalizing our audition dates. Once they are released, you will receive an email and a WhatsApp message notifying you.</li>
-      <li><strong>Booking Your Slot:</strong> You will be required to log into the Applicant Portal using your Application ID to book your preferred audition slot.</li>
-      <li><strong>Preparation:</strong> You now have exclusive 1-month access to our Facilitator Preparation Library via the portal to help you prepare.</li>
-    </ol>
+    <h3>WHAT HAPPENS NEXT?</h3>
+    <p>The next stage of the recruitment process is a physical audition.</p>
+    <p>We are currently finalizing audition dates and schedules. Auditions are expected to take place in August; however, it is very possible that auditions may begin sooner than that.</p>
+    <p>For this reason, we encourage you to begin preparing immediately and remain attentive to all communications from the LOFT team.</p>
+    <p>As soon as audition slots become available, we will notify you via both email and WhatsApp using the contact information you provided.</p>
+    <p>Once notified, you will be able to return to the recruitment portal and book your preferred audition slot from the available options.</p>
+    <p><strong>Please keep an eye on your email and WhatsApp messages and be ready when booking opens.</strong></p>
     
-    <p><strong>Important:</strong> Please save your Application ID (<code>${data.applicantId}</code>) for your records. You can use it to log into the <a href="${branding.siteUrl}/recruitment/portal">Applicant Portal</a>.</p>
+    <h3>FACILITATOR PREPARATION LIBRARY</h3>
+    <p>To help you prepare, your Applicant ID has unlocked complimentary access to the LOFT Facilitator Preparation Library for one month.</p>
+    <p>We strongly encourage you to:</p>
+    <ul>
+      <li>Read the books available in the library</li>
+      <li>Become familiar with the LOFT reading experience</li>
+      <li>Explore the LOFT platform</li>
+      <li>Learn more about the LOFT brand and mission</li>
+      <li>Practice reading aloud, storytelling, and voice acting</li>
+    </ul>
+    <p><em>Please note that books and materials from the Preparation Library may be used during the audition process.</em></p>
     
-    <p style="font-size: 14px; color: #666; margin-top: 30px;">
-      If you have any questions, feel free to contact us.
+    <p style="text-align: center; margin: 30px 0;">
+      <a href="${branding.siteUrl}/recruitment/portal/${data.applicantId}" class="button">Access Preparation Library</a>
     </p>
+
+    <h3>STAY CONNECTED</h3>
+    <p>We also encourage you to follow LOFT on all our social media platforms to stay updated on announcements, activities, important recruitment updates, and opportunities within the LOFT community.</p>
+    <p>
+      <a href="https://instagram.com/landoffairytales" style="margin-right: 15px;">Instagram</a>
+      <a href="https://twitter.com/loft_kids" style="margin-right: 15px;">X (Twitter)</a>
+      <a href="https://linkedin.com/company/landoffairytales">LinkedIn</a>
+    </p>
+
+    <h3>NEED HELP?</h3>
+    <p>If you have any questions, concerns, or require assistance at any stage of the recruitment process, please feel free to reach out to us.</p>
+    <p>Our team will be happy to assist you.</p>
+    <p><strong>Email:</strong> <a href="mailto:hello@landoffairytales.com">hello@landoffairytales.com</a><br>
+    <strong>WhatsApp / Phone:</strong> <a href="tel:0559922299">0559922299</a></p>
+    <p>Please don't hesitate to contact us if you need clarification or support.</p>
+    
+    <p>Thank you again for your interest in becoming a LOFT Reading Club Facilitator.</p>
+    <p>We look forward to meeting you at the auditions.</p>
+    <p><strong>The LOFT Team</strong></p>
   `;
 
   return sendEmail({
@@ -1007,7 +1036,7 @@ export async function sendAuditionInvitationEmail(data: {
     <p>Please log into the Applicant Portal using your Application ID to book your preferred audition slot:</p>
     
     <p style="text-align: center; margin: 30px 0;">
-      <a href="${branding.siteUrl}/recruitment/portal" class="button">Log into Applicant Portal</a>
+      <a href="${branding.siteUrl}/recruitment/portal/${data.applicantId}" class="button">Log into Applicant Portal</a>
     </p>
     
     <p style="font-size: 14px; color: #666; margin-top: 30px;">
