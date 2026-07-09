@@ -25,16 +25,39 @@ export async function POST(request: NextRequest) {
     if (event.event === "charge.success") {
       const { reference, amount, customer, metadata } = event.data;
 
+      // Resolve a valid user ID if possible to satisfy foreign key constraint
+      let activeUserId: string | null = null;
+      if (metadata?.userId) {
+        const user = await prisma.user.findUnique({
+          where: { id: metadata.userId },
+          select: { id: true },
+        });
+        if (user) {
+          activeUserId = user.id;
+        }
+      }
+      if (!activeUserId && customer?.email) {
+        const user = await prisma.user.findUnique({
+          where: { email: customer.email },
+          select: { id: true },
+        });
+        if (user) {
+          activeUserId = user.id;
+        }
+      }
+
       // Log webhook event
       await prisma.activityLog.create({
         data: {
-          userId: metadata?.userId || customer.email,
+          userId: activeUserId,
           actionType: "PAYMENT_RECEIVED",
           actionDetails: JSON.stringify({
             reference,
-            amount: amount / 100, // Convert from pesewas
+            amount: (amount || 0) / 100, // Convert from pesewas
             type: metadata?.type,
             itemId: metadata?.itemId || metadata?.planId || metadata?.productId,
+            email: customer?.email,
+            applicantId: metadata?.applicantId,
           }),
         },
       });
