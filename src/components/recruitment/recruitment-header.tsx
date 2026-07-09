@@ -57,10 +57,10 @@ export function RecruitmentHeader() {
           <Link href="/recruitment/portal">
             <Button 
               variant="outline" 
-              className={`text-sm font-bold rounded-full transition-colors duration-300 ${
+              className={`text-sm font-bold rounded-full transition-all duration-300 ${
                 scrolled 
                   ? "border-[#4B2E83] text-[#4B2E83] hover:bg-[#4B2E83] hover:text-white" 
-                  : "border-white/50 text-white hover:bg-white/20"
+                  : "bg-transparent border-white/50 text-white hover:bg-white hover:text-[#4B2E83]"
               }`}
             >
               Applicant Portal

@@ -14,7 +14,12 @@ const ALLOWED_REMOTE_DOMAINS = [
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
-    if (!session?.user) {
+    
+    // Allow access if the user has an active session OR if the request originates from the recruitment portal
+    const referer = request.headers.get("referer");
+    const isRecruitmentPortal = referer?.includes("/recruitment/portal/") || referer?.includes("/recruitment/confirm-audition/");
+    
+    if (!session?.user && !isRecruitmentPortal) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

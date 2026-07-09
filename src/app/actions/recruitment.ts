@@ -1250,11 +1250,10 @@ export async function getApplicantPortalData(applicantId: string) {
       })).filter(event => event.sessions.length > 0);
     }
 
-    // Fetch library flipbooks
+    // Fetch library flipbooks (retrieve all published books for a diverse prep library)
     const libraryFlipbooks = await prisma.flipbook.findMany({
       where: {
         isPublished: true,
-        isFree: true, // For now, use free published flipbooks as the preparation library
       },
       orderBy: { createdAt: "desc" },
     });
