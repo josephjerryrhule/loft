@@ -1447,24 +1447,75 @@ export async function syncAllApplicantsToSheets() {
     const { error } = await requireRecruitmentAdmin();
     if (error) return { error };
 
+    const { getSystemSettingsServerSecret } = await import("@/app/actions/settings");
+    const settings = await getSystemSettingsServerSecret();
+    const webhookUrl = process.env.GOOGLE_SHEETS_WEBHOOK_URL || settings.googleSheetsWebhookUrl;
+
+    if (!webhookUrl) {
+      console.warn("Google Sheets Webhook URL is not configured.");
+      return { error: "Google Sheets Webhook URL is not configured." };
+    }
+
     const applicants = await prisma.recruitmentApplicant.findMany({
-      select: { applicantId: true },
+      include: {
+        auditionScores: {
+          select: { totalScore: true },
+        },
+      },
       orderBy: { createdAt: "asc" },
     });
 
-    let successCount = 0;
-    let failCount = 0;
+    const payloads = applicants.map((applicant) => {
+      const avgScore =
+        applicant.auditionScores.length > 0
+          ? Math.round(
+              applicant.auditionScores.reduce((sum, s) => sum + s.totalScore, 0) /
+                applicant.auditionScores.length
+            )
+          : "";
 
-    for (const applicant of applicants) {
-      const res = await syncApplicantToSheets(applicant.applicantId);
-      if (res.success) {
-        successCount++;
-      } else {
-        failCount++;
-      }
+      return {
+        applicantId: applicant.applicantId,
+        fullName: applicant.fullName,
+        age: applicant.age,
+        gender: applicant.gender,
+        phoneNumber: applicant.phoneNumber,
+        whatsappNumber: applicant.whatsappNumber,
+        email: applicant.email || "",
+        townCity: applicant.townCity,
+        region: applicant.region,
+        highestEducation: applicant.highestEducation,
+        status: applicant.status,
+        paymentStatus: applicant.paymentStatus,
+        averageScore: avgScore,
+        appliedAt: new Date(applicant.createdAt).toLocaleDateString(),
+      };
+    });
+
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payloads),
+    });
+
+    if (!response.ok) {
+      console.error(`Failed to post batch to Google Sheets webhook: ${response.status} ${response.statusText}`);
+      return { error: `Webhook error: ${response.statusText}` };
     }
 
-    return { success: true, successCount, failCount };
+    const resText = await response.text();
+    let resJson: any = {};
+    try {
+      resJson = JSON.parse(resText);
+    } catch (_) {}
+
+    if (resJson.result === "error") {
+      return { error: resJson.error || "Google Apps Script error" };
+    }
+
+    return { success: true, successCount: payloads.length, failCount: 0 };
   } catch (error: any) {
     console.error("Failed to bulk sync applicants to Google Sheets:", error);
     return { error: error.message || "An unexpected error occurred." };
