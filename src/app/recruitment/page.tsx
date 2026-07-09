@@ -145,13 +145,13 @@ export default function RecruitmentPage() {
           <SquiggleLeft />
           <SquiggleRight />
           <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-white tracking-[-0.03em] leading-[1.05] font-['var(--font-quicksand)',_sans-serif]">
-            Inspire a love for reading <br />
-            with our <span className="relative">clubs
+            Inspire confidence <br />
+            through our <span className="relative">programs
               <svg className="absolute -bottom-2 left-0 w-full h-3 text-[#E87154] opacity-90" viewBox="0 0 100 20" preserveAspectRatio="none"><path d="M0 15Q25 5 50 15T100 15" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round"/></svg>
             </span>
           </h1>
           <p className="text-base sm:text-lg text-purple-100 font-medium max-w-xl mx-auto leading-relaxed pt-2">
-            Help children fall in love with reading through fun, interactive sessions. Join our team of passionate facilitators making a lifelong difference.
+            Help children build confidence through fun, interactive sessions that use storytelling, creativity, and collaboration. Join our team of passionate facilitators making a lifelong difference.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 pb-12 w-full max-w-md mx-auto sm:max-w-none">
@@ -277,7 +277,7 @@ export default function RecruitmentPage() {
             </div>
             <h3 className="text-xl font-bold text-slate-900 mb-3">Creative Improvisation</h3>
             <p className="text-sm text-slate-500 font-medium leading-relaxed px-4">
-              Children are unpredictable! We assess your ability to adapt, pivot, and turn unexpected moments into magical learning opportunities.
+              Children are unpredictable! We assess your ability to adapt, pivot, and turn unexpected moments into meaningful confidence-building opportunities.
             </p>
           </div>
 

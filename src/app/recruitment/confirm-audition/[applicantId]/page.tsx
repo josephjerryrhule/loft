@@ -9,7 +9,7 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Confirm Audition | LOFT",
-  description: "Confirm your attendance for the LOFT Reading Club audition.",
+  description: "Confirm your attendance for the LOFT Confidence Program audition.",
 };
 
 export default async function ConfirmAuditionPage({

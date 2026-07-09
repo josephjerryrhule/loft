@@ -474,7 +474,7 @@ export default function ApplyPage() {
             {currentStep === 4 && (
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <Label>Why do you want to become a LOFT Reading Club Facilitator? *</Label>
+                  <Label>Why do you want to become a LOFT Confidence Program Facilitator? *</Label>
                   <Controller name="whyFacilitator" control={control} render={({ field }) => (
                     <Textarea {...field} className="min-h-[120px] rounded-xl resize-none" />
                   )} />

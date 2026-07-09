@@ -32,7 +32,7 @@ export default async function PaymentCallbackPage({
               </div>
               <h1 className="text-2xl font-black text-green-900 mb-2 uppercase tracking-wide">Application Received</h1>
               <p className="text-green-700 font-medium">
-                Thank you for completing your LOFT Reading Club Facilitator Application. Your application and payment have been received successfully.
+                Thank you for completing your LOFT Confidence Program Facilitator Application. Your application and payment have been received successfully.
               </p>
             </div>
             
@@ -107,7 +107,7 @@ export default async function PaymentCallbackPage({
                   <p className="mt-3">Please don't hesitate to contact us if you need clarification or support.</p>
                 </div>
                 <div className="text-center sm:text-left mt-6">
-                  <p>Thank you again for your interest in becoming a LOFT Reading Club Facilitator.</p>
+                  <p>Thank you again for your interest in becoming a LOFT Confidence Program Facilitator.</p>
                   <p className="mt-1">We look forward to meeting you at the auditions.</p>
                   <p className="mt-4 font-bold">The LOFT Team</p>
                 </div>

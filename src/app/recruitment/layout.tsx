@@ -4,9 +4,9 @@ import Image from "next/image";
 import { RecruitmentHeader } from "@/components/recruitment/recruitment-header";
 
 export const metadata = {
-  title: "Become a LOFT Reading Club Facilitator",
+  title: "Become a LOFT Confidence Program Facilitator",
   description:
-    "Apply to become a LOFT Reading Club Facilitator. Help children fall in love with reading through fun, interactive sessions.",
+    "Apply to become a LOFT Confidence Program Facilitator. Help children build confidence through fun, interactive sessions.",
 };
 
 export default function RecruitmentLayout({
@@ -33,7 +33,7 @@ export default function RecruitmentLayout({
                 <Image src="/logo-v2.png" alt="LOFT Logo" width={24} height={24} className="object-contain" />
               </div>
               <span className="text-sm font-bold text-slate-700">
-                LOFT Reading Club
+                LOFT | Land of Fairy Tales
               </span>
             </div>
             <p className="text-xs text-slate-400 font-medium">

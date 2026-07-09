@@ -935,7 +935,7 @@ export async function sendRecruitmentConfirmationEmail(data: {
 
   const content = `
     <h2>APPLICATION RECEIVED</h2>
-    <p>Thank you for completing your LOFT Reading Club Facilitator Application.</p>
+    <p>Thank you for completing your LOFT Confidence Program Facilitator Application.</p>
     <p>Your application and payment have been received successfully.</p>
     
     <div class="info-box">
@@ -983,7 +983,7 @@ export async function sendRecruitmentConfirmationEmail(data: {
     <strong>WhatsApp / Phone:</strong> <a href="tel:0559922299">0559922299</a></p>
     <p>Please don't hesitate to contact us if you need clarification or support.</p>
     
-    <p>Thank you again for your interest in becoming a LOFT Reading Club Facilitator.</p>
+    <p>Thank you again for your interest in becoming a LOFT Confidence Program Facilitator.</p>
     <p>We look forward to meeting you at the auditions.</p>
     <p><strong>The LOFT Team</strong></p>
   `;
@@ -1021,7 +1021,7 @@ export async function sendAuditionInvitationEmail(data: {
   const content = `
     <h2>Audition Dates Released 📅</h2>
     <p>Dear ${data.fullName},</p>
-    <p>We are pleased to inform you that the audition dates for the LOFT Reading Club Facilitator role have been finalized and released.</p>
+    <p>We are pleased to inform you that the audition dates for the LOFT Confidence Program Facilitator role have been finalized and released.</p>
     <p>Our auditions are professional, structured, engaging, and enjoyable. Facilitators may be scheduled at any time between 10:00 AM and 6:00 PM.</p>
     
     ${eventDetails}
@@ -1046,7 +1046,7 @@ export async function sendAuditionInvitationEmail(data: {
 
   return sendEmail({
     to: data.email,
-    subject: `Audition Invitation — LOFT Reading Club Facilitator — ${branding.platformName}`,
+    subject: `Audition Invitation — LOFT Confidence Program Facilitator — ${branding.platformName}`,
     html: emailWrapper(content, branding.platformName, branding.logoUrl),
   });
 }
@@ -1063,7 +1063,7 @@ export async function sendPaymentReminderEmail(data: {
   const content = `
     <h2>Complete Your Application 📋</h2>
     <p>Dear ${data.fullName},</p>
-    <p>We noticed that you started your application to become a <strong>LOFT Reading Club Facilitator</strong> but haven't completed the payment yet.</p>
+    <p>We noticed that you started your application to become a <strong>LOFT Confidence Program Facilitator</strong> but haven't completed the payment yet.</p>
     
     <div class="info-box">
       <p><strong>Application ID:</strong> ${data.applicantId}</p>
