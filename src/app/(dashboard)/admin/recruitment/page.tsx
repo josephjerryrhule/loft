@@ -7,8 +7,10 @@ import {
   Users, CreditCard, FileText, Search, Eye, Clock, CheckCircle2,
   XCircle, UserCheck, Mic, Star, Award, Download, Filter,
   ChevronLeft, ChevronRight, BarChart3, TrendingUp, Percent,
-  CalendarCheck, Loader2, RefreshCw, MessageSquare, Paperclip, MoreHorizontal
+  CalendarCheck, Loader2, RefreshCw, MessageSquare, Paperclip, MoreHorizontal,
+  Share2
 } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +24,7 @@ import {
   getRecruitmentAnalytics,
   exportApplicants,
   getAuditionEvents,
+  syncAllApplicantsToSheets,
 } from "@/app/actions/recruitment";
 import { RECRUITMENT_STATUSES } from "@/lib/recruitment-constants";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
@@ -113,6 +116,27 @@ export default function RecruitmentDashboardPage() {
     a.download = `recruitment-export-${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const [syncing, setSyncing] = useState(false);
+
+  const handleSyncToSheets = async () => {
+    if (!confirm("Are you sure you want to sync all applicants to Google Sheets? This will update or add all entries in real-time.")) {
+      return;
+    }
+    setSyncing(true);
+    try {
+      const res = await syncAllApplicantsToSheets();
+      if ("error" in res && res.error) {
+        toast.error(`Sync failed: ${res.error}`);
+      } else if ("successCount" in res) {
+        toast.success(`Successfully synced ${res.successCount} applicants to Google Sheets (${res.failCount} failed).`);
+      }
+    } catch (err: any) {
+      toast.error(`Sync error: ${err.message || "An unexpected error occurred."}`);
+    } finally {
+      setSyncing(false);
+    }
   };
 
   const toggleSelect = (id: string) => {
@@ -375,6 +399,9 @@ export default function RecruitmentDashboardPage() {
                       {RECRUITMENT_STATUSES.map((s) => (<SelectItem key={s} value={s}>{STATUS_CONFIG[s]?.label || s}</SelectItem>))}
                     </SelectContent>
                   </Select>
+                  <Button variant="outline" size="sm" onClick={handleSyncToSheets} className="gap-2 h-9 rounded-lg" disabled={syncing}>
+                    <Share2 size={14} /> {syncing ? "Syncing..." : "Sync Sheets"}
+                  </Button>
                   <Button variant="outline" size="sm" onClick={handleExport} className="gap-2 h-9 rounded-lg"><Download size={14} /> Export</Button>
                 </div>
               </div>

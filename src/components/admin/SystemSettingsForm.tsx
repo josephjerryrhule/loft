@@ -149,6 +149,10 @@ export function SystemSettingsForm({ settings }: SystemSettingsFormProps) {
                                 <Label htmlFor="supportEmail" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Support Email</Label>
                                 <Input id="supportEmail" name="supportEmail" defaultValue={settings.supportEmail || ""} placeholder="support@example.com" className="h-12 bg-stone-50 border-none rounded-xl font-bold focus-visible:ring-[#E87154] shadow-inner px-4" />
                             </div>
+                            <div className="space-y-3">
+                                <Label htmlFor="googleSheetsWebhookUrl" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Google Sheets Webhook URL</Label>
+                                <PasswordInput id="googleSheetsWebhookUrl" name="googleSheetsWebhookUrl" defaultValue={settings.googleSheetsWebhookUrl || ""} placeholder="https://script.google.com/macros/s/..." className="h-12 bg-stone-50 border-none rounded-xl font-mono text-sm focus-visible:ring-[#E87154] shadow-inner px-4" />
+                            </div>
                         </CardContent>
                     </Card>
                 </TabsContent>

@@ -118,6 +118,7 @@ const SECRET_SETTING_KEYS = new Set([
     "stripeLiveWebhookSecret",
     "paypalTestClientSecret",
     "paypalLiveClientSecret",
+    "googleSheetsWebhookUrl",
 ]);
 
 export async function updateSystemSettings(formData: FormData) {

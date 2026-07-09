@@ -191,6 +191,9 @@ export async function submitApplication(
       },
     });
 
+    // Sync to Google Sheets in background
+    syncApplicantToSheets(applicant.applicantId).catch(console.error);
+
     return { success: true, applicantId: applicant.applicantId };
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -341,6 +344,9 @@ export async function processRecruitmentPayment(reference: string, applicantIdFr
         console.error("Failed to send recruitment confirmation email:", emailErr);
       }
     }
+
+    // Sync to Google Sheets in background
+    syncApplicantToSheets(applicant.applicantId).catch(console.error);
 
     return { success: true };
   } catch (error) {
@@ -614,6 +620,9 @@ export async function updateApplicantStatus(
     }
   }
 
+  // Sync to Google Sheets in background
+  syncApplicantToSheets(applicantId).catch(console.error);
+
   return { success: true };
 }
 
@@ -676,6 +685,9 @@ export async function bulkUpdateStatus(
         note: note || `Bulk status update`,
       },
     });
+
+    // Sync to Google Sheets in background
+    syncApplicantToSheets(applicant.applicantId).catch(console.error);
   }
 
   return { success: true, count: applicants.length };
@@ -884,6 +896,9 @@ export async function submitAuditionScore(data: {
       attended: data.attended,
     },
   });
+
+  // Sync to Google Sheets in background
+  syncApplicantToSheets(data.applicantId).catch(console.error);
 
   return { success: true, score };
 }
@@ -1194,6 +1209,9 @@ export async function confirmAuditionAttendance(applicantId: string) {
     },
   });
 
+  // Sync to Google Sheets in background
+  syncApplicantToSheets(applicantId).catch(console.error);
+
   return { success: true };
 }
 
@@ -1297,7 +1315,7 @@ export async function bookAuditionSession(applicantId: string, sessionId: string
     }
 
     // Use a transaction to ensure we don't overbook
-    return await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       const session = await tx.recruitmentAuditionSession.findUnique({
         where: { id: sessionId },
         include: {
@@ -1330,8 +1348,125 @@ export async function bookAuditionSession(applicantId: string, sessionId: string
 
       return { success: true, applicant: updatedApplicant };
     });
+
+    if (result.success) {
+      syncApplicantToSheets(applicantId).catch(console.error);
+    }
+
+    return result;
   } catch (error: any) {
     console.error("Failed to book audition session:", error);
     return { success: false, error: error.message || "An unexpected error occurred." };
+  }
+}
+
+/**
+ * Syncs an applicant's data to the Google Sheets webhook in real-time.
+ */
+export async function syncApplicantToSheets(applicantId: string) {
+  try {
+    const { getSystemSettingsServerSecret } = await import("@/app/actions/settings");
+    const settings = await getSystemSettingsServerSecret();
+    const webhookUrl = process.env.GOOGLE_SHEETS_WEBHOOK_URL || settings.googleSheetsWebhookUrl;
+
+    if (!webhookUrl) {
+      console.warn("Google Sheets Webhook URL is not configured.");
+      return { success: false, error: "Webhook URL not configured" };
+    }
+
+    const applicant = await prisma.recruitmentApplicant.findUnique({
+      where: { applicantId },
+      include: {
+        auditionScores: {
+          select: { totalScore: true },
+        },
+      },
+    });
+
+    if (!applicant) {
+      console.error(`Applicant with ID ${applicantId} not found for Google Sheets sync.`);
+      return { success: false, error: "Applicant not found" };
+    }
+
+    const avgScore =
+      applicant.auditionScores.length > 0
+        ? Math.round(
+            applicant.auditionScores.reduce((sum, s) => sum + s.totalScore, 0) /
+              applicant.auditionScores.length
+          )
+        : "";
+
+    const payload = {
+      applicantId: applicant.applicantId,
+      fullName: applicant.fullName,
+      age: applicant.age,
+      gender: applicant.gender,
+      phoneNumber: applicant.phoneNumber,
+      whatsappNumber: applicant.whatsappNumber,
+      email: applicant.email || "",
+      townCity: applicant.townCity,
+      region: applicant.region,
+      highestEducation: applicant.highestEducation,
+      status: applicant.status,
+      paymentStatus: applicant.paymentStatus,
+      averageScore: avgScore,
+      appliedAt: new Date(applicant.createdAt).toLocaleDateString(),
+    };
+
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      console.error(`Failed to post to Google Sheets webhook: ${response.status} ${response.statusText}`);
+      return { success: false, error: `Webhook error: ${response.statusText}` };
+    }
+
+    const resText = await response.text();
+    let resJson = {};
+    try {
+      resJson = JSON.parse(resText);
+    } catch (_) {}
+
+    return { success: true, result: resJson };
+  } catch (error: any) {
+    console.error("Failed to sync applicant to Google Sheets:", error);
+    return { success: false, error: error.message || "Unknown error" };
+  }
+}
+
+/**
+ * Bulk syncs all applicants currently in the database to Google Sheets.
+ */
+export async function syncAllApplicantsToSheets() {
+  try {
+    const { error } = await requireRecruitmentAdmin();
+    if (error) return { error };
+
+    const applicants = await prisma.recruitmentApplicant.findMany({
+      select: { applicantId: true },
+      orderBy: { createdAt: "asc" },
+    });
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const applicant of applicants) {
+      const res = await syncApplicantToSheets(applicant.applicantId);
+      if (res.success) {
+        successCount++;
+      } else {
+        failCount++;
+      }
+    }
+
+    return { success: true, successCount, failCount };
+  } catch (error: any) {
+    console.error("Failed to bulk sync applicants to Google Sheets:", error);
+    return { error: error.message || "An unexpected error occurred." };
   }
 }
