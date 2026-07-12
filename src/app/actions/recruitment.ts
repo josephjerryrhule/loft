@@ -1268,20 +1268,32 @@ export async function getApplicantPortalData(applicantId: string) {
       })).filter(event => event.sessions.length > 0);
     }
 
-    // Fetch library flipbooks (retrieve 15 published books for a diverse prep library)
-    let libraryFlipbooks = await prisma.flipbook.findMany({
+    // Fetch a balanced selection of published flipbooks
+    // Get up to 8 of Little LOFTERS (Ages 0-3) and up to 8 of LOFT 365 (Ages 4-7)
+    let loftersBooks = await prisma.flipbook.findMany({
       where: {
         isPublished: true,
+        ageGroup: {
+          in: ["LITTLE_LOFTERS", "TODDLER"]
+        }
       },
-      take: 15,
+      take: 8,
       orderBy: { createdAt: "desc" },
     });
 
-    // Auto-seed sample books if they are missing in the database (ensuring both LOFT_365 and LITTLE_LOFTERS are present on live/staging)
-    const has365 = libraryFlipbooks.some(b => b.ageGroup === "LOFT_365");
-    const hasLofters = libraryFlipbooks.some(b => b.ageGroup === "LITTLE_LOFTERS");
+    let loft365Books = await prisma.flipbook.findMany({
+      where: {
+        isPublished: true,
+        ageGroup: {
+          in: ["LOFT_365", "EARLY_READER"]
+        }
+      },
+      take: 8,
+      orderBy: { createdAt: "desc" },
+    });
 
-    if (!has365 || !hasLofters) {
+    // Auto-seed sample books if they are completely missing in the database
+    if (loftersBooks.length === 0 || loft365Books.length === 0) {
       let admin = await prisma.user.findFirst({
         where: { role: "ADMIN" }
       });
@@ -1290,71 +1302,78 @@ export async function getApplicantPortalData(applicantId: string) {
       }
 
       if (admin) {
-        if (!has365) {
-          const check365 = await prisma.flipbook.findFirst({
-            where: { ageGroup: "LOFT_365" }
+        if (loft365Books.length === 0) {
+          await prisma.flipbook.create({
+            data: {
+              title: "LOFT 365: The Boy Who Wanted to Touch the Stars",
+              description: "A magical story about curiosity and dreaming big. Perfect for ages 4-7.",
+              ageGroup: "LOFT_365",
+              category: "Adventure",
+              isPublished: true,
+              isFree: true,
+              createdById: admin.id,
+              coverImageUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=400",
+              pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+            }
           });
-          if (!check365) {
-            await prisma.flipbook.create({
-              data: {
-                title: "LOFT 365: The Boy Who Wanted to Touch the Stars",
-                description: "A magical story about curiosity and dreaming big. Perfect for ages 4-7.",
-                ageGroup: "LOFT_365",
-                category: "Adventure",
-                isPublished: true,
-                isFree: true,
-                createdById: admin.id,
-                coverImageUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=400",
-                pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+          await prisma.flipbook.create({
+            data: {
+              title: "LOFT 365: Detective Lulu and the Mystery of the Lost Tooth",
+              description: "Help Detective Lulu solve the case of the missing tooth in this interactive mystery for ages 4-7.",
+              ageGroup: "LOFT_365",
+              category: "Mystery",
+              isPublished: true,
+              isFree: true,
+              createdById: admin.id,
+              coverImageUrl: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=400",
+              pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+            }
+          });
+
+          // Re-fetch 365 books
+          loft365Books = await prisma.flipbook.findMany({
+            where: {
+              isPublished: true,
+              ageGroup: {
+                in: ["LOFT_365", "EARLY_READER"]
               }
-            });
-            await prisma.flipbook.create({
-              data: {
-                title: "LOFT 365: Detective Lulu and the Mystery of the Lost Tooth",
-                description: "Help Detective Lulu solve the case of the missing tooth in this interactive mystery for ages 4-7.",
-                ageGroup: "LOFT_365",
-                category: "Mystery",
-                isPublished: true,
-                isFree: true,
-                createdById: admin.id,
-                coverImageUrl: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=400",
-                pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-              }
-            });
-          }
+            },
+            take: 8,
+            orderBy: { createdAt: "desc" },
+          });
         }
 
-        if (!hasLofters) {
-          const checkLofters = await prisma.flipbook.findFirst({
-            where: { ageGroup: "LITTLE_LOFTERS" }
+        if (loftersBooks.length === 0) {
+          await prisma.flipbook.create({
+            data: {
+              title: "Little LOFTERS: Peekaboo Jungle",
+              description: "A fun and interactive peekaboo adventure for toddlers aged 0-3.",
+              ageGroup: "LITTLE_LOFTERS",
+              category: "Interactive",
+              isPublished: true,
+              isFree: true,
+              createdById: admin.id,
+              coverImageUrl: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=400",
+              pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+            }
           });
-          if (!checkLofters) {
-            await prisma.flipbook.create({
-              data: {
-                title: "Little LOFTERS: Peekaboo Jungle",
-                description: "A fun and interactive peekaboo adventure for toddlers aged 0-3.",
-                ageGroup: "LITTLE_LOFTERS",
-                category: "Interactive",
-                isPublished: true,
-                isFree: true,
-                createdById: admin.id,
-                coverImageUrl: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=400",
-                pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-              }
-            });
-          }
-        }
 
-        // Re-fetch with the auto-seeded books
-        libraryFlipbooks = await prisma.flipbook.findMany({
-          where: {
-            isPublished: true,
-          },
-          take: 15,
-          orderBy: { createdAt: "desc" },
-        });
+          // Re-fetch lofters books
+          loftersBooks = await prisma.flipbook.findMany({
+            where: {
+              isPublished: true,
+              ageGroup: {
+                in: ["LITTLE_LOFTERS", "TODDLER"]
+              }
+            },
+            take: 8,
+            orderBy: { createdAt: "desc" },
+          });
+        }
       }
     }
+
+    const libraryFlipbooks = [...loftersBooks, ...loft365Books];
 
     // Check if library access is valid (1 month from paidAt or createdAt)
     const accessStartDate = applicant.paidAt || applicant.createdAt;
