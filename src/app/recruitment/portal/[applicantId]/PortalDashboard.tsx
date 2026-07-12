@@ -362,14 +362,145 @@ export function PortalDashboard({ initialData }: { initialData: any }) {
             )}
 
             {!hasBooked && !areSlotsAvailable && (
-              <Card className="border-slate-200 shadow-sm rounded-2xl overflow-hidden bg-slate-50 border-amber-200">
-                <CardContent className="p-8 text-center text-slate-600">
-                  <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <AlertCircle className="w-8 h-8 text-amber-500" />
+              <Card className="border-slate-200 shadow-xl rounded-3xl overflow-hidden bg-white border-t-8 border-t-[#4B2E83]">
+                <CardContent className="p-8 sm:p-12 text-center max-w-4xl mx-auto">
+                  <div className="w-20 h-20 bg-purple-50 text-[#4B2E83] rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-purple-100">
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      className="w-10 h-10 animate-pulse"
+                    >
+                      <path d="M12 10c0-3.3-1.8-6-4-6S4 6.7 4 10c0 4.1 2.2 6 4 6s4-1.9 4-6z" />
+                      <circle cx="6.5" cy="9" r="0.5" fill="currentColor" />
+                      <circle cx="9.5" cy="9" r="0.5" fill="currentColor" />
+                      <path d="M6.5 12.5c.5.8 1 1.2 1.5 1.2s1-.4 1.5-1.2" />
+
+                      <path d="M20 12c0-3.3-1.8-6-4-6s-4 2.7-4 6c0 4.1 2.2 6 4 6s4-1.9 4-6z" />
+                      <circle cx="14.5" cy="11" r="0.5" fill="currentColor" />
+                      <circle cx="17.5" cy="11" r="0.5" fill="currentColor" />
+                      <path d="M17.5 14.5c-.5-.8-1-1.2-1.5-1.2s-1 .4-1.5 1.2" />
+                    </svg>
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">Awaiting Audition Dates</h3>
-                  <p className="text-slate-600 max-w-lg mx-auto leading-relaxed">We are currently finalizing audition dates and schedules. Auditions are expected to take place in August; however, it is very possible that auditions may begin sooner than that.</p>
-                  <p className="text-slate-600 max-w-lg mx-auto mt-4 leading-relaxed font-medium">As soon as audition slots become available, we will notify you via both email and WhatsApp. You will then be able to book your preferred audition slot right here.</p>
+                  
+                  <Badge className="bg-purple-100 hover:bg-purple-200 text-[#4B2E83] border-none font-bold uppercase tracking-wider px-3.5 py-1.5 text-xs rounded-full mb-4">
+                    Audition Stage Progressed
+                  </Badge>
+
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mb-2">
+                    🎭 You're Through to the Audition Stage
+                  </h2>
+                  <h3 className="text-lg font-bold text-[#E87154] mb-4">Congratulations!</h3>
+
+                  <div className="space-y-4 text-slate-600 max-w-2xl mx-auto leading-relaxed text-sm sm:text-base">
+                    <p>
+                      Your application has been successfully completed and you've progressed to the <span className="font-bold text-slate-900">Audition Stage</span> of the LOFT Guide recruitment process.
+                    </p>
+                    <p>
+                      You're now one step closer to becoming a <span className="font-bold text-slate-900">LOFT Confidence Program Guide</span>.
+                    </p>
+                    <p className="bg-purple-50/50 text-purple-950 p-4 rounded-2xl border border-purple-100/50 font-semibold text-center">
+                      We're currently finalising the audition schedule. As soon as booking opens, you'll be able to choose your preferred audition date and time directly from this page.
+                    </p>
+                  </div>
+
+                  <div className="w-full h-px bg-slate-100 my-10" />
+
+                  {/* What Happens Next Section */}
+                  <div className="text-left space-y-6">
+                    <h3 className="text-xl font-black text-slate-900 flex items-center gap-2 justify-center sm:justify-start">
+                      <span>What Happens Next?</span>
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="border border-slate-150 p-6 rounded-2xl bg-slate-50/50 space-y-3 relative hover:border-[#4B2E83]/40 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-black uppercase text-[#4B2E83] tracking-widest">Stage 1</span>
+                          <span className="text-2xl">🎭</span>
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-slate-900 text-sm">Week of 20th July</h4>
+                          <p className="font-black text-xs text-[#E87154] uppercase tracking-wider mt-0.5">Audition Booking Opens</p>
+                        </div>
+                        <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                          You'll receive both an <strong className="text-slate-700">email</strong> and a <strong className="text-slate-700">WhatsApp notification</strong> as soon as booking becomes available. Once booking opens, simply return to this page to select your preferred audition date and time.
+                        </p>
+                      </div>
+
+                      <div className="border border-slate-150 p-6 rounded-2xl bg-slate-50/50 space-y-3 relative hover:border-[#4B2E83]/40 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-black uppercase text-[#4B2E83] tracking-widest">Stage 2</span>
+                          <span className="text-2xl">💬</span>
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-slate-900 text-sm">Last Week of July</h4>
+                          <p className="font-black text-xs text-[#E87154] uppercase tracking-wider mt-0.5">Interviews</p>
+                        </div>
+                        <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                          Applicants who successfully complete their auditions will be invited to interview.
+                        </p>
+                      </div>
+
+                      <div className="border border-slate-150 p-6 rounded-2xl bg-slate-50/50 space-y-3 relative hover:border-[#4B2E83]/40 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-black uppercase text-[#4B2E83] tracking-widest">Stage 3</span>
+                          <span className="text-2xl">🚀</span>
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-slate-900 text-sm">First Week of August</h4>
+                          <p className="font-black text-xs text-[#E87154] uppercase tracking-wider mt-0.5">Guide Onboarding</p>
+                        </div>
+                        <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                          Successful candidates will begin their LOFT Guide onboarding journey.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="w-full h-px bg-slate-100 my-10" />
+
+                  {/* While You Wait Section */}
+                  <div className="text-left bg-slate-50 p-6 sm:p-8 rounded-3xl border border-slate-150 space-y-4">
+                    <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                      <span>While You Wait...</span>
+                    </h3>
+                    <p className="text-sm text-slate-600 font-medium">
+                      Take this time to prepare for your audition by completing everything in your Preparation Library.
+                    </p>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
+                      {[
+                        "Read the Audition Preparation Guide",
+                        "Complete the Guide Questionnaire",
+                        "Choose one Little LOFTERS book",
+                        "Choose one LOFT 365 book",
+                        "Practise reading both books aloud"
+                      ].map((item) => (
+                        <div key={item} className="flex items-center gap-2.5">
+                          <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                            <span className="text-emerald-700 text-xs font-bold">✔</span>
+                          </div>
+                          <span className="text-sm font-semibold text-slate-700">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-200 text-xs sm:text-sm text-slate-500 space-y-3 leading-relaxed">
+                      <p className="font-bold text-slate-700">
+                        The more prepared you are, the more confident you'll feel on audition day.
+                      </p>
+                      <p>
+                        Thank you once again for applying to become a LOFT Guide.
+                      </p>
+                      <p className="text-[#E87154] font-black text-sm">
+                        We can't wait to meet you!
+                      </p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             )}

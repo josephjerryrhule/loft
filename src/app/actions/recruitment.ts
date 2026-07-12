@@ -1219,6 +1219,15 @@ export async function confirmAuditionAttendance(applicantId: string) {
 // APPLICANT PORTAL
 // ═══════════════════════════════════════════════════════════
 
+function shuffleArray<T>(array: T[]): T[] {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 export async function getApplicantPortalData(applicantId: string) {
   try {
     const applicant = await prisma.recruitmentApplicant.findUnique({
@@ -1268,32 +1277,28 @@ export async function getApplicantPortalData(applicantId: string) {
       })).filter(event => event.sessions.length > 0);
     }
 
-    // Fetch a balanced selection of published flipbooks
-    // Get up to 8 of Little LOFTERS (Ages 0-3) and up to 8 of LOFT 365 (Ages 4-7)
-    let loftersBooks = await prisma.flipbook.findMany({
+    // Fetch all published Little LOFTERS / Toddler books
+    let allLofters = await prisma.flipbook.findMany({
       where: {
         isPublished: true,
         ageGroup: {
           in: ["LITTLE_LOFTERS", "TODDLER"]
         }
-      },
-      take: 8,
-      orderBy: { createdAt: "desc" },
+      }
     });
 
-    let loft365Books = await prisma.flipbook.findMany({
+    // Fetch all published LOFT 365 / Early Reader books
+    let all365 = await prisma.flipbook.findMany({
       where: {
         isPublished: true,
         ageGroup: {
           in: ["LOFT_365", "EARLY_READER"]
         }
-      },
-      take: 8,
-      orderBy: { createdAt: "desc" },
+      }
     });
 
     // Auto-seed sample books if they are completely missing in the database
-    if (loftersBooks.length === 0 || loft365Books.length === 0) {
+    if (allLofters.length === 0 || all365.length === 0) {
       let admin = await prisma.user.findFirst({
         where: { role: "ADMIN" }
       });
@@ -1302,7 +1307,7 @@ export async function getApplicantPortalData(applicantId: string) {
       }
 
       if (admin) {
-        if (loft365Books.length === 0) {
+        if (all365.length === 0) {
           await prisma.flipbook.create({
             data: {
               title: "LOFT 365: The Boy Who Wanted to Touch the Stars",
@@ -1331,19 +1336,17 @@ export async function getApplicantPortalData(applicantId: string) {
           });
 
           // Re-fetch 365 books
-          loft365Books = await prisma.flipbook.findMany({
+          all365 = await prisma.flipbook.findMany({
             where: {
               isPublished: true,
               ageGroup: {
                 in: ["LOFT_365", "EARLY_READER"]
               }
-            },
-            take: 8,
-            orderBy: { createdAt: "desc" },
+            }
           });
         }
 
-        if (loftersBooks.length === 0) {
+        if (allLofters.length === 0) {
           await prisma.flipbook.create({
             data: {
               title: "Little LOFTERS: Peekaboo Jungle",
@@ -1359,21 +1362,42 @@ export async function getApplicantPortalData(applicantId: string) {
           });
 
           // Re-fetch lofters books
-          loftersBooks = await prisma.flipbook.findMany({
+          allLofters = await prisma.flipbook.findMany({
             where: {
               isPublished: true,
               ageGroup: {
                 in: ["LITTLE_LOFTERS", "TODDLER"]
               }
-            },
-            take: 8,
-            orderBy: { createdAt: "desc" },
+            }
           });
         }
       }
     }
 
-    const libraryFlipbooks = [...loftersBooks, ...loft365Books];
+    // Shuffle and pick a mix of exactly 15 books (ensuring both collections are represented, no duplicates, and random combinations)
+    let libraryFlipbooks: any[] = [];
+    if (allLofters.length > 0 && all365.length > 0) {
+      const shuffledLofters = shuffleArray(allLofters);
+      const shuffled365 = shuffleArray(all365);
+
+      // Guarantee at least one of each collection is present
+      const guaranteedLofter = shuffledLofters[0];
+      const guaranteed365 = shuffled365[0];
+
+      // Merge remainders and shuffle them
+      const remainingLofters = shuffledLofters.slice(1);
+      const remaining365 = shuffled365.slice(1);
+      const combinedRemaining = shuffleArray([...remainingLofters, ...remaining365]);
+
+      // Take up to 13 remaining books to make the total exactly 15
+      const pickedRemaining = combinedRemaining.slice(0, 13);
+
+      // Combine and shuffle the final list of 15 books
+      libraryFlipbooks = shuffleArray([guaranteedLofter, guaranteed365, ...pickedRemaining]);
+    } else {
+      // Fallback
+      libraryFlipbooks = shuffleArray([...allLofters, ...all365]).slice(0, 15);
+    }
 
     // Check if library access is valid (1 month from paidAt or createdAt)
     const accessStartDate = applicant.paidAt || applicant.createdAt;
