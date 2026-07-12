@@ -1521,3 +1521,31 @@ export async function syncAllApplicantsToSheets() {
     return { error: error.message || "An unexpected error occurred." };
   }
 }
+
+/**
+ * Save applicant's questionnaire responses.
+ */
+export async function saveQuestionnaireResponses(applicantId: string, responsesJson: string) {
+  try {
+    const applicant = await prisma.recruitmentApplicant.findUnique({
+      where: { applicantId }
+    });
+
+    if (!applicant) {
+      return { success: false, error: "Applicant not found." };
+    }
+
+    await prisma.recruitmentApplicant.update({
+      where: { applicantId },
+      data: {
+        questionnaireResponses: responsesJson
+      }
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to save questionnaire responses:", error);
+    return { success: false, error: error.message || "An unexpected error occurred." };
+  }
+}
+

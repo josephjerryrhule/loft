@@ -2,13 +2,14 @@ import { getApplicantProfile } from "@/app/actions/recruitment";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Calendar, Mail, MapPin, Phone, GraduationCap, Clock, BookOpen, AlertCircle, Edit2, CreditCard, ChevronRight, MessageSquare, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Calendar, Mail, MapPin, Phone, GraduationCap, Clock, BookOpen, AlertCircle, Edit2, CreditCard, ChevronRight, MessageSquare, CheckCircle2, HelpCircle, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import { ApplicantActions } from "./_components/ApplicantActions";
 import { AssignSessionDialog } from "./_components/AssignSessionDialog";
 import { formatDistanceToNow } from "date-fns";
+import { QUESTIONNAIRE_QUESTIONS } from "@/lib/questionnaire-data";
 
 function getStatusBadge(status: string) {
   switch (status) {
@@ -232,6 +233,7 @@ export default async function ApplicantProfilePage({ params }: { params: Promise
             <Tabs defaultValue="application" className="w-full">
               <TabsList className="w-full justify-start border-b border-slate-100 rounded-none h-auto p-0 bg-transparent mb-6 space-x-8">
                 <TabsTrigger value="application" className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#E87154] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 py-3 text-slate-500 font-medium data-[state=active]:text-slate-900">Form Responses</TabsTrigger>
+                <TabsTrigger value="questionnaire" className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#E87154] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 py-3 text-slate-500 font-medium data-[state=active]:text-slate-900">Questionnaire Responses</TabsTrigger>
                 <TabsTrigger value="scores" className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#E87154] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 py-3 text-slate-500 font-medium data-[state=active]:text-slate-900">Audition Scores</TabsTrigger>
                 <TabsTrigger value="timeline" className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#E87154] data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 py-3 text-slate-500 font-medium data-[state=active]:text-slate-900">Status History</TabsTrigger>
               </TabsList>
@@ -328,6 +330,105 @@ export default async function ApplicantProfilePage({ params }: { params: Promise
                     </div>
                   </div>
                 </section>
+              </TabsContent>
+
+              <TabsContent value="questionnaire" className="mt-0 space-y-6">
+                {(() => {
+                  let answers: Record<string, string> = {};
+                  try {
+                    const parsed = applicant.questionnaireResponses 
+                      ? JSON.parse(applicant.questionnaireResponses) 
+                      : {};
+                    answers = parsed.answers || {};
+                  } catch (e) {}
+
+                  const totalQuestions = QUESTIONNAIRE_QUESTIONS.length + 2;
+                  const answeredCount = [
+                    ...QUESTIONNAIRE_QUESTIONS.map(q => q.id),
+                    "animal",
+                    "whyAnimal"
+                  ].filter(id => answers[id] && answers[id].trim() !== "").length;
+
+                  if (answeredCount === 0) {
+                    return (
+                      <div className="text-center py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                        <AlertCircle className="h-8 w-8 text-slate-300 mx-auto mb-3" />
+                        <p className="text-sm font-medium text-slate-500">Applicant has not answered the questionnaire yet.</p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-6">
+                      <div className="bg-emerald-50 border border-emerald-100 p-5 rounded-2xl flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <CheckCircle className="h-6 w-6 text-emerald-600 animate-pulse" />
+                          <div>
+                            <h4 className="font-bold text-slate-900 text-sm sm:text-base">Questionnaire Progress</h4>
+                            <p className="text-xs text-slate-600 font-medium">Completed {answeredCount} out of {totalQuestions} questions.</p>
+                          </div>
+                        </div>
+                        <Badge className="bg-emerald-600 text-white font-bold">{Math.round((answeredCount / totalQuestions) * 100)}% Complete</Badge>
+                      </div>
+
+                      <div className="space-y-4">
+                        {QUESTIONNAIRE_QUESTIONS.map((q, idx) => (
+                          <div key={q.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/85 space-y-3">
+                            <div className="flex justify-between items-center text-xs font-bold text-slate-400 uppercase tracking-wider">
+                              <span>Question {idx + 1}</span>
+                              {answers[q.id] ? (
+                                <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Answered</span>
+                              ) : (
+                                <span className="text-rose-600 bg-rose-50 px-2 py-0.5 rounded">Not Answered</span>
+                              )}
+                            </div>
+                            <p className="font-bold text-slate-900 text-sm leading-snug">{q.text}</p>
+                            {answers[q.id] ? (
+                              <div className="bg-slate-50 border border-slate-100 p-3.5 rounded-xl text-sm font-semibold text-slate-700">
+                                {answers[q.id]}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-slate-400 italic">No response provided</p>
+                            )}
+                          </div>
+                        ))}
+
+                        {/* Final Jungle Adventure Helper */}
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/85 space-y-4">
+                          <div className="flex justify-between items-center text-xs font-bold text-slate-400 uppercase tracking-wider">
+                            <span>Jungle Helper Selection</span>
+                            {answers.animal ? (
+                              <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Answered</span>
+                            ) : (
+                              <span className="text-rose-600 bg-rose-50 px-2 py-0.5 rounded">Not Answered</span>
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-bold text-slate-900 text-sm leading-snug">Which animal would you most like as your helper on a jungle adventure?</p>
+                            {answers.animal ? (
+                              <div className="mt-2.5 bg-purple-50 border border-purple-100 p-4 rounded-xl text-lg font-bold text-[#4B2E83] w-fit flex items-center gap-2">
+                                <span>{answers.animal}</span>
+                              </div>
+                            ) : (
+                              <p className="text-xs text-slate-400 italic mt-2">No response provided</p>
+                            )}
+                          </div>
+
+                          <div className="pt-3 border-t border-slate-100 space-y-2">
+                            <p className="font-bold text-slate-900 text-sm">Why did you choose that animal?</p>
+                            {answers.whyAnimal ? (
+                              <div className="bg-slate-50 border border-slate-100 p-4 rounded-xl text-sm text-slate-700 leading-relaxed font-medium whitespace-pre-wrap">
+                                {answers.whyAnimal}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-slate-400 italic">No explanation provided</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </TabsContent>
 
               <TabsContent value="scores" className="mt-0">

@@ -195,3 +195,20 @@
   }
 }
 
+/* Audition Prep Portal - Security controls to prevent printing, copying and saving */
+@media print {
+  body, html, #__next, [role="main"], main, div, section, iframe, canvas {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+}
+
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+

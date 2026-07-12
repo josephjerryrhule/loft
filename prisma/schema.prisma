@@ -485,6 +485,9 @@ model RecruitmentApplicant {
   auditionSessionId     String?                    @map("audition_session_id")
   auditionSession       RecruitmentAuditionSession? @relation(fields: [auditionSessionId], references: [id])
 
+  // Questionnaire
+  questionnaireResponses String?                    @map("questionnaire_responses")
+
   createdAt             DateTime                   @default(now()) @map("created_at")
   updatedAt             DateTime                   @updatedAt @map("updated_at")
 
