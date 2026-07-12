@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getApplicantPortalData } from "@/app/actions/recruitment";
 import { redirect } from "next/navigation";
 import { PortalDashboard } from "./PortalDashboard";

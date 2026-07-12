@@ -1269,13 +1269,92 @@ export async function getApplicantPortalData(applicantId: string) {
     }
 
     // Fetch library flipbooks (retrieve 15 published books for a diverse prep library)
-    const libraryFlipbooks = await prisma.flipbook.findMany({
+    let libraryFlipbooks = await prisma.flipbook.findMany({
       where: {
         isPublished: true,
       },
       take: 15,
       orderBy: { createdAt: "desc" },
     });
+
+    // Auto-seed sample books if they are missing in the database (ensuring both LOFT_365 and LITTLE_LOFTERS are present on live/staging)
+    const has365 = libraryFlipbooks.some(b => b.ageGroup === "LOFT_365");
+    const hasLofters = libraryFlipbooks.some(b => b.ageGroup === "LITTLE_LOFTERS");
+
+    if (!has365 || !hasLofters) {
+      let admin = await prisma.user.findFirst({
+        where: { role: "ADMIN" }
+      });
+      if (!admin) {
+        admin = await prisma.user.findFirst();
+      }
+
+      if (admin) {
+        if (!has365) {
+          const check365 = await prisma.flipbook.findFirst({
+            where: { ageGroup: "LOFT_365" }
+          });
+          if (!check365) {
+            await prisma.flipbook.create({
+              data: {
+                title: "LOFT 365: The Boy Who Wanted to Touch the Stars",
+                description: "A magical story about curiosity and dreaming big. Perfect for ages 4-7.",
+                ageGroup: "LOFT_365",
+                category: "Adventure",
+                isPublished: true,
+                isFree: true,
+                createdById: admin.id,
+                coverImageUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=400",
+                pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+              }
+            });
+            await prisma.flipbook.create({
+              data: {
+                title: "LOFT 365: Detective Lulu and the Mystery of the Lost Tooth",
+                description: "Help Detective Lulu solve the case of the missing tooth in this interactive mystery for ages 4-7.",
+                ageGroup: "LOFT_365",
+                category: "Mystery",
+                isPublished: true,
+                isFree: true,
+                createdById: admin.id,
+                coverImageUrl: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=400",
+                pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+              }
+            });
+          }
+        }
+
+        if (!hasLofters) {
+          const checkLofters = await prisma.flipbook.findFirst({
+            where: { ageGroup: "LITTLE_LOFTERS" }
+          });
+          if (!checkLofters) {
+            await prisma.flipbook.create({
+              data: {
+                title: "Little LOFTERS: Peekaboo Jungle",
+                description: "A fun and interactive peekaboo adventure for toddlers aged 0-3.",
+                ageGroup: "LITTLE_LOFTERS",
+                category: "Interactive",
+                isPublished: true,
+                isFree: true,
+                createdById: admin.id,
+                coverImageUrl: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=400",
+                pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+              }
+            });
+          }
+        }
+
+        // Re-fetch with the auto-seeded books
+        libraryFlipbooks = await prisma.flipbook.findMany({
+          where: {
+            isPublished: true,
+          },
+          take: 15,
+          orderBy: { createdAt: "desc" },
+        });
+      }
+    }
 
     // Check if library access is valid (1 month from paidAt or createdAt)
     const accessStartDate = applicant.paidAt || applicant.createdAt;
