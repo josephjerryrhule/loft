@@ -107,6 +107,13 @@ export default async function ApplicantProfilePage({ params }: { params: Promise
                 <p className="text-xs text-slate-400 mb-0.5">E-mail</p>
                 <p className="text-sm font-medium text-slate-900 break-all">{applicant.email || "Not provided"}</p>
               </div>
+              <div>
+                <p className="text-xs text-slate-400 mb-0.5">Location</p>
+                <p className="text-sm font-medium text-slate-900">
+                  {applicant.residentialArea ? `${applicant.residentialArea}, ` : ""}
+                  {applicant.townCity}, {applicant.region}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -127,9 +134,27 @@ export default async function ApplicantProfilePage({ params }: { params: Promise
                 </div>
               </div>
               <div>
+                <p className="text-xs text-slate-400 mb-0.5">Date of Birth</p>
+                <p className="text-sm font-medium text-slate-900">
+                  {format(new Date(applicant.dateOfBirth), "MMMM d, yyyy")}
+                </p>
+              </div>
+              <div>
                 <p className="text-xs text-slate-400 mb-0.5">Highest Education</p>
                 <p className="text-sm font-medium text-slate-900">{applicant.highestEducation}</p>
               </div>
+              {applicant.institution && (
+                <div>
+                  <p className="text-xs text-slate-400 mb-0.5">Institution</p>
+                  <p className="text-sm font-medium text-slate-900">{applicant.institution}</p>
+                </div>
+              )}
+              {applicant.course && (
+                <div>
+                  <p className="text-xs text-slate-400 mb-0.5">Course / Field of Study</p>
+                  <p className="text-sm font-medium text-slate-900">{applicant.course}</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -327,6 +352,35 @@ export default async function ApplicantProfilePage({ params }: { params: Promise
                     <div>
                       <p className="text-sm font-bold text-slate-900 mb-2">Problem-solving example:</p>
                       <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{applicant.problemSolvingExample}</p>
+                    </div>
+                  </div>
+                </section>
+
+                <div className="w-full h-px bg-slate-100" />
+
+                {/* Travel & Declaration */}
+                <section>
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <MapPin className="h-4 w-4" /> Travel & Declaration
+                  </h3>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <p className="text-xs text-slate-400 mb-1">Willing to travel to audition venue?</p>
+                      <p className="text-sm font-medium text-slate-900">{applicant.willingToTravel ? "Yes" : "No"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400 mb-1">Understood audition requirements?</p>
+                      <p className="text-sm font-medium text-slate-900">{applicant.auditionUnderstood ? "Yes" : "No"}</p>
+                    </div>
+                    <div className="md:col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2">
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Applicant Declaration</p>
+                      <p className="text-sm text-slate-700 font-medium">
+                        I hereby declare that the information provided in this application is true and accurate.
+                      </p>
+                      <div className="flex justify-between items-center text-xs text-slate-500 pt-2 border-t border-slate-200">
+                        <span>Signed: <strong>{applicant.declarationName}</strong></span>
+                        <span>Date: <strong>{format(new Date(applicant.declarationDate), "MMMM d, yyyy")}</strong></span>
+                      </div>
                     </div>
                   </div>
                 </section>
