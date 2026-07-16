@@ -2,6 +2,7 @@ import nodemailer from "nodemailer";
 import { prisma } from "./prisma";
 import { getCurrencySymbol, getAppUrl } from "./utils";
 import { cache } from "./cache";
+import { format } from "date-fns";
 
 interface EmailOptions {
   to: string | string[];
@@ -1087,6 +1088,121 @@ export async function sendPaymentReminderEmail(data: {
   return sendEmail({
     to: data.email,
     subject: `Complete Your Application — ${data.applicantId} — ${branding.platformName}`,
+    html: emailWrapper(content, branding.platformName, branding.logoUrl),
+  });
+}
+
+// Audition Booking Available Email
+export async function sendAuditionBookingAvailableEmail(data: {
+  email: string;
+  fullName: string;
+  applicantId: string;
+  eventDate?: string | Date;
+}) {
+  const branding = await getBranding();
+
+  let dateStr = "Tuesday, 28th July";
+  if (data.eventDate) {
+    const d = new Date(data.eventDate);
+    dateStr = format(d, "eeee, do MMMM");
+  } else {
+    // Look up first upcoming released event
+    const nextEvent = await prisma.recruitmentAuditionEvent.findFirst({
+      where: {
+        date: { gte: new Date() },
+        isReleased: true,
+      },
+      orderBy: { date: "asc" },
+    });
+    if (nextEvent) {
+      dateStr = format(new Date(nextEvent.date), "eeee, do MMMM");
+    }
+  }
+
+  const content = `
+    <h2>Your Audition Slot is Ready to Book!</h2>
+    <p>Hello,</p>
+    <p>We're pleased to let you know that the audition schedule for the LOFT Confidence Program Facilitator Recruitment has now been finalized.</p>
+    <p>Due to the number of applications received during this recruitment cycle, we have combined the interview and audition into a single 30-minute session.</p>
+    <p><strong>Audition Date:</strong> ${dateStr}</p>
+    <p>You may now log in to your applicant portal and book your preferred audition time.</p>
+    <p>Time slots are allocated on a first-come, first-served basis, so we encourage you to book your slot as soon as possible to secure your preferred time.</p>
+    <p>We look forward to meeting you and wish you the very best in your audition.</p>
+    
+    <p style="text-align: center; margin: 30px 0;">
+      <a href="${branding.siteUrl}/recruitment/portal/${data.applicantId}" class="button" style="color: #ffffff;">Book Your Audition Slot Now</a>
+    </p>
+  `;
+
+  return sendEmail({
+    to: data.email,
+    subject: `Your Audition Slot is Ready to Book! — LOFT Facilitator Recruitment — ${branding.platformName}`,
+    html: emailWrapper(content, branding.platformName, branding.logoUrl),
+  });
+}
+
+// Audition Booking Confirmation Email
+export async function sendAuditionBookingConfirmationEmail(data: {
+  email: string;
+  fullName: string;
+  applicantId: string;
+  startTime: Date;
+  endTime: Date;
+  eventDate: Date;
+}) {
+  const branding = await getBranding();
+  const settings = await prisma.systemSettings.findMany({
+    where: { key: "auditionLocation" },
+  });
+  let auditionLocation = "Accra";
+  if (settings.length > 0) {
+    try {
+      auditionLocation = JSON.parse(settings[0].value);
+    } catch {
+      auditionLocation = settings[0].value;
+    }
+  }
+
+  const firstName = data.fullName.trim().split(/\s+/)[0] || data.fullName;
+  const selectedDate = format(new Date(data.eventDate), "eeee, do MMMM yyyy");
+  const selectedTime = format(new Date(data.startTime), "h:mm a");
+
+  const content = `
+    <h2>🎉 Congratulations, ${firstName}!</h2>
+    <p>Your LOFT Confidence Program Facilitator Interview & Audition has been successfully booked.</p>
+    
+    <div class="info-box">
+      <h3 style="margin-top: 0; font-size: 16px;">Your Booking Details</h3>
+      <p style="margin: 6px 0;"><strong>Date:</strong> ${selectedDate}</p>
+      <p style="margin: 6px 0;"><strong>Time:</strong> ${selectedTime}</p>
+    </div>
+    
+    <p>Please save these details and plan to arrive at least 10–15 minutes before your scheduled time to allow for check-in.</p>
+    <p>The audition venue will be in <strong>${auditionLocation}</strong>. We are currently finalizing the exact location, and this will be communicated to you by email and WhatsApp before your scheduled audition.</p>
+    
+    <h3 style="margin-top: 24px; font-size: 16px;">Before Your Audition</h3>
+    <p>Please remember to come prepared with the items and activities outlined in your applicant portal.</p>
+    <p>These preparations form part of your interview and audition, so kindly ensure you have completed them before arriving.</p>
+    
+    <h3 style="margin-top: 24px; font-size: 16px;">Important Information</h3>
+    <ul style="padding-left: 20px; margin: 12px 0;">
+      <li style="margin-bottom: 8px;">Your interview and audition will take place in one combined session lasting approximately 30 minutes.</li>
+      <li style="margin-bottom: 8px;">Please arrive on time. Late arrivals may not be accommodated.</li>
+      <li style="margin-bottom: 8px;">There will be no additional audition dates for this recruitment cycle.</li>
+      <li style="margin-bottom: 8px;">As stated during the application process, the application and audition fee is non-refundable, including if you miss your scheduled audition.</li>
+    </ul>
+    
+    <p>We look forward to meeting you and wish you the very best.</p>
+    <p>See you soon!</p>
+    
+    <p style="text-align: center; margin: 30px 0;">
+      <a href="${branding.siteUrl}/recruitment/portal/${data.applicantId}" class="button" style="color: #ffffff;">Go to Applicant Portal</a>
+    </p>
+  `;
+
+  return sendEmail({
+    to: data.email,
+    subject: `Booking Confirmed — LOFT Confidence Program Facilitator Audition — ${branding.platformName}`,
     html: emailWrapper(content, branding.platformName, branding.logoUrl),
   });
 }

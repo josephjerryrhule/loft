@@ -322,11 +322,42 @@ export function PortalDashboard({ initialData }: { initialData: any }) {
         {activeTab === "audition" && (
           <div className="space-y-8 animate-in fade-in duration-300">
             {!hasBooked && areSlotsAvailable && (
-              <Card className="border-slate-200 shadow-xl rounded-2xl overflow-hidden border-t-4 border-t-[#E87154]">
-                <CardHeader className="bg-white pb-4 border-b border-slate-100">
-                  <CardTitle className="text-2xl font-black text-slate-900">Book Your Audition</CardTitle>
-                  <CardDescription>Select an available time slot below to confirm your audition.</CardDescription>
-                </CardHeader>
+              <>
+                <Card className="border-slate-200 shadow-xl rounded-3xl overflow-hidden border-t-8 border-t-[#4B2E83] bg-white">
+                  <CardContent className="p-8 md:p-10 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-100 text-[#4B2E83] font-bold text-xs uppercase tracking-wider">
+                        📢 Announcement
+                      </span>
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-black text-slate-900">Your Audition Slot is Ready to Book!</h2>
+                    <div className="space-y-4 text-slate-600 text-sm md:text-base leading-relaxed">
+                      <p>Hello,</p>
+                      <p>We're pleased to let you know that the audition schedule for the LOFT Confidence Program Facilitator Recruitment has now been finalized.</p>
+                      <p>Due to the number of applications received during this recruitment cycle, we have combined the interview and audition into a single 30-minute session.</p>
+                      
+                      {(() => {
+                        const firstEvent = data.availableSessions?.[0];
+                        const dateStr = firstEvent ? format(new Date(firstEvent.date), "eeee, do MMMM") : "Tuesday, 28th July";
+                        return (
+                          <div className="font-bold text-[#E87154] bg-orange-50 px-4 py-2.5 rounded-xl w-fit flex items-center gap-2 border border-orange-100">
+                            📅 Audition Date: {dateStr}
+                          </div>
+                        );
+                      })()}
+
+                      <p>You may now select and book your preferred audition time slot from the available options below.</p>
+                      <p>Time slots are allocated on a first-come, first-served basis, so we encourage you to book your slot as soon as possible to secure your preferred time.</p>
+                      <p>We look forward to meeting you and wish you the very best in your audition.</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-slate-200 shadow-xl rounded-2xl overflow-hidden border-t-4 border-t-[#E87154]">
+                  <CardHeader className="bg-white pb-4 border-b border-slate-100">
+                    <CardTitle className="text-2xl font-black text-slate-900">Book Your Audition</CardTitle>
+                    <CardDescription>Select an available time slot below to confirm your audition.</CardDescription>
+                  </CardHeader>
                 <CardContent className="p-6 bg-slate-50/50">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {data.availableSessions.map((event: any) =>
@@ -359,7 +390,7 @@ export function PortalDashboard({ initialData }: { initialData: any }) {
                   </div>
                 </CardContent>
               </Card>
-            )}
+            </>)}
 
             {!hasBooked && !areSlotsAvailable && (
               <Card className="border-slate-200 shadow-xl rounded-3xl overflow-hidden bg-white border-t-8 border-t-[#4B2E83]">
@@ -506,33 +537,69 @@ export function PortalDashboard({ initialData }: { initialData: any }) {
             )}
 
             {hasBooked && data.applicant.auditionSession && (
-              <Card className="border-slate-200 shadow-xl rounded-2xl overflow-hidden border-t-4 border-t-emerald-500 bg-gradient-to-br from-emerald-50 to-white">
-                <CardContent className="p-6 md:p-8">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 bg-emerald-100 rounded-2xl flex items-center justify-center shrink-0">
-                        <CheckCircle2 className="w-7 h-7 text-emerald-600" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl md:text-2xl font-black text-slate-900">Audition Booked</h3>
-                        <p className="text-slate-600 mt-1 max-w-md">
-                          Your audition slot has been successfully confirmed. We look forward to seeing you!
-                        </p>
-                      </div>
+              <Card className="border-slate-200 shadow-xl rounded-3xl overflow-hidden border-t-8 border-t-emerald-500 bg-white">
+                <CardContent className="p-8 md:p-10 space-y-6 text-left">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-sm">
+                      <CheckCircle2 className="w-6 h-6" />
                     </div>
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-emerald-100 text-center md:text-left min-w-[240px]">
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Your Session</p>
-                      <p className="font-bold text-slate-900">{data.applicant.auditionSession.event?.name || "Audition Session"}</p>
-                      <div className="flex flex-wrap items-center gap-3 mt-3 text-sm text-slate-600">
-                        <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-[#E87154]" /> {format(new Date(data.applicant.auditionSession.event?.date), "MMM do, yyyy")}</span>
-                        <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-[#E87154]" /> {format(new Date(data.applicant.auditionSession.startTime), "h:mm a")}</span>
-                        <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-[#E87154]" /> <a href={data.applicant.auditionSession.event?.locationUrl || `https://maps.google.com/?q=${encodeURIComponent(data.applicant.auditionSession.event?.venue || '')}`} target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-[#E87154] transition-colors">{data.applicant.auditionSession.event?.venue}</a></span>
+                    <span className="text-xs font-black uppercase text-emerald-600 tracking-widest">
+                      Booking Confirmed
+                    </span>
+                  </div>
+
+                  <h2 className="text-2xl md:text-3xl font-black text-slate-900">
+                    🎉 Congratulations, {applicant.fullName.trim().split(/\s+/)[0] || applicant.fullName}!
+                  </h2>
+                  <p className="text-slate-600 font-medium leading-relaxed">
+                    Your LOFT Confidence Program Facilitator Interview & Audition has been successfully booked.
+                  </p>
+
+                  <div className="bg-slate-50 border border-slate-200/60 rounded-2xl p-6 space-y-3.5 max-w-md shadow-inner">
+                    <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider">Your Booking Details</h4>
+                    <div className="space-y-2.5 text-slate-700 font-semibold text-sm">
+                      <div className="flex items-center gap-3">
+                        <Calendar className="w-4 h-4 text-[#E87154]" />
+                        <span>Date: {format(new Date(data.applicant.auditionSession.event.date), "eeee, do MMMM yyyy")}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Clock className="w-4 h-4 text-[#E87154]" />
+                        <span>Time: {format(new Date(data.applicant.auditionSession.startTime), "h:mm a")}</span>
                       </div>
                     </div>
                   </div>
-                  <p className="text-slate-500 text-sm mt-6 text-center md:text-left">
-                    Remember to use the <span className="font-bold text-[#E87154]">Facilitator Preparation tabs</span> above to get ready!
-                  </p>
+
+                  <div className="space-y-6 text-slate-600 text-sm md:text-base leading-relaxed">
+                    <p>
+                      Please save these details and plan to arrive at least <strong>10–15 minutes</strong> before your scheduled time to allow for check-in.
+                    </p>
+                    <p>
+                      The audition venue will be in <strong>{data.auditionLocation || "Accra"}</strong>. We are currently finalizing the exact location, and this will be communicated to you by email and WhatsApp before your scheduled audition.
+                    </p>
+
+                    <div className="border-t border-slate-100 pt-6 space-y-3">
+                      <h4 className="font-bold text-slate-900 text-base">Before Your Audition</h4>
+                      <p>
+                        Please remember to come prepared with the items and activities outlined in your applicant portal. These preparations form part of your interview and audition, so kindly ensure you have completed them before arriving.
+                      </p>
+                    </div>
+
+                    <div className="border-t border-slate-100 pt-6 space-y-4">
+                      <h4 className="font-bold text-slate-900 text-base">Important Information</h4>
+                      <ul className="list-disc pl-5 space-y-2 text-sm text-slate-500">
+                        <li>Your interview and audition will take place in one combined session lasting approximately 30 minutes.</li>
+                        <li>Please arrive on time. Late arrivals may not be accommodated.</li>
+                        <li>There will be no additional audition dates for this recruitment cycle.</li>
+                        <li>As stated during the application process, the application and audition fee is non-refundable, including if you miss your scheduled audition.</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-100 pt-6">
+                    <p className="text-slate-800 font-black text-center md:text-left">
+                      We look forward to meeting you and wish you the very best. See you soon!
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             )}

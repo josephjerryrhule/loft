@@ -620,6 +620,20 @@ export async function updateApplicantStatus(
     }
   }
 
+  // Send audition booking available email if status is AUDITION_BOOKING_OPEN
+  if (newStatus === "AUDITION_BOOKING_OPEN" && applicant.email) {
+    try {
+      const { sendAuditionBookingAvailableEmail } = await import("@/lib/email");
+      await sendAuditionBookingAvailableEmail({
+        email: applicant.email,
+        fullName: applicant.fullName,
+        applicantId,
+      });
+    } catch (emailErr) {
+      console.error("Failed to send audition booking available email:", emailErr);
+    }
+  }
+
   // Sync to Google Sheets in background
   syncApplicantToSheets(applicantId).catch(console.error);
 
@@ -667,7 +681,7 @@ export async function bulkUpdateStatus(
 
   const applicants = await prisma.recruitmentApplicant.findMany({
     where: { applicantId: { in: applicantIds } },
-    select: { id: true, applicantId: true, status: true },
+    select: { id: true, applicantId: true, status: true, email: true, fullName: true },
   });
 
   for (const applicant of applicants) {
@@ -685,6 +699,20 @@ export async function bulkUpdateStatus(
         note: note || `Bulk status update`,
       },
     });
+
+    // Send booking available email if status is AUDITION_BOOKING_OPEN
+    if (newStatus === "AUDITION_BOOKING_OPEN" && applicant.email) {
+      try {
+        const { sendAuditionBookingAvailableEmail } = await import("@/lib/email");
+        await sendAuditionBookingAvailableEmail({
+          email: applicant.email,
+          fullName: applicant.fullName,
+          applicantId: applicant.applicantId,
+        });
+      } catch (emailErr) {
+        console.error("Failed to send booking available email in bulk update:", emailErr);
+      }
+    }
 
     // Sync to Google Sheets in background
     syncApplicantToSheets(applicant.applicantId).catch(console.error);
@@ -1011,7 +1039,7 @@ export async function releaseAuditionSlots(eventId: string, release: boolean) {
         status: { in: ["APPLICATION_SUBMITTED", "AWAITING_AUDITION_SLOT_RELEASE"] },
         auditionSessionId: null,
       },
-      select: { id: true, applicantId: true, status: true },
+      select: { id: true, applicantId: true, status: true, email: true, fullName: true },
     });
 
     if (eligibleApplicants.length > 0) {
@@ -1031,6 +1059,23 @@ export async function releaseAuditionSlots(eventId: string, release: boolean) {
           note: `Audition slots released for event: ${event.name}`,
         })),
       });
+
+      // Send booking available emails to all eligible applicants who have an email
+      try {
+        const { sendAuditionBookingAvailableEmail } = await import("@/lib/email");
+        for (const app of eligibleApplicants) {
+          if (app.email) {
+            sendAuditionBookingAvailableEmail({
+              email: app.email,
+              fullName: app.fullName,
+              applicantId: app.applicantId,
+              eventDate: event.date,
+            }).catch((err) => console.error(`Failed to send booking available email to ${app.applicantId}:`, err));
+          }
+        }
+      } catch (emailErr) {
+        console.error("Failed to send booking available emails:", emailErr);
+      }
     }
 
     return { 
@@ -1405,6 +1450,10 @@ export async function getApplicantPortalData(applicantId: string) {
     accessExpiryDate.setMonth(accessExpiryDate.getMonth() + 1);
     const hasLibraryAccess = new Date() <= accessExpiryDate;
 
+    const { getSystemSettings } = await import("@/app/actions/settings");
+    const settings = await getSystemSettings();
+    const auditionLocation = settings.auditionLocation || "Accra";
+
     return {
       success: true,
       data: {
@@ -1413,6 +1462,7 @@ export async function getApplicantPortalData(applicantId: string) {
         libraryFlipbooks: hasLibraryAccess ? libraryFlipbooks : [],
         hasLibraryAccess,
         accessExpiryDate,
+        auditionLocation,
       }
     };
   } catch (error) {
@@ -1465,6 +1515,13 @@ export async function bookAuditionSession(applicantId: string, sessionId: string
               note: "Applicant booked an audition slot via portal."
             }
           }
+        },
+        include: {
+          auditionSession: {
+            include: {
+              event: true
+            }
+          }
         }
       });
 
@@ -1473,6 +1530,24 @@ export async function bookAuditionSession(applicantId: string, sessionId: string
 
     if (result.success) {
       syncApplicantToSheets(applicantId).catch(console.error);
+
+      // Send confirmation email
+      const fullApplicant = (result as any).applicant;
+      if (fullApplicant && fullApplicant.email && fullApplicant.auditionSession) {
+        try {
+          const { sendAuditionBookingConfirmationEmail } = await import("@/lib/email");
+          await sendAuditionBookingConfirmationEmail({
+            email: fullApplicant.email,
+            fullName: fullApplicant.fullName,
+            applicantId: fullApplicant.applicantId,
+            startTime: fullApplicant.auditionSession.startTime,
+            endTime: fullApplicant.auditionSession.endTime,
+            eventDate: fullApplicant.auditionSession.event.date,
+          });
+        } catch (emailErr) {
+          console.error("Failed to send booking confirmation email:", emailErr);
+        }
+      }
     }
 
     return result;

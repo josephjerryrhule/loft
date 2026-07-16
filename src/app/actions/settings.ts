@@ -37,6 +37,7 @@ const PUBLIC_SETTING_KEYS = new Set([
     "usdToGbpRate",
     "eurToUsdRate",
     "gbpToUsdRate",
+    "auditionLocation",
 ]);
 
 async function fetchSettingsMap(): Promise<Record<string, any>> {
