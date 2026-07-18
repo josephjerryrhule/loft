@@ -460,28 +460,59 @@ export default function AuditionsPage() {
                         {/* Applicants in this session */}
                         {session.applicants.length > 0 && (
                           <div className="mt-4 flex flex-wrap gap-2 animate-in fade-in duration-200">
-                            {session.applicants.map((app: any) => (
-                              <div key={app.applicantId} className="flex items-center gap-1.5 bg-white border border-white/40 shadow-sm rounded-full py-1 pr-2.5 pl-1.5">
-                                <button 
-                                  onClick={() => openScoreModal(app, session.id)}
-                                  className="flex items-center gap-2 hover:opacity-85 transition-opacity text-left cursor-pointer"
-                                  title="Score Performance"
-                                >
-                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${color.bg} ${color.text}`}>
-                                    {getInitials(app.fullName)}
+                            {session.applicants.map((app: any) => {
+                              const bookingEntry = app.statusHistory?.find((h: any) => h.toStatus === "AUDITION_SLOT_BOOKED");
+                              const assignmentEntry = app.statusHistory?.[app.statusHistory.length - 1];
+                              const bookedAt = bookingEntry 
+                                ? new Date(bookingEntry.createdAt) 
+                                : assignmentEntry 
+                                  ? new Date(assignmentEntry.createdAt) 
+                                  : null;
+                              const labelText = bookingEntry ? "Booked" : "Assigned";
+
+                              return (
+                                <div key={app.applicantId} className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2.5 bg-white border border-white/40 shadow-sm rounded-2xl sm:rounded-full py-2 sm:py-1 pr-3 sm:pr-2.5 pl-2 sm:pl-1.5 w-full sm:w-auto">
+                                  <div className="flex items-center justify-between w-full sm:w-auto gap-2">
+                                    <button 
+                                      onClick={() => openScoreModal(app, session.id)}
+                                      className="flex items-center gap-2 hover:opacity-85 transition-opacity text-left cursor-pointer"
+                                      title="Score Performance"
+                                    >
+                                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${color.bg} ${color.text} shrink-0`}>
+                                        {getInitials(app.fullName)}
+                                      </div>
+                                      <div className="flex flex-col">
+                                        <span className="text-xs font-bold text-slate-700 hover:text-slate-900 leading-snug">{app.fullName}</span>
+                                        {bookedAt && (
+                                          <span className="text-[9px] text-slate-400 font-medium leading-none mt-0.5">
+                                            {labelText}: {format(bookedAt, "h:mm a (MMM d)")}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </button>
+                                    <div className="flex items-center gap-1 sm:hidden">
+                                      <AssignSessionDialog 
+                                        applicantId={app.applicantId} 
+                                        currentSessionId={session.id} 
+                                        currentStatus={app.status}
+                                        compact={true}
+                                        onAssignComplete={loadEvents}
+                                      />
+                                    </div>
                                   </div>
-                                  <span className="text-xs font-bold text-slate-700 hover:text-slate-900">{app.fullName}</span>
-                                </button>
-                                <div className="w-px h-3.5 bg-slate-200 mx-0.5" />
-                                <AssignSessionDialog 
-                                  applicantId={app.applicantId} 
-                                  currentSessionId={session.id} 
-                                  currentStatus={app.status}
-                                  compact={true}
-                                  onAssignComplete={loadEvents}
-                                />
-                              </div>
-                            ))}
+                                  <div className="hidden sm:block w-px h-3.5 bg-slate-200 mx-0.5" />
+                                  <div className="hidden sm:block">
+                                    <AssignSessionDialog 
+                                      applicantId={app.applicantId} 
+                                      currentSessionId={session.id} 
+                                      currentStatus={app.status}
+                                      compact={true}
+                                      onAssignComplete={loadEvents}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </div>

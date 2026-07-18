@@ -1005,6 +1005,15 @@ export async function getAuditionEventsForAdmin() {
               fullName: true,
               phoneNumber: true,
               status: true,
+              statusHistory: {
+                select: {
+                  toStatus: true,
+                  createdAt: true
+                },
+                orderBy: {
+                  createdAt: "asc"
+                }
+              }
             },
           },
           _count: {
