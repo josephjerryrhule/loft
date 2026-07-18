@@ -1276,10 +1276,23 @@ export async function confirmAuditionAttendance(applicantId: string) {
 // APPLICANT PORTAL
 // ═══════════════════════════════════════════════════════════
 
-function shuffleArray<T>(array: T[]): T[] {
+function seededShuffle<T>(array: T[], seed: string): T[] {
+  // Simple deterministic hash function to generate a number from seed string
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) {
+    h = (h << 5) - h + seed.charCodeAt(i);
+    h |= 0; // Convert to 32bit integer
+  }
+  
+  // Seeded pseudo-random number generator
+  function random() {
+    const x = Math.sin(h++) * 10000;
+    return x - Math.floor(x);
+  }
+
   const arr = [...array];
   for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
@@ -1434,8 +1447,8 @@ export async function getApplicantPortalData(applicantId: string) {
     // Shuffle and pick a mix of exactly 15 books (ensuring both collections are represented, no duplicates, and random combinations)
     let libraryFlipbooks: any[] = [];
     if (allLofters.length > 0 && all365.length > 0) {
-      const shuffledLofters = shuffleArray(allLofters);
-      const shuffled365 = shuffleArray(all365);
+      const shuffledLofters = seededShuffle(allLofters, applicantId);
+      const shuffled365 = seededShuffle(all365, applicantId);
 
       // Guarantee at least one of each collection is present
       const guaranteedLofter = shuffledLofters[0];
@@ -1444,16 +1457,16 @@ export async function getApplicantPortalData(applicantId: string) {
       // Merge remainders and shuffle them
       const remainingLofters = shuffledLofters.slice(1);
       const remaining365 = shuffled365.slice(1);
-      const combinedRemaining = shuffleArray([...remainingLofters, ...remaining365]);
+      const combinedRemaining = seededShuffle([...remainingLofters, ...remaining365], applicantId + "-remaining");
 
       // Take up to 13 remaining books to make the total exactly 15
       const pickedRemaining = combinedRemaining.slice(0, 13);
 
       // Combine and shuffle the final list of 15 books
-      libraryFlipbooks = shuffleArray([guaranteedLofter, guaranteed365, ...pickedRemaining]);
+      libraryFlipbooks = seededShuffle([guaranteedLofter, guaranteed365, ...pickedRemaining], applicantId + "-final");
     } else {
       // Fallback
-      libraryFlipbooks = shuffleArray([...allLofters, ...all365]).slice(0, 15);
+      libraryFlipbooks = seededShuffle([...allLofters, ...all365], applicantId).slice(0, 15);
     }
 
     // Check if library access is valid (1 month from paidAt or createdAt)
