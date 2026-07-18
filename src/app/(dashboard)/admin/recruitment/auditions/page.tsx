@@ -403,25 +403,23 @@ export default function AuditionsPage() {
                 {/* Event Sessions Container */}
                 <div className="pl-0 sm:pl-[104px] space-y-4">
                   {/* Add Session Form inline block */}
-                  <div className="bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 p-4 w-full sm:w-[90%] md:w-3/4 lg:w-1/2">
-                    <form onSubmit={(e) => handleCreateSession(event.id, e)} className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
-                      <div className="flex gap-3 flex-1">
-                        <div className="space-y-1 flex-1">
-                          <Label className="text-[11px] font-bold uppercase text-slate-400">Start</Label>
-                          <Input name="startTime" type="time" required className="h-9 bg-white border-slate-200 rounded-lg text-sm w-full" />
-                        </div>
-                        <div className="space-y-1 flex-1">
-                          <Label className="text-[11px] font-bold uppercase text-slate-400">End</Label>
-                          <Input name="endTime" type="time" required className="h-9 bg-white border-slate-200 rounded-lg text-sm w-full" />
-                        </div>
+                  <div className="bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 p-4 w-full sm:w-[90%] md:w-3/4 lg:w-2/3 xl:w-1/2">
+                    <form onSubmit={(e) => handleCreateSession(event.id, e)} className="flex flex-wrap items-end gap-3">
+                      <div className="space-y-1 w-28 flex-1 min-w-[100px]">
+                        <Label className="text-[11px] font-bold uppercase text-slate-400">Start</Label>
+                        <Input name="startTime" type="time" required className="h-9 bg-white border-slate-200 rounded-lg text-sm w-full" />
                       </div>
-                      <div className="flex gap-3 items-end">
-                        <div className="space-y-1 w-20">
-                          <Label className="text-[11px] font-bold uppercase text-slate-400">Cap (Opt)</Label>
-                          <Input name="capacity" type="number" className="h-9 bg-white border-slate-200 rounded-lg text-sm w-full" />
-                        </div>
-                        <Button type="submit" size="sm" variant="secondary" className="h-9 rounded-lg px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold shrink-0">Add Slot</Button>
+                      <div className="space-y-1 w-28 flex-1 min-w-[100px]">
+                        <Label className="text-[11px] font-bold uppercase text-slate-400">End</Label>
+                        <Input name="endTime" type="time" required className="h-9 bg-white border-slate-200 rounded-lg text-sm w-full" />
                       </div>
+                      <div className="space-y-1 w-20 flex-1 min-w-[80px]">
+                        <Label className="text-[11px] font-bold uppercase text-slate-400">Cap (Opt)</Label>
+                        <Input name="capacity" type="number" className="h-9 bg-white border-slate-200 rounded-lg text-sm w-full" />
+                      </div>
+                      <Button type="submit" size="sm" variant="secondary" className="h-9 rounded-lg px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
+                        Add Slot
+                      </Button>
                     </form>
                   </div>
 
