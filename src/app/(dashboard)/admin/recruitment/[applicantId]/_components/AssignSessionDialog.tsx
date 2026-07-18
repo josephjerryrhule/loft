@@ -87,7 +87,7 @@ export function AssignSessionDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-white shadow-xl border border-slate-100">
         <DialogHeader>
           <DialogTitle>{currentSessionId ? "Change Audition Session" : "Assign to Audition Session"}</DialogTitle>
         </DialogHeader>

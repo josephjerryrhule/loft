@@ -81,7 +81,7 @@ export function AddApplicantToSessionDialog({
           <UserPlus className="w-3 h-3 mr-1" /> Add Applicant
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-white shadow-xl border border-slate-100">
         <DialogHeader>
           <DialogTitle>Assign to {sessionName}</DialogTitle>
         </DialogHeader>

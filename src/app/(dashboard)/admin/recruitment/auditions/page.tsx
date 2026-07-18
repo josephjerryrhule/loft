@@ -278,7 +278,7 @@ export default function AuditionsPage() {
                   {selectedDate ? "Change Date" : "Filter Date"}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="w-fit p-4 rounded-2xl">
+              <DialogContent className="w-fit p-4 rounded-2xl bg-white shadow-xl border border-slate-100">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
@@ -297,7 +297,7 @@ export default function AuditionsPage() {
             <DialogTrigger asChild>
               <Button className="bg-[#E87154] hover:bg-[#D66144] rounded-full px-6 shadow-sm"><Plus className="w-4 h-4 mr-2" /> Create Event</Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] rounded-2xl">
+            <DialogContent className="sm:max-w-[425px] rounded-2xl bg-white shadow-xl border border-slate-100">
               <DialogHeader>
                 <DialogTitle className="text-xl">Create New Event</DialogTitle>
               </DialogHeader>
