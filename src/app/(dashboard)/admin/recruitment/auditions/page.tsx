@@ -275,7 +275,7 @@ export default function AuditionsPage() {
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="lg:hidden h-8 text-xs font-bold rounded-full">
                   <Calendar className="w-3.5 h-3.5 mr-1" />
-                  {selectedDate ? format(selectedDate, "Change Date") : "Filter Date"}
+                  {selectedDate ? "Change Date" : "Filter Date"}
                 </Button>
               </DialogTrigger>
               <DialogContent className="w-fit p-4 rounded-2xl">
