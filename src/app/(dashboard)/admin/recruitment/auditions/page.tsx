@@ -19,6 +19,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { MapPin, Users, Plus, Trash2, Clock, Star, Loader2, ChevronLeft, ChevronRight, Video, FileText, CheckCircle2, Unlock, Lock, Megaphone } from "lucide-react";
 import { format, isSameDay, startOfDay } from "date-fns";
 import { AddApplicantToSessionDialog } from "./_components/AddApplicantToSessionDialog";
+import { AssignSessionDialog } from "@/app/(dashboard)/admin/recruitment/[applicantId]/_components/AssignSessionDialog";
 
 // Pastel colors to mimic the reference image schedule blocks
 const PASTEL_COLORS = [
@@ -458,19 +459,28 @@ export default function AuditionsPage() {
 
                         {/* Applicants in this session */}
                         {session.applicants.length > 0 && (
-                          <div className="mt-4 flex flex-wrap gap-2">
+                          <div className="mt-4 flex flex-wrap gap-2 animate-in fade-in duration-200">
                             {session.applicants.map((app: any) => (
-                              <button 
-                                key={app.applicantId} 
-                                onClick={() => openScoreModal(app, session.id)}
-                                className="flex items-center gap-2 bg-white hover:bg-slate-50 transition-colors border border-white/40 shadow-sm rounded-full py-1.5 pr-4 pl-1.5 text-left"
-                              >
-                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${color.bg} ${color.text}`}>
-                                  {getInitials(app.fullName)}
-                                </div>
-                                <span className="text-xs font-bold text-slate-700">{app.fullName}</span>
-                                <Star className={`w-3 h-3 ${color.text} ml-1`} />
-                              </button>
+                              <div key={app.applicantId} className="flex items-center gap-1.5 bg-white border border-white/40 shadow-sm rounded-full py-1 pr-2.5 pl-1.5">
+                                <button 
+                                  onClick={() => openScoreModal(app, session.id)}
+                                  className="flex items-center gap-2 hover:opacity-85 transition-opacity text-left cursor-pointer"
+                                  title="Score Performance"
+                                >
+                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${color.bg} ${color.text}`}>
+                                    {getInitials(app.fullName)}
+                                  </div>
+                                  <span className="text-xs font-bold text-slate-700 hover:text-slate-900">{app.fullName}</span>
+                                </button>
+                                <div className="w-px h-3.5 bg-slate-200 mx-0.5" />
+                                <AssignSessionDialog 
+                                  applicantId={app.applicantId} 
+                                  currentSessionId={session.id} 
+                                  currentStatus={app.status}
+                                  compact={true}
+                                  onAssignComplete={loadEvents}
+                                />
+                              </div>
                             ))}
                           </div>
                         )}
