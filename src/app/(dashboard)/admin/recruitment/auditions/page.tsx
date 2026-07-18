@@ -212,7 +212,7 @@ export default function AuditionsPage() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto h-[calc(100vh-8rem)] flex gap-6 animate-in fade-in duration-500">
+    <div className="max-w-7xl mx-auto h-[calc(100vh-8rem)] flex flex-col lg:flex-row gap-6 animate-in fade-in duration-500">
       
       {/* LEFT SIDEBAR */}
       <div className="w-[300px] shrink-0 flex flex-col gap-6 overflow-y-auto pb-6 hidden lg:flex">
@@ -260,16 +260,36 @@ export default function AuditionsPage() {
       <div className="flex-1 bg-white rounded-3xl shadow-sm border border-slate-100 flex flex-col overflow-hidden">
         
         {/* Header */}
-        <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-          <div className="flex items-center gap-4">
-            <h2 className="text-2xl font-bold text-slate-900">
+        <div className="px-4 sm:px-8 py-4 sm:py-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/50">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 leading-tight">
               {selectedDate ? format(selectedDate, "MMMM d, yyyy") : "All Upcoming Events"}
             </h2>
             {selectedDate && (
               <Button variant="outline" size="sm" onClick={() => setSelectedDate(undefined)} className="h-8 text-xs font-bold rounded-full">
-                Clear Date Filter
+                Clear Filter
               </Button>
             )}
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="lg:hidden h-8 text-xs font-bold rounded-full">
+                  <Calendar className="w-3.5 h-3.5 mr-1" />
+                  {selectedDate ? format(selectedDate, "Change Date") : "Filter Date"}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="w-fit p-4 rounded-2xl">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  className="rounded-md mx-auto"
+                  classNames={{
+                    day_selected: "bg-[#E87154] text-white hover:bg-[#E87154] hover:text-white focus:bg-[#E87154] focus:text-white",
+                    day_today: "bg-slate-100 text-slate-900"
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
           </div>
           
           <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
@@ -306,7 +326,7 @@ export default function AuditionsPage() {
         </div>
 
         {/* Schedule View */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-12">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-12">
           {displayedEvents.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-slate-400">
               <Calendar className="w-16 h-16 mb-4 opacity-20" />
@@ -314,39 +334,40 @@ export default function AuditionsPage() {
             </div>
           ) : (
             displayedEvents.map((event, eventIdx) => (
-              <div key={event.id} className="relative">
+              <div key={event.id} className="relative border-b border-slate-100 pb-8 last:border-0">
                 {/* Event Header Timeline Marker */}
-                <div className="flex items-center gap-4 mb-6 sticky top-0 bg-white z-10 py-2">
-                  <div className="w-16 text-right">
-                    <p className="text-sm font-bold text-slate-900">{format(new Date(event.date), "EEE")}</p>
-                    <p className="text-2xl font-light text-slate-400 -mt-1">{format(new Date(event.date), "dd")}</p>
-                  </div>
-                  <div className="w-px h-12 bg-slate-200 mx-2" />
-                  <div className="flex-1 flex items-center justify-between">
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <div>
-                        <h3 className="text-xl font-bold text-slate-900">{event.name}</h3>
-                        <p className="text-sm text-slate-500 font-medium flex items-center gap-1.5 mt-0.5">
-                          <MapPin className="w-3.5 h-3.5" /> {event.venue}
-                        </p>
-                      </div>
-                      {/* Released Status Badge */}
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${event.isReleased 
-                        ? "bg-emerald-100 text-emerald-700 border border-emerald-200" 
-                        : "bg-slate-100 text-slate-600 border border-slate-200"}`}>
-                        {event.isReleased ? (
-                          <>
-                            <Unlock className="w-3 h-3" />
-                            <span>Released</span>
-                          </>
-                        ) : (
-                          <>
-                            <Lock className="w-3 h-3" />
-                            <span>Not Released</span>
-                          </>
-                        )}
-                      </span>
+                <div className="flex flex-col sm:flex-row sm:items-start md:items-center gap-4 mb-6 sticky top-0 bg-white z-10 py-3 border-b sm:border-b-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 sm:w-16 text-center sm:text-right bg-slate-50 sm:bg-transparent p-2 sm:p-0 rounded-xl shrink-0">
+                      <p className="text-xs sm:text-sm font-bold text-[#E87154] uppercase tracking-wider">{format(new Date(event.date), "EEE")}</p>
+                      <p className="text-xl sm:text-2xl font-black text-slate-900 sm:text-slate-400 sm:font-light -mt-1">{format(new Date(event.date), "dd")}</p>
                     </div>
+                    <div className="w-px h-12 bg-slate-200 mx-2 hidden sm:block" />
+                    <div>
+                      <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">{event.name}</h3>
+                      <p className="text-xs sm:text-sm text-slate-500 font-medium flex items-center gap-1.5 mt-0.5">
+                        <MapPin className="w-3.5 h-3.5 text-[#E87154]" /> {event.venue}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 flex-1 w-full sm:w-auto">
+                    {/* Released Status Badge */}
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${event.isReleased 
+                      ? "bg-emerald-100 text-emerald-700 border border-emerald-200" 
+                      : "bg-slate-100 text-slate-600 border border-slate-200"}`}>
+                      {event.isReleased ? (
+                        <>
+                          <Unlock className="w-3 h-3" />
+                          <span>Released</span>
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="w-3 h-3" />
+                          <span>Not Released</span>
+                        </>
+                      )}
+                    </span>
                     <div className="flex items-center gap-2">
                       <Button 
                         variant="outline" 
@@ -354,8 +375,8 @@ export default function AuditionsPage() {
                         onClick={() => handleReleaseSlots(event.id, !event.isReleased)}
                         disabled={releasingEventId === event.id}
                         className={event.isReleased 
-                          ? "border-amber-300 text-amber-700 hover:bg-amber-50" 
-                          : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"}
+                          ? "border-amber-300 text-amber-700 hover:bg-amber-50 h-8 text-xs font-bold" 
+                          : "border-emerald-300 text-emerald-700 hover:bg-emerald-50 h-8 text-xs font-bold"}
                       >
                         {releasingEventId === event.id ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -371,7 +392,7 @@ export default function AuditionsPage() {
                           </>
                         )}
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDeleteEvent(event.id)} className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full">
+                      <Button variant="ghost" size="icon" onClick={() => handleDeleteEvent(event.id)} className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full h-8 w-8">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -379,30 +400,34 @@ export default function AuditionsPage() {
                 </div>
 
                 {/* Event Sessions Container */}
-                <div className="ml-[104px] space-y-4">
+                <div className="pl-0 sm:pl-[104px] space-y-4">
                   {/* Add Session Form inline block */}
-                  <div className="bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 p-4 w-full md:w-3/4 lg:w-1/2">
-                    <form onSubmit={(e) => handleCreateSession(event.id, e)} className="flex items-end gap-3">
-                      <div className="space-y-1 flex-1">
-                        <Label className="text-[11px] font-bold uppercase text-slate-400">Start</Label>
-                        <Input name="startTime" type="time" required className="h-9 bg-white border-slate-200 rounded-lg text-sm" />
+                  <div className="bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 p-4 w-full sm:w-[90%] md:w-3/4 lg:w-1/2">
+                    <form onSubmit={(e) => handleCreateSession(event.id, e)} className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
+                      <div className="flex gap-3 flex-1">
+                        <div className="space-y-1 flex-1">
+                          <Label className="text-[11px] font-bold uppercase text-slate-400">Start</Label>
+                          <Input name="startTime" type="time" required className="h-9 bg-white border-slate-200 rounded-lg text-sm w-full" />
+                        </div>
+                        <div className="space-y-1 flex-1">
+                          <Label className="text-[11px] font-bold uppercase text-slate-400">End</Label>
+                          <Input name="endTime" type="time" required className="h-9 bg-white border-slate-200 rounded-lg text-sm w-full" />
+                        </div>
                       </div>
-                      <div className="space-y-1 flex-1">
-                        <Label className="text-[11px] font-bold uppercase text-slate-400">End</Label>
-                        <Input name="endTime" type="time" required className="h-9 bg-white border-slate-200 rounded-lg text-sm" />
+                      <div className="flex gap-3 items-end">
+                        <div className="space-y-1 w-20">
+                          <Label className="text-[11px] font-bold uppercase text-slate-400">Cap (Opt)</Label>
+                          <Input name="capacity" type="number" className="h-9 bg-white border-slate-200 rounded-lg text-sm w-full" />
+                        </div>
+                        <Button type="submit" size="sm" variant="secondary" className="h-9 rounded-lg px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold shrink-0">Add Slot</Button>
                       </div>
-                      <div className="space-y-1 w-20">
-                        <Label className="text-[11px] font-bold uppercase text-slate-400">Cap (Opt)</Label>
-                        <Input name="capacity" type="number" className="h-9 bg-white border-slate-200 rounded-lg text-sm" />
-                      </div>
-                      <Button type="submit" size="sm" variant="secondary" className="h-9 rounded-lg px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold">Add Slot</Button>
                     </form>
                   </div>
 
                   {event.sessions.map((session: any, sessionIdx: number) => {
                     const color = PASTEL_COLORS[(eventIdx + sessionIdx) % PASTEL_COLORS.length];
                     return (
-                      <div key={session.id} className={`${color.bg} ${color.border} border rounded-2xl p-5 shadow-sm transition-transform hover:scale-[1.01] w-full md:w-[90%]`}>
+                      <div key={session.id} className={`${color.bg} ${color.border} border rounded-2xl p-4 sm:p-5 shadow-sm transition-transform hover:scale-[1.01] w-full sm:w-[90%]`}>
                         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
                           <div>
                             <h4 className={`text-base font-bold ${color.text}`}>
@@ -413,17 +438,21 @@ export default function AuditionsPage() {
                             </p>
                           </div>
                           
-                          <div className="flex items-center gap-2 bg-white/50 px-3 py-1.5 rounded-full border border-white/20">
+                          <div className="flex flex-wrap items-center gap-2 bg-white/50 px-3 py-1.5 rounded-2xl sm:rounded-full border border-white/20 w-fit">
                             <Users className={`w-3.5 h-3.5 ${color.text}`} />
                             <span className={`text-xs font-bold ${color.text}`}>
-                              {session.applicants.length} {session.maxCapacity ? `/ ${session.maxCapacity}` : ''} Assigned
+                              {session.applicants.length}/1 Assigned
                             </span>
-                            <div className="w-px h-3 bg-white/50 mx-1" />
-                            <AddApplicantToSessionDialog 
-                              sessionId={session.id} 
-                              sessionName={`${format(new Date(session.startTime), "h:mm a")} - ${format(new Date(session.endTime), "h:mm a")}`} 
-                              onAssignComplete={loadEvents}
-                            />
+                            {session.applicants.length < 1 && (
+                              <>
+                                <div className="hidden sm:block w-px h-3 bg-white/50 mx-1" />
+                                <AddApplicantToSessionDialog 
+                                  sessionId={session.id} 
+                                  sessionName={`${format(new Date(session.startTime), "h:mm a")} - ${format(new Date(session.endTime), "h:mm a")}`} 
+                                  onAssignComplete={loadEvents}
+                                />
+                              </>
+                            )}
                           </div>
                         </div>
 
@@ -434,7 +463,7 @@ export default function AuditionsPage() {
                               <button 
                                 key={app.applicantId} 
                                 onClick={() => openScoreModal(app, session.id)}
-                                className="flex items-center gap-2 bg-white hover:bg-slate-50 transition-colors border border-white/40 shadow-sm rounded-full py-1.5 pr-4 pl-1.5"
+                                className="flex items-center gap-2 bg-white hover:bg-slate-50 transition-colors border border-white/40 shadow-sm rounded-full py-1.5 pr-4 pl-1.5 text-left"
                               >
                                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${color.bg} ${color.text}`}>
                                   {getInitials(app.fullName)}

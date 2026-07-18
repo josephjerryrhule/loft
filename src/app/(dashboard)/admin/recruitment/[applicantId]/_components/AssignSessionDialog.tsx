@@ -47,7 +47,11 @@ export function AssignSessionDialog({
     
     setIsSubmitting(true);
     try {
-      await assignApplicantToSession(applicantId, selectedSessionId);
+      const res = await assignApplicantToSession(applicantId, selectedSessionId);
+      if (res && 'error' in res && res.error) {
+        alert(res.error);
+        return;
+      }
       
       if (updateToInvited) {
         await updateApplicantStatus(applicantId, "AUDITION_INVITED", "Assigned to an audition session.");
@@ -99,7 +103,7 @@ export function AssignSessionDialog({
                           {event.name} ({format(new Date(event.date), "MMM d, yyyy")})
                         </SelectLabel>
                         {event.sessions.map((session: any) => {
-                          const isFull = session.maxCapacity && session._count.applicants >= session.maxCapacity;
+                          const isFull = session._count.applicants >= 1;
                           return (
                             <SelectItem 
                               key={session.id} 
@@ -109,8 +113,8 @@ export function AssignSessionDialog({
                               <div className="flex justify-between items-center w-full min-w-[200px]">
                                 <span>{format(new Date(session.startTime), "h:mm a")} - {format(new Date(session.endTime), "h:mm a")}</span>
                                 <span className={`text-xs ml-4 ${isFull ? "text-red-500 font-bold" : "text-slate-400"}`}>
-                                  ({session._count.applicants}{session.maxCapacity ? `/${session.maxCapacity}` : ""})
-                                  {isFull && session.id !== currentSessionId && " FULL"}
+                                  ({session._count.applicants}/1)
+                                  {isFull && session.id !== currentSessionId && " BOOKED"}
                                 </span>
                               </div>
                             </SelectItem>

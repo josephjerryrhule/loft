@@ -51,7 +51,11 @@ export function AddApplicantToSessionDialog({
     
     setIsSubmitting(true);
     try {
-      await assignApplicantToSession(selectedApplicant.applicantId, sessionId);
+      const res = await assignApplicantToSession(selectedApplicant.applicantId, sessionId);
+      if (res && 'error' in res && res.error) {
+        alert(res.error);
+        return;
+      }
       
       // Optionally prompt or auto-update status to AUDITION_INVITED
       if (selectedApplicant.status !== "AUDITION_INVITED" && selectedApplicant.status !== "AUDITION_CONFIRMED") {

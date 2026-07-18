@@ -863,6 +863,18 @@ export async function assignApplicantToSession(
 
   if (!applicant) return { error: "Applicant not found" };
 
+  // Check if session already has another applicant assigned
+  const existingAssignment = await prisma.recruitmentApplicant.findFirst({
+    where: { 
+      auditionSessionId: sessionId,
+      id: { not: applicant.id }
+    }
+  });
+
+  if (existingAssignment) {
+    return { error: "This slot is already assigned to another applicant." };
+  }
+
   await prisma.recruitmentApplicant.update({
     where: { id: applicant.id },
     data: { auditionSessionId: sessionId },
@@ -1315,10 +1327,10 @@ export async function getApplicantPortalData(applicantId: string) {
         orderBy: { date: "asc" }
       });
       
-      // Filter out full sessions if maxCapacity is set
+      // Filter out full sessions (one applicant per slot, so slots with >= 1 applicant are unavailable)
       availableSessions = events.map(event => ({
         ...event,
-        sessions: event.sessions.filter(s => !s.maxCapacity || s._count.applicants < s.maxCapacity)
+        sessions: event.sessions.filter(s => s._count.applicants < 1)
       })).filter(event => event.sessions.length > 0);
     }
 
@@ -1499,8 +1511,8 @@ export async function bookAuditionSession(applicantId: string, sessionId: string
         throw new Error("Session not found.");
       }
 
-      if (session.maxCapacity && session._count.applicants >= session.maxCapacity) {
-        throw new Error("This session is already full.");
+      if (session._count.applicants >= 1) {
+        throw new Error("This session is already booked.");
       }
 
       const updatedApplicant = await tx.recruitmentApplicant.update({
