@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createFlipbook, getAllFlipbooks, deleteFlipbook } from "@/app/actions/flipbooks";
+import { createFlipbook, getAllFlipbooks, deleteFlipbook, resyncFlipbookCovers } from "@/app/actions/flipbooks";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { FlipbookActions } from "@/components/flipbook/FlipbookActions";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { 
   Loader2, Plus, BookOpen, Clock, CheckCircle2, LayoutGrid, List, Search, 
-  Eye, Pencil, Trash2, Library, Filter, Tag, Folder, Layers, X 
+  Eye, Pencil, Trash2, Library, Filter, Tag, Folder, Layers, X, RefreshCw 
 } from "lucide-react";
 import { DateTimePicker } from "@/components/ui/datetime-picker";
 import { toast } from "sonner";
@@ -41,6 +41,7 @@ const ReliableFlipbookViewer = dynamicImport(
 export default function AdminFlipbooksPage() {
   const [flipbooks, setFlipbooks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [resyncing, setResyncing] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(12);
   const [schedulePublish, setSchedulePublish] = useState(false);
@@ -66,6 +67,24 @@ export default function AdminFlipbooksPage() {
       console.error("Failed to load flipbooks:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResyncCovers = async () => {
+    try {
+      setResyncing(true);
+      toast.info("Resyncing Heyzine flipbook cover URLs...");
+      const result = await resyncFlipbookCovers();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success(`Resynced ${result.updatedCount} cover images from Heyzine!`);
+        loadFlipbooks();
+      }
+    } catch (err) {
+      toast.error("Failed to resync covers.");
+    } finally {
+      setResyncing(false);
     }
   };
 
@@ -174,6 +193,19 @@ export default function AdminFlipbooksPage() {
         subtitle="Manage, categorize, and schedule digital flipbooks across age brackets and bookshelves"
         actions={
           <div className="flex items-center gap-3">
+            {/* Re-sync Covers Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResyncCovers}
+              disabled={resyncing}
+              className="h-9 px-3 gap-1.5 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800"
+              title="Re-sync cover images from Heyzine API"
+            >
+              <RefreshCw size={14} className={cn(resyncing && "animate-spin")} />
+              {resyncing ? "Syncing..." : "Re-sync Covers"}
+            </Button>
+
             {/* View Mode Switcher */}
             <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200/50 dark:border-slate-700/50 mr-2">
               <Button
@@ -430,13 +462,7 @@ export default function AdminFlipbooksPage() {
                             className="aspect-[3/4] bg-white rounded shadow-md overflow-hidden border border-black/5 transition-transform duration-300 group-hover:scale-105"
                             style={{ transform: `rotate(${(i - 1) * 3}deg)` }}
                           >
-                            {b.coverImageUrl ? (
-                              <img src={b.coverImageUrl} alt={b.title} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-[#FFFAF5] p-1 text-[8px] font-bold text-center">
-                                {b.title}
-                              </div>
-                            )}
+                            <BookshelfPreviewThumb book={b} />
                           </div>
                         ))}
                       </div>
@@ -601,9 +627,23 @@ export default function AdminFlipbooksPage() {
   );
 }
 
+function BookshelfPreviewThumb({ book }: { book: any }) {
+  const [error, setError] = useState(false);
+  if (book.coverImageUrl && !error) {
+    return <img src={book.coverImageUrl} alt={book.title} onError={() => setError(true)} className="w-full h-full object-cover" />;
+  }
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center bg-[#FFFAF5] p-1 text-[8px] font-bold text-center leading-tight">
+      <BookOpen className="h-3 w-3 text-[#E87154] mb-0.5" />
+      <span className="line-clamp-2">{book.title}</span>
+    </div>
+  );
+}
+
 function AdminBookItem({ book, loadFlipbooks }: { book: any; loadFlipbooks: () => void }) {
   const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -630,10 +670,10 @@ function AdminBookItem({ book, loadFlipbooks }: { book: any; loadFlipbooks: () =
       {/* Cover image wrapper: scales naturally with capped aspect ratio, max height, and horizontal centering */}
       <div className="w-full relative flex items-center justify-center">
         <div
-          className="block w-full max-h-[280px] transition-all duration-300 ease-out group-hover:scale-[1.03] group-hover:-translate-y-1.5 text-left shadow-[0_12px_24px_-8px_rgba(0,0,0,0.25)] group-hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.35)] rounded-[4px] relative mx-auto overflow-hidden bg-slate-50 border border-black/5"
+          className="block w-full max-h-[280px] transition-all duration-300 ease-out group-hover:scale-[1.03] group-hover:-translate-y-1.5 text-left shadow-[0_12px_24px_-8px_rgba(0,0,0,0.25)] group-hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.35)] rounded-[4px] relative mx-auto overflow-hidden bg-[#FFFAF5] border border-black/5"
           style={{ aspectRatio: `${cappedAspect}` }}
         >
-          {book.coverImageUrl ? (
+          {book.coverImageUrl && !imgError ? (
             <img
               src={book.coverImageUrl}
               alt={book.title}
@@ -644,6 +684,9 @@ function AdminBookItem({ book, loadFlipbooks }: { book: any; loadFlipbooks: () =
                 }
                 setLoaded(true);
               }}
+              onError={() => {
+                setImgError(true);
+              }}
               className={cn(
                 "w-full h-full object-cover transition-opacity duration-300",
                 loaded ? "opacity-100" : "opacity-0"
@@ -651,8 +694,10 @@ function AdminBookItem({ book, loadFlipbooks }: { book: any; loadFlipbooks: () =
             />
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#FFFAF5] p-4 text-center">
-              <BookOpen className="h-8 w-8 text-[#E87154] mb-2" />
-              <span className="text-stone-850 font-bold text-xs sm:text-sm leading-tight line-clamp-3">
+              <div className="w-12 h-12 rounded-full bg-[#E87154]/10 flex items-center justify-center mb-3">
+                <BookOpen className="h-6 w-6 text-[#E87154]" />
+              </div>
+              <span className="text-stone-850 font-bold text-xs sm:text-sm leading-tight line-clamp-3 px-2">
                 {book.title}
               </span>
             </div>

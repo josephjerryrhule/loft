@@ -229,6 +229,42 @@ export async function getAllFlipbooks() {
     }
 }
 
+export async function resyncFlipbookCovers() {
+    try {
+        const session = await auth();
+        if (!session?.user?.id) throw new Error("Unauthorized");
+
+        const flipbooks = await prisma.flipbook.findMany({
+            where: { heyzineUrl: { not: null } },
+            select: { id: true, heyzineUrl: true }
+        });
+
+        let updatedCount = 0;
+        for (const book of flipbooks) {
+            if (!book.heyzineUrl) continue;
+            try {
+                const { iframeContent, thumbnailUrl } = await fetchHeyzineData(book.heyzineUrl);
+                if (thumbnailUrl) {
+                    await prisma.flipbook.update({
+                        where: { id: book.id },
+                        data: { coverImageUrl: thumbnailUrl, iframeContent }
+                    });
+                    updatedCount++;
+                }
+            } catch (err) {
+                console.error(`Failed to resync cover for book ${book.id}:`, err);
+            }
+        }
+
+        revalidatePath("/admin/flipbooks");
+        revalidatePath("/parent/flipbooks");
+        return { success: true, updatedCount };
+    } catch (error) {
+        console.error("Failed to resync flipbook covers:", error);
+        return { error: error instanceof Error ? error.message : "Failed to resync covers" };
+    }
+}
+
 export async function getCustomerFlipbooks(childProfileId?: string) {
     const session = await auth();
     if (!session?.user?.id) {

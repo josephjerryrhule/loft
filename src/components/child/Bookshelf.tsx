@@ -107,6 +107,7 @@ export function Bookshelf({ flipbooks }: BookshelfProps) {
 function BookItem({ book }: BookItemProps) {
   const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   // Default to portrait aspect ratio (3/4)
   const aspect = dimensions ? dimensions.width / dimensions.height : 0.75;
@@ -122,8 +123,8 @@ function BookItem({ book }: BookItemProps) {
           className="block w-auto max-w-full h-auto max-h-full transition-transform duration-500 group-hover:scale-105 group-hover:-translate-y-2 group-hover:rotate-1"
           style={{ aspectRatio: `${cappedAspect}` }}
         >
-          <div className="relative w-full h-full rounded-xl sm:rounded-2xl overflow-hidden shadow-xl ring-4 ring-white group-hover:ring-[#E87154]/20 bg-stone-100 flex items-center justify-center">
-            {book.coverImageUrl ? (
+          <div className="relative w-full h-full rounded-xl sm:rounded-2xl overflow-hidden shadow-xl ring-4 ring-white group-hover:ring-[#E87154]/20 bg-[#FFFAF5] flex items-center justify-center">
+            {book.coverImageUrl && !imgError ? (
               <img
                 src={book.coverImageUrl}
                 alt={book.title}
@@ -134,13 +135,14 @@ function BookItem({ book }: BookItemProps) {
                   }
                   setLoaded(true);
                 }}
+                onError={() => setImgError(true)}
                 className={cn(
                   "w-full h-full object-cover transition-opacity duration-300",
                   loaded ? "opacity-100" : "opacity-0"
                 )}
               />
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center bg-[#FFFAF5] p-6 text-center">
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#FFFAF5] p-6 text-center">
                 <span className="text-[#E87154] font-black text-sm sm:text-base font-quicksand leading-tight">
                   {book.title}
                 </span>
