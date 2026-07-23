@@ -10,7 +10,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { FlipbookActions } from "@/components/flipbook/FlipbookActions";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { Loader2, Plus, BookOpen, Clock, CheckCircle2, LayoutGrid, List, Search, Eye, Pencil, Trash2 } from "lucide-react";
+import { 
+  Loader2, Plus, BookOpen, Clock, CheckCircle2, LayoutGrid, List, Search, 
+  Eye, Pencil, Trash2, Library, Filter, Tag, Folder, Layers, X 
+} from "lucide-react";
 import { DateTimePicker } from "@/components/ui/datetime-picker";
 import { toast } from "sonner";
 import { getAgeGroupLabel } from "@/lib/utils";
@@ -44,9 +47,11 @@ export default function AdminFlipbooksPage() {
   const [publishDate, setPublishDate] = useState<Date | undefined>(undefined);
   const [dialogOpen, setDialogOpen] = useState(false);
   
-  // Grid/Table View & Search States
-  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  // View Modes & Categorized Dropdown States
+  const [viewMode, setViewMode] = useState<"bookshelves" | "grid" | "table">("bookshelves");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedAgeGroup, setSelectedAgeGroup] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   useEffect(() => {
     loadFlipbooks();
@@ -85,15 +90,70 @@ export default function AdminFlipbooksPage() {
     }
   };
 
-  // Filter flipbooks dynamically based on search query
+  // Collect unique categories dynamically from loaded flipbooks
+  const existingCategories = useMemo(() => {
+    const cats = flipbooks
+      .map((f) => f.category)
+      .filter((c): c is string => Boolean(c && c.trim()));
+    return Array.from(new Set(cats)).sort();
+  }, [flipbooks]);
+
+  // Filter flipbooks dynamically based on search, age group, and shelf category
   const filteredFlipbooks = useMemo(() => {
-    if (!searchQuery.trim()) return flipbooks;
-    const q = searchQuery.toLowerCase();
-    return flipbooks.filter(f => 
-      f.title.toLowerCase().includes(q) || 
-      (f.description && f.description.toLowerCase().includes(q))
-    );
-  }, [flipbooks, searchQuery]);
+    return flipbooks.filter((f) => {
+      // Search query filter
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchesSearch =
+          f.title.toLowerCase().includes(q) ||
+          (f.description && f.description.toLowerCase().includes(q)) ||
+          (f.category && f.category.toLowerCase().includes(q)) ||
+          (f.ageGroup && f.ageGroup.toLowerCase().includes(q));
+        if (!matchesSearch) return false;
+      }
+
+      // Age Group filter
+      if (selectedAgeGroup !== "all") {
+        if (selectedAgeGroup === "UNASSIGNED") {
+          if (f.ageGroup) return false;
+        } else if (f.ageGroup !== selectedAgeGroup) {
+          return false;
+        }
+      }
+
+      // Category / Shelf filter
+      if (selectedCategory !== "all") {
+        if (selectedCategory === "UNASSIGNED") {
+          if (f.category) return false;
+        } else if (f.category !== selectedCategory) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [flipbooks, searchQuery, selectedAgeGroup, selectedCategory]);
+
+  // Group filtered flipbooks into Bookshelf cards (Heyzine style)
+  const groupedBookshelves = useMemo(() => {
+    const groups: Record<string, any[]> = {};
+    filteredFlipbooks.forEach((book) => {
+      const shelfName = book.category?.trim() || "Uncategorized Shelves";
+      if (!groups[shelfName]) {
+        groups[shelfName] = [];
+      }
+      groups[shelfName].push(book);
+    });
+    return groups;
+  }, [filteredFlipbooks]);
+
+  const hasActiveFilters = searchQuery !== "" || selectedAgeGroup !== "all" || selectedCategory !== "all";
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSelectedAgeGroup("all");
+    setSelectedCategory("all");
+  };
 
   const totalPages = Math.ceil(filteredFlipbooks.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -111,11 +171,23 @@ export default function AdminFlipbooksPage() {
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <PageHeader
         title="Flipbooks"
-        subtitle="Manage and schedule digital flipbooks for various age groups"
+        subtitle="Manage, categorize, and schedule digital flipbooks across age brackets and bookshelves"
         actions={
           <div className="flex items-center gap-3">
-            {/* View Mode Toggle Switcher */}
+            {/* View Mode Switcher */}
             <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200/50 dark:border-slate-700/50 mr-2">
+              <Button
+                variant={viewMode === "bookshelves" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("bookshelves")}
+                className={cn(
+                  "h-8 px-3 rounded-md text-xs font-bold gap-1.5 cursor-pointer transition-all",
+                  viewMode === "bookshelves" ? "bg-white dark:bg-slate-950 shadow-sm text-slate-850 dark:text-slate-100" : "text-slate-500 hover:text-slate-900"
+                )}
+                title="Bookshelves View (Heyzine style)"
+              >
+                <Library size={14} /> Shelves
+              </Button>
               <Button
                 variant={viewMode === "grid" ? "secondary" : "ghost"}
                 size="sm"
@@ -124,6 +196,7 @@ export default function AdminFlipbooksPage() {
                   "h-8 px-3 rounded-md text-xs font-bold gap-1.5 cursor-pointer transition-all",
                   viewMode === "grid" ? "bg-white dark:bg-slate-950 shadow-sm text-slate-850 dark:text-slate-100" : "text-slate-500 hover:text-slate-900"
                 )}
+                title="Grid View"
               >
                 <LayoutGrid size={14} /> Grid
               </Button>
@@ -135,6 +208,7 @@ export default function AdminFlipbooksPage() {
                   "h-8 px-3 rounded-md text-xs font-bold gap-1.5 cursor-pointer transition-all",
                   viewMode === "table" ? "bg-white dark:bg-slate-950 shadow-sm text-slate-850 dark:text-slate-100" : "text-slate-500 hover:text-slate-900"
                 )}
+                title="Table View"
               >
                 <List size={14} /> Table
               </Button>
@@ -157,7 +231,7 @@ export default function AdminFlipbooksPage() {
                             <Input name="title" placeholder="E.g. Monthly Gazette" required />
                         </div>
                         <div className="space-y-2">
-                            <Label>Age Group</Label>
+                            <Label>Age Group / Bracket</Label>
                             <select 
                                 name="ageGroup" 
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -168,6 +242,23 @@ export default function AdminFlipbooksPage() {
                                 <option value="BIG_READERS">{getAgeGroupLabel("BIG_READERS")}</option>
                             </select>
                         </div>
+                   </div>
+
+                   <div className="space-y-2">
+                      <Label>Category / Bookshelf Name</Label>
+                      <Input 
+                        name="category" 
+                        placeholder="E.g. LOFT 365 SERIES, Series 1, Children's Classics..." 
+                        list="category-suggestions"
+                      />
+                      <datalist id="category-suggestions">
+                        {existingCategories.map(cat => (
+                          <option key={cat} value={cat} />
+                        ))}
+                      </datalist>
+                      <p className="text-[11px] text-muted-foreground">
+                        Group this book into a bookshelf or series folder.
+                      </p>
                    </div>
 
                    <div className="space-y-2">
@@ -188,7 +279,7 @@ export default function AdminFlipbooksPage() {
                       </p>
                    </div>
 
-                   <div className="flex items-center space-x-2 p-3 bg-slate-50 rounded-lg">
+                   <div className="flex items-center space-x-2 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                       <input type="checkbox" id="isFree" name="isFree" className="h-4 w-4 rounded border-slate-300 text-[#E87154] focus:ring-[#E87154]" />
                       <Label htmlFor="isFree" className="text-sm font-medium cursor-pointer">Free Access (available to all users)</Label>
                    </div>
@@ -218,7 +309,7 @@ export default function AdminFlipbooksPage() {
                       )}
                    </div>
 
-                   <Button type="submit" className="w-full bg-[#E87154] hover:bg-[#D66144] h-11">Create Flipbook</Button>
+                   <Button type="submit" className="w-full bg-[#E87154] hover:bg-[#D66144] h-11 text-white">Create Flipbook</Button>
                 </form>
               </DialogContent>
             </Dialog>
@@ -226,29 +317,162 @@ export default function AdminFlipbooksPage() {
         }
       />
 
-      {/* Conditional Layout Containers based on View Mode */}
-      {viewMode === "table" ? (
-        <div className="rounded-xl border border-slate-100 dark:border-slate-800 shadow-md overflow-hidden bg-white dark:bg-slate-900 p-6 space-y-6">
-          {/* Search Bar Input inside table container */}
-          <div className="relative group w-full sm:max-w-md">
+      {/* Categorized Filter & Dropdown Toolbar */}
+      <div className="p-4 sm:p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+          
+          {/* Search Input */}
+          <div className="relative group w-full md:w-80">
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search flipbooks..."
-              className="pl-10 h-10 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus-visible:ring-[#E87154]/20 focus-visible:border-[#E87154]"
+              placeholder="Search title, shelf, description..."
+              className="pl-10 h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus-visible:ring-[#E87154]/20 focus-visible:border-[#E87154]"
             />
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-[#E87154]" />
           </div>
 
+          {/* Categorized Dropdown Grouping Selectors */}
+          <div className="flex flex-wrap items-center gap-3">
+            
+            {/* Shelf / Category Dropdown */}
+            <div className="flex items-center gap-2">
+              <Folder size={15} className="text-[#E87154] shrink-0" />
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="h-10 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#E87154]"
+              >
+                <option value="all">All Bookshelves / Categories</option>
+                {existingCategories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    📚 {cat}
+                  </option>
+                ))}
+                <option value="UNASSIGNED">📂 Uncategorized Shelves</option>
+              </select>
+            </div>
+
+            {/* Age Bracket Dropdown */}
+            <div className="flex items-center gap-2">
+              <Tag size={15} className="text-[#E87154] shrink-0" />
+              <select
+                value={selectedAgeGroup}
+                onChange={(e) => setSelectedAgeGroup(e.target.value)}
+                className="h-10 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#E87154]"
+              >
+                <option value="all">All Age Brackets</option>
+                <option value="LITTLE_LOFTERS">👶 Little Lofters (0-3 yrs)</option>
+                <option value="LOFT_365">👧 Loft 365 Readers (4-7 yrs)</option>
+                <option value="BIG_READERS">🧒 Big Readers (8+ yrs)</option>
+                <option value="UNASSIGNED">Default / All Ages</option>
+              </select>
+            </div>
+
+            {/* Clear Filters Button */}
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className="h-10 px-3 text-xs font-bold text-slate-500 hover:text-red-600 gap-1"
+              >
+                <X size={14} /> Clear
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Conditional Layout Containers based on View Mode */}
+      {viewMode === "bookshelves" ? (
+        <div className="space-y-10">
+          {Object.keys(groupedBookshelves).length === 0 ? (
+            <div className="text-center py-20 text-slate-400 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
+              <div className="flex flex-col items-center gap-2">
+                <Library className="h-12 w-12 opacity-20" />
+                <p className="font-bold text-base">No flipbook bookshelves found.</p>
+                <p className="text-xs text-slate-400">Try adjusting your age bracket or category dropdown filters.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
+              {Object.entries(groupedBookshelves).map(([shelfName, books]) => (
+                <div
+                  key={shelfName}
+                  className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
+                >
+                  <div>
+                    {/* Bookshelf Card Header */}
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <div>
+                        <h3 className="font-black text-slate-900 dark:text-slate-100 text-base leading-tight group-hover:text-[#E87154] transition-colors">
+                          {shelfName}
+                        </h3>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">
+                          Updated {new Date(books[0]?.updatedAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="bg-[#E87154]/10 text-[#E87154] font-extrabold text-[10px] rounded-full px-2.5">
+                        {books.length} {books.length === 1 ? "Book" : "Books"}
+                      </Badge>
+                    </div>
+
+                    {/* Heyzine Style Bookshelf Preview Box */}
+                    <div 
+                      onClick={() => setSelectedCategory(shelfName)}
+                      className="bg-slate-100 dark:bg-slate-850 rounded-2xl p-3 border border-slate-200/40 dark:border-slate-800 min-h-[160px] flex items-center justify-center cursor-pointer hover:bg-slate-200/50 transition-colors relative overflow-hidden"
+                    >
+                      <div className="grid grid-cols-3 gap-2 w-full max-w-[240px] items-center justify-center">
+                        {books.slice(0, 3).map((b, i) => (
+                          <div
+                            key={b.id}
+                            className="aspect-[3/4] bg-white rounded shadow-md overflow-hidden border border-black/5 transition-transform duration-300 group-hover:scale-105"
+                            style={{ transform: `rotate(${(i - 1) * 3}deg)` }}
+                          >
+                            {b.coverImageUrl ? (
+                              <img src={b.coverImageUrl} alt={b.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-[#FFFAF5] p-1 text-[8px] font-bold text-center">
+                                {b.title}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bookshelf Card Footer Action */}
+                  <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-500">
+                      {books.filter(b => b.ageGroup).length} Tagged Brackets
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedCategory(shelfName)}
+                      className="text-xs font-black text-[#E87154] hover:bg-[#E87154]/10 p-0 h-auto px-2 py-1 rounded-lg"
+                    >
+                      View Shelf →
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : viewMode === "table" ? (
+        <div className="rounded-xl border border-slate-100 dark:border-slate-800 shadow-md overflow-hidden bg-white dark:bg-slate-900 p-6 space-y-6">
           <div className="border rounded-lg overflow-hidden border-slate-100 dark:border-slate-800">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-none">
                   <TableHead className="pl-6">Flipbook</TableHead>
+                  <TableHead>Bookshelf / Category</TableHead>
                   <TableHead>Age Group</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Publish Date</TableHead>
-                  <TableHead>Author</TableHead>
                   <TableHead className="text-right pr-6">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -258,7 +482,7 @@ export default function AdminFlipbooksPage() {
                         <TableCell colSpan={6} className="text-center py-20 text-slate-400">
                             <div className="flex flex-col items-center gap-2">
                                 <BookOpen className="h-10 w-10 opacity-20" />
-                                <p>No flipbooks found.</p>
+                                <p>No flipbooks found matching current filters.</p>
                             </div>
                         </TableCell>
                     </TableRow>
@@ -270,6 +494,15 @@ export default function AdminFlipbooksPage() {
                             <span className="font-bold text-sm text-slate-900 dark:text-slate-100">{book.title}</span>
                             <span className="text-[11px] text-slate-500">Created {new Date(book.createdAt).toLocaleDateString()}</span>
                         </div>
+                    </TableCell>
+                    <TableCell>
+                      {book.category ? (
+                        <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-orange-50 text-[#E87154] border-[#E87154]/20">
+                          📚 {book.category}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-slate-400 font-medium italic">Uncategorized</span>
+                      )}
                     </TableCell>
                     <TableCell>
                         {book.ageGroup ? (
@@ -307,9 +540,6 @@ export default function AdminFlipbooksPage() {
                         <span className="text-slate-400">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-sm text-slate-500 dark:text-slate-400">
-                        {book.createdBy?.firstName || book.createdBy?.email.split('@')[0]}
-                    </TableCell>
                     <TableCell className="text-right pr-6">
                         {/* @ts-ignore */}
                         <FlipbookActions flipbook={book} />
@@ -336,24 +566,13 @@ export default function AdminFlipbooksPage() {
         </div>
       ) : (
         <div className="space-y-8">
-          {/* Search Bar Input directly on page background in grid mode */}
-          <div className="relative group w-full sm:max-w-md">
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search flipbooks..."
-              className="pl-10 h-10 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus-visible:ring-[#E87154]/20 focus-visible:border-[#E87154]"
-            />
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-[#E87154]" />
-          </div>
-
-          {/* Grid Layout without a background box container */}
+          {/* Grid Layout */}
           <div className="grid gap-x-6 gap-y-10 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {paginatedFlipbooks.length === 0 && (
               <div className="col-span-full text-center py-20 text-slate-400">
                 <div className="flex flex-col items-center gap-2">
                   <BookOpen className="h-10 w-10 opacity-20" />
-                  <p>No flipbooks found.</p>
+                  <p>No flipbooks found matching current filters.</p>
                 </div>
               </div>
             )}
@@ -448,6 +667,11 @@ function AdminBookItem({ book, loadFlipbooks }: { book: any; loadFlipbooks: () =
             {book.isFree && (
               <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide w-fit" variant="default">Free</Badge>
             )}
+            {book.category && (
+              <Badge className="bg-[#E87154] text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide w-fit truncate max-w-[100px]" variant="default">
+                📚 {book.category}
+              </Badge>
+            )}
             {book.ageGroup ? (
               <Badge className="bg-blue-500 hover:bg-blue-600 text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide w-fit" variant="default">
                 {getAgeGroupLabel(book.ageGroup)}
@@ -477,7 +701,6 @@ function AdminBookItem({ book, loadFlipbooks }: { book: any; loadFlipbooks: () =
 
           {/* Hover Actions Overlay */}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 z-30">
-            {/* Action pill is fully interactive and doesn't get hidden */}
             <div className="flex items-center justify-center p-1.5 bg-white dark:bg-slate-900 rounded-full shadow-lg border border-slate-100/10 dark:border-slate-800/10">
               <Button 
                 variant="ghost" 
@@ -511,7 +734,7 @@ function AdminBookItem({ book, loadFlipbooks }: { book: any; loadFlipbooks: () =
         </div>
       </div>
 
-      {/* Render Modals at Root of AdminBookItem to prevent them from inheriting hover opacity-0 */}
+      {/* Render Modals */}
       <EditFlipbookDialog 
           flipbook={book} 
           open={editOpen} 
@@ -544,14 +767,21 @@ function AdminBookItem({ book, loadFlipbooks }: { book: any; loadFlipbooks: () =
            />
       )}
 
-      {/* Book Metadata - left aligned below cover */}
+      {/* Book Metadata */}
       <div className="text-left w-full mt-2.5">
         <h3 className="font-bold text-slate-900 dark:text-slate-100 line-clamp-1 text-sm sm:text-base leading-tight">
           {book.title}
         </h3>
-        <p className="text-[11px] text-slate-400 font-semibold mt-1 uppercase tracking-wider">
-          Created {new Date(book.createdAt).toLocaleDateString()}
-        </p>
+        <div className="flex items-center justify-between gap-1 mt-1">
+          <span className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">
+            {new Date(book.createdAt).toLocaleDateString()}
+          </span>
+          {book.category && (
+            <span className="text-[10px] font-bold text-[#E87154] truncate max-w-[120px]">
+              📚 {book.category}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

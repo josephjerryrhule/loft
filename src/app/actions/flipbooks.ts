@@ -11,6 +11,7 @@ const flipbookSchema = z.object({
   description: z.string().optional(),
   heyzineUrl: z.string().url("Must be a valid URL"),
   ageGroup: z.string().optional().nullable(),
+  category: z.string().optional().nullable(),
   isFree: z.boolean().optional(),
   schedulePublish: z.boolean().optional(),
   publishedAt: z.string().optional().nullable(),
@@ -42,6 +43,8 @@ export async function createFlipbook(formData: FormData) {
   const title = formData.get("title") as string;
   const description = formData.get("description") as string;
   const heyzineUrl = formData.get("heyzineUrl") as string;
+  const rawCategory = formData.get("category") as string | null;
+  const category = rawCategory && rawCategory.trim() !== "" ? rawCategory.trim() : null;
   const rawAgeGroup = formData.get("ageGroup") as string | null;
   // Normalize age group: empty -> null, any variant containing "all" -> "all"
   const ageGroup = rawAgeGroup && rawAgeGroup.trim() !== "" ? rawAgeGroup.trim() : null;
@@ -56,6 +59,7 @@ export async function createFlipbook(formData: FormData) {
       description, 
       heyzineUrl,
       ageGroup: normalizedAgeGroup,
+      category,
       isFree,
       schedulePublish,
       publishedAt
@@ -75,6 +79,7 @@ export async function createFlipbook(formData: FormData) {
         iframeContent,
         coverImageUrl: thumbnailUrl,
         ageGroup: validatedData.ageGroup,
+        category: validatedData.category,
         createdById: session.user.id,
         isPublished: isPublishedNow,
         isFree: validatedData.isFree || false,
@@ -100,6 +105,7 @@ export async function updateFlipbook(flipbookId: string, data: {
     title: string;
     description?: string;
     ageGroup?: string;
+    category?: string;
     heyzineUrl?: string; // Changed from pdfUrl
     isPublished?: boolean;
     isFree?: boolean;
@@ -109,6 +115,7 @@ export async function updateFlipbook(flipbookId: string, data: {
             title: string;
             description?: string;
             ageGroup?: string | null;
+            category?: string | null;
             isPublished?: boolean;
             isFree?: boolean;
             heyzineUrl?: string;
@@ -119,6 +126,7 @@ export async function updateFlipbook(flipbookId: string, data: {
             description: data.description,
             // normalize incoming ageGroup: empty -> null, any "all" variant -> "all"
             ageGroup: data.ageGroup && data.ageGroup.trim() !== "" ? (/all/i.test(data.ageGroup) ? "all" : data.ageGroup) : null,
+            category: data.category && data.category.trim() !== "" ? data.category.trim() : null,
             isPublished: data.isPublished,
             isFree: data.isFree
         };

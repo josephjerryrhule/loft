@@ -24,6 +24,7 @@ const editFlipbookSchema = z.object({
   title: z.string().min(3),
   description: z.string().optional(),
   ageGroup: z.string().optional(),
+  category: z.string().optional(),
   heyzineUrl: z.string().url("Must be a valid URL").optional(),
   isFree: z.boolean().optional(),
 });
@@ -41,6 +42,7 @@ export function EditFlipbookDialog({ flipbook, open, onOpenChange }: EditFlipboo
       title: flipbook.title,
       description: flipbook.description || "",
       ageGroup: flipbook.ageGroup || "",
+      category: flipbook.category || "",
       heyzineUrl: flipbook.heyzineUrl || "",
       isFree: flipbook.isFree || false,
     },
@@ -49,6 +51,7 @@ export function EditFlipbookDialog({ flipbook, open, onOpenChange }: EditFlipboo
   async function onSubmit(values: z.infer<typeof editFlipbookSchema>) {
     const result = await updateFlipbook(flipbook.id, {
       ...values,
+      category: values.category || undefined,
       heyzineUrl: values.heyzineUrl || undefined,
     });
     if (result && result.error) {
@@ -76,11 +79,21 @@ export function EditFlipbookDialog({ flipbook, open, onOpenChange }: EditFlipboo
         
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 sm:p-10 space-y-6 sm:space-y-8 bg-white dark:bg-slate-900 overflow-x-hidden">
-                <div className="grid gap-6 sm:gap-8 grid-cols-1 md:grid-cols-2">
+                <div className="grid gap-6 sm:gap-8 grid-cols-1 md:grid-cols-3">
                     <FormField control={form.control} name="title" render={({ field }) => (
                     <FormItem>
                         <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Book Title</FormLabel>
                         <FormControl><Input placeholder="E.g. Monthly Gazette" className="h-11 sm:h-12 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold focus-visible:ring-[#E87154] shadow-inner px-4" {...field} /></FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )} />
+
+                    <FormField control={form.control} name="category" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Category / Shelf</FormLabel>
+                        <FormControl>
+                            <Input placeholder="E.g. LOFT 365 SERIES, Series 1..." className="h-11 sm:h-12 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold focus-visible:ring-[#E87154] shadow-inner px-4" {...field} />
+                        </FormControl>
                         <FormMessage />
                     </FormItem>
                     )} />
