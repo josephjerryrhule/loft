@@ -12,7 +12,7 @@ import { FlipbookActions } from "@/components/flipbook/FlipbookActions";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { 
   Loader2, Plus, BookOpen, Clock, CheckCircle2, LayoutGrid, List, Search, 
-  Eye, Pencil, Trash2, Library, Filter, Tag, Folder, Layers, X, RefreshCw 
+  Eye, Pencil, Trash2, Library, Filter, Tag, Folder, Layers, X, RefreshCw, ArrowLeft
 } from "lucide-react";
 import { DateTimePicker } from "@/components/ui/datetime-picker";
 import { toast } from "sonner";
@@ -172,6 +172,12 @@ export default function AdminFlipbooksPage() {
     setSearchQuery("");
     setSelectedAgeGroup("all");
     setSelectedCategory("all");
+  };
+
+  const openShelfGrid = (shelfName: string) => {
+    setSelectedCategory(shelfName);
+    setViewMode("grid");
+    setCurrentPage(1);
   };
 
   const totalPages = Math.ceil(filteredFlipbooks.length / itemsPerPage);
@@ -372,7 +378,13 @@ export default function AdminFlipbooksPage() {
               <Folder size={15} className="text-[#E87154] shrink-0" />
               <select
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSelectedCategory(val);
+                  if (val !== "all" && viewMode === "bookshelves") {
+                    setViewMode("grid");
+                  }
+                }}
                 className="h-10 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#E87154]"
               >
                 <option value="all">All Bookshelves / Categories</option>
@@ -416,6 +428,29 @@ export default function AdminFlipbooksPage() {
         </div>
       </div>
 
+      {/* Active Shelf Filter Banner when in Grid or Table View */}
+      {selectedCategory !== "all" && viewMode !== "bookshelves" && (
+        <div className="flex items-center justify-between p-3.5 px-5 bg-[#E87154]/10 rounded-2xl border border-[#E87154]/20 text-[#E87154]">
+          <div className="flex items-center gap-2">
+            <Folder size={18} className="shrink-0" />
+            <span className="font-extrabold text-sm">
+              Viewing Shelf: <span className="underline">{selectedCategory === "UNASSIGNED" ? "Uncategorized" : selectedCategory}</span> ({filteredFlipbooks.length} {filteredFlipbooks.length === 1 ? "book" : "books"})
+            </span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setSelectedCategory("all");
+              setViewMode("bookshelves");
+            }}
+            className="text-xs font-bold hover:bg-[#E87154]/20 text-[#E87154] cursor-pointer gap-1"
+          >
+            <ArrowLeft size={14} /> All Bookshelves
+          </Button>
+        </div>
+      )}
+
       {/* Conditional Layout Containers based on View Mode */}
       {viewMode === "bookshelves" ? (
         <div className="space-y-10">
@@ -452,7 +487,7 @@ export default function AdminFlipbooksPage() {
 
                     {/* Heyzine Style Bookshelf Preview Box */}
                     <div 
-                      onClick={() => setSelectedCategory(shelfName)}
+                      onClick={() => openShelfGrid(shelfName)}
                       className="bg-slate-100 dark:bg-slate-850 rounded-2xl p-3 border border-slate-200/40 dark:border-slate-800 min-h-[160px] flex items-center justify-center cursor-pointer hover:bg-slate-200/50 transition-colors relative overflow-hidden"
                     >
                       <div className="grid grid-cols-3 gap-2 w-full max-w-[240px] items-center justify-center">
@@ -477,8 +512,8 @@ export default function AdminFlipbooksPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setSelectedCategory(shelfName)}
-                      className="text-xs font-black text-[#E87154] hover:bg-[#E87154]/10 p-0 h-auto px-2 py-1 rounded-lg"
+                      onClick={() => openShelfGrid(shelfName)}
+                      className="text-xs font-black text-[#E87154] hover:bg-[#E87154]/10 p-0 h-auto px-2 py-1 rounded-lg cursor-pointer"
                     >
                       View Shelf →
                     </Button>
@@ -523,7 +558,11 @@ export default function AdminFlipbooksPage() {
                     </TableCell>
                     <TableCell>
                       {book.category ? (
-                        <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-orange-50 text-[#E87154] border-[#E87154]/20">
+                        <Badge 
+                          variant="outline" 
+                          onClick={() => openShelfGrid(book.category)}
+                          className="text-[10px] font-bold uppercase tracking-wider bg-orange-50 text-[#E87154] border-[#E87154]/20 cursor-pointer hover:bg-orange-100"
+                        >
                           📚 {book.category}
                         </Badge>
                       ) : (
@@ -603,7 +642,7 @@ export default function AdminFlipbooksPage() {
               </div>
             )}
             {paginatedFlipbooks.map((book) => (
-              <AdminBookItem key={book.id} book={book} loadFlipbooks={loadFlipbooks} />
+              <AdminBookItem key={book.id} book={book} loadFlipbooks={loadFlipbooks} onSelectShelf={openShelfGrid} />
             ))}
           </div>
 
@@ -640,7 +679,7 @@ function BookshelfPreviewThumb({ book }: { book: any }) {
   );
 }
 
-function AdminBookItem({ book, loadFlipbooks }: { book: any; loadFlipbooks: () => void }) {
+function AdminBookItem({ book, loadFlipbooks, onSelectShelf }: { book: any; loadFlipbooks: () => void; onSelectShelf?: (shelf: string) => void }) {
   const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -713,7 +752,11 @@ function AdminBookItem({ book, loadFlipbooks }: { book: any; loadFlipbooks: () =
               <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide w-fit" variant="default">Free</Badge>
             )}
             {book.category && (
-              <Badge className="bg-[#E87154] text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide w-fit truncate max-w-[100px]" variant="default">
+              <Badge 
+                onClick={() => onSelectShelf && onSelectShelf(book.category)}
+                className="bg-[#E87154] text-white font-bold text-[8px] px-1.5 py-0.5 rounded border-none tracking-wide w-fit truncate max-w-[100px] cursor-pointer hover:bg-[#D66144]" 
+                variant="default"
+              >
                 📚 {book.category}
               </Badge>
             )}
@@ -822,7 +865,10 @@ function AdminBookItem({ book, loadFlipbooks }: { book: any; loadFlipbooks: () =
             {new Date(book.createdAt).toLocaleDateString()}
           </span>
           {book.category && (
-            <span className="text-[10px] font-bold text-[#E87154] truncate max-w-[120px]">
+            <span 
+              onClick={() => onSelectShelf && onSelectShelf(book.category)}
+              className="text-[10px] font-bold text-[#E87154] truncate max-w-[120px] cursor-pointer hover:underline"
+            >
               📚 {book.category}
             </span>
           )}
