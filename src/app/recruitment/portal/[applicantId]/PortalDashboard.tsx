@@ -42,6 +42,7 @@ function getAgeGroupLabel(group: string) {
 function PortalBookItem({ book }: { book: any }) {
   const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
 
   const aspect = dimensions ? dimensions.width / dimensions.height : 0.75;
@@ -51,10 +52,10 @@ function PortalBookItem({ book }: { book: any }) {
     <div className="group flex flex-col w-full">
       <div className="w-full relative flex items-center justify-center">
         <div
-          className="block w-full max-h-[280px] transition-all duration-300 ease-out group-hover:scale-[1.03] group-hover:-translate-y-1.5 text-left shadow-[0_12px_24px_-8px_rgba(0,0,0,0.25)] group-hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.35)] rounded-[4px] relative mx-auto overflow-hidden bg-slate-50 border border-black/5"
+          className="block w-full max-h-[280px] transition-all duration-300 ease-out group-hover:scale-[1.03] group-hover:-translate-y-1.5 text-left shadow-[0_12px_24px_-8px_rgba(0,0,0,0.25)] group-hover:shadow-[0_20px_35px_-10px_rgba(0,0,0,0.35)] rounded-[4px] relative mx-auto overflow-hidden bg-[#FFFAF5] border border-black/5"
           style={{ aspectRatio: `${cappedAspect}` }}
         >
-          {book.coverImageUrl ? (
+          {book.coverImageUrl && !imgError ? (
             <img
               src={book.coverImageUrl}
               alt={book.title}
@@ -65,6 +66,7 @@ function PortalBookItem({ book }: { book: any }) {
                 }
                 setLoaded(true);
               }}
+              onError={() => setImgError(true)}
               className={cn(
                 "w-full h-full object-cover transition-opacity duration-300",
                 loaded ? "opacity-100" : "opacity-0"
@@ -72,8 +74,10 @@ function PortalBookItem({ book }: { book: any }) {
             />
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#FFFAF5] p-4 text-center">
-              <BookOpen className="h-8 w-8 text-[#E87154] mb-2" />
-              <span className="text-stone-850 font-bold text-xs sm:text-sm leading-tight line-clamp-3">
+              <div className="w-12 h-12 rounded-full bg-[#E87154]/10 flex items-center justify-center mb-3">
+                <BookOpen className="h-6 w-6 text-[#E87154]" />
+              </div>
+              <span className="text-stone-850 font-bold text-xs sm:text-sm leading-tight line-clamp-3 px-2">
                 {book.title}
               </span>
             </div>

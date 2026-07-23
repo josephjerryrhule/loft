@@ -258,6 +258,9 @@ export async function resyncFlipbookCovers() {
 
         revalidatePath("/admin/flipbooks");
         revalidatePath("/parent/flipbooks");
+        revalidatePath("/customer/flipbooks");
+        revalidatePath("/child");
+        revalidatePath("/recruitment");
         return { success: true, updatedCount };
     } catch (error) {
         console.error("Failed to resync flipbook covers:", error);
