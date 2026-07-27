@@ -1206,3 +1206,64 @@ export async function sendAuditionBookingConfirmationEmail(data: {
     html: emailWrapper(content, branding.platformName, branding.logoUrl),
   });
 }
+
+// Confirmed Venue Announcement & Notification Email to Booked Applicants
+export async function sendVenueConfirmationEmail(data: {
+  email: string;
+  fullName: string;
+  applicantId: string;
+  startTime: Date;
+  endTime: Date;
+  eventDate: Date;
+  venueName?: string;
+  locationUrl?: string;
+  emailBodyText?: string;
+}) {
+  const branding = await getBranding();
+  const firstName = data.fullName.trim().split(/\s+/)[0] || data.fullName;
+  const selectedDate = format(new Date(data.eventDate), "eeee, do MMMM yyyy");
+  const selectedTime = format(new Date(data.startTime), "h:mm a");
+  const venue = data.venueName || "The BabyNest, UG Legon";
+  const mapsUrl = data.locationUrl || "https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIHCAEQIRiPAjIHCAIQIRiPAtIBBzU2MGowajeoAgCwAgA&um=1&ie=UTF-8&fb=1&gl=pl&sa=X&geocode=KeuMtcGIm98PMaIEGeeMGSMu&daddr=Ayido+Cres,+Accra,+Ghana";
+
+  const defaultBodyContent = `
+    <h2>📍 Audition & Interview Venue Confirmed!</h2>
+    <p>Dear ${firstName},</p>
+    <p>We are pleased to inform you that the venue for your upcoming <strong>LOFT Confidence Program Facilitator Interview & Audition</strong> has now been finalized and confirmed.</p>
+    
+    <div class="info-box" style="background-color: #f8fafc; border-left: 4px solid #4B2E83; padding: 16px; margin: 20px 0; border-radius: 8px;">
+      <h3 style="margin-top: 0; font-size: 16px; color: #4B2E83;">Your Scheduled Session & Venue Details</h3>
+      <p style="margin: 6px 0;"><strong>Date:</strong> ${selectedDate}</p>
+      <p style="margin: 6px 0;"><strong>Time:</strong> ${selectedTime}</p>
+      <p style="margin: 6px 0;"><strong>Venue:</strong> ${venue}</p>
+      <p style="margin: 12px 0 0 0;">
+        📍 <a href="${mapsUrl}" target="_blank" style="color: #E87154; font-weight: bold; text-decoration: underline;">Open Location in Google Maps</a>
+      </p>
+    </div>
+    
+    <h3 style="margin-top: 24px; font-size: 16px; color: #1e293b;">Important Reminders for Audition Day:</h3>
+    <ul style="padding-left: 20px; margin: 12px 0; color: #475569;">
+      <li style="margin-bottom: 8px;">Please arrive <strong>10–15 minutes early</strong> to allow for check-in before your scheduled start time.</li>
+      <li style="margin-bottom: 8px;">Ensure you have reviewed and completed your preparations outlined in your Applicant Portal.</li>
+      <li style="margin-bottom: 8px;">Bring any required materials or books assigned for your audition session.</li>
+    </ul>
+
+    <p style="margin-top: 20px;">If you have any questions or need directions, please log into your Applicant Portal or reply directly to this email.</p>
+    
+    <p style="text-align: center; margin: 30px 0;">
+      <a href="${branding.siteUrl}/recruitment/portal/${data.applicantId}" class="button" style="color: #ffffff; background-color: #4B2E83; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">View Applicant Portal</a>
+    </p>
+    
+    <p>We look forward to seeing you at your audition!</p>
+    <p>Warm regards,<br/><strong>The LOFT Recruitment Team</strong></p>
+  `;
+
+  const content = data.emailBodyText ? data.emailBodyText : defaultBodyContent;
+
+  return sendEmail({
+    to: data.email,
+    subject: `📍 Venue Confirmed – Your LOFT Facilitator Interview & Audition`,
+    html: emailWrapper(content, branding.platformName, branding.logoUrl),
+  });
+}
+

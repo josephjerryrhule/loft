@@ -570,16 +570,39 @@ export function PortalDashboard({ initialData }: { initialData: any }) {
                         <Clock className="w-4 h-4 text-[#E87154]" />
                         <span>Time: {format(new Date(data.applicant.auditionSession.startTime), "h:mm a")}</span>
                       </div>
+                      <div className="flex items-center gap-3">
+                        <MapPin className="w-4 h-4 text-[#E87154]" />
+                        <span>Venue: {data.applicant.auditionSession.event.venue || data.auditionLocation || "East Legon Office, Accra"}</span>
+                      </div>
                     </div>
+                    { (data.applicant.auditionSession.event.locationUrl || data.applicant.auditionSession.event.venue) && (
+                      <div className="pt-2">
+                        <a
+                          href={data.applicant.auditionSession.event.locationUrl || `https://maps.google.com/?q=${encodeURIComponent(data.applicant.auditionSession.event.venue || "East Legon Office, Accra")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 text-xs font-bold text-[#E87154] hover:text-[#D66144] bg-orange-50 hover:bg-orange-100 border border-orange-200 px-3.5 py-2 rounded-xl transition-colors"
+                        >
+                          <MapPin className="w-3.5 h-3.5" />
+                          View Venue Location on Google Maps ↗
+                        </a>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-6 text-slate-600 text-sm md:text-base leading-relaxed">
-                    <p>
-                      Please save these details and plan to arrive at least <strong>10–15 minutes</strong> before your scheduled time to allow for check-in.
-                    </p>
-                    <p>
-                      The audition venue will be in <strong>{data.auditionLocation || "Accra"}</strong>. We are currently finalizing the exact location, and this will be communicated to you by email and WhatsApp before your scheduled audition.
-                    </p>
+                    <div className="bg-emerald-50/80 border border-emerald-200/80 rounded-2xl p-5 space-y-2">
+                      <div className="flex items-center gap-2 text-emerald-800 font-bold text-base">
+                        <MapPin className="w-5 h-5 text-emerald-600" />
+                        <span>📍 Venue Confirmed</span>
+                      </div>
+                      <p className="text-slate-700 font-semibold text-sm">
+                        <strong>Confirmed Location:</strong> {data.applicant.auditionSession.event.venue || "East Legon Office, Accra"}
+                      </p>
+                      <p className="text-slate-600 text-xs leading-relaxed">
+                        Please save these details and plan to arrive at least <strong>10–15 minutes</strong> before your scheduled time to allow for check-in.
+                      </p>
+                    </div>
 
                     <div className="border-t border-slate-100 pt-6 space-y-3">
                       <h4 className="font-bold text-slate-900 text-base">Before Your Audition</h4>

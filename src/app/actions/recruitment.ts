@@ -5,6 +5,8 @@ import { auth } from "@/auth";
 import { z } from "zod";
 import { getPaystackSecretKey } from "@/lib/paystack";
 import { initializePaystackTransaction } from "@/lib/paystack";
+import { sendVenueConfirmationEmail } from "@/lib/email";
+import { format } from "date-fns";
 
 // ═══════════════════════════════════════════════════════════
 // CONSTANTS & TYPES
@@ -1779,4 +1781,117 @@ export async function saveQuestionnaireResponses(applicantId: string, responsesJ
     return { success: false, error: error.message || "An unexpected error occurred." };
   }
 }
+
+/**
+ * Trigger Venue Confirmation Email Campaign to all booked applicants.
+ */
+export async function triggerVenueConfirmationCampaign(options?: { testOnly?: boolean; testEmail?: string }) {
+  const { error } = await requireRecruitmentAdmin();
+  if (error) return { error };
+
+  try {
+    const bookedApplicants = await prisma.recruitmentApplicant.findMany({
+      where: {
+        OR: [
+          { auditionSessionId: { not: null } },
+          { status: { in: ["AUDITION_SLOT_BOOKED", "AUDITION_CONFIRMED", "AUDITION_ATTENDED"] } }
+        ]
+      },
+      include: {
+        auditionSession: {
+          include: {
+            event: true
+          }
+        }
+      }
+    });
+
+    if (bookedApplicants.length === 0) {
+      return { success: true, message: "No booked applicants found.", total: 0, sent: 0, skipped: 0, failed: 0 };
+    }
+
+    if (options?.testOnly) {
+      const recipient = options.testEmail || "joseph@effectstudios.co";
+      const sample = bookedApplicants[0];
+      const session = sample.auditionSession;
+
+      if (!session || !session.event) {
+        return { error: "Sample applicant lacks audition session details." };
+      }
+
+      const venueStr = session.event.venue || "East Legon Office, Accra";
+      const mapsUrl = session.event.locationUrl || `https://maps.google.com/?q=${encodeURIComponent(venueStr)}`;
+
+      const sent = await sendVenueConfirmationEmail({
+        email: recipient,
+        fullName: sample.fullName,
+        applicantId: sample.applicantId,
+        startTime: session.startTime,
+        endTime: session.endTime,
+        eventDate: session.event.date,
+        venueName: venueStr,
+        locationUrl: mapsUrl,
+      });
+
+      if (!sent) return { error: `Failed to send test email to ${recipient}` };
+      return { success: true, message: `Test email sent to ${recipient}`, testRecipient: recipient };
+    }
+
+    let sent = 0;
+    let skipped = 0;
+    let failed = 0;
+
+    for (const applicant of bookedApplicants) {
+      if (applicant.venueConfirmationEmailSent) {
+        skipped++;
+        continue;
+      }
+
+      if (!applicant.email || !applicant.auditionSession || !applicant.auditionSession.event) {
+        failed++;
+        continue;
+      }
+
+      const session = applicant.auditionSession;
+      const venueStr = session.event.venue || "East Legon Office, Accra";
+      const mapsUrl = session.event.locationUrl || `https://maps.google.com/?q=${encodeURIComponent(venueStr)}`;
+
+      const isSent = await sendVenueConfirmationEmail({
+        email: applicant.email,
+        fullName: applicant.fullName,
+        applicantId: applicant.applicantId,
+        startTime: session.startTime,
+        endTime: session.endTime,
+        eventDate: session.event.date,
+        venueName: venueStr,
+        locationUrl: mapsUrl,
+      });
+
+      if (isSent) {
+        await prisma.recruitmentApplicant.update({
+          where: { id: applicant.id },
+          data: {
+            venueConfirmationEmailSent: true,
+            venueConfirmationEmailSentAt: new Date()
+          }
+        });
+        sent++;
+      } else {
+        failed++;
+      }
+    }
+
+    return {
+      success: true,
+      total: bookedApplicants.length,
+      sent,
+      skipped,
+      failed
+    };
+  } catch (err: any) {
+    console.error("Error running venue confirmation campaign:", err);
+    return { error: err.message || "Campaign execution failed." };
+  }
+}
+
 
