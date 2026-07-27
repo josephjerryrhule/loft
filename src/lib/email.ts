@@ -1223,8 +1223,8 @@ export async function sendVenueConfirmationEmail(data: {
   const firstName = data.fullName.trim().split(/\s+/)[0] || data.fullName;
   const selectedDate = format(new Date(data.eventDate), "eeee, do MMMM yyyy");
   const selectedTime = format(new Date(data.startTime), "h:mm a");
-  const venue = data.venueName || "The BabyNest, UG Legon";
-  const mapsUrl = data.locationUrl || "https://www.google.com/maps?gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIHCAEQIRiPAjIHCAIQIRiPAtIBBzU2MGowajeoAgCwAgA&um=1&ie=UTF-8&fb=1&gl=pl&sa=X&geocode=KeuMtcGIm98PMaIEGeeMGSMu&daddr=Ayido+Cres,+Accra,+Ghana";
+  const venue = data.venueName || "The BabyNest, UG - Legon";
+  const mapsUrl = data.locationUrl || "https://www.google.com/maps/place/The+BabyNest,+UG+-+Legon/@5.6417399,-0.2002429,17z/data=!3m1!4b1!4m6!3m5!1s0xfdf9b88c1b58ceb:0x2e23198ce71904a2!8m2!3d5.6417346!4d-0.197668!16s%2Fg%2F11bwp6r16d?entry=ttu&g_ep=EgoyMDI2MDcyMi4wIKXMDSoASAFQAw%3D%3D";
 
   const defaultBodyContent = `
     <h2>📍 Audition & Interview Venue Confirmed!</h2>
