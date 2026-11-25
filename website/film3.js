@@ -175,6 +175,6 @@
 
   const imgs = ['ravine', 'bridge', 'friends', 'abena'].map((k) => [k, el[k].querySelector('img')]);
   Promise.all(imgs.map(([k, img]) => (img.complete ? Promise.resolve() : new Promise((r) => { img.onload = img.onerror = r; }))
-    .then(() => { ratio[k] = img.naturalHeight / img.naturalWidth || ratio[k]; })))
+    .then(() => { ratio[k] = img.naturalHeight / img.naturalWidth || ratio[k]; img.addEventListener('load', () => { ratio[k] = img.naturalHeight / img.naturalWidth || ratio[k]; }); })))
     .then(() => { layout(); addEventListener('resize', layout); requestAnimationFrame(frame); });
 })();

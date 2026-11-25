@@ -113,10 +113,12 @@ a { color:inherit; }
 @keyframes paint { 70% { stroke-dashoffset:0; fill-opacity:0; } 100% { stroke-dashoffset:0; fill-opacity:1; } }
 @keyframes flicker { 0%,100% { filter:brightness(1); } 23% { filter:brightness(1.07); } 41% { filter:brightness(.95); } 67% { filter:brightness(1.04); } }
 .o-spark { position:absolute; width:56px; opacity:0; transform:translate(-50%,-50%) scale(0); }
+.o-dark { display:none; }
+.js .o-dark { display:block; }
 .o-dark { position:absolute; inset:0; background:#05060f; -webkit-mask-image:radial-gradient(circle at var(--x,30%) var(--y,60%), transparent var(--r,0px), #000 calc(var(--r,0px) + 120px)); mask-image:radial-gradient(circle at var(--x,30%) var(--y,60%), transparent var(--r,0px), #000 calc(var(--r,0px) + 120px)); }
 .o-fade { position:absolute; inset:0; background:var(--mid); opacity:0; pointer-events:none; }
 .o-copy { position:absolute; left:5vw; top:20vh; z-index:4; text-align:left; width:min(460px, 40vw); padding:24px 26px 26px; background:var(--mid); border:1px solid var(--line); opacity:0; transform:translateY(16px); transition:opacity .9s ease, transform .9s cubic-bezier(.2,.8,.2,1); }
-.o-copy.on { opacity:1; transform:none; }
+.o-copy.on, html:not(.js) .o-copy { opacity:1; transform:none; }
 .o-copy h1 { font:800 clamp(24px, 2.5vw, 36px)/1.12 Jost, sans-serif; margin:0 0 18px; max-width:20ch; color:var(--cream); }
 .o-copy p { font:600 18px/1.4 Nunito, sans-serif; margin:0 0 18px; color:var(--cream); opacity:.85; }
 .o-actions { display:flex; gap:12px; flex-wrap:wrap; }

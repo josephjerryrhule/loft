@@ -8,7 +8,18 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="image" href="layers/o-room.webp" fetchpriority="high">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@500;600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<script>document.documentElement.classList.add("js")</script>
 <link rel="stylesheet" href="style.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script defer src="motion.js"></script>
+<script defer src="heroes.js"></script>
+<script defer src="opening.js"></script>
+<script defer src="film1.js"></script>
+<script defer src="film.js"></script>
+<script defer src="film3.js"></script>
+
 </head>
 <body>
 <header class="bar">
@@ -71,15 +82,15 @@
   <section class="film film1" id="film1" aria-label="Chapter 1, Once upon a time">
     <div class="sticky">
       <div id="stage1" class="stage">
-        <div class="L" id="sky1"><img src="layers/sky.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="sky1"><img data-src="layers/sky.webp" alt="" fetchpriority="low" decoding="async"></div>
         <div id="stars1" class="stars"></div>
-        <div class="L" id="farhill"><img src="layers/hill.webp" alt="" fetchpriority="low" decoding="async"></div>
-        <div class="L" id="street"><img src="layers/c1-street.webp" alt="" fetchpriority="low" decoding="async"></div>
-        <div class="L lamp" id="lamp0"><img src="layers/c1-post-lantern.webp" alt="" fetchpriority="low" decoding="async"></div>
-        <div class="L lamp" id="lamp1"><img src="layers/c1-post-lantern.webp" alt="" fetchpriority="low" decoding="async"></div>
-        <div class="L lamp" id="lamp2"><img src="layers/c1-post-lantern.webp" alt="" fetchpriority="low" decoding="async"></div>
-        <div class="L lamp" id="lamp3"><img src="layers/c1-post-lantern.webp" alt="" fetchpriority="low" decoding="async"></div>
-        <div class="L" id="luna"><img src="layers/c1-luna.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="farhill"><img data-src="layers/hill.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="street"><img data-src="layers/c1-street.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L lamp" id="lamp0"><img data-src="layers/c1-post-lantern.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L lamp" id="lamp1"><img data-src="layers/c1-post-lantern.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L lamp" id="lamp2"><img data-src="layers/c1-post-lantern.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L lamp" id="lamp3"><img data-src="layers/c1-post-lantern.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="luna"><img data-src="layers/c1-luna.webp" alt="" fetchpriority="low" decoding="async"></div>
       </div>
       <div class="caption" id="caption1" aria-live="polite">
         <p class="ch">Chapter 1 · Once upon a time</p>
@@ -111,20 +122,20 @@
   <section class="film" id="film" aria-label="Chapter 2, The clues and the boat">
     <div class="sticky">
       <div id="stage" class="stage" aria-hidden="true">
-        <div class="L" id="sky"><img src="layers/sky.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="sky"><img data-src="layers/sky.webp" alt="" fetchpriority="low" decoding="async"></div>
         <div id="stars" class="stars"></div>
-        <div class="L" id="hill"><img src="layers/hill.webp" alt="" fetchpriority="low" decoding="async"></div>
-        <div class="L" id="village"><img src="layers/village.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="hill"><img data-src="layers/hill.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="village"><img data-src="layers/village.webp" alt="" fetchpriority="low" decoding="async"></div>
         <div class="L sea" id="seaBack"></div>
         <div class="L sea" id="seaMid"></div>
-        <div class="L" id="fish"><img src="layers/fish.webp" alt="" fetchpriority="low" decoding="async"></div>
-        <div class="L" id="boat"><img id="boatSolo" src="layers/boat.webp" alt="" fetchpriority="low" decoding="async"><img id="boatCrew" src="layers/boat-crew.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="fish"><img data-src="layers/fish.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="boat"><img id="boatSolo" data-src="layers/boat.webp" alt="" fetchpriority="low" decoding="async"><img id="boatCrew" data-src="layers/boat-crew.webp" alt="" fetchpriority="low" decoding="async"></div>
         <div class="L sea" id="seaFront"></div>
-        <div class="L" id="beach"><img src="layers/beach.webp" alt="" fetchpriority="low" decoding="async"></div>
-        <div class="L" id="landing"><img src="layers/landing.webp" alt="" fetchpriority="low" decoding="async"></div>
-        <div class="L" id="lulu"><img src="layers/lulu.webp" alt="" fetchpriority="low" decoding="async"></div>
-        <div class="L" id="duo"><img src="layers/amani-amara.webp" alt="" fetchpriority="low" decoding="async"></div>
-        <div class="L" id="splash"><img src="layers/splash.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="beach"><img data-src="layers/beach.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="landing"><img data-src="layers/landing.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="lulu"><img data-src="layers/lulu.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="duo"><img data-src="layers/amani-amara.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="splash"><img data-src="layers/splash.webp" alt="" fetchpriority="low" decoding="async"></div>
       </div>
       <div class="caption" id="caption" aria-live="polite">
         <p class="ch">Chapter 2 · The clues and the boat</p>
@@ -148,19 +159,19 @@
   <section class="film film3" id="film3" aria-label="Chapter 3, The broken bridge">
     <div class="sticky">
       <div id="stage3" class="stage">
-        <div class="L" id="sky3"><img src="layers/sky.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="sky3"><img data-src="layers/sky.webp" alt="" fetchpriority="low" decoding="async"></div>
         <div id="stars3" class="stars"></div>
-        <div class="L" id="summit"><img src="layers/hill.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="summit"><img data-src="layers/hill.webp" alt="" fetchpriority="low" decoding="async"></div>
         <div class="L sea" id="farsea"></div>
-        <div class="L" id="ravine"><img src="layers/c3-ravine.webp" alt="" fetchpriority="low" decoding="async"></div>
-        <div class="L" id="bridge"><img src="layers/c3-bridge.webp" alt="" fetchpriority="low" decoding="async"></div>
-        <div class="L" id="friends"><img src="layers/c3-friends.webp" alt="" fetchpriority="low" decoding="async"></div>
-        <div class="L" id="cheer"><img src="layers/c3-cheer.webp" alt="" fetchpriority="low" decoding="async"></div>
-        <div class="L" id="abena"><img src="layers/c3-abena.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="ravine"><img data-src="layers/c3-ravine.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="bridge"><img data-src="layers/c3-bridge.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="friends"><img data-src="layers/c3-friends.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="cheer"><img data-src="layers/c3-cheer.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="abena"><img data-src="layers/c3-abena.webp" alt="" fetchpriority="low" decoding="async"></div>
         <div class="toolbox" id="toolbox" aria-label="Pass Abena the tools">
-          <button type="button"><img src="layers/c3-rope.webp" alt="" fetchpriority="low" decoding="async"><span>Rope</span></button>
-          <button type="button"><img src="layers/c3-wrench.webp" alt="" fetchpriority="low" decoding="async"><span>Wrench</span></button>
-          <button type="button"><img src="layers/c3-plank.webp" alt="" fetchpriority="low" decoding="async"><span>Plank</span></button>
+          <button type="button"><img data-src="layers/c3-rope.webp" alt="" fetchpriority="low" decoding="async"><span>Rope</span></button>
+          <button type="button"><img data-src="layers/c3-wrench.webp" alt="" fetchpriority="low" decoding="async"><span>Wrench</span></button>
+          <button type="button"><img data-src="layers/c3-plank.webp" alt="" fetchpriority="low" decoding="async"><span>Plank</span></button>
         </div>
       </div>
       <div class="caption" id="caption3" aria-live="polite">
@@ -254,14 +265,5 @@
 
 <a class="join-dock btn gold" href="#bedtime-club">Join the Bedtime Club</a>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
-<script src="motion.js"></script>
-<script src="heroes.js"></script>
-<script src="opening.js"></script>
-<script src="film1.js"></script>
-<script src="film.js"></script>
-<script src="film3.js"></script>
 </body>
 </html>

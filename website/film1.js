@@ -1,6 +1,11 @@
 // Chapter 1: the village gets ready for bed, the lanterns come on one by one, and Luna finds the moon is missing.
 (() => {
   const $ = (id) => document.getElementById(id);
+  // story art after the opening arrives once the opening has loaded (or as soon as someone starts scrolling)
+  const lazyArt = () => document.querySelectorAll('img[data-src]').forEach((i) => { i.src = i.dataset.src; i.removeAttribute('data-src'); });
+  if (document.readyState === 'complete') setTimeout(lazyArt, 300); else addEventListener('load', () => setTimeout(lazyArt, 300));
+  addEventListener('scroll', function early() { if (scrollY > innerHeight * 0.6) { lazyArt(); removeEventListener('scroll', early); } }, { passive: true });
+
   const film = $('film1'), stage = $('stage1'), starsBox = $('stars1');
   const sky = $('sky1'), farhill = $('farhill'), street = $('street'), luna = $('luna');
   const lamps = [0, 1, 2, 3].map((i) => $('lamp' + i));
@@ -120,7 +125,7 @@
 
   const imgs = [['street', street.querySelector('img')], ['farhill', farhill.querySelector('img')], ['lamp', lamps[0].querySelector('img')], ['luna', luna.querySelector('img')]];
   Promise.all(imgs.map(([k, img]) => (img.complete ? Promise.resolve() : new Promise((r) => { img.onload = img.onerror = r; }))
-    .then(() => { ratio[k] = img.naturalHeight / img.naturalWidth || ratio[k]; })))
+    .then(() => { ratio[k] = img.naturalHeight / img.naturalWidth || ratio[k]; img.addEventListener('load', () => { ratio[k] = img.naturalHeight / img.naturalWidth || ratio[k]; layout(); }); })))
     .then(() => { layout(); addEventListener('resize', layout); requestAnimationFrame(frame); });
 
   // Who we are: count the numbers up when they come into view
