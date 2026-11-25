@@ -9,6 +9,7 @@ interface EmailOptions {
   subject: string;
   html: string;
   text?: string;
+  replyTo?: string;
 }
 
 interface SmtpConfig {
@@ -79,6 +80,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
       subject: options.subject,
       html: options.html,
       text: options.text,
+      replyTo: options.replyTo,
     });
 
     console.log(`Email sent to ${options.to}: ${options.subject}`);
@@ -139,54 +141,80 @@ async function getBranding(): Promise<{
   return { ...branding, logoUrl };
 }
 
-// Base email template wrapper
-function emailWrapper(content: string, platformName: string, logoUrl?: string): string {
-  // Logic to display logo: allow http/https, but now we also expect absolute URLs from getBranding
-  // We can just check if it exists.
+// Base email template wrapper, in the LOFT style.
+// Table layout with inline styles for the frame (Gmail, Outlook, Apple Mail), plus a <style> block that
+// styles the classes the individual templates already use (.button, .info-box, h2, tables, badges).
+const LOFT = {
+  mid: "#0E0F2D", gold: "#E6992F", cream: "#F2DDC0", paper: "#FBF6EC", sand: "#E9D6B8", rust: "#9D430F",
+  head: "'Jost','Trebuchet MS',Arial,sans-serif",
+  body: "'Nunito','Segoe UI',Arial,sans-serif",
+  site: process.env.NEXT_PUBLIC_SITE_URL || "https://landoffairytales.com",
+  support: "support@landoffairytales.com",
+  phone: "+233 55 992 2299",
+};
+
+// Heroes drawn for LOFT, served from /public/email
+export type EmailArt = "kobi" | "lulu" | "luna" | "sukura" | "abena" | "foofo" | "amara" | "kofi" | "mila";
+
+function emailWrapper(content: string, platformName: string, _logoUrl?: string, art?: EmailArt): string {
+  const app = getAppUrl().replace(/\/$/, "");
+  const L = LOFT;
+  const artHtml = art
+    ? `<img src="${app}/email/${art}.jpg" width="132" height="160" alt="" style="display:block;width:132px;height:160px;border:2px solid ${L.mid};margin:0 0 22px">`
+    : "";
   return `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
   <title>${platformName}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f5f5; }
-    .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
-    .header { background: #1a1a1a; padding: 24px; text-align: center; }
-    .header img { max-height: 50px; }
-    .header h1 { color: #ffffff; margin: 0; font-size: 24px; }
-    .content { padding: 32px 24px; }
-    .footer { background: #f5f5f5; padding: 24px; text-align: center; font-size: 12px; color: #666; }
-    .button { display: inline-block; background: #1a1a1a; color: #ffffff !important; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 16px 0; }
-    .info-box { background: #f5f5f5; border-radius: 8px; padding: 16px; margin: 16px 0; }
-    .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-    .info-row:last-child { border-bottom: none; }
-    .amount { font-size: 24px; font-weight: bold; color: #1a1a1a; }
-    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; }
-    .status-active { background: #dcfce7; color: #166534; }
-    .status-pending { background: #fef3c7; color: #92400e; }
-    .status-completed { background: #dbeafe; color: #1e40af; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-    th { background: #f5f5f5; font-weight: 600; }
+    body { margin:0; padding:0; background:${L.sand}; }
+    .content h1, .content h2 { font-family:${L.head}; font-weight:800; color:${L.mid}; line-height:1.1; margin:0 0 18px; }
+    .content h2 { font-size:30px; }
+    .content h3 { font-family:${L.head}; font-weight:700; color:${L.mid}; font-size:20px; margin:24px 0 10px; }
+    .content p, .content li, .content table:not([role=presentation]) td, .content table:not([role=presentation]) th { font-family:${L.body}; font-size:16px; line-height:1.6; color:${L.mid}; }
+    .content a { color:${L.rust}; }
+    .content a.button, .button { display:inline-block; background:${L.gold}; color:${L.mid} !important; font-family:${L.head}; font-weight:700; font-size:16px; padding:15px 28px; border-radius:999px; text-decoration:none; margin:16px 0; }
+    .info-box { background:${L.cream}; border:2px solid ${L.mid}; padding:14px 20px; margin:20px 0; }
+    .info-box p { margin:6px 0; }
+    .info-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid ${L.sand}; }
+    .info-row:last-child { border-bottom:none; }
+    .amount { font-family:${L.head}; font-size:28px; font-weight:800; color:${L.mid}; }
+    .status-badge { display:inline-block; padding:4px 12px; border-radius:999px; font-family:${L.head}; font-size:12px; font-weight:700; }
+    .status-active { background:${L.gold}; color:${L.mid}; }
+    .status-pending { background:${L.cream}; color:${L.mid}; border:1px solid ${L.mid}; }
+    .status-completed { background:${L.mid}; color:${L.cream}; }
+    .content table:not([role=presentation]) { width:100%; border-collapse:collapse; }
+    .content table:not([role=presentation]) th, .content table:not([role=presentation]) td { padding:10px 0; text-align:left; border-bottom:1px solid ${L.sand}; }
+    .content th { font-family:${L.head}; font-weight:700; }
+    @media (max-width:620px) { .c { width:100% !important; } .pad { padding-left:22px !important; padding-right:22px !important; } .content h2 { font-size:26px; } }
   </style>
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      ${logoUrl 
-        ? `<img src="${logoUrl}" alt="${platformName}" style="max-height: 50px; height: auto;" />` 
-        : `<h1>${platformName}</h1>`
-      }
-    </div>
-    <div class="content">
-      ${content}
-    </div>
-    <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} ${platformName}. All rights reserved.</p>
-    </div>
-  </div>
+<body style="margin:0;padding:0;background:${L.sand}">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${L.sand}"><tr><td align="center" style="padding:28px 12px">
+<table role="presentation" class="c" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px">
+  <tr><td align="center" style="background:${L.mid};padding:26px 24px">
+    <a href="${L.site}"><img src="${app}/email/loft-logo.png" width="76" height="76" alt="${platformName}" style="display:block;width:76px;height:76px;border-radius:12px"></a>
+  </td></tr>
+  <tr><td class="pad content" style="background:${L.paper};padding:40px 48px 36px;font-family:${L.body};color:${L.mid}">
+    ${artHtml}
+    ${content}
+  </td></tr>
+  <tr><td class="pad" style="background:${L.mid};padding:28px 48px;color:${L.cream}">
+    <p style="margin:0 0 12px;font:700 14px/1.6 ${L.head}">
+      <a href="${L.site}/#bedtime-club" style="color:${L.cream};text-decoration:none">Bedtime Club</a> &nbsp;&middot;&nbsp;
+      <a href="${L.site}/confidence-club" style="color:${L.cream};text-decoration:none">Confidence Club</a> &nbsp;&middot;&nbsp;
+      <a href="${L.site}/events" style="color:${L.cream};text-decoration:none">Events</a> &nbsp;&middot;&nbsp;
+      <a href="${L.site}/about" style="color:${L.cream};text-decoration:none">About</a></p>
+    <p style="margin:0 0 12px;font:400 14px/1.6 ${L.body};color:${L.cream}">Questions? Write to <a href="mailto:${L.support}" style="color:${L.gold}">${L.support}</a> or call ${L.phone}.</p>
+    <p style="margin:0 0 14px;font:700 13px/1 ${L.head}"><a href="https://www.instagram.com/loftbookclub" style="color:${L.gold};text-decoration:none">Instagram</a> &nbsp; <a href="https://www.tiktok.com/@loftbookclub" style="color:${L.gold};text-decoration:none">TikTok</a> &nbsp; <a href="https://www.facebook.com/Loftbookclub" style="color:${L.gold};text-decoration:none">Facebook</a></p>
+    <p style="margin:0;font:400 12px/1.5 ${L.body};color:${L.cream}">&copy; ${new Date().getFullYear()} Land of Fairytales. Safe, ad-free African stories for children.</p>
+  </td></tr>
+</table></td></tr></table>
 </body>
 </html>
 `;
@@ -220,7 +248,7 @@ export async function sendWelcomeEmail(user: {
   return sendEmail({
     to: user.email,
     subject: `Welcome to ${branding.platformName}!`,
-    html: emailWrapper(content, branding.platformName, branding.logoUrl),
+    html: emailWrapper(content, branding.platformName, branding.logoUrl, "kobi"),
   });
 }
 
@@ -295,7 +323,7 @@ export async function sendOrderReceiptEmail(order: {
   return sendEmail({
     to: order.customerEmail,
     subject: `Order Confirmation - ${order.id}`,
-    html: emailWrapper(content, branding.platformName, branding.logoUrl),
+    html: emailWrapper(content, branding.platformName, branding.logoUrl, "foofo"),
   });
 }
 
@@ -374,7 +402,7 @@ export async function sendSubscriptionConfirmationEmail(subscription: {
   return sendEmail({
     to: subscription.userEmail,
     subject: `Subscription Confirmed - ${subscription.planName}`,
-    html: emailWrapper(content, branding.platformName, branding.logoUrl),
+    html: emailWrapper(content, branding.platformName, branding.logoUrl, "sukura"),
   });
 }
 
@@ -601,7 +629,7 @@ export async function sendSubscriptionReceiptEmail(subscription: {
   return sendEmail({
     to: subscription.userEmail,
     subject: `Subscription Receipt - ${subscription.planName}`,
-    html: emailWrapper(content, branding.platformName, branding.logoUrl),
+    html: emailWrapper(content, branding.platformName, branding.logoUrl, "sukura"),
   });
 }
 
@@ -631,7 +659,7 @@ export async function sendPlanRenewalReminderEmail(subscription: {
   return sendEmail({
     to: subscription.userEmail,
     subject: `Subscription Expiring in ${subscription.daysRemaining} Days`,
-    html: emailWrapper(content, branding.platformName, branding.logoUrl),
+    html: emailWrapper(content, branding.platformName, branding.logoUrl, "kofi"),
   });
 }
 
@@ -662,7 +690,7 @@ export async function sendSubscriptionExpiredEmail(
   return sendEmail({
     to: userEmail,
     subject: `Your ${data.planName} Subscription Has Expired`,
-    html: emailWrapper(content, branding.platformName, branding.logoUrl),
+    html: emailWrapper(content, branding.platformName, branding.logoUrl, "mila"),
   });
 }
 
@@ -809,7 +837,7 @@ export async function sendPasswordResetEmail(data: {
   return sendEmail({
     to: data.userEmail,
     subject: `Reset Your Password - ${branding.platformName}`,
-    html: emailWrapper(content, branding.platformName, branding.logoUrl),
+    html: emailWrapper(content, branding.platformName, branding.logoUrl, "lulu"),
   });
 }
 
@@ -883,7 +911,7 @@ export async function sendEmailVerification(data: { userEmail: string; verificat
   return sendEmail({
     to: data.userEmail,
     subject: `Verify Your Email - ${branding.platformName}`,
-    html: emailWrapper(content, branding.platformName, branding.logoUrl),
+    html: emailWrapper(content, branding.platformName, branding.logoUrl, "amara"),
   });
 }
 
@@ -904,7 +932,7 @@ export async function sendChildOtpEmail({
     <p>Here is the one-time password (OTP) for <strong>${childName}</strong> to log in to their dashboard:</p>
     
     <div style="text-align: center; margin: 30px 0;">
-      <span style="background-color: #f3f4f6; padding: 15px 30px; font-size: 24px; font-weight: bold; letter-spacing: 4px; border-radius: 8px; color: #1f2937;">
+      <span style="display:inline-block; background-color:#F2DDC0; border:2px solid #0E0F2D; padding:14px 26px; font-family:'Jost','Trebuchet MS',Arial,sans-serif; font-size:34px; font-weight:800; letter-spacing:8px; color:#0E0F2D;">
         ${otp}
       </span>
     </div>
@@ -918,7 +946,7 @@ export async function sendChildOtpEmail({
   return sendEmail({
     to: email,
     subject: `Login code for ${childName} - ${branding.platformName}`,
-    html: emailWrapper(content, branding.platformName, branding.logoUrl),
+    html: emailWrapper(content, branding.platformName, branding.logoUrl, "luna"),
   });
 }
 
@@ -1267,3 +1295,98 @@ export async function sendVenueConfirmationEmail(data: {
   });
 }
 
+
+
+// ============================================
+// WEBSITE FORMS (landoffairytales.com)
+// ============================================
+
+function esc(v: string): string {
+  return v.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string);
+}
+
+function infoTable(rows: [string, string][]): string {
+  const L = LOFT;
+  const trs = rows
+    .map(([k, v]) => `<tr><td style="padding:10px 0;border-bottom:1px solid ${L.sand};font:600 15px/1.4 ${L.body};color:${L.mid}">${k}</td><td align="right" style="text-align:right;padding:10px 0;border-bottom:1px solid ${L.sand};font:400 15px/1.4 ${L.body};color:${L.mid}">${v}</td></tr>`)
+    .join("");
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${L.cream};border:2px solid ${L.mid};margin:20px 0"><tr><td style="padding:8px 20px 12px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">${trs}</table></td></tr></table>`;
+}
+
+function pill(label: string, href: string): string {
+  const L = LOFT;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0 8px"><tr><td style="background:${L.gold};border-radius:999px"><a href="${href}" style="display:inline-block;padding:15px 28px;font:700 16px/1 ${L.head};color:${L.mid};text-decoration:none;border-radius:999px">${label}</a></td></tr></table>`;
+}
+
+const signOff = `<p style="margin:26px 0 0">Warmly,<br><b>The LOFT team</b></p>`;
+
+async function brandingOrDefaults() {
+  try {
+    return await getBranding();
+  } catch {
+    return { platformName: "Land of Fairytales", logoUrl: "", supportEmail: LOFT.support, siteUrl: LOFT.site, currency: "₵" };
+  }
+}
+
+export type SchoolEnquiry = { name: string; school: string; interest: string; children: string; email: string; phone?: string };
+
+// A school filled in the Confidence Club sentence form: thank the school, and tell the LOFT team (reply goes to the school).
+export async function sendSchoolEnquiryEmails(e: SchoolEnquiry): Promise<{ school: boolean; team: boolean }> {
+  const branding = await brandingOrDefaults();
+  const supportTo = branding.supportEmail || LOFT.support;
+  const first = esc(e.name.trim().split(/\s+/)[0]);
+  const rows: [string, string][] = [
+    ["School", esc(e.school)],
+    ["Interested in", esc(e.interest)],
+    ["Children", `About ${esc(e.children)}`],
+    ["Reach you at", esc(e.email)],
+  ];
+  if (e.phone) rows.push(["Phone", esc(e.phone)]);
+
+  const schoolHtml = emailWrapper(
+    `<h2>Thank you, ${first}!</h2>
+     <p>We're so glad ${esc(e.school)} would like to bring LOFT into the classroom. Here's what you told us:</p>
+     ${infoTable(rows)}
+     <p>Someone from our team will write to you soon to talk about dates, class sizes and school pricing. If anything changes in the meantime, just reply to this email.</p>
+     ${pill("See the Confidence Club", `${LOFT.site}/confidence-club`)}
+     ${signOff}`,
+    branding.platformName, branding.logoUrl, "abena");
+
+  const when = format(new Date(), "d MMM yyyy, HH:mm");
+  const teamHtml = emailWrapper(
+    `<h2>New school enquiry</h2>
+     <p>A school filled in the Confidence Club form on landoffairytales.com.</p>
+     ${infoTable([["Name", esc(e.name)], ...rows, ["Sent", when]])}
+     <p>Reply to this email and it goes straight to ${first}.</p>
+     ${pill(`Email ${first}`, `mailto:${encodeURIComponent(e.email)}`)}`,
+    branding.platformName, branding.logoUrl);
+
+  const [school, team] = await Promise.all([
+    sendEmail({ to: e.email, subject: "Thank you for your enquiry, we'll be in touch", html: schoolHtml, replyTo: supportTo }),
+    sendEmail({ to: supportTo, subject: `New school enquiry: ${e.school} (about ${e.children} children)`, html: teamHtml, replyTo: e.email }),
+  ]);
+  return { school, team };
+}
+
+// Someone asked to hear first about the next Loftland event.
+export async function sendEventsSignupEmails(email: string): Promise<{ person: boolean; team: boolean }> {
+  const branding = await brandingOrDefaults();
+  const supportTo = branding.supportEmail || LOFT.support;
+  const personHtml = emailWrapper(
+    `<h2>You're on the list!</h2>
+     <p>Thank you for signing up. The moment the next Loftland event is booked (story days, readings and celebrations), you'll be the first to know.</p>
+     <p>Yearly Enchanter members get a free ticket for two to Loftland events.</p>
+     ${pill("See the Bedtime Club plans", `${LOFT.site}/#bedtime-club`)}
+     ${signOff}`,
+    branding.platformName, branding.logoUrl, "foofo");
+  const teamHtml = emailWrapper(
+    `<h2>New events sign-up</h2>
+     <p><b>${esc(email)}</b> wants to hear first about the next Loftland event.</p>
+     <p>Signed up ${format(new Date(), "d MMM yyyy, HH:mm")}.</p>`,
+    branding.platformName, branding.logoUrl);
+  const [person, team] = await Promise.all([
+    sendEmail({ to: email, subject: "You're on the list for Loftland events", html: personHtml, replyTo: supportTo }),
+    sendEmail({ to: supportTo, subject: `Events sign-up: ${email}`, html: teamHtml, replyTo: email }),
+  ]);
+  return { person, team };
+}
