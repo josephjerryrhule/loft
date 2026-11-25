@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Land of Fairytales</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="image" href="layers/o-room.webp" fetchpriority="high">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@500;600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="bar">
+  <a href="#" class="logo-link"><img class="logo" src="logo.png" alt="Land of Fairytales"></a>
+  <nav class="nav" aria-label="Main">
+    <a href="#bedtime-club">Bedtime Club</a>
+    <a href="confidence-club.html">Confidence Club</a>
+    <a href="events.html">Events</a>
+    <a href="about.html">About</a>
+  </nav>
+  <div class="actions">
+    <a class="btn line" href="https://app.landoffairytales.com/child/login">Child login</a>
+    <a class="btn gold" href="#bedtime-club">Join the Bedtime Club</a>
+    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menu">Menu</button>
+  </div>
+</header>
+
+<div class="menu" id="menu" hidden>
+  <a href="#bedtime-club">Bedtime Club</a>
+  <a href="confidence-club.html">Confidence Club</a>
+  <a href="events.html">Events</a>
+  <a href="about.html">About</a>
+  <div class="menu-actions">
+    <a class="btn gold" href="#bedtime-club">Join the Bedtime Club</a>
+    <a class="btn line" href="https://app.landoffairytales.com/child/login">Child login</a>
+  </div>
+</div>
+
+<main>
+  <section class="opening" id="top" aria-label="The Night the Moon Was Shy">
+    <div class="sticky">
+      <div class="o-stage" id="oStage">
+        <img class="o-room" id="oRoom" src="layers/o-room.webp" alt="" fetchpriority="high">
+        <div class="o-book" id="oBook">
+          <img src="layers/o-book.webp" alt="" fetchpriority="high">
+          <img class="o-page" id="oPage" src="layers/o-page.webp" alt="">
+          <svg class="o-title" id="oTitle" viewBox="0 0 1000 300" role="img" aria-label="The Night the Moon Was Shy">
+            <text x="250" y="90" text-anchor="middle">The Night</text>
+            <text x="250" y="168" text-anchor="middle">the Moon</text>
+            <text x="250" y="246" text-anchor="middle">Was Shy</text>
+            <text class="sub" x="750" y="150" text-anchor="middle">A bedtime story</text>
+            <text class="sub" x="750" y="196" text-anchor="middle">from the Land of Fairytales</text>
+          </svg>
+        </div>
+        <img class="o-spark" id="oSpark" src="layers/star.webp" alt="" fetchpriority="low" decoding="async">
+        <div class="o-dark" id="oDark"></div>
+        <div class="o-fade" id="oFade"></div>
+      </div>
+      <div class="o-copy" id="oCopy">
+        <h1>African bedtime stories that build brave, kind, confident children.</h1>
+        <div class="o-actions">
+          <a class="btn gold big" href="#bedtime-club">Join the Bedtime Club</a>
+          <a class="btn line big" href="#film1">Begin the story</a>
+        </div>
+      </div>
+      <a class="skip" href="#bedtime-club">Skip the story</a>
+    </div>
+  </section>
+
+  <section class="film film1" id="film1" aria-label="Chapter 1, Once upon a time">
+    <div class="sticky">
+      <div id="stage1" class="stage">
+        <div class="L" id="sky1"><img src="layers/sky.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div id="stars1" class="stars"></div>
+        <div class="L" id="farhill"><img src="layers/hill.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="street"><img src="layers/c1-street.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L lamp" id="lamp0"><img src="layers/c1-post-lantern.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L lamp" id="lamp1"><img src="layers/c1-post-lantern.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L lamp" id="lamp2"><img src="layers/c1-post-lantern.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L lamp" id="lamp3"><img src="layers/c1-post-lantern.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="luna"><img src="layers/c1-luna.webp" alt="" fetchpriority="low" decoding="async"></div>
+      </div>
+      <div class="caption" id="caption1" aria-live="polite">
+        <p class="ch">Chapter 1 · Once upon a time</p>
+        <p class="who" id="who1"></p>
+        <p class="line" id="line1"></p>
+      </div>
+      <div class="hint" id="hint1"></div>
+      <a class="skip" href="#bedtime-club">Skip the story</a>
+    </div>
+  </section>
+
+  <section class="page who" id="about-loft">
+    <div class="page-in">
+      <h2>Stories where African children are the heroes.</h2>
+      <p class="lede">LOFT is a growing library of African bedtime stories for children. Every tale builds empathy, new words and pride in who they are, and every hero looks like the children reading them.</p>
+      <dl class="stats" id="stats">
+        <div><dt><span data-n="365">0</span></dt><dd>bedtime stories</dd></div>
+        <div><dt><span data-n="10">0</span></dt><dd>star characters</dd></div>
+        <div><dt><span data-n="100">0</span>+</dt><dd>story characters</dd></div>
+        <div><dt><span data-n="100">0</span>+</dt><dd>families reading</dd></div>
+      </dl>
+      <div class="strip">
+        <p><b>The Bedtime Club</b> from ₵100 a month, on any phone, tablet or computer.</p>
+        <a class="btn gold" href="#bedtime-club">See the plans</a>
+        <a class="btn line-dark" href="https://app.landoffairytales.com/auth/register?planId=free-plan-default">Get five free stories</a>
+      </div>
+    </div>
+  </section>
+  <section class="film" id="film" aria-label="Chapter 2, The clues and the boat">
+    <div class="sticky">
+      <div id="stage" class="stage" aria-hidden="true">
+        <div class="L" id="sky"><img src="layers/sky.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div id="stars" class="stars"></div>
+        <div class="L" id="hill"><img src="layers/hill.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="village"><img src="layers/village.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L sea" id="seaBack"></div>
+        <div class="L sea" id="seaMid"></div>
+        <div class="L" id="fish"><img src="layers/fish.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="boat"><img id="boatSolo" src="layers/boat.webp" alt="" fetchpriority="low" decoding="async"><img id="boatCrew" src="layers/boat-crew.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L sea" id="seaFront"></div>
+        <div class="L" id="beach"><img src="layers/beach.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="landing"><img src="layers/landing.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="lulu"><img src="layers/lulu.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="duo"><img src="layers/amani-amara.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="splash"><img src="layers/splash.webp" alt="" fetchpriority="low" decoding="async"></div>
+      </div>
+      <div class="caption" id="caption" aria-live="polite">
+        <p class="ch">Chapter 2 · The clues and the boat</p>
+        <p class="who" id="who"></p>
+        <p class="line" id="line"></p>
+      </div>
+      <div class="hint" id="hint"></div>
+      <a class="skip" href="#bedtime-club">Skip the story</a>
+    </div>
+  </section>
+
+  <section class="page" id="heroes">
+    <div class="page-in">
+      <h2>Meet the heroes.</h2>
+      <p class="lede">Every LOFT story stars a hero who looks like the children reading it. Tap a hero to meet them.</p>
+      <div class="cards" id="cards"></div>
+      <a class="btn gold big" href="https://app.landoffairytales.com/auth/register?planId=free-plan-default">Read their stories</a>
+    </div>
+  </section>
+
+  <section class="film film3" id="film3" aria-label="Chapter 3, The broken bridge">
+    <div class="sticky">
+      <div id="stage3" class="stage">
+        <div class="L" id="sky3"><img src="layers/sky.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div id="stars3" class="stars"></div>
+        <div class="L" id="summit"><img src="layers/hill.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L sea" id="farsea"></div>
+        <div class="L" id="ravine"><img src="layers/c3-ravine.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="bridge"><img src="layers/c3-bridge.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="friends"><img src="layers/c3-friends.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="cheer"><img src="layers/c3-cheer.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="L" id="abena"><img src="layers/c3-abena.webp" alt="" fetchpriority="low" decoding="async"></div>
+        <div class="toolbox" id="toolbox" aria-label="Pass Abena the tools">
+          <button type="button"><img src="layers/c3-rope.webp" alt="" fetchpriority="low" decoding="async"><span>Rope</span></button>
+          <button type="button"><img src="layers/c3-wrench.webp" alt="" fetchpriority="low" decoding="async"><span>Wrench</span></button>
+          <button type="button"><img src="layers/c3-plank.webp" alt="" fetchpriority="low" decoding="async"><span>Plank</span></button>
+        </div>
+      </div>
+      <div class="caption" id="caption3" aria-live="polite">
+        <p class="ch">Chapter 3 · The broken bridge</p>
+        <p class="who" id="who3"></p>
+        <p class="line" id="line3"></p>
+      </div>
+      <div class="hint" id="hint3"></div>
+      <a class="skip" href="#bedtime-club">Skip the story</a>
+    </div>
+  </section>
+
+  <section class="page schools" id="confidence-club">
+    <div class="page-in">
+      <h2>The Confidence Club, for schools.</h2>
+      <p class="lede">We bring the LOFT heroes into the classroom with stories, activities and games that help children speak up, try again and believe in themselves. Schools can also subscribe to the whole LOFT library, every month.</p>
+      <ol class="steps steps-row">
+        <li><img src="heroes/amara.jpg" alt="" loading="lazy"><div><h3>Book a visit</h3><p>We plan the sessions with you.</p></div></li>
+        <li><img src="heroes/abena.jpg" alt="" loading="lazy"><div><h3>We run the sessions</h3><p>Stories, games and activities in your classroom.</p></div></li>
+        <li><img src="heroes/kofi.jpg" alt="" loading="lazy"><div><h3>Children keep growing</h3><p>A story to keep practising.</p></div></li>
+      </ol>
+      <div class="o-actions start">
+        <a class="btn gold big" href="confidence-club.html">See the Confidence Club</a>
+        <a class="btn line-dark big" href="confidence-club.html#enquiry">Bring it to your school</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="page plans" id="bedtime-club">
+    <div class="page-in">
+      <h2>A little braver, every night.</h2>
+      <p class="lede">The Bedtime Club opens the LOFT library on any phone, tablet or computer: a new African story to share at bedtime, safe and ad-free.</p>
+      <div class="plan-grid">
+        <article class="plan">
+          <h3>Monthly Explorer</h3>
+          <p class="price"><b>₵100</b> a month</p>
+          <ul><li>Access to 30 stories every month</li><li>Read on any device</li><li>Cancel anytime</li></ul>
+          <a class="btn line-dark" href="https://app.landoffairytales.com/auth/register?planId=5c285ff3-8628-4bf8-9d8e-3be3d336e2d1">Start Explorer Journey</a>
+        </article>
+        <article class="plan">
+          <h3>Semi Annual</h3>
+          <p class="price"><b>₵600</b> for 6 months</p>
+          <ul><li>Access to 30 stories every six months</li><li>Bonus: a personalised digital birthday storybook with your child as the star</li><li>Discount on LOFT T-shirts</li><li>Cancel anytime</li></ul>
+          <a class="btn line-dark" href="https://app.landoffairytales.com/auth/register?planId=a7584e9a-3bd2-4415-a0ca-5813c4572763">Join As A Dreamer</a>
+        </article>
+        <article class="plan best">
+          <p class="tag">Save 20%</p>
+          <h3>Yearly Enchanter</h3>
+          <p class="price"><b>₵1000</b> a year</p>
+          <ul><li>2 months free</li><li>Access to 30 stories for 12 months</li><li>Bonus: a personalised digital birthday storybook with your child as the star</li><li>A free ticket for two to Loftland events</li><li>Discount on LOFT T-shirts</li><li>Cancel anytime</li></ul>
+          <a class="btn gold" href="https://app.landoffairytales.com/auth/register?planId=6b9b8fce-e36a-4326-90b2-ad5f37e8112a">Become An Enchanter</a>
+        </article>
+      </div>
+      <div class="free">
+        <img src="heroes/sukura.jpg" alt="">
+        <div><h3>Not ready to subscribe yet?</h3><p>Start with five African bedtime stories, free, the moment you sign up. No commitment.</p></div>
+        <a class="btn gold" href="https://app.landoffairytales.com/auth/register?planId=free-plan-default">Get five free stories</a>
+      </div>
+      <div class="quotes">
+        <figure><blockquote>I can't believe how much my son looks forward to bedtime now. LOFT's stories have taught him new words, sparked his curiosity about our heritage and made storytelling the best part of our day.</blockquote><figcaption>Samuel K.</figcaption></figure>
+        <figure><blockquote>LOFT has become the highlight of our evenings. My daughter loves hearing tales about African heroes and legends, and I love sharing our culture with her.</blockquote><figcaption>Fatima A.</figcaption></figure>
+      </div>
+    </div>
+  </section>
+</main>
+<footer class="foot">
+  <div class="foot-in">
+    <div class="foot-brand">
+      <img src="logo.png" alt="Land of Fairytales" class="foot-logo">
+      <p>African bedtime stories that build brave, kind, confident children.</p>
+    </div>
+    <nav class="foot-col" aria-label="Footer">
+      <a href="index.html#bedtime-club">Bedtime Club</a>
+      <a href="confidence-club.html">Confidence Club</a>
+      <a href="events.html">Events</a>
+      <a href="about.html">About</a>
+      <a href="https://app.landoffairytales.com/child/login">Child login</a>
+    </nav>
+    <div class="foot-col">
+      <a href="mailto:support@landoffairytales.com">support@landoffairytales.com</a>
+      <a href="tel:+233559922299">+233 55 992 2299</a>
+      <div class="socials">
+        <a class="btn line" href="https://www.instagram.com/loftbookclub">Instagram</a>
+        <a class="btn line" href="https://www.tiktok.com/@loftbookclub">TikTok</a>
+        <a class="btn line" href="https://www.facebook.com/Loftbookclub">Facebook</a>
+      </div>
+    </div>
+  </div>
+  <p class="foot-small">© 2026 Land of Fairytales. Safe, ad-free African stories for children.</p>
+</footer>
+
+<a class="join-dock btn gold" href="#bedtime-club">Join the Bedtime Club</a>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script src="motion.js"></script>
+<script src="heroes.js"></script>
+<script src="opening.js"></script>
+<script src="film1.js"></script>
+<script src="film.js"></script>
+<script src="film3.js"></script>
+</body>
+</html>

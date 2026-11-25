@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Loftland events · Land of Fairytales</title>
+<meta name="description" content="Story days, readings and celebrations where LOFT stories step off the page.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@500;600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="sub">
+<header class="bar">
+  <a href="index.html" class="logo-link"><img class="logo" src="logo.png" alt="Land of Fairytales, home"></a>
+  <nav class="nav" aria-label="Main">
+    <a href="index.html#bedtime-club">Bedtime Club</a>
+    <a href="confidence-club.html">Confidence Club</a>
+    <a href="events.html" aria-current="page">Events</a>
+    <a href="about.html">About</a>
+  </nav>
+  <div class="actions">
+    <a class="btn line" href="https://app.landoffairytales.com/child/login">Child login</a>
+    <a class="btn gold" href="index.html#bedtime-club">Join the Bedtime Club</a>
+    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menu">Menu</button>
+  </div>
+</header>
+
+<div class="menu" id="menu" hidden>
+  <a href="index.html#bedtime-club">Bedtime Club</a>
+  <a href="confidence-club.html">Confidence Club</a>
+  <a href="events.html">Events</a>
+  <a href="about.html">About</a>
+  <div class="menu-actions">
+    <a class="btn gold" href="index.html#bedtime-club">Join the Bedtime Club</a>
+    <a class="btn line" href="https://app.landoffairytales.com/child/login">Child login</a>
+  </div>
+</div>
+<main>
+  <section class="sub-hero ev-hero" id="evHero">
+    <div class="sky" aria-hidden="true"><img src="layers/sky.webp" alt=""></div>
+    <div class="stars" id="evStars" aria-hidden="true"></div>
+    <svg class="string" id="evString" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 1000 120"><path d="M-10 20 Q 500 130 1010 20" /></svg>
+    <div class="lanterns" id="evLanterns" aria-label="Lanterns: tap to light them"></div>
+    <div class="sub-copy">
+      <p class="kicker">Loftland events</p>
+      <h1>Come and celebrate with us.</h1>
+      <p class="lede">Story days, readings and celebrations where LOFT stories step off the page. Tap the lanterns to light up the night.</p>
+    </div>
+    <img class="party" src="layers/e-party.webp" alt="Foofo plays her flute, Mamele dances with her golden staff, Kofi beats a drum and Luna leaps at a village celebration">
+  </section>
+
+  <section class="page ev-on" id="whats-on">
+    <div class="page-in">
+      <p class="kicker">What's on</p>
+      <h2>Upcoming events</h2>
+      <div id="evList" class="ev-list"></div>
+      <div class="soon" id="evSoon" hidden>
+        <div>
+          <h3>No events booked just yet.</h3>
+          <p>New Loftland events are announced here first. Leave your email and we'll tell you the moment the next one is booked.</p>
+          <form class="notify" id="notify">
+            <label class="sr" for="nEmail">Email</label>
+            <input id="nEmail" name="email" type="email" required placeholder="Your email" autocomplete="email">
+            <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+            <button class="btn gold" type="submit">Tell me first</button>
+          </form>
+          <p class="notify-done" hidden>Lovely! We'll be in touch when the next event is booked.</p>
+        </div>
+        <div class="soon-social">
+          <p>Or follow along</p>
+          <a class="btn line-dark" href="https://www.instagram.com/loftbookclub">Instagram</a>
+          <a class="btn line-dark" href="https://www.tiktok.com/@loftbookclub">TikTok</a>
+          <a class="btn line-dark" href="https://www.facebook.com/Loftbookclub">Facebook</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="page ev-what">
+    <div class="page-in">
+      <p class="kicker">At a Loftland event</p>
+      <h2>Stories you can step inside.</h2>
+      <div class="tiles">
+        <article><img src="heroes/mila.jpg" alt="" loading="lazy"><h3>Story readings</h3><p>Our storytellers bring a LOFT tale to life, with voices, songs and a few surprises.</p></article>
+        <article><img src="heroes/kobi.jpg" alt="" loading="lazy"><h3>Meet the heroes</h3><p>Say hello to Kobi, Lulu and friends, and find out which hero is most like you.</p></article>
+        <article><img src="heroes/foofo.jpg" alt="" loading="lazy"><h3>Songs, dances and games</h3><p>Drums, flutes, dancing and games for the whole family, from the youngest up.</p></article>
+      </div>
+      <div class="strip perk">
+        <p><b>Yearly Enchanter members</b> get a free ticket for two to Loftland events.</p>
+        <a class="btn gold" href="index.html#bedtime-club">See the plans</a>
+      </div>
+      <p class="aside">Looking for the Confidence Club? It runs inside schools rather than as an event. <a href="confidence-club.html#enquiry">Bring it to your school</a></p>
+    </div>
+  </section>
+</main>
+<footer class="foot">
+  <div class="foot-in">
+    <div class="foot-brand">
+      <img src="logo.png" alt="Land of Fairytales" class="foot-logo">
+      <p>African bedtime stories that build brave, kind, confident children.</p>
+    </div>
+    <nav class="foot-col" aria-label="Footer">
+      <a href="index.html#bedtime-club">Bedtime Club</a>
+      <a href="confidence-club.html">Confidence Club</a>
+      <a href="events.html">Events</a>
+      <a href="about.html">About</a>
+      <a href="https://app.landoffairytales.com/child/login">Child login</a>
+    </nav>
+    <div class="foot-col">
+      <a href="mailto:support@landoffairytales.com">support@landoffairytales.com</a>
+      <a href="tel:+233559922299">+233 55 992 2299</a>
+      <div class="socials">
+        <a class="btn line" href="https://www.instagram.com/loftbookclub">Instagram</a>
+        <a class="btn line" href="https://www.tiktok.com/@loftbookclub">TikTok</a>
+        <a class="btn line" href="https://www.facebook.com/Loftbookclub">Facebook</a>
+      </div>
+    </div>
+  </div>
+  <p class="foot-small">© 2026 Land of Fairytales. Safe, ad-free African stories for children.</p>
+</footer>
+<a class="join-dock btn gold" href="index.html#bedtime-club">Join the Bedtime Club</a>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script src="motion.js"></script>
+<script src="events.js"></script>
+<script src="pages.js"></script>
+</body>
+</html>
